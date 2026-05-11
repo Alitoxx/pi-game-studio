@@ -1,0 +1,13 @@
+{
+  "name": "pi-game-studio-hooks",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "^0.8.0",
+    "typebox": "^0.34.0",
+    "@earendil-works/pi-ai": "^0.8.0"
+  },
+  "pi": {
+    "extensions": ["./index.ts"]
+  }
+}

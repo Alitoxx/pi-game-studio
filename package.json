@@ -1,0 +1,32 @@
+{
+  "name": "pi-game-studio",
+  "version": "0.1.0",
+  "description": "49 agents, 74 skills, one coordinated AI team — now in Pi",
+  "license": "MIT",
+  "author": "Alexis <alexis@bytetech.com.ar>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alexis/pi-game-studio.git"
+  },
+  "homepage": "https://github.com/alexis/pi-game-studio",
+  "bugs": {
+    "url": "https://github.com/alexis/pi-game-studio/issues"
+  },
+  "keywords": ["pi-package", "game-development", "game-studio", "gamedev"],
+  "files": [
+    "agents/",
+    "skills/",
+    "prompts/",
+    "extensions/",
+    "scripts/",
+    "models.default.json",
+    "AGENTS.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "pi": {
+    "skills": ["./skills"],
+    "prompts": ["./prompts"],
+    "extensions": ["./extensions"]
+  }
+}

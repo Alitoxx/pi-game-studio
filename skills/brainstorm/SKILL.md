@@ -1,6 +1,7 @@
 ---
 name: brainstorm
 description: "Guided game concept ideation — from zero idea to a structured game concept document. Uses professional studio ideation techniques, player psychology frameworks, and structured creative exploration."
+agent: creative-director
 model: inherit
 inheritProjectContext: true
 tools: read, glob, grep, write, web_search, subagent, ask_user_question, engram_mem_save
@@ -18,8 +19,13 @@ When this skill is invoked:
    See `.pi/game-studio/director-gates.md` for the full check pattern.
 
 2. **Check for existing concept work**:
-   - Read `design/gdd/game-concept.md` if it exists (resume, don't restart)
-   - Read `design/gdd/game-pillars.md` if it exists (build on established pillars)
+   - **File check**: If `design/gdd/game-concept.md` exists, we may resume the concept. If a fresh start is desired but the file already exists, create a backup named `design/gdd/game-concept.md.backup.<timestamp>` before overwriting.
+   - **Engram check**: Query Engram for any saved brainstorm checkpoints using the topic keys `brainstorm/phase-1`, `brainstorm/phase-2`, etc. If such memories exist, surface them to the user and offer to resume from the latest checkpoint.
+   - **Pillar file**: If `design/gdd/game-pillars.md` exists, load it to continue building on established pillars.
+   - **User decision**: After the above checks, call `ask_user_question` offering the appropriate options:
+     1. _Resume existing concept_ — continue from the loaded `game-concept.md` or Engram checkpoint.
+     2. _Start fresh (backup existing)_ — create a new concept while preserving the existing file as a timestamped backup.
+     3. _Start fresh (overwrite)_ — proceed with a blank slate, replacing any existing file.
 
 3. **Run through ideation phases** interactively, asking the user questions at
    each phase. Do NOT generate everything silently — the goal is **collaborative
@@ -77,6 +83,16 @@ Use exactly these tab names — do not rename or duplicate them.
 summary of the person's emotional goals, taste profile, and constraints.
 Read the brief back and confirm it captures their intent.
 
+**Engram checkpoint — Phase 1**
+
+```
+engram_mem_save(
+  title: "Brainstorm - Phase 1 | Creative Discovery",
+  topic_key: "brainstorm/phase-1",
+  content: "Creative Brief <summary>, taste profile, constraints (timeline, dev level, experience target)"
+)
+```
+
 ---
 
 ### Phase 2: Concept Generation
@@ -131,6 +147,16 @@ Do NOT use a `tabs` field here. The `tabs` form is for multi-field input only �
 
 Never pressure toward a choice — let them sit with it.
 
+**Engram checkpoint — Phase 2**
+
+```
+engram_mem_save(
+  title: "Brainstorm - Phase 2 | Concept Generation",
+  topic_key: "brainstorm/phase-2",
+  content: "Generated three concepts; user selection: <title>, unique hook, core verb, MDA aesthetic"
+)
+```
+
 ---
 
 ### Phase 3: Core Loop Design
@@ -173,6 +199,16 @@ After capturing answers, analyze: Is this action intrinsically satisfying? What 
 - **Relatedness**: How does the player feel connected (to characters,
   other players, or the world)?
 
+**Engram checkpoint — Phase 3**
+
+```
+engram_mem_save(
+  title: "Brainstorm - Phase 3 | Core Loop Design",
+  topic_key: "brainstorm/phase-3",
+  content: "Core loop components (30s, 5min, session, progression), player motivation (autonomy, competence, relatedness)"
+)
+```
+
 ---
 
 ### Phase 4: Pillars and Boundaries
@@ -211,7 +247,7 @@ Repeat until the user selects [A] Lock these in.
 **Review mode check** — apply before spawning CD-PILLARS and AD-CONCEPT-VISUAL:
 
 - `solo` → skip both. Note: "CD-PILLARS skipped — Solo mode. AD-CONCEPT-VISUAL skipped — Solo mode." Proceed to Phase 5.
-- `lean` → skip both (not PHASE-GATEs). Note: "CD-PILLARS skipped — Lean mode. AD-CONCEPT-VISUAL skipped — Lean mode." Proceed to Phase 5.
+- `lean` → run inline validation instead of subagent spawn. Check the pillar set (3-5 pillars, each with design test, anti-pillars defined). If validation fails, use `ask_user_question`: "Phase 4 validation: some checks failed. Continue?" Options: `Yes — continue` / `No — fix first`. Do NOT spawn subagents in lean mode.
 - `full` → spawn as normal.
 
 **After pillars and anti-pillars are agreed, spawn BOTH `creative-director` AND `art-director` via subagent in parallel before moving to Phase 5. Issue both subagent calls simultaneously — do not wait for one before starting the other.**
@@ -231,6 +267,16 @@ The user's selected visual anchor (the named direction or their custom descripti
 
 If the creative-director returns CONCERNS or REJECT on pillars, resolve pillar issues before asking for the visual anchor selection — visual direction should flow from confirmed pillars.
 
+**Engram checkpoint — Phase 4**
+
+```
+engram_mem_save(
+  title: "Brainstorm - Phase 4 | Pillars & Boundaries",
+  topic_key: "brainstorm/phase-4",
+  content: "Pillar set (3-5), anti-pillars (3+), visual identity anchor, gate verdicts from creative-director and art-director"
+)
+```
+
 ---
 
 ### Phase 5: Player Type Validation
@@ -245,6 +291,16 @@ who this game is actually for:
   important as knowing who will
 - **Market validation**: Are there successful games that serve a similar
   player type? What can we learn from their audience size?
+
+**Engram checkpoint — Phase 5**
+
+```
+engram_mem_save(
+  title: "Brainstorm - Phase 5 | Player Type Validation",
+  topic_key: "brainstorm/phase-5",
+  content: "Primary player type: <type>, secondary appeal: <type>, market validation references"
+)
+```
 
 ---
 
@@ -271,7 +327,7 @@ Ground the concept in reality:
 **Review mode check** — apply before spawning TD-FEASIBILITY:
 
 - `solo` → skip. Note: "TD-FEASIBILITY skipped — Solo mode." Proceed directly to scope tier definition.
-- `lean` → skip (not a PHASE-GATE). Note: "TD-FEASIBILITY skipped — Lean mode." Proceed directly to scope tier definition.
+- `lean` → run inline validation instead of subagent spawn. Check that technical risks were identified and platform target is set. If validation fails, use `ask_user_question`: "Technical feasibility gaps found. Continue?" Options: `Yes — continue` / `No — review risks`. Do NOT spawn subagent in lean mode.
 - `full` → spawn as normal.
 
 **After identifying biggest technical risks, spawn `technical-director` via subagent using gate TD-FEASIBILITY (`.pi/game-studio/director-gates.md`) before scope tiers are defined.**
@@ -283,7 +339,7 @@ Present the assessment to the user. If HIGH RISK, offer to revisit scope before 
 **Review mode check** — apply before spawning PR-SCOPE:
 
 - `solo` → skip. Note: "PR-SCOPE skipped — Solo mode." Proceed to document generation.
-- `lean` → skip (not a PHASE-GATE). Note: "PR-SCOPE skipped — Lean mode." Proceed to document generation.
+- `lean` → run inline validation instead of subagent spawn. Check that scope tiers are defined, MVP is clear, and timeline is set. If validation fails, use `ask_user_question`: "Scope planning gaps found. Continue?" Options: `Yes — continue` / `No — adjust scope`. Do NOT spawn subagent in lean mode.
 - `full` → spawn as normal.
 
 **After scope tiers are defined, spawn `producer` via subagent using gate PR-SCOPE (`.pi/game-studio/director-gates.md`).**
@@ -291,6 +347,16 @@ Present the assessment to the user. If HIGH RISK, offer to revisit scope before 
 Pass: full vision scope, MVP definition, timeline estimate, team size.
 
 Present the assessment to the user. If UNREALISTIC, offer to adjust the MVP definition or scope tiers before writing the document.
+
+**Engram checkpoint — Phase 6**
+
+```
+engram_mem_save(
+  title: "Brainstorm - Phase 6 | Scope & Feasibility",
+  topic_key: "brainstorm/phase-6",
+  content: "Target platform, engine preference, art pipeline, content scope, MVP definition, biggest risks, scope tiers"
+)
+```
 
 ---
 
@@ -345,45 +411,17 @@ Verdict: **COMPLETE** — game concept created and handed off for next steps.
 
 ---
 
-## Context Window Awareness
-
-This is a multi-phase skill. If context reaches or exceeds 70% during any phase,
-append this notice to the current response before continuing:
-
-> **Context is approaching the limit (≥70%).** The game concept document is saved
-> to `design/gdd/game-concept.md`. Open a fresh Claude Code session to continue
-> if needed — progress is not lost.
-
----
-
-## Recommended Next Steps
-
-After the game concept is written, follow the pre-production pipeline in order:
-
-1. `/setup-engine` — configure the engine and populate version-aware reference docs
-2. `/art-bible` — establish visual identity before writing any GDDs
-3. `/map-systems` — decompose the concept into individual systems with dependencies
-4. `/design-system [first-system]` — author per-system GDDs in dependency order
-5. `/create-architecture` — produce the master architecture blueprint
-6. `/gate-check pre-production` — validate readiness before committing to production
-
----
-
 ## Engram persistence
 
-If Engram is enabled (check `.pi/game-studio/engram-enabled`), save the key
-decisions to persistent memory:
+If Engram is enabled (check `.pi/game-studio/engram-enabled`), each phase saves
+its key decisions (`topic_key: brainstorm/phase-1` through `phase-6`).
+When the document is written, a final record is saved:
 
 ```
-engram_mem_save:
-  title: "Game Concept: <working-title>"
-  type: "decision"
-  topic_key: "game-concept/<normalized-title>"
-  content: |
-    **What**: Generated game concept for <title>
-    **Why**: User requested brainstorm session
-    **Where**: design/game-concept.md or design/gdd/game-concept.md
-    **Genre**: <genre>
-    **Setting**: <setting>
-    **Core Loop**: <elevator-pitch>
+engram_mem_save(
+  title: "Game Concept: <working-title>",
+  type: "decision",
+  topic_key: "game-concept/<normalized-title>",
+  content: "**What**: Generated game concept for <title>\n**Why**: User requested brainstorm session\n**Where**: design/game-concept.md\n**Genre**: <genre>\n**Setting**: <setting>\n**Core Loop**: <elevator-pitch>"
+)
 ```

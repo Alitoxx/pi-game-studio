@@ -3,13 +3,13 @@
 <p align="center">
   Turn a Pi session into a full game development studio.
   <br />
-  49 agents. 74 skills. One coordinated AI team.
+  49 agents. 75 skills. One coordinated AI team.
 </p>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
   <a href="agents"><img src="https://img.shields.io/badge/agents-49-blueviolet" alt="49 Agents"></a>
-  <a href="skills"><img src="https://img.shields.io/badge/skills-74-green" alt="74 Skills"></a>
+  <a href="skills"><img src="https://img.shields.io/badge/skills-75-green" alt="75 Skills"></a>
   <a href="prompts"><img src="https://img.shields.io/badge/templates-38-orange" alt="38 Templates"></a>
   <a href="extensions"><img src="https://img.shields.io/badge/hooks-5-red" alt="5 Hooks"></a>
   <img src="https://img.shields.io/badge/built%20for-Pi-8B5CF6?logo=pinokio" alt="Built for Pi">
@@ -49,7 +49,7 @@ The result: you still make every decision, but now you have a team that asks the
 | Category      | Count | Description                                                                                                              |
 | ------------- | ----- | ------------------------------------------------------------------------------------------------------------------------ |
 | **Agents**    | 49    | Specialized agents across design, programming, art, audio, narrative, QA, and production                                 |
-| **Skills**    | 74    | Slash commands for every workflow phase (`/start`, `/design-system`, `/create-epics`, `/dev-story`, `/story-done`, etc.) |
+| **Skills**    | 75    | Slash commands for every workflow phase (`/start`, `/design-system`, `/create-epics`, `/dev-story`, `/story-done`, etc.) |
 | **Templates** | 38    | Document templates for GDDs, UX specs, ADRs, sprint plans, HUD design, accessibility, and more                           |
 | **Hooks**     | 5     | Automated validation on commits, pushes, skill changes, agent audit trail, and gap detection                             |
 | **Engram**    | 1     | Optional persistent memory — decisions auto-save across sessions when Engram is connected                                |
@@ -157,7 +157,7 @@ Agents not listed use the session default.
 
 ## Slash Commands
 
-Type `/` in Pi to browse all 74 skills:
+Type `/` in Pi to browse all 75 skills:
 
 ### Onboarding & Navigation
 
@@ -293,7 +293,7 @@ pi-game-studio/                     # Package root
 ├── AGENTS.md                       # Full agent roster
 ├── models.default.json             # Recommended 3-tier model mapping
 ├── agents/                         # 49 source agents (model: inherit)
-├── skills/                         # 74 skills (SKILL.md per directory)
+├── skills/                         # 75 skills (SKILL.md per directory)
 ├── prompts/                        # 38 document templates
 ├── extensions/                     # Hooks extension
 │   └── hooks/

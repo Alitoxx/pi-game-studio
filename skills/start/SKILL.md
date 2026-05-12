@@ -3,7 +3,7 @@ name: start
 description: "First-time onboarding — asks where you are, then guides you to the right workflow. No assumptions."
 model: inherit
 inheritProjectContext: true
-tools: read, glob, grep, write, ask_user_question
+tools: read, glob, grep, write, ask_user_question, bash, engram_mem_save
 ---
 
 # Guided Onboarding
@@ -19,12 +19,16 @@ This skill is the entry point for new users. It does NOT assume you have a game 
 Before asking anything, silently gather context so you can tailor your guidance. Do NOT show these results unprompted — they inform your recommendations, not the conversation opener.
 
 Check:
+
 - **Engine configured?** Read `.pi/game-studio/technical-preferences.md`. If the Engine field contains `[TO BE CONFIGURED]`, the engine is not set.
 - **Game concept exists?** Check for `design/gdd/game-concept.md`.
 - **Source code exists?** Glob for source files in `src/` (`*.gd`, `*.cs`, `*.cpp`, `*.h`, `*.rs`, `*.py`, `*.js`, `*.ts`).
 - **Prototypes exist?** Check for subdirectories in `prototypes/`.
 - **Design docs exist?** Count markdown files in `design/gdd/`.
 - **Production artifacts?** Check for files in `production/sprints/` or `production/milestones/`.
+- **Engram status?** Run `bash which engram 2>/dev/null` to check if Engram CLI is installed. If it is, run `bash engram doctor --json 2>/dev/null` to check connection. Silently determine:
+  - `engram_installed: true/false`
+  - `engram_connected: true/false` (true only if doctor reports healthy connection)
 
 Store these findings internally to validate the user's self-assessment and tailor recommendations.
 
@@ -63,19 +67,19 @@ The user needs creative exploration before anything else.
    - `/design-system` — author a GDD for each MVP system
    - `/review-all-gdds` — cross-system consistency check
    - `/gate-check` — validate readiness before architecture work
-   **Architecture phase:**
+     **Architecture phase:**
    - `/create-architecture` — produce the master architecture blueprint and Required ADR list
    - `/architecture-decision (×N)` — record key technical decisions, following the Required ADR list
    - `/create-control-manifest` — compile decisions into an actionable rules sheet
    - `/architecture-review` — validate architecture coverage
-   **Pre-Production phase:**
+     **Pre-Production phase:**
    - `/ux-design` — author UX specs for key screens (main menu, HUD, core interactions)
    - `/prototype` — build a throwaway prototype to validate the core mechanic
    - `/playtest-report (×1+)` — document each vertical slice playtest session
    - `/create-epics` — map systems to epics
    - `/create-stories` — break epics into implementable stories
    - `/sprint-plan` — plan the first sprint
-   **Production phase:** → pick up stories with `/dev-story`
+     **Production phase:** → pick up stories with `/dev-story`
 
 #### If B: Vague idea
 
@@ -91,19 +95,19 @@ The user needs creative exploration before anything else.
    - `/design-system` — author a GDD for each MVP system
    - `/review-all-gdds` — cross-system consistency check
    - `/gate-check` — validate readiness before architecture work
-   **Architecture phase:**
+     **Architecture phase:**
    - `/create-architecture` — produce the master architecture blueprint and Required ADR list
    - `/architecture-decision (×N)` — record key technical decisions, following the Required ADR list
    - `/create-control-manifest` — compile decisions into an actionable rules sheet
    - `/architecture-review` — validate architecture coverage
-   **Pre-Production phase:**
+     **Pre-Production phase:**
    - `/ux-design` — author UX specs for key screens (main menu, HUD, core interactions)
    - `/prototype` — build a throwaway prototype to validate the core mechanic
    - `/playtest-report (×1+)` — document each vertical slice playtest session
    - `/create-epics` — map systems to epics
    - `/create-stories` — break epics into implementable stories
    - `/sprint-plan` — plan the first sprint
-   **Production phase:** → pick up stories with `/dev-story`
+     **Production phase:** → pick up stories with `/dev-story`
 
 #### If C: Clear concept
 
@@ -122,19 +126,19 @@ The user needs creative exploration before anything else.
    - `/design-system` — author a GDD for each MVP system
    - `/review-all-gdds` — cross-system consistency check
    - `/gate-check` — validate readiness before architecture work
-   **Architecture phase:**
+     **Architecture phase:**
    - `/create-architecture` — produce the master architecture blueprint and Required ADR list
    - `/architecture-decision (×N)` — record key technical decisions, following the Required ADR list
    - `/create-control-manifest` — compile decisions into an actionable rules sheet
    - `/architecture-review` — validate architecture coverage
-   **Pre-Production phase:**
+     **Pre-Production phase:**
    - `/ux-design` — author UX specs for key screens (main menu, HUD, core interactions)
    - `/prototype` — build a throwaway prototype to validate the core mechanic
    - `/playtest-report (×1+)` — document each vertical slice playtest session
    - `/create-epics` — map systems to epics
    - `/create-stories` — break epics into implementable stories
    - `/sprint-plan` — plan the first sprint
-   **Production phase:** → pick up stories with `/dev-story`
+     **Production phase:** → pick up stories with `/dev-story`
 
 #### If D: Existing work
 
@@ -180,11 +184,32 @@ Check if `production/review-mode.txt` already exists.
 Write the choice to `production/review-mode.txt` immediately after the user
 selects — no separate "May I write?" needed, as the write is a direct
 consequence of the selection:
+
 - `Full` → write `full`
 - `Lean (recommended)` → write `lean`
 - `Solo` → write `solo`
 
 Create the `production/` directory if it does not exist.
+
+---
+
+## Phase 3c: Engram Notice
+
+Using the Engram status gathered in Phase 1, add a single info line at the end of the roadmap (after Phase 3b), right before Phase 4:
+
+**If Engram is NOT installed:** Do nothing. No mention needed.
+
+**If Engram is installed but NOT connected:** Append one line:
+
+> 📌 **Engram detected** — run `/connect-engram` anytime for cross-session decision memory.
+
+**If Engram IS connected:** Append one line:
+
+> ✅ **Engram connected** — decisions auto-save across sessions.
+
+In all cases: zero questions, zero blocking, just an informational line at the end of the roadmap.
+
+Store the boolean `engram_connected` internally for Phase 5.
 
 ---
 
@@ -201,7 +226,21 @@ After presenting the recommended path, use `ask_user_question` to ask the user w
 
 ## Phase 5: Hand Off
 
-When the user confirms their next step, respond with a single short line: "Type `[skill command]` to begin." Nothing else. Do not re-explain the skill or add encouragement. The `/start` skill's job is done.
+When the user confirms their next step:
+
+1. **If Engram is connected** (from Phase 1), silently save the onboarding context:
+
+   ```
+   engram_mem_save(
+     title: "Game Studio onboarding",
+     type: "config",
+     content: "**What**: User completed /start onboarding\n**Why**: Record the project state and user choices at session start\n**Where**: production/review-mode.txt\n**Learned**: User chose [path A/B/C/D] with [full/lean/solo] review mode. First step: [skill command]."
+   )
+   ```
+
+   Fire this silently — do not show the result or mention it to the user. If the save fails (e.g., Engram went down since Phase 1), ignore the error.
+
+2. Respond with a single short line: "Type `[skill command]` to begin." Nothing else. Do not re-explain the skill or add encouragement.
 
 Verdict: **COMPLETE** — user oriented and handed off to next step.
 

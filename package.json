@@ -1,7 +1,7 @@
 {
   "name": "pi-game-studio",
-  "version": "0.1.0",
-  "description": "49 agents, 74 skills, one coordinated AI team — now in Pi",
+  "version": "0.2.0",
+  "description": "49 agents, 75 skills, one coordinated AI team — now in Pi",
   "license": "MIT",
   "author": "Alexis <alexis@bytetech.com.ar>",
   "repository": {

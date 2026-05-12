@@ -325,6 +325,32 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
 - **Review work matters.** No design doc, architecture decision, or implementation passes without review from the right agent.
 - **Quality gates.** Director gates (APPROVE / CONCERNS / REJECT) prevent advancing with unresolved issues.
 
+## Changelog
+
+### v0.2.0 — 2026-05-12
+
+- **`/brainstorm`** — rewritten with professional studio ideation structure:
+  - Assigned to `creative-director` agent for vision-aligned brainstorming
+  - **Engram checkpoints** at each phase (Creative Discovery, Concept Generation, Core Loop, Pillars) — if a session is interrupted, `/brainstorm` detects the last checkpoint and offers to resume
+  - **Smart resume** — checks both `game-concept.md` and Engram memory, then asks: resume, start fresh with backup, or overwrite
+  - **Auto-backup** existing `game-concept.md` with timestamp before overwriting
+
+- **`/start`** — smarter first-run detection:
+  - **Silent Engram availability check** — detects if Engram CLI is installed and connected without cluttering the output
+  - **Context snapshot** — saves user's onboarding state to Engram for continuity across sessions
+
+### v0.1.0 — 2026-05-11
+
+- Initial release. Port of CCGS (49 agents, 74 skills) to Pi package format.
+  - 49 agents with `model: inherit` architecture
+  - 74 skills covering design → production → release
+  - 38 document templates
+  - 5 hooks extension
+  - SDD agents for structured development
+  - Optional Engram integration
+
+---
+
 ## Source & Credits
 
 This project is a migration of **Claude Code Game Studios** to run natively on Pi. All the credit for the original work goes to its creators.

@@ -4,15 +4,7 @@ description: "Guided game concept ideation — from zero idea to a structured ga
 agent: creative-director
 model: inherit
 inheritProjectContext: true
-tools:
-  - read
-  - glob
-  - grep
-  - write
-  - web_search
-  - subagent
-  - ask_user_question
-  - engram_mem_save
+tools: read, glob, grep, write, web_search, subagent, ask_user_question, engram_mem_save
 ---
 
 When this skill is invoked:
@@ -21,12 +13,14 @@ When this skill is invoked:
    `space survival`, `cozy farming`). If `open` or no argument, start from
    scratch. Also resolve the review mode (once, store for all gate spawns this run):
    1. If `--review [full|lean|solo]` was passed → use that
-   2. Else → default to `lean`
-   3. Review mode pipeline follows the unified solo/lean/full pattern from /setup and /start skills.
+   2. Else read `production/review-mode.txt` → use that value
+   3. Else → default to `lean`
+
+   See `.pi/game-studio/director-gates.md` for the full check pattern.
 
 2. **Check for existing concept work**:
    - **File check**: If `design/gdd/game-concept.md` exists, we may resume the concept. If a fresh start is desired but the file already exists, create a backup named `design/gdd/game-concept.md.backup.<timestamp>` before overwriting.
-   - **Engram check**: Use silent detection via `which engram` command to check for memory capabilities. If available, query saved brainstorm checkpoints using the topic keys `brainstorm/phase-1`, `brainstorm/phase-2`, etc. and offer to resume from the latest checkpoint.
+   - **Engram check**: Query Engram for any saved brainstorm checkpoints using the topic keys `brainstorm/phase-1`, `brainstorm/phase-2`, etc. If such memories exist, surface them to the user and offer to resume from the latest checkpoint.
    - **Pillar file**: If `design/gdd/game-pillars.md` exists, load it to continue building on established pillars.
    - **User decision**: After the above checks, call `ask_user_question` offering the appropriate options:
      1. _Resume existing concept_ — continue from the loaded `game-concept.md` or Engram checkpoint.
@@ -256,12 +250,12 @@ Repeat until the user selects [A] Lock these in.
 - `lean` → run inline validation instead of subagent spawn. Check the pillar set (3-5 pillars, each with design test, anti-pillars defined). If validation fails, use `ask_user_question`: "Phase 4 validation: some checks failed. Continue?" Options: `Yes — continue` / `No — fix first`. Do NOT spawn subagents in lean mode.
 - `full` → spawn as normal.
 
-**After pillars and anti-pillars are agreed, spawn BOTH `creative-director` AND `art-director` via subagent in parallel before moving to Phase 5. Use the shared director-gate pattern for the gates below.**
+**After pillars and anti-pillars are agreed, spawn BOTH `creative-director` AND `art-director` via subagent in parallel before moving to Phase 5. Issue both subagent calls simultaneously — do not wait for one before starting the other.**
 
-- **`creative-director`** — gate **CD-PILLARS** (shared director-gate pattern)
+- **`creative-director`** — gate **CD-PILLARS** (`.pi/game-studio/director-gates.md`)
   Pass: full pillar set with design tests, anti-pillars, core fantasy, unique hook.
 
-- **`art-director`** — gate **AD-CONCEPT-VISUAL** (shared director-gate pattern)
+- **`art-director`** — gate **AD-CONCEPT-VISUAL** (`.pi/game-studio/director-gates.md`)
   Pass: game concept elevator pitch, full pillar set with design tests, target platform (if known), any reference games or visual touchstones the user mentioned.
 
 Collect both verdicts, then present them together using a two-tab `ask_user_question`:
@@ -336,7 +330,7 @@ Ground the concept in reality:
 - `lean` → run inline validation instead of subagent spawn. Check that technical risks were identified and platform target is set. If validation fails, use `ask_user_question`: "Technical feasibility gaps found. Continue?" Options: `Yes — continue` / `No — review risks`. Do NOT spawn subagent in lean mode.
 - `full` → spawn as normal.
 
-**After identifying biggest technical risks, spawn `technical-director` via subagent using gate TD-FEASIBILITY (shared director-gate pattern) before scope tiers are defined.**
+**After identifying biggest technical risks, spawn `technical-director` via subagent using gate TD-FEASIBILITY (`.pi/game-studio/director-gates.md`) before scope tiers are defined.**
 
 Pass: core loop description, platform target, engine choice (or "undecided"), list of identified technical risks.
 
@@ -348,7 +342,7 @@ Present the assessment to the user. If HIGH RISK, offer to revisit scope before 
 - `lean` → run inline validation instead of subagent spawn. Check that scope tiers are defined, MVP is clear, and timeline is set. If validation fails, use `ask_user_question`: "Scope planning gaps found. Continue?" Options: `Yes — continue` / `No — adjust scope`. Do NOT spawn subagent in lean mode.
 - `full` → spawn as normal.
 
-**After scope tiers are defined, spawn `producer` via subagent using gate PR-SCOPE (shared director-gate pattern).**
+**After scope tiers are defined, spawn `producer` via subagent using gate PR-SCOPE (`.pi/game-studio/director-gates.md`).**
 
 Pass: full vision scope, MVP definition, timeline estimate, team size.
 
@@ -367,7 +361,7 @@ engram_mem_save(
 ---
 
 4. **Generate the game concept document** using the template at
-   `prompts/game-concept.md`. Fill in ALL sections from the
+   `.pi/game-studio/templates/game-concept.md`. Fill in ALL sections from the
    brainstorm conversation, including the MDA analysis, player motivation
    profile, and flow state design sections.
 
@@ -391,7 +385,7 @@ After revising, show the updated section as a diff or clear before/after, then u
 Options: `[A] Yes — write it` / `[B] Revise another section`
 Repeat until the user selects [A].
 
-If yes, generate the document using the template at `prompts/game-concept.md`, fill in ALL sections from the brainstorm conversation, and write the file, creating directories as needed.
+If yes, generate the document using the template at `.pi/game-studio/templates/game-concept.md`, fill in ALL sections from the brainstorm conversation, and write the file, creating directories as needed.
 
 **Scope consistency rule**: The "Estimated Scope" field in the Core Identity table must match the full-vision timeline from the Scope Tiers section — not just say "Large (9+ months)". Write it as "Large (X–Y months, solo)" or "Large (X–Y months, team of N)" so the summary table is accurate.
 
@@ -419,13 +413,15 @@ Verdict: **COMPLETE** — game concept created and handed off for next steps.
 
 ## Engram persistence
 
-If `which engram` detects memory capabilities, each phase saves its key decisions (`topic_key: brainstorm/phase-1` through `phase-6`). When the document is written, a final record is saved:
+If Engram is enabled (check `.pi/game-studio/engram-enabled`), each phase saves
+its key decisions (`topic_key: brainstorm/phase-1` through `phase-6`).
+When the document is written, a final record is saved:
 
 ```
 engram_mem_save(
   title: "Game Concept: <working-title>",
   type: "decision",
   topic_key: "game-concept/<normalized-title>",
-  content: "**What**: Generated game concept for <title>\n**Why**: User requested brainstorm session\n**Where**: design/gdd/game-concept.md\n**Genre**: <genre>\n**Setting**: <setting>\n**Core Loop**: <elevator-pitch>"
+  content: "**What**: Generated game concept for <title>\n**Why**: User requested brainstorm session\n**Where**: design/game-concept.md\n**Genre**: <genre>\n**Setting**: <setting>\n**Core Loop**: <elevator-pitch>"
 )
 ```

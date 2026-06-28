@@ -3,7 +3,7 @@
 <p align="center">
   Turn a Pi session into a full game development studio.
   <br />
-  49 agents. 75 skills. One coordinated AI team.
+  49 agents. 75 skills. 38 templates. One coordinated AI team.
 </p>
 
 <p align="center">
@@ -11,7 +11,7 @@
   <a href="agents"><img src="https://img.shields.io/badge/agents-49-blueviolet" alt="49 Agents"></a>
   <a href="skills"><img src="https://img.shields.io/badge/skills-75-green" alt="75 Skills"></a>
   <a href="prompts"><img src="https://img.shields.io/badge/templates-38-orange" alt="38 Templates"></a>
-  <a href="extensions"><img src="https://img.shields.io/badge/hooks-5-red" alt="5 Hooks"></a>
+  <a href="extensions"><img src="https://img.shields.io/badge/hooks-4-red" alt="4 Hooks"></a>
   <img src="https://img.shields.io/badge/built%20for-Pi-8B5CF6?logo=pinokio" alt="Built for Pi">
 </p>
 
@@ -51,7 +51,7 @@ The result: you still make every decision, but now you have a team that asks the
 | **Agents**    | 49    | Specialized agents across design, programming, art, audio, narrative, QA, and production                                 |
 | **Skills**    | 75    | Slash commands for every workflow phase (`/start`, `/design-system`, `/create-epics`, `/dev-story`, `/story-done`, etc.) |
 | **Templates** | 38    | Document templates for GDDs, UX specs, ADRs, sprint plans, HUD design, accessibility, and more                           |
-| **Hooks**     | 5     | Automated validation on commits, pushes, skill changes, agent audit trail, and gap detection                             |
+| **Hooks**     | 4     | Automated validation on commits, pushes, skill changes, and session audit/gap detection                                  |
 | **Engram**    | 1     | Optional persistent memory — decisions auto-save across sessions when Engram is connected                                |
 | **Setup**     | 2     | `/setup` — install agents and model config; `/assign-models` — customize models per agent                                |
 
@@ -297,7 +297,7 @@ pi-game-studio/                     # Package root
 ├── prompts/                        # 38 document templates
 ├── extensions/                     # Hooks extension
 │   └── hooks/
-│       ├── index.ts                # 5 ported hooks
+│       ├── index.ts                # 4 ported hooks
 │       └── package.json
 └── scripts/                        # Utility scripts
 ```
@@ -327,6 +327,17 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
 
 ## Changelog
 
+### v0.3.0 — 2026-05-16
+
+- **Homologation pass** — aligned the Pi inventory with the current tree and normalized the public counts:
+  - 49 agents
+  - 75 skills
+  - 38 templates
+  - 4 runtime hooks
+- **README provenance note** — added explicit source/origin and Pi-homologation notes for upstream parity tracking
+- **Regression coverage** — added inventory tests so README counts stay in sync with the actual file tree
+- **Setup completion** — generated `.pi/gentle-ai/models.json` from `models.default.json`
+
 ### v0.2.0 — 2026-05-12
 
 - **`/brainstorm`** — rewritten with professional studio ideation structure:
@@ -341,11 +352,11 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
 
 ### v0.1.0 — 2026-05-11
 
-- Initial release. Port of CCGS (49 agents, 74 skills) to Pi package format.
+- Initial release. Port of CCGS (49 agents, 75 skills) to Pi package format.
   - 49 agents with `model: inherit` architecture
-  - 74 skills covering design → production → release
+  - 75 skills covering design → production → release
   - 38 document templates
-  - 5 hooks extension
+  - 4 hooks extension
   - SDD agents for structured development
   - Optional Engram integration
 
@@ -365,10 +376,17 @@ This project is a migration of **Claude Code Game Studios** to run natively on P
 
 ### Qué cambia este port
 
+- **Provenance**: README inventory counts reflect the current Pi tree; imported content and intentional Pi divergences are called out in the homologation note below.
+
 - **Plataforma**: Agents, skills y templates adaptados de `.claude/` (Claude Code) y `.opencode/` (OpenCode) al formato de package de Pi
 - **Arquitectura de modelos**: Todos los agents usan `model: inherit` en vez de tiers hardcodeados — los modelos se asignan via `models.json` (estilo Gentle AI)
 - **Sistema de package**: Todo se distribuye como un Pi package instalable (`pi install`), no una copia de archivos
 - **Integración con Engram**: Memoria persistente opcional para seguimiento de decisiones cross-session
+
+### Homologation note
+
+- Imported counts were normalized to the current Pi tree: 49 agents, 75 skills, 38 templates, 4 runtime hooks.
+- `extensions/hooks/index.ts` remains the single hook entrypoint; hook behavior is split across four handlers.
 
 Este port no existiría sin el trabajo fundacional de Donchitos y striderZA. Gracias.
 

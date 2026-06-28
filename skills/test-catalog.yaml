@@ -1,0 +1,23 @@
+skills:
+  - name: gate-check
+    category: gate
+    priority: critical
+    description: "Validate gate readiness before production"
+    spec: prompts/skill-test-spec/gate-check.md
+    last_static: null
+    last_static_result: null
+    last_spec: null
+    last_spec_result: null
+    last_category: null
+    last_category_result: null
+  - name: design-review
+    category: review
+    priority: critical
+    description: "Review design specifications and alignment"
+    spec: prompts/skill-test-spec/design-review.md
+    last_static: null
+    last_static_result: null
+    last_spec: null
+    last_spec_result: null
+    last_category: null
+    last_category_result: null

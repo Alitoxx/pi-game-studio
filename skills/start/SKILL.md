@@ -1,5 +1,6 @@
 ---
 name: start
+agent: game-designer
 description: "First-time onboarding — asks where you are, then guides you to the right workflow. No assumptions."
 model: inherit
 inheritProjectContext: true
@@ -22,13 +23,16 @@ Check:
 
 - **Engine configured?** Read `.pi/game-studio/technical-preferences.md`. If the Engine field contains `[TO BE CONFIGURED]`, the engine is not set.
 - **Game concept exists?** Check for `design/gdd/game-concept.md`.
+- **Setup completed?** Glob for `.pi/agents/**/*.md` and read `.pi/gentle-ai/models.json` to detect whether `/setup` ran.
 - **Source code exists?** Glob for source files in `src/` (`*.gd`, `*.cs`, `*.cpp`, `*.h`, `*.rs`, `*.py`, `*.js`, `*.ts`).
 - **Prototypes exist?** Check for subdirectories in `prototypes/`.
 - **Design docs exist?** Count markdown files in `design/gdd/`.
 - **Production artifacts?** Check for files in `production/sprints/` or `production/milestones/`.
-- **Engram status?** Run `bash which engram 2>/dev/null` to check if Engram CLI is installed. If it is, run `bash engram doctor --json 2>/dev/null` to check connection. Silently determine:
+- **Engram status?** Run `bash which engram 2>/dev/null` to check if Engram CLI is installed. If it is, run `bash engram doctor --json 2>/dev/null` to check connection. Also read `.pi/mcp.json` and `.pi/game-studio/engram-enabled` to confirm project-level Engram setup. Silently determine:
   - `engram_installed: true/false`
   - `engram_connected: true/false` (true only if doctor reports healthy connection)
+  - `engram_configured: true/false`
+  - `engram_enabled: true/false`
 
 Store these findings internally to validate the user's self-assessment and tailor recommendations.
 
@@ -38,7 +42,7 @@ Store these findings internally to validate the user's self-assessment and tailo
 
 This is the first thing the user sees. Use `ask_user_question` with these exact options so the user can click rather than type:
 
-- **Prompt**: "Welcome to Claude Code Game Studios! Before I suggest anything, I'd like to understand where you're starting from. Where are you at with your game idea right now?"
+- **Prompt**: "Welcome to Pi Game Studio! Before I suggest anything, I'd like to understand where you're starting from. Where are you at with your game idea right now?"
 - **Options**:
   - `A) No idea yet` — I don't have a game concept at all. I want to explore and figure out what to make.
   - `B) Vague idea` — I have a rough theme, feeling, or genre in mind (e.g., "something with space" or "a cozy farming game") but nothing concrete.
@@ -61,25 +65,7 @@ The user needs creative exploration before anything else.
 4. Show the recommended path:
    **Concept phase:**
    - `/brainstorm open` — discover your game concept
-   - `/setup-engine` — configure the engine (brainstorm will recommend one)
-   - `/art-bible` — define visual identity (uses the Visual Identity Anchor brainstorm produces)
-   - `/map-systems` — decompose the concept into systems
-   - `/design-system` — author a GDD for each MVP system
-   - `/review-all-gdds` — cross-system consistency check
-   - `/gate-check` — validate readiness before architecture work
-     **Architecture phase:**
-   - `/create-architecture` — produce the master architecture blueprint and Required ADR list
-   - `/architecture-decision (×N)` — record key technical decisions, following the Required ADR list
-   - `/create-control-manifest` — compile decisions into an actionable rules sheet
-   - `/architecture-review` — validate architecture coverage
-     **Pre-Production phase:**
-   - `/ux-design` — author UX specs for key screens (main menu, HUD, core interactions)
-   - `/prototype` — build a throwaway prototype to validate the core mechanic
-   - `/playtest-report (×1+)` — document each vertical slice playtest session
-   - `/create-epics` — map systems to epics
-   - `/create-stories` — break epics into implementable stories
-   - `/sprint-plan` — plan the first sprint
-     **Production phase:** → pick up stories with `/dev-story`
+   - Then follow the shared pipeline block below.
 
 #### If B: Vague idea
 
@@ -89,25 +75,7 @@ The user needs creative exploration before anything else.
 4. Show the recommended path:
    **Concept phase:**
    - `/brainstorm [hint]` — develop the idea into a full concept
-   - `/setup-engine` — configure the engine
-   - `/art-bible` — define visual identity (uses the Visual Identity Anchor brainstorm produces)
-   - `/map-systems` — decompose the concept into systems
-   - `/design-system` — author a GDD for each MVP system
-   - `/review-all-gdds` — cross-system consistency check
-   - `/gate-check` — validate readiness before architecture work
-     **Architecture phase:**
-   - `/create-architecture` — produce the master architecture blueprint and Required ADR list
-   - `/architecture-decision (×N)` — record key technical decisions, following the Required ADR list
-   - `/create-control-manifest` — compile decisions into an actionable rules sheet
-   - `/architecture-review` — validate architecture coverage
-     **Pre-Production phase:**
-   - `/ux-design` — author UX specs for key screens (main menu, HUD, core interactions)
-   - `/prototype` — build a throwaway prototype to validate the core mechanic
-   - `/playtest-report (×1+)` — document each vertical slice playtest session
-   - `/create-epics` — map systems to epics
-   - `/create-stories` — break epics into implementable stories
-   - `/sprint-plan` — plan the first sprint
-     **Production phase:** → pick up stories with `/dev-story`
+   - Then follow the shared pipeline block below.
 
 #### If C: Clear concept
 
@@ -120,25 +88,32 @@ The user needs creative exploration before anything else.
 3. Show the recommended path:
    **Concept phase:**
    - `/brainstorm` or `/setup-engine` — (their pick from step 2)
-   - `/art-bible` — define visual identity (after brainstorm if run, or after concept doc exists)
-   - `/design-review` — validate the concept doc
-   - `/map-systems` — decompose the concept into individual systems
-   - `/design-system` — author a GDD for each MVP system
-   - `/review-all-gdds` — cross-system consistency check
-   - `/gate-check` — validate readiness before architecture work
-     **Architecture phase:**
-   - `/create-architecture` — produce the master architecture blueprint and Required ADR list
-   - `/architecture-decision (×N)` — record key technical decisions, following the Required ADR list
-   - `/create-control-manifest` — compile decisions into an actionable rules sheet
-   - `/architecture-review` — validate architecture coverage
-     **Pre-Production phase:**
-   - `/ux-design` — author UX specs for key screens (main menu, HUD, core interactions)
-   - `/prototype` — build a throwaway prototype to validate the core mechanic
-   - `/playtest-report (×1+)` — document each vertical slice playtest session
-   - `/create-epics` — map systems to epics
-   - `/create-stories` — break epics into implementable stories
-   - `/sprint-plan` — plan the first sprint
-     **Production phase:** → pick up stories with `/dev-story`
+   - `/design-review` — validate the concept doc if they formalized it first
+   - Then follow the shared pipeline block below.
+
+#### Shared Concept → Architecture → Pre-Production → Production pipeline
+
+- `/setup-engine` — configure the engine
+- `/connect-engram` — connect cross-session decision memory
+- `/skill-test` — validate the onboarding workflow
+- `/art-bible` — define visual identity (uses the Visual Identity Anchor brainstorm produces)
+- `/map-systems` — decompose the concept into systems
+- `/design-system` — author a GDD for each MVP system
+- `/review-all-gdds` — cross-system consistency check
+- `/gate-check` — validate readiness before architecture work
+  **Architecture phase:**
+- `/create-architecture` — produce the master architecture blueprint and Required ADR list
+- `/architecture-decision (×N)` — record key technical decisions, following the Required ADR list
+- `/create-control-manifest` — compile decisions into an actionable rules sheet
+- `/architecture-review` — validate architecture coverage
+  **Pre-Production phase:**
+- `/ux-design` — author UX specs for key screens (main menu, HUD, core interactions)
+- `/prototype` — build a throwaway prototype to validate the core mechanic
+- `/playtest-report (×1+)` — document each vertical slice playtest session
+- `/create-epics` — map systems to epics
+- `/create-stories` — break epics into implementable stories
+- `/sprint-plan` — plan the first sprint
+  **Production phase:** → pick up stories with `/dev-story`
 
 #### If D: Existing work
 
@@ -234,7 +209,7 @@ When the user confirms their next step:
    engram_mem_save(
      title: "Game Studio onboarding",
      type: "config",
-     content: "**What**: User completed /start onboarding\n**Why**: Record the project state and user choices at session start\n**Where**: production/review-mode.txt\n**Learned**: User chose [path A/B/C/D] with [full/lean/solo] review mode. First step: [skill command]."
+     content: "**What**: User completed /start onboarding\n**Why**: Record the project state and user choices at session start\n**Where**: production/review-mode.txt\n**Learned**: Engine config: [configured engine or [TO BE CONFIGURED]]. Review mode: [full/lean/solo]. Chosen path: [A/B/C/D]. Engram status: [connected/not connected]. First step: [skill command]."
    )
    ```
 
@@ -250,7 +225,7 @@ Verdict: **COMPLETE** — user oriented and handed off to next step.
 
 - **User picks D but project is empty**: Gently redirect — "It looks like the project is a fresh template with no artifacts yet. Would Path A or B be a better fit?"
 - **User picks A but project has code**: Mention what you found — "I noticed there's already code in `src/`. Did you mean to pick D (existing work)?"
-- **User is returning (engine configured, concept exists)**: Skip onboarding entirely — "It looks like you're already set up! Your engine is [X] and you have a game concept at `design/gdd/game-concept.md`. Review mode: `[read from production/review-mode.txt, or 'lean (default)' if missing]`. Want to pick up where you left off? Try `/sprint-plan` or just tell me what you'd like to work on."
+- **User is returning (engine configured, concept exists)**: Check Engram for previous session context first, then skip onboarding entirely — "It looks like you're already set up! Your engine is [X] and you have a game concept at `design/gdd/game-concept.md`. Review mode: `[read from production/review-mode.txt, or 'lean (default)' if missing]`. Want to pick up where you left off? Try `/sprint-plan` or just tell me what you'd like to work on."
 - **User doesn't fit any option**: Let them describe their situation in their own words and adapt.
 
 ---

@@ -208,9 +208,9 @@ Type `/` in Pi to browse all 75 skills:
 
 `/team-combat` `/team-narrative` `/team-ui` `/team-release` `/team-polish` `/team-audio` `/team-level` `/team-live-ops` `/team-qa`
 
-### Package Admin
+### Studio Suite & Admin (`studio:*`)
 
-`/studio` `/setup` `/assign-models` `/connect-engram`
+`/studio` `/studio:setup` `/studio:models` `/studio:status` `/studio:agents` `/studio:settings` `/setup` `/assign-models` `/connect-engram`
 
 ## Getting Started
 
@@ -327,6 +327,19 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
 - **Quality gates.** Director gates (APPROVE / CONCERNS / REJECT) prevent advancing with unresolved issues.
 
 ## Changelog
+
+### v0.5.1 — 2026-09-25
+
+- **Studio Suite Extension Commands (`studio:*`)**: Implemented dedicated TypeScript extension command namespace inspired by Gentle Shell:
+  - `/studio:setup` — Interactive studio installation (Automatic 1-click or Manual guided wizard), updates, and diagnostics.
+  - `/studio:models` — Interactive AI model configuration by tier or individual agents with dynamic provider discovery.
+  - `/studio:status` — Live dashboard and diagnostic health check for studio files and dependencies.
+  - `/studio:agents` — Interactive directory and role browser for all 50 studio agents.
+  - `/studio:settings` — Interactive project configuration manager for game engine and language.
+  - `/studio:help` / `/studio` — Comprehensive studio command palette and category navigator.
+- **Dynamic Provider & Model Discovery Engine**: Automatic detection of configured providers from Pi runtime (`ctx.modelRegistry`, `~/.pi/agent/models-store.json`, `auth.json`) with role-tailored model recommendations (Directors, Workhorses, Lightweight).
+- **Dual Setup Mode (Automatic vs Manual)**: Choose between 1-click instant setup or step-by-step customization of game engine (Godot, Unity, Unreal, Bevy), language (es/en), and model assignments per tier or agent.
+- **Pi TUI Compatibility**: Fixed `ctx.ui.select` string return handling and integrated `ctx.ui.notify` for visual feedback in Pi TUI mode.
 
 ### v0.5.0 — 2026-09-25
 

@@ -42,7 +42,7 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 	const lines: string[] = [];
 
 	// Package version detection
-	let version = "0.5.0";
+	let version = "0.5.1";
 	try {
 		const pkgUrl = new URL("../../package.json", import.meta.url);
 		if (existsSync(pkgUrl)) {
@@ -155,7 +155,7 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 		lines.push(
 			center(
 				formatRow(
-					`${GOLD}${BOLD}💡 TIPS     ${RESET}${DIM}:${RESET} ${WHITE}/studio${RESET} ${DIM}(Comandos)${RESET} · ${WHITE}/start${RESET} ${DIM}(Inicio)${RESET} · ${WHITE}/settings${RESET} ${DIM}(Config)${RESET}`,
+					`${GOLD}${BOLD}💡 TIPS     ${RESET}${DIM}:${RESET} ${WHITE}/studio${RESET} ${DIM}(Menú)${RESET} · ${WHITE}/studio:setup${RESET} ${DIM}(Setup)${RESET} · ${WHITE}/start${RESET} ${DIM}(Inicio)${RESET}`,
 					boxWidth,
 				),
 				width,
@@ -167,7 +167,7 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 		lines.push(center(`${VIOLET}${BOLD}🎮 PI GAME STUDIO v${version}${RESET}`, width));
 		lines.push(center(`${CYAN}50 Agentes · 77 Skills · 43 Templates · 4 Hooks${RESET}`, width));
 		lines.push(center(`${WHITE}Motores: ${engineInfo}${RESET}`, width));
-		lines.push(center(`${GOLD}💡 Usa /studio o /start para comenzar con tu videojuego${RESET}`, width));
+		lines.push(center(`${GOLD}💡 Usa /studio o /studio:setup para comenzar con tu videojuego${RESET}`, width));
 	}
 
 	return lines;

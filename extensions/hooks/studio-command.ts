@@ -86,9 +86,11 @@ export const STUDIO_CATEGORIES: StudioCategory[] = [
 		emoji: "⚙️",
 		description: "Ajustes de estudio, modelos y memoria",
 		commands: [
-			{ cmd: "/settings", desc: "Gestor interactivo de project.yaml" },
-			{ cmd: "/setup", desc: "Instalación guiada de agentes y configuración inicial" },
-			{ cmd: "/assign-models", desc: "Personalizar modelos LLM por nivel o agente" },
+			{ cmd: "/studio:setup", desc: "Instalación guiada de agentes y configuración inicial" },
+			{ cmd: "/studio:models", desc: "Personalizar modelos LLM por nivel o agente" },
+			{ cmd: "/studio:status", desc: "Dashboard en vivo de estado y métricas del estudio" },
+			{ cmd: "/studio:agents", desc: "Catálogo interactivo de los 50 agentes del estudio" },
+			{ cmd: "/studio:settings", desc: "Gestor interactivo de project.yaml y motor" },
 			{ cmd: "/connect-engram", desc: "Vincular memoria persistente entre sesiones" },
 		],
 	},
@@ -127,12 +129,15 @@ export async function handleStudioCommand(
 			"📖 Ver todos los comandos",
 		];
 
-		const selectedIndex = await (ctx.ui as any).select(
+		const selected = await (ctx.ui as any).select(
 			"🎮 Pi Game Studio — Catálogo de Comandos",
 			options,
 		);
 
-		if (selectedIndex === undefined) return;
+		if (selected === undefined || selected === null) return;
+
+		const selectedIndex = typeof selected === "number" ? selected : options.indexOf(selected);
+		if (selectedIndex === -1) return;
 
 		if (selectedIndex < STUDIO_CATEGORIES.length) {
 			renderCategory(STUDIO_CATEGORIES[selectedIndex]);

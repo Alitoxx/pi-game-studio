@@ -86,6 +86,7 @@ const TIERS = {
 		"ue-blueprint-specialist",
 		"ue-replication-specialist",
 		"ue-umg-specialist",
+		"bevy-specialist",
 	],
 	lightweight: [...LIGHTWEIGHT_AGENTS],
 };

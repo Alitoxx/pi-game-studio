@@ -3,14 +3,14 @@
 <p align="center">
   Turn a Pi session into a full game development studio.
   <br />
-  49 agents. 75 skills. 38 templates. One coordinated AI team.
+  50 agents. 77 skills. 43 templates. One coordinated AI team.
 </p>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
-  <a href="agents"><img src="https://img.shields.io/badge/agents-49-blueviolet" alt="49 Agents"></a>
-  <a href="skills"><img src="https://img.shields.io/badge/skills-75-green" alt="75 Skills"></a>
-  <a href="prompts"><img src="https://img.shields.io/badge/templates-38-orange" alt="38 Templates"></a>
+  <a href="agents"><img src="https://img.shields.io/badge/agents-50-blueviolet" alt="50 Agents"></a>
+  <a href="skills"><img src="https://img.shields.io/badge/skills-77-green" alt="77 Skills"></a>
+  <a href="prompts"><img src="https://img.shields.io/badge/templates-43-orange" alt="43 Templates"></a>
   <a href="extensions"><img src="https://img.shields.io/badge/hooks-4-red" alt="4 Hooks"></a>
   <img src="https://img.shields.io/badge/built%20for-Pi-8B5CF6?logo=pinokio" alt="Built for Pi">
 </p>
@@ -21,7 +21,7 @@
 
 Building a game solo with AI is powerful — but a single chat session has no structure. No one stops you from hardcoding magic numbers, skipping design docs, or writing spaghetti code. There's no QA pass, no design review, no one asking "does this actually fit the game's vision?"
 
-**Pi Game Studio** solves this by giving your AI session the structure of a real studio. Instead of one general-purpose assistant, you get 49 specialized agents organized into a studio hierarchy — directors who guard the vision, department leads who own their domains, and specialists who do the hands-on work. Each agent has defined responsibilities, escalation paths, and quality gates.
+**Pi Game Studio** solves this by giving your AI session the structure of a real studio. Instead of one general-purpose assistant, you get 50 specialized agents organized into a studio hierarchy — directors who guard the vision, department leads who own their domains, and specialists who do the hands-on work. Each agent has defined responsibilities, escalation paths, and quality gates.
 
 The result: you still make every decision, but now you have a team that asks the right questions, catches mistakes early, and keeps your project organized from first brainstorm to launch.
 
@@ -48,9 +48,9 @@ The result: you still make every decision, but now you have a team that asks the
 
 | Category      | Count | Description                                                                                                              |
 | ------------- | ----- | ------------------------------------------------------------------------------------------------------------------------ |
-| **Agents**    | 49    | Specialized agents across design, programming, art, audio, narrative, QA, and production                                 |
-| **Skills**    | 75    | Slash commands for every workflow phase (`/start`, `/design-system`, `/create-epics`, `/dev-story`, `/story-done`, etc.) |
-| **Templates** | 38    | Document templates for GDDs, UX specs, ADRs, sprint plans, HUD design, accessibility, and more                           |
+| **Agents**    | 50    | Specialized agents across design, programming, art, audio, narrative, QA, and production                                 |
+| **Skills**    | 77    | Slash commands for every workflow phase (`/start`, `/settings`, `/prototype`, `/vertical-slice`, `/dev-story`, etc.)     |
+| **Templates** | 43    | Document templates for GDDs, UX specs, ADRs, sprint plans, vertical slice reports, game briefs, and more                  |
 | **Hooks**     | 4     | Automated validation on commits, pushes, skill changes, and session audit/gap detection                                  |
 | **Engram**    | 1     | Optional persistent memory — decisions auto-save across sessions when Engram is connected                                |
 | **Setup**     | 2     | `/setup` — install agents and model config; `/assign-models` — customize models per agent                                |
@@ -88,7 +88,7 @@ Tier 3 — Specialists
   world-builder        ux-designer           prototyper
   performance-analyst  devops-engineer       analytics-engineer
   security-engineer    qa-tester             accessibility-specialist
-  live-ops-designer    community-manager
+  live-ops-designer    community-manager     bevy-specialist
 ```
 
 ### Engine Specialists
@@ -98,6 +98,7 @@ Tier 3 — Specialists
 | **Godot 4**         | `godot-specialist`  | GDScript, Shaders, GDExtension                  |
 | **Unity**           | `unity-specialist`  | DOTS/ECS, Shaders/VFX, Addressables, UI Toolkit |
 | **Unreal Engine 5** | `unreal-specialist` | GAS, Blueprints, Replication, UMG/CommonUI      |
+| **Bevy (Rust)**     | `bevy-specialist`   | ECS, 2D/3D (wgpu), bevy_ui, Assets, Cargo/WASM  |
 
 ## Model Mapping
 
@@ -327,6 +328,17 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
 
 ## Changelog
 
+### v0.4.0 — 2026-09-24
+
+- **Dual Upstream Homologation Pass** — synchronized with CCGS (Donchitos v1.1.1) and OCGS (striderZA v0.13.0):
+  - **50 agents** (+`bevy-specialist` covering Bevy 0.19 / Rust ECS, wgpu 2D/3D, bevy_ui, audio, input, Cargo/WASM)
+  - **77 skills** (+`/vertical-slice` for pre-production loop validation; +`/settings` for project configuration; updated `/prototype` with `--spike` mode; updated `/setup-engine`)
+  - **43 templates** (+`game-brief.md`, `prototype-report.md`, `vertical-slice-report.md`, `session-state.md`, `SKILL-CONTRACT-TEMPLATE.md`)
+  - **4 runtime hooks**
+- **Unified Configuration**: added `project.yaml` support with `/settings` and `scripts/yaml-helper.sh`
+- **Prototype Overhaul**: `/prototype` updated with concept validation, `--spike` mode (4-hour technical spikes), and updated `prototyper` agent
+- **Engine Reference & Support**: Added Bevy Engine reference docs (`docs/engine-reference/bevy/`) and specialist routing in `/setup-engine`
+
 ### v0.3.0 — 2026-05-16
 
 - **Homologation pass** — aligned the Pi inventory with the current tree and normalized the public counts:
@@ -385,7 +397,7 @@ This project is a migration of **Claude Code Game Studios** to run natively on P
 
 ### Homologation note
 
-- Imported counts were normalized to the current Pi tree: 49 agents, 75 skills, 38 templates, 4 runtime hooks.
+- Imported counts were normalized to the current Pi tree: 50 agents, 77 skills, 43 templates, 4 runtime hooks.
 - `extensions/hooks/index.ts` remains the single hook entrypoint; hook behavior is split across four handlers.
 
 Este port no existiría sin el trabajo fundacional de Donchitos y striderZA. Gracias.

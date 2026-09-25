@@ -36,7 +36,7 @@ If no engine is specified, run an interactive engine selection process:
 
 **Question 1 — Prior experience** (ask this first, always, via `ask_user_question`):
 - Prompt: "Have you worked in any of these engines before?"
-- Options: `Godot` / `Unity` / `Unreal Engine 5` / `Multiple — I'll explain` / `None of them`
+- Options: `Godot` / `Unity` / `Unreal Engine 5` / `Bevy (Rust engine)` / `Multiple — I'll explain` / `None of them`
 - If they pick a specific engine → recommend that engine. Prior experience outweighs all other factors. Confirm with them and skip the matrix.
 - If "None" or "Multiple" → continue to the questions below.
 
@@ -81,10 +81,17 @@ Do NOT use a simple scoring matrix that eliminates engines. Instead, reason thro
 - Real limitations: Steepest learning curve; heaviest editor (slow compile times, large project sizes); overkill for stylized/2D/small-scope games; C++ is genuinely hard; not suitable for mobile or web; 5% royalty past $1M gross revenue
 - Licensing reality: 5% royalty only applies AFTER $1M gross revenue per title. For a first game or any game that doesn't reach $1M, it costs nothing. This threshold is high enough that most indie developers will never pay it.
 - Best fit: AAA-quality 3D; large open-world games; photorealistic visuals; developers with C++ experience or willing to use Blueprint; games targeting high-end PC/console where visual fidelity is a core selling point
+ 
+**Bevy**
+- Genuine strengths: Modern Rust with strong type safety; ECS-first data-oriented design scales well for systems-heavy gameplay; free forever (MIT OR Apache-2.0); fast iteration with hot reload; solid 2D and capable 3D (wgpu); rapidly growing ecosystem and community
+- Real limitations: No visual editor — everything is code; fast release cadence (breaking changes roughly every 3 months) means frequent migration work; steep Rust learning curve for non-Rust teams; smaller asset/tutorial ecosystem than Godot or Unity; console support is weak; mobile/web require extra tooling (WASM/NDK)
+- Licensing reality: MIT OR Apache-2.0 — completely free with no restrictions whatsoever
+- Best fit: Systems-heavy 2D or 3D games; teams already proficient in Rust; projects that value data-oriented ECS architecture; prototypes to mid-scope games
 
 **Genre-specific guidance** (factor this into the recommendation):
 - 2D any style → Godot strongly preferred
 - 3D stylized / atmospheric / contained world → Godot viable, Unity solid alternative
+- Rust teams / systems-heavy gameplay → Bevy (ECS-first; capable in both 2D and 3D)
 - 3D open world (large, seamless) → Unity or Unreal; Godot is not production-proven for this
 - 3D photorealistic / AAA-quality → Unreal
 - Mobile-first → Unity strongly preferred
@@ -713,3 +720,25 @@ Use GDScript conventions for `.gd` files and C# conventions for `.cs` files. Mix
 | Native extension / plugin files (.gdextension, C++) | godot-gdextension-specialist |
 | General architecture review | godot-specialist |
 ```
+
+**Bevy (Rust):**
+```markdown
+## Engine Specialists
+- **Primary**: bevy-specialist
+- **Language/Code Specialist**: bevy-specialist (Rust — single specialist covers all code)
+- **Shader Specialist**: bevy-specialist (WGSL shaders, wgpu materials)
+- **UI Specialist**: bevy-specialist (bevy_ui)
+- **Additional Specialists**: None
+- **Routing Notes**: Invoke primary for all Bevy code, Cargo build, and architecture decisions. The single specialist covers ECS, rendering, UI, assets, audio, and input.
+
+### File Extension Routing
+
+| File Extension / Type | Specialist to Spawn |
+|-----------------------|---------------------|
+| Game code (.rs files) | bevy-specialist |
+| Shader files (.wgsl) | bevy-specialist |
+| Asset / scene files (.ron, .gltf, .scene) | bevy-specialist |
+| Cargo / build files (Cargo.toml, Cargo.lock) | bevy-specialist |
+| General architecture review | bevy-specialist |
+```
+

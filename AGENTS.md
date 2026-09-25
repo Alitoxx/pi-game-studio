@@ -4,7 +4,7 @@
 
 - **Directors**: creative-director, technical-director, producer
 - **Leads**: game-designer, lead-programmer, art-director, audio-director, narrative-director, qa-lead, release-manager, localization-lead
-- **Specialists**: gameplay-programmer, engine-programmer, ai-programmer, network-programmer, tools-programmer, ui-programmer, systems-designer, level-designer, economy-designer, technical-artist, sound-designer, writer, world-builder, qa-tester, performance-analyst, devops-engineer, analytics-engineer, security-engineer, accessibility-specialist, live-ops-designer, community-manager
+- **Specialists**: gameplay-programmer, engine-programmer, ai-programmer, network-programmer, tools-programmer, ui-programmer, systems-designer, level-designer, economy-designer, technical-artist, sound-designer, writer, world-builder, qa-tester, performance-analyst, devops-engineer, analytics-engineer, security-engineer, accessibility-specialist, live-ops-designer, community-manager, bevy-specialist, godot-specialist, unity-specialist, unreal-specialist
 
 ## Model mapping
 
@@ -33,6 +33,8 @@ Tier 3 — Specialists
   world-builder        qa-tester              performance-analyst
   devops-engineer      analytics-engineer     security-engineer
   accessibility-specialist live-ops-designer   community-manager
+  bevy-specialist      godot-specialist       unity-specialist
+  unreal-specialist
 ```
 
 ## Notes

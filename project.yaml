@@ -1,0 +1,17 @@
+# Pi Game Studio project configuration — single source of truth for project settings.
+
+schema_version: 1
+
+framework:
+  version: 0.3.0
+  last_upgraded: 2026-09-24
+
+# NOTE: this template ships with no `modes:` block by default.
+# `/start` adds `modes.rigor` and `modes.automation` here during project setup.
+#
+# What stays absent are the knobs `modes.rigor` fronts:
+# `modes.review_mode`, `modes.workflow`, `docs.density`, `qa.level`,
+# `modes.story_granularity` and `team.size`.
+#
+# Per-developer preferences belong in `project.local.yaml` (gitignored).
+# `/settings <key>=<value>` writes to project.yaml or project.local.yaml with --local.

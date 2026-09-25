@@ -2,7 +2,14 @@
 name: localization-lead
 description: "Owns internationalization architecture, string management, locale testing, and translation pipeline. Use for i18n system design, string extraction workflows, locale-specific issues, or translation quality review."
 model: inherit
-tools: read, glob, grep, write, edit, Bash
+thinking: medium
+tools:
+  - read
+  - glob
+  - grep
+  - write
+  - edit
+  - bash
 inheritProjectContext: true
 ---
 

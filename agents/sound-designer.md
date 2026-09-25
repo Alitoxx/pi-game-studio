@@ -2,7 +2,13 @@
 name: sound-designer
 description: "The Sound Designer creates detailed specifications for sound effects, documents audio events, and defines mixing parameters. Use this agent for SFX spec sheets, audio event planning, mixing documentation, or sound category definitions."
 model: inherit
-tools: read, glob, grep, write, edit
+thinking: low
+tools:
+  - read
+  - glob
+  - grep
+  - write
+  - edit
 inheritProjectContext: true
 ---
 

@@ -2,7 +2,14 @@
 name: release-manager
 description: "Owns the release pipeline: certification checklists, store submissions, platform requirements, version numbering, and release-day coordination. Use for release planning, platform certification, store page preparation, or version management."
 model: inherit
-tools: read, glob, grep, write, edit, Bash
+thinking: medium
+tools:
+  - read
+  - glob
+  - grep
+  - write
+  - edit
+  - bash
 inheritProjectContext: true
 ---
 

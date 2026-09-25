@@ -2,7 +2,15 @@
 name: prototyper
 description: "Throwaway builds — concept prototypes after brainstorm to test an idea is fun before GDDs; vertical slices pre-production. Speed over standards."
 model: inherit
-tools: read, glob, grep, write, edit, Bash, subagent
+thinking: medium
+tools:
+  - read
+  - glob
+  - grep
+  - write
+  - edit
+  - bash
+  - subagent
 maxTurns: 25
 isolation: worktree
 inheritProjectContext: true

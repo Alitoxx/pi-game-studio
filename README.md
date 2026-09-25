@@ -106,11 +106,11 @@ Pi Game Studio uses **model inheritance**: all agents ship with `model: inherit`
 
 The recommended model assignment lives in `models.default.json`:
 
-| Tier                      | Default model                         | Rationale                                                                     |
-| ------------------------- | ------------------------------------- | ----------------------------------------------------------------------------- |
-| **Directors** (Tier 1)    | `openai-codex/gpt-5.4-mini`           | Heaviest model for strategic planning, architecture, and cross-team decisions |
-| **Workhorses** (Tier 2–3) | `openrouter/openai/gpt-oss-120b:free` | Balanced model for day-to-day design, implementation, and review              |
-| **Lightweight** (Special) | `openrouter/openai/gpt-oss-20b:free`  | Fast model for simple, repetitive tasks                                       |
+| Tier                      | Default model                         | Thinking Effort | Rationale                                                                     |
+| ------------------------- | ------------------------------------- | --------------- | ----------------------------------------------------------------------------- |
+| **Directors** (Tier 1)    | `openai-codex/gpt-5.4-mini`           | `high`          | Heaviest model for strategic planning, architecture, and cross-team decisions |
+| **Workhorses** (Tier 2–3) | `openrouter/openai/gpt-oss-120b:free` | `medium`        | Balanced model for day-to-day design, implementation, and review              |
+| **Lightweight** (Special) | `openrouter/openai/gpt-oss-20b:free`  | `low`           | Fast model for simple, repetitive tasks, logs, and community updates          |
 
 After running `/setup`, the mapping is written to `.pi/gentle-ai/models.json`. You can edit it directly or use `/assign-models` to change models interactively.
 
@@ -327,6 +327,18 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
 - **Quality gates.** Director gates (APPROVE / CONCERNS / REJECT) prevent advancing with unresolved issues.
 
 ## Changelog
+
+### v0.6.0 — 2026-09-25
+
+- **Gentle Shell Architectural Homologation**:
+  - **Thinking Effort Hierarchy**: Structured all 50 studio agents with explicit `thinking:` frontmatter budgets (`high` for Tier 1 Directors, `medium` for Tier 2 Leads & Core Specialists, `low` for Tier 3 Lightweight tasks).
+  - **YAML List Tool Format**: Standardized `tools:` across all 50 agents to native YAML list format (`- read`, `- grep`, etc.) with normalized lowercase identifiers.
+  - **Studio Multi-Agent Chains (`chains/`)**: Added declarative multi-agent pipelines inspired by Gentle Shell:
+    - `chains/gdd-review.chain.md`: Full Game Design Document audit (`creative-director` ➔ `game-designer` ➔ `technical-director` ➔ `producer`).
+    - `chains/feature-implement.chain.md`: End-to-end feature pipeline (`game-designer` ➔ `lead-programmer` ➔ `gameplay-programmer` ➔ `qa-tester`).
+    - `chains/release-gate.chain.md`: Milestone and release audit (`qa-lead` ➔ `performance-analyst` ➔ `security-engineer` ➔ `release-manager`).
+  - **New Extension Command `/studio:chains`**: Interactive chain browser, step visualizer, and pipeline launcher in Pi TUI.
+  - **Interactive Thinking Effort Tuning in `/studio:models`**: Added direct reasoning effort adjuster (High, Medium, Low, Off) per tier or per individual agent.
 
 ### v0.5.3 — 2026-09-25
 

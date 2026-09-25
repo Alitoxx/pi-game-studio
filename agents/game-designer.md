@@ -2,7 +2,14 @@
 name: game-designer
 description: "The Game Designer owns the mechanical and systems design of the game. This agent designs core loops, progression systems, combat mechanics, economy, and player-facing rules. Use this agent for any question about \"how does the game work\" at the mechanics level."
 model: inherit
-tools: read, glob, grep, write, edit, web_search
+thinking: medium
+tools:
+  - read
+  - glob
+  - grep
+  - write
+  - edit
+  - web_search
 inheritProjectContext: true
 ---
 

@@ -2,7 +2,13 @@
 name: writer
 description: "The Writer creates dialogue, lore entries, item descriptions, environmental text, and all player-facing written content. Use this agent for dialogue writing, lore creation, item/ability descriptions, or in-game text of any kind."
 model: inherit
-tools: read, glob, grep, write, edit
+thinking: medium
+tools:
+  - read
+  - glob
+  - grep
+  - write
+  - edit
 inheritProjectContext: true
 ---
 

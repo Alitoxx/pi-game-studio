@@ -2,7 +2,14 @@
 name: engine-programmer
 description: "The Engine Programmer works on core engine systems: rendering pipeline, physics, memory management, resource loading, scene management, and core framework code. Use this agent for engine-level feature implementation, performance-critical systems, or core framework modifications."
 model: inherit
-tools: read, glob, grep, write, edit, Bash
+thinking: medium
+tools:
+  - read
+  - glob
+  - grep
+  - write
+  - edit
+  - bash
 inheritProjectContext: true
 ---
 

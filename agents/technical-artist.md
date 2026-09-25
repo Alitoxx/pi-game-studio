@@ -2,7 +2,14 @@
 name: technical-artist
 description: "The Technical Artist bridges art and engineering: shaders, VFX, rendering optimization, art pipeline tools, and performance profiling for visual systems. Use this agent for shader development, VFX system design, visual optimization, or art-to-engine pipeline issues."
 model: inherit
-tools: read, glob, grep, write, edit, Bash
+thinking: medium
+tools:
+  - read
+  - glob
+  - grep
+  - write
+  - edit
+  - bash
 inheritProjectContext: true
 ---
 

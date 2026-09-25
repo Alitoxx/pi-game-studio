@@ -14,6 +14,7 @@ import { handleStudioModels } from "./studio-models.ts";
 import { handleStudioStatus } from "./studio-status.ts";
 import { handleStudioAgents } from "./studio-agents.ts";
 import { handleStudioSettings } from "./studio-settings.ts";
+import { handleStudioChains } from "./studio-chains.ts";
 
 export default function (pi: ExtensionAPI) {
 	// ──────────────────────────────────────────────
@@ -57,6 +58,22 @@ export default function (pi: ExtensionAPI) {
 		description: "🎮 [Studio] Catálogo interactivo de los 50 agentes y sus especialidades",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioAgents(args, ctx);
+		},
+	});
+
+	// /studio:chains — Cadenas multi-agente guiadas
+	(pi as any).registerCommand?.("studio:chains", {
+		description: "🎮 [Studio] Cadenas de ejecución multi-agente para GDD, mecánicas y release",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioChains(args, ctx);
+		},
+	});
+
+	// /studio:chain — Alias singular de cadenas
+	(pi as any).registerCommand?.("studio:chain", {
+		description: "🎮 [Studio] Cadenas de ejecución multi-agente para GDD, mecánicas y release",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioChains(args, ctx);
 		},
 	});
 

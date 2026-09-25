@@ -2,7 +2,14 @@
 name: ai-programmer
 description: "The AI Programmer implements game AI systems: behavior trees, state machines, pathfinding, perception systems, decision-making, and NPC behavior. Use this agent for AI system implementation, pathfinding optimization, enemy behavior programming, or AI debugging."
 model: inherit
-tools: read, glob, grep, write, edit, Bash
+thinking: medium
+tools:
+  - read
+  - glob
+  - grep
+  - write
+  - edit
+  - bash
 inheritProjectContext: true
 ---
 

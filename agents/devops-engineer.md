@@ -2,7 +2,14 @@
 name: devops-engineer
 description: "The DevOps Engineer maintains build pipelines, CI/CD configuration, version control workflow, and deployment infrastructure. Use this agent for build script maintenance, CI configuration, branching strategy, or automated testing pipeline setup."
 model: inherit
-tools: read, glob, grep, write, edit, Bash
+thinking: low
+tools:
+  - read
+  - glob
+  - grep
+  - write
+  - edit
+  - bash
 inheritProjectContext: true
 ---
 

@@ -1,5 +1,5 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { promptModelForRole } from "./provider-resolver.ts";
 
@@ -66,6 +66,7 @@ export async function handleStudioModels(
 			"🔄 Modo 'inherit' (Heredar el modelo activo de la sesión de Pi en todos los agentes)",
 			"🎯 Personalizar modelos por Nivel / Tier (Directores, Workhorses, Ligeros)",
 			"👤 Asignar modelo a un agente específico",
+			"🧠 Ajustar presupuesto de razonamiento (Thinking Effort: High, Medium, Low)",
 			"📋 Ver asignación actual de modelos",
 		];
 
@@ -94,7 +95,10 @@ export async function handleStudioModels(
 				saveModelsConfig(ctx, updated);
 				break;
 			}
-			case 4: {
+			case 4:
+				await configureThinkingEffort(ctx);
+				break;
+			case 5: {
 				const list = formatModelsList(currentConfig);
 				if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 					ctx.ui.notify(list, "info");
@@ -324,4 +328,102 @@ async function promptInputSafe(
 		} catch {}
 	}
 	return defaultValue;
+}
+
+async function configureThinkingEffort(ctx: ExtensionContext): Promise<void> {
+	const targets = [
+		"👑 Tier 1 — Directores (creative-director, technical-director, producer)",
+		"💻 Tier 2 — Workhorses & Leads (gameplay, engine, systems, etc.)",
+		"🚀 Tier 3 — Ligeros & Soporte (community-manager, devops, sound)",
+		"👤 Personalizar un agente específico...",
+	];
+
+	const targetChoice = await promptSelectSafe(
+		ctx,
+		"Selecciona el grupo o agente para ajustar su Thinking Effort:",
+		targets,
+	);
+	if (!targetChoice) return;
+
+	const effortLevels = [
+		"high (Pensamiento profundo, ideal para arquitectura y visión)",
+		"medium (Balanceado, ideal para programación y diseño)",
+		"low (Rápido y conciso, ideal para tareas operativas)",
+		"off (Sin razonamiento explícito)",
+	];
+
+	const effortChoice = await promptSelectSafe(
+		ctx,
+		"Selecciona el nivel de razonamiento deseado:",
+		effortLevels,
+	);
+	if (!effortChoice) return;
+
+	const level = ["high", "medium", "low", "off"][effortChoice.index];
+	const pkgRoot = resolvePackageRoot();
+	const agentsDirs = [join(ctx.cwd, ".pi", "agents"), join(pkgRoot, "agents")].filter(existsSync);
+
+	const TIER_1 = ["creative-director", "technical-director", "producer"];
+	const TIER_3 = ["community-manager", "devops-engineer", "sound-designer"];
+
+	let affectedCount = 0;
+
+	if (targetChoice.index === 0) {
+		affectedCount = updateAgentsThinking(agentsDirs, TIER_1, level);
+	} else if (targetChoice.index === 1) {
+		affectedCount = updateAgentsThinking(
+			agentsDirs,
+			(name) => !TIER_1.includes(name) && !TIER_3.includes(name),
+			level,
+		);
+	} else if (targetChoice.index === 2) {
+		affectedCount = updateAgentsThinking(agentsDirs, TIER_3, level);
+	} else {
+		const agentName = await promptInputSafe(
+			ctx,
+			"Nombre del agente (ej. gameplay-programmer):",
+			"gameplay-programmer",
+		);
+		affectedCount = updateAgentsThinking(agentsDirs, [agentName], level);
+	}
+
+	const msg = `✔ Presupuesto de razonamiento (thinking) actualizado a '${level}' (${affectedCount} archivos).`;
+	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
+		ctx.ui.notify(msg, "info");
+	} else {
+		console.log(msg);
+	}
+}
+
+function updateAgentsThinking(
+	dirs: string[],
+	filter: string[] | ((name: string) => boolean),
+	level: string,
+): number {
+	let count = 0;
+	const isMatch = Array.isArray(filter) ? (n: string) => filter.includes(n) : filter;
+
+	for (const dir of dirs) {
+		if (!existsSync(dir)) continue;
+		try {
+			const files = readdirSync(dir).filter((f) => f.endsWith(".md"));
+			for (const f of files) {
+				const name = f.replace(".md", "");
+				if (!isMatch(name)) continue;
+				const fullPath = join(dir, f);
+				const content = readFileSync(fullPath, "utf8");
+				let updated = content;
+				if (/^thinking:\s*[^\n]+/m.test(content)) {
+					updated = content.replace(/^thinking:\s*[^\n]+/m, `thinking: ${level}`);
+				} else {
+					updated = content.replace(/^---\n/, `---\nthinking: ${level}\n`);
+				}
+				if (updated !== content) {
+					writeFileSync(fullPath, updated, "utf8");
+					count++;
+				}
+			}
+		} catch {}
+	}
+	return count;
 }

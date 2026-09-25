@@ -2,7 +2,15 @@
 name: producer
 description: "The Producer manages all production concerns: sprint planning, milestone tracking, risk management, scope negotiation, and cross-department coordination. This is the primary coordination agent. Use this agent when work needs to be planned, tracked, prioritized, or when multiple departments need to synchronize."
 model: inherit
-tools: read, glob, grep, write, edit, Bash, web_search
+thinking: high
+tools:
+  - read
+  - glob
+  - grep
+  - write
+  - edit
+  - bash
+  - web_search
 inheritProjectContext: true
 ---
 

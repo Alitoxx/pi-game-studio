@@ -88,6 +88,7 @@ export const STUDIO_CATEGORIES: StudioCategory[] = [
 		commands: [
 			{ cmd: "/studio:setup", desc: "Instalación guiada de agentes y configuración inicial" },
 			{ cmd: "/studio:models", desc: "Personalizar modelos LLM por nivel o agente" },
+			{ cmd: "/studio:chains", desc: "Pipelines multi-agente guiados (GDD, features, release)" },
 			{ cmd: "/studio:status", desc: "Dashboard en vivo de estado y métricas del estudio" },
 			{ cmd: "/studio:agents", desc: "Catálogo interactivo de los 50 agentes del estudio" },
 			{ cmd: "/studio:settings", desc: "Gestor interactivo de project.yaml y motor" },

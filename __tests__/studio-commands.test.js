@@ -28,6 +28,7 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 			"studio:models",
 			"studio:status",
 			"studio:agents",
+			"studio:chains",
 			"studio:settings",
 			"studio:help",
 		];
@@ -64,6 +65,7 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 			"studio-models.ts",
 			"studio-command.ts",
 			"studio-agents.ts",
+			"studio-chains.ts",
 			"studio-settings.ts",
 		];
 
@@ -75,6 +77,32 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 			if (source.includes(".select(")) {
 				expect(source).toContain("indexOf(");
 			}
+		}
+	});
+
+	test("all 50 agents define structured YAML tools and thinking effort levels", () => {
+		const agentsDir = path.join(__dirname, "..", "agents");
+		const agentFiles = fs.readdirSync(agentsDir).filter((f) => f.endsWith(".md"));
+		expect(agentFiles.length).toBe(50);
+
+		for (const f of agentFiles) {
+			const content = fs.readFileSync(path.join(agentsDir, f), "utf8");
+			expect(content).toMatch(/^thinking:\s*(high|medium|low)/m);
+			expect(content).toMatch(/^tools:\n(\s+-\s+[a-z_]+\n)+/m);
+		}
+	});
+
+	test("studio multi-agent chains exist and contain valid steps", () => {
+		const chainsDir = path.join(__dirname, "..", "chains");
+		expect(fs.existsSync(chainsDir)).toBe(true);
+
+		const chainFiles = ["gdd-review.chain.md", "feature-implement.chain.md", "release-gate.chain.md"];
+		for (const cf of chainFiles) {
+			const fullPath = path.join(chainsDir, cf);
+			expect(fs.existsSync(fullPath)).toBe(true);
+			const content = fs.readFileSync(fullPath, "utf8");
+			expect(content).toMatch(/^name:\s*[a-z-]+/m);
+			expect(content).toMatch(/^##\s+[a-z-]+/m);
 		}
 	});
 

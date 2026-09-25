@@ -140,7 +140,30 @@ function setEngine(cwd: string, engineName: string): void {
 	}
 }
 
-function setLanguage(cwd: string, lang: string): void {
+export function getLanguage(cwd: string): string {
+	const studioDir = join(cwd, ".pi", "game-studio");
+	const langFile = join(studioDir, "language");
+	if (existsSync(langFile)) {
+		try {
+			const lang = readFileSync(langFile, "utf8").trim().toLowerCase();
+			if (lang === "es" || lang === "en") return lang;
+		} catch {}
+	}
+	const projectYamlPath = join(cwd, "project.yaml");
+	if (existsSync(projectYamlPath)) {
+		try {
+			const content = readFileSync(projectYamlPath, "utf8");
+			const m = content.match(/^language:\s*["']?([^\n"']+)["']?/m);
+			if (m && m[1]) {
+				const lang = m[1].trim().toLowerCase();
+				if (lang === "es" || lang === "en") return lang;
+			}
+		} catch {}
+	}
+	return "es";
+}
+
+export function setLanguage(cwd: string, lang: string): void {
 	const studioDir = join(cwd, ".pi", "game-studio");
 	mkdirSync(studioDir, { recursive: true });
 	const langFile = join(studioDir, "language");

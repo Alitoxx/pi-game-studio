@@ -13,7 +13,7 @@ import { handleStudioSetup } from "./studio-setup.ts";
 import { handleStudioModels } from "./studio-models.ts";
 import { handleStudioStatus } from "./studio-status.ts";
 import { handleStudioAgents } from "./studio-agents.ts";
-import { handleStudioSettings } from "./studio-settings.ts";
+import { handleStudioSettings, getLanguage } from "./studio-settings.ts";
 import { handleStudioChains } from "./studio-chains.ts";
 import { handleStudioStart } from "./studio-start.ts";
 
@@ -147,8 +147,8 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// ──────────────────────────────────────────────
-	// Hook: Agent audit trail
-	// Logs agent invocations for debugging
+	// Hook: Agent turn & language policy enforcement
+	// Logs agent calls and injects active language rules
 	// ──────────────────────────────────────────────
 	pi.on("turn_start", async (event, ctx) => {
 		const logDir = join(ctx.cwd, "production", "session-logs");
@@ -156,6 +156,25 @@ export default function (pi: ExtensionAPI) {
 
 		const line = `${new Date().toISOString()} | Agent called\n`;
 		await appendToFile(join(logDir, "agent-audit.log"), line).catch(() => {});
+
+		// Active language policy enforcement
+		const isGameStudio =
+			existsSync(join(ctx.cwd, ".pi", "game-studio")) ||
+			existsSync(join(ctx.cwd, "project.yaml"));
+
+		if (isGameStudio) {
+			const activeLang = getLanguage(ctx.cwd);
+			if (activeLang === "es" && (event as any)?.systemPromptOptions) {
+				if (!(event as any).systemPromptOptions.promptGuidelines) {
+					(event as any).systemPromptOptions.promptGuidelines = [];
+				}
+				(event as any).systemPromptOptions.promptGuidelines.push(
+					"Language Policy: The user's active language for this game studio is Spanish (Español). " +
+					"You MUST respond, formulate questions, present menus, and guide the user in Spanish at all times unless the user explicitly asks for another language. " +
+					"Keep code syntax, keywords, and engine API identifiers in their standard form, but all dialogue, explanations, choices, and recommendations MUST be in natural Spanish."
+				);
+			}
+		}
 	});
 
 	// ──────────────────────────────────────────────

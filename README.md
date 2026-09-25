@@ -328,6 +328,13 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
 
 ## Changelog
 
+### v0.6.3 — 2026-09-25
+
+- **Automatic Language Policy & Full Bilingual Localization**:
+  - **Runtime Active Language Injection**: Enforced workspace language preference (`.pi/game-studio/language` or `project.yaml`) via runtime hook (`turn_start`). Agents and skills automatically adopt Spanish (`es`) or English (`en`) without requiring explicit user greetings in Spanish.
+  - **Bilingual Onboarding Prompts (`/start`)**: Added localized interactive options and prompts to `/start` phases (Phase 2, Phase 3b review modes, Phase 4 confirmation gates) matching the detected language.
+  - **Global Language Policy**: Established studio-wide language policy in `AGENTS.md` ensuring consistent dialogue while maintaining standard programming and engine API symbols.
+
 ### v0.6.2 — 2026-09-25
 
 - **Modern Agent Architecture & Few-Shot Alignment**:

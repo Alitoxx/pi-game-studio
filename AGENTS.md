@@ -37,6 +37,10 @@ Tier 3 — Specialists
   unreal-specialist
 ```
 
+## Language Policy
+- All agents dynamically adapt to the project's language preference configured in `.pi/game-studio/language` or `project.yaml`.
+- When the active language is Spanish (`es`), all agents must respond, structure options, explain trade-offs, and conduct dialogue in Spanish. Technical symbols, engine APIs, and code keywords remain standard.
+
 ## Notes
 
 - Agents ship as source in this package.

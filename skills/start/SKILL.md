@@ -28,6 +28,7 @@ Check:
 - **Prototypes exist?** Check for subdirectories in `prototypes/`.
 - **Design docs exist?** Count markdown files in `design/gdd/`.
 - **Production artifacts?** Check for files in `production/sprints/` or `production/milestones/`.
+- **Language configured?** Check `.pi/game-studio/language` or `project.yaml`. If set to `es`, or if the user addresses you in Spanish, conduct the entire onboarding in Spanish. Otherwise default to English.
 - **Engram status?** Run `bash which engram 2>/dev/null` to check if Engram CLI is installed. If it is, run `bash engram doctor --json 2>/dev/null` to check connection. Also read `.pi/mcp.json` and `.pi/game-studio/engram-enabled` to confirm project-level Engram setup. Silently determine:
   - `engram_installed: true/false`
   - `engram_connected: true/false` (true only if doctor reports healthy connection)
@@ -40,8 +41,17 @@ Store these findings internally to validate the user's self-assessment and tailo
 
 ## Phase 2: Ask Where the User Is
 
-This is the first thing the user sees. Use `ask_user_question` with these exact options so the user can click rather than type:
+This is the first thing the user sees. Use `ask_user_question` with these options matching the detected language:
 
+**If Spanish (`es`):**
+- **Prompt**: "¡Bienvenido a Pi Game Studio! 🎮 Antes de sugerirte un flujo de trabajo, me gustaría entender desde qué punto partes. ¿En qué estado se encuentra tu idea de juego en este momento?"
+- **Options**:
+  - `A) No tengo idea aún` — No tengo un concepto todavía. Quiero explorar temas y descubrir qué crear.
+  - `B) Idea vaga / aproximada` — Tengo un tema general, vibra o género en mente (ej. 'algo espacial' o 'granja acogedora') pero nada concreto.
+  - `C) Concepto claro` — Conozco la idea central (género, mecánicas principales, pitch), pero aún no la he formalizado en documentos.
+  - `D) Trabajo existente` — Ya tengo documentos de diseño, prototipos o código hecho. Quiero organizar o continuar el desarrollo.
+
+**If English (`en`):**
 - **Prompt**: "Welcome to Pi Game Studio! Before I suggest anything, I'd like to understand where you're starting from. Where are you at with your game idea right now?"
 - **Options**:
   - `A) No idea yet` — I don't have a game concept at all. I want to explore and figure out what to make.
@@ -150,6 +160,14 @@ Check if `production/review-mode.txt` already exists.
 
 **If it does not exist**: Use `ask_user_question`:
 
+**If Spanish (`es`):**
+- **Prompt**: "Configuración de revisión: ¿cuánta revisión de diseño deseas a medida que avanzas en el flujo de trabajo?"
+- **Options**:
+  - `Full` — Revisión de Directores en cada paso clave. Ideal para equipos o feedback exhaustivo.
+  - `Lean (recomendado)` — Directores solo en transiciones de fase críticas (/gate-check). Enfoque equilibrado para desarrolladores indie.
+  - `Solo` — Sin revisiones de directores. Máxima velocidad para game jams o prototipos.
+
+**If English (`en`):**
 - **Prompt**: "One setup choice: how much design review would you want as you work through the workflow?"
 - **Options**:
   - `Full` — Director specialists review at each key workflow step. Best for teams, learning the workflow, or when you want thorough feedback on every decision.
@@ -161,7 +179,7 @@ selects — no separate "May I write?" needed, as the write is a direct
 consequence of the selection:
 
 - `Full` → write `full`
-- `Lean (recommended)` → write `lean`
+- `Lean (recomendado)` / `Lean (recommended)` → write `lean`
 - `Solo` → write `solo`
 
 Create the `production/` directory if it does not exist.
@@ -176,11 +194,11 @@ Using the Engram status gathered in Phase 1, add a single info line at the end o
 
 **If Engram is installed but NOT connected:** Append one line:
 
-> 📌 **Engram detected** — run `/connect-engram` anytime for cross-session decision memory.
+> 📌 **Engram detected / detectado** — run `/connect-engram` anytime for cross-session decision memory.
 
 **If Engram IS connected:** Append one line:
 
-> ✅ **Engram connected** — decisions auto-save across sessions.
+> ✅ **Engram connected / conectado** — decisions auto-save across sessions.
 
 In all cases: zero questions, zero blocking, just an informational line at the end of the roadmap.
 
@@ -192,6 +210,13 @@ Store the boolean `engram_connected` internally for Phase 5.
 
 After presenting the recommended path, use `ask_user_question` to ask the user which step they'd like to take first. Never auto-run the next skill.
 
+**If Spanish (`es`):**
+- **Prompt**: "¿Deseas comenzar con [primer paso recomendado]?"
+- **Options**:
+  - `Sí, comencemos con [primer paso recomendado]`
+  - `Me gustaría hacer otra cosa primero`
+
+**If English (`en`):**
 - **Prompt**: "Would you like to start with [recommended first step]?"
 - **Options**:
   - `Yes, let's start with [recommended first step]`

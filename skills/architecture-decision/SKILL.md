@@ -3,7 +3,7 @@ name: architecture-decision
 description: "🎮 [Studio] Creates an Architecture Decision Record (ADR) documenting a significant technical decision, its context, alternatives considered, and consequences. Every major technical choice should have an ADR."
 model: inherit
 inheritProjectContext: true
-tools: read, glob, grep, write, edit, subagent, ask_user_question, engram_mem_save
+tools: read, glob, grep, write, edit, subagent, ask_user_question
 ---
 
 When this skill is invoked:
@@ -487,20 +487,11 @@ Update any stories that were `Status: Blocked` pending this ADR to `Status: Read
 
 ---
 
-## Engram persistence
+## Storage & Persistence (Files First)
 
-If Engram is enabled (check `.pi/game-studio/engram-enabled`), save this ADR
-to persistent memory:
-
-```
-engram_mem_save:
-  title: "ADR: <title>"
-  type: "architecture"
-  topic_key: "architecture/<adr-filename>"
-  content: |
-    **What**: <decision>
-    **Why**: <rationale>
-    **Alternatives**: <considered options>
-    **Consequences**: <tradeoffs>
-    **Where**: docs/architecture/<filename>.md
-```
+1. **Primary Source of Truth**: The ADR document `docs/architecture/<filename>.md` is the authoritative record in the repository. It must always be created and committed.
+2. **Engram (Optional Cache)**: Check if `.pi/game-studio/engram-enabled` exists and contains `true`.
+   - If enabled and persistent memory tools (`mem_save`) or CLI (`engram`) are available:
+     - Save a summary record to persistent memory (`type: architecture`, `topic_key: architecture/<adr-filename>`).
+   - If disabled or Engram is not installed:
+     - Skip memory save silently. The ADR file in Git is complete and sufficient on its own.

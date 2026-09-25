@@ -156,15 +156,9 @@ If yes: run `git checkout -- skills/[name]/SKILL.md`
 
 ---
 
-## Engram persistence
+## Storage & Persistence (Files First)
 
-If `which engram` detects memory capabilities, each improve cycle saves its key results:
-
-```
-engram_mem_save(
-  title: "Skill Improve: <skill-name>",
-  type: "decision",
-  topic_key: "skill-improve/<skill-name>",
-  content: "**What**: Ran skill-improve on <skill-name>\n**Why**: Static/category baseline showed failures\n**Where**: skills/<skill-name>/SKILL.md\n**Baseline**: <N> failures, <M> warnings\n**After**: <N'> failures, <M'> warnings\n**Verdict**: <improved / no-change / reverted>"
-)
-```
+1. **Primary Source of Truth**: The improved skill file `skills/<skill-name>/SKILL.md` and test logs in `skills/test-results/` are the authoritative changes in the repository.
+2. **Engram (Optional Cache)**: If `.pi/game-studio/engram-enabled` is true and persistent memory tools (`mem_save`) or CLI (`engram`) are available:
+   - Save the cycle result to persistent memory (`type: decision`, `topic_key: skill-improve/<skill-name>`).
+   - If Engram is disabled or not installed, skip silently. All test logs and skill modifications are stored locally.

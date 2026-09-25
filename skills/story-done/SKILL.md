@@ -3,7 +3,7 @@ name: story-done
 description: "🎮 [Studio] End-of-story completion review. Reads the story file, verifies each acceptance criterion against the implementation, checks for GDD/ADR deviations, prompts code review, updates story status to Complete, and surfaces the next ready story from the sprint."
 model: inherit
 inheritProjectContext: true
-tools: read, glob, grep, bash, write, edit, ask_user_question, subagent, engram_mem_save
+tools: read, glob, grep, bash, write, edit, ask_user_question, subagent
 ---
 
 # Story Done
@@ -446,20 +446,9 @@ If no more stories are ready but Must Have stories are still In Progress (not Co
 
 ---
 
-## Engram persistence
+## Storage & Persistence (Files First)
 
-If Engram is enabled (check `.pi/game-studio/engram-enabled`), save the story
-completion to persistent memory:
-
-```
-engram_mem_save:
-  title: "Story Done: <story-title>"
-  type: "pattern"
-  topic_key: "stories/<story-id>"
-  content: |
-    **What**: Completed story <title>
-    **Status**: Complete
-    **Criteria Passed**: <X>/<Y>
-    **Deviations**: <any documented>
-    **Where**: <story-path>
-```
+1. **Primary Source of Truth**: The story file in `production/stories/` is updated directly with verified criteria and `Status: Complete`.
+2. **Engram (Optional Cache)**: If `.pi/game-studio/engram-enabled` is true and persistent memory tools (`mem_save`) or CLI (`engram`) are available:
+   - Save the story completion to persistent memory (`type: pattern`, `topic_key: stories/<story-id>`).
+   - If Engram is disabled or unavailable, skip silently. All progress is tracked in the sprint and story Markdown files.

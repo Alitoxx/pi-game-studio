@@ -12,7 +12,6 @@ tools:
   - web_search
   - subagent
   - ask_user_question
-  - engram_mem_save
 ---
 
 When this skill is invoked:
@@ -89,10 +88,10 @@ Use exactly these tab names — do not rename or duplicate them.
 summary of the person's emotional goals, taste profile, and constraints.
 Read the brief back and confirm it captures their intent.
 
-**Engram checkpoint — Phase 1**
+**Engram checkpoint — Phase 1 (optional if enabled)**
 
 ```
-engram_mem_save(
+mem_save(
   title: "Brainstorm - Phase 1 | Creative Discovery",
   topic_key: "brainstorm/phase-1",
   content: "Creative Brief <summary>, taste profile, constraints (timeline, dev level, experience target)"
@@ -153,10 +152,10 @@ Do NOT use a `tabs` field here. The `tabs` form is for multi-field input only �
 
 Never pressure toward a choice — let them sit with it.
 
-**Engram checkpoint — Phase 2**
+**Engram checkpoint — Phase 2 (optional if enabled)**
 
 ```
-engram_mem_save(
+mem_save(
   title: "Brainstorm - Phase 2 | Concept Generation",
   topic_key: "brainstorm/phase-2",
   content: "Generated three concepts; user selection: <title>, unique hook, core verb, MDA aesthetic"
@@ -205,10 +204,10 @@ After capturing answers, analyze: Is this action intrinsically satisfying? What 
 - **Relatedness**: How does the player feel connected (to characters,
   other players, or the world)?
 
-**Engram checkpoint — Phase 3**
+**Engram checkpoint — Phase 3 (optional if enabled)**
 
 ```
-engram_mem_save(
+mem_save(
   title: "Brainstorm - Phase 3 | Core Loop Design",
   topic_key: "brainstorm/phase-3",
   content: "Core loop components (30s, 5min, session, progression), player motivation (autonomy, competence, relatedness)"
@@ -273,10 +272,10 @@ The user's selected visual anchor (the named direction or their custom descripti
 
 If the creative-director returns CONCERNS or REJECT on pillars, resolve pillar issues before asking for the visual anchor selection — visual direction should flow from confirmed pillars.
 
-**Engram checkpoint — Phase 4**
+**Engram checkpoint — Phase 4 (optional if enabled)**
 
 ```
-engram_mem_save(
+mem_save(
   title: "Brainstorm - Phase 4 | Pillars & Boundaries",
   topic_key: "brainstorm/phase-4",
   content: "Pillar set (3-5), anti-pillars (3+), visual identity anchor, gate verdicts from creative-director and art-director"
@@ -298,10 +297,10 @@ who this game is actually for:
 - **Market validation**: Are there successful games that serve a similar
   player type? What can we learn from their audience size?
 
-**Engram checkpoint — Phase 5**
+**Engram checkpoint — Phase 5 (optional if enabled)**
 
 ```
-engram_mem_save(
+mem_save(
   title: "Brainstorm - Phase 5 | Player Type Validation",
   topic_key: "brainstorm/phase-5",
   content: "Primary player type: <type>, secondary appeal: <type>, market validation references"
@@ -354,10 +353,10 @@ Pass: full vision scope, MVP definition, timeline estimate, team size.
 
 Present the assessment to the user. If UNREALISTIC, offer to adjust the MVP definition or scope tiers before writing the document.
 
-**Engram checkpoint — Phase 6**
+**Engram checkpoint — Phase 6 (optional if enabled)**
 
 ```
-engram_mem_save(
+mem_save(
   title: "Brainstorm - Phase 6 | Scope & Feasibility",
   topic_key: "brainstorm/phase-6",
   content: "Target platform, engine preference, art pipeline, content scope, MVP definition, biggest risks, scope tiers"
@@ -417,15 +416,10 @@ Verdict: **COMPLETE** — game concept created and handed off for next steps.
 
 ---
 
-## Engram persistence
+## Storage & Persistence (Files First)
 
-If `which engram` detects memory capabilities, each phase saves its key decisions (`topic_key: brainstorm/phase-1` through `phase-6`). When the document is written, a final record is saved:
-
-```
-engram_mem_save(
-  title: "Game Concept: <working-title>",
-  type: "decision",
-  topic_key: "game-concept/<normalized-title>",
-  content: "**What**: Generated game concept for <title>\n**Why**: User requested brainstorm session\n**Where**: design/gdd/game-concept.md\n**Genre**: <genre>\n**Setting**: <setting>\n**Core Loop**: <elevator-pitch>"
-)
-```
+1. **Primary Source of Truth**: The concept file `design/gdd/game-concept.md` (and optional `design/gdd/game-pillars.md`) is always written and maintained in the project.
+2. **Engram (Optional Cache)**: If `.pi/game-studio/engram-enabled` is true and persistent memory tools (`mem_save`) or CLI (`engram`) are available:
+   - Each phase can checkpoint decisions (`topic_key: brainstorm/phase-1` through `phase-6`).
+   - A final summary record is saved (`topic_key: game-concept/<normalized-title>`).
+   - If Engram is not enabled or not installed, skip memory saves silently. All game concept data is fully stored in `design/gdd/game-concept.md`.

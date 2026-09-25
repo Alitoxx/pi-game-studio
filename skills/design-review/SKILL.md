@@ -3,7 +3,7 @@ name: design-review
 description: "🎮 [Studio] Reviews a game design document for completeness, internal consistency, implementability, and adherence to project design standards. Run this before handing a design document to programmers."
 model: inherit
 inheritProjectContext: true
-tools: read, glob, grep, write, edit, subagent, ask_user_question, engram_mem_save
+tools: read, glob, grep, write, edit, subagent, ask_user_question
 ---
 
 ## Phase 0: Parse Arguments
@@ -268,21 +268,12 @@ Assign letters A, B, C… only to included options. Mark the most pipeline-advan
 
 ---
 
-## Engram persistence
+## Storage & Persistence (Files First)
 
-If Engram is enabled (check `.pi/game-studio/engram-enabled`), save the review
-verdict to persistent memory:
-
-```
-engram_mem_save:
-  title: "Design Review: <document>"
-  type: "decision"
-  topic_key: "design-reviews/<document-name>"
-  content: |
-    **What**: Design review for <document>
-    **Verdict**: <findings summary>
-    **Where**: <path-to-document>
-```
+1. **Primary Source of Truth**: Design review feedback, corrections, and sign-offs are written directly into the project files (in `design/gdd/` or associated review reports).
+2. **Engram (Optional Cache)**: If `.pi/game-studio/engram-enabled` is true and persistent memory tools (`mem_save`) or CLI (`engram`) are available:
+   - Save the review verdict to persistent memory (`type: decision`, `topic_key: design-reviews/<document-name>`).
+   - If Engram is disabled or unavailable, skip silently. All review data is fully preserved in the project files.
 
 ---
 

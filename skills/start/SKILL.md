@@ -4,7 +4,7 @@ agent: game-designer
 description: "🎮 [Studio] First-time onboarding — asks where you are, then guides you to the right workflow. No assumptions."
 model: inherit
 inheritProjectContext: true
-tools: read, glob, grep, write, ask_user_question, bash, engram_mem_save
+tools: read, glob, grep, write, ask_user_question, bash
 ---
 
 # Guided Onboarding
@@ -203,17 +203,11 @@ After presenting the recommended path, use `ask_user_question` to ask the user w
 
 When the user confirms their next step:
 
-1. **If Engram is connected** (from Phase 1), silently save the onboarding context:
-
-   ```
-   engram_mem_save(
-     title: "Game Studio onboarding",
-     type: "config",
-     content: "**What**: User completed /start onboarding\n**Why**: Record the project state and user choices at session start\n**Where**: production/review-mode.txt\n**Learned**: Engine config: [configured engine or [TO BE CONFIGURED]]. Review mode: [full/lean/solo]. Chosen path: [A/B/C/D]. Engram status: [connected/not connected]. First step: [skill command]."
-   )
-   ```
-
-   Fire this silently — do not show the result or mention it to the user. If the save fails (e.g., Engram went down since Phase 1), ignore the error.
+1. **If Engram is connected** (`.pi/game-studio/engram-enabled` is `true` and memory tools or CLI are available), silently save onboarding context:
+   - title: "Game Studio onboarding"
+   - type: "config"
+   - content: What, Why, Where (`production/review-mode.txt`), Learned.
+   - Fire silently. If Engram is not enabled or fails, ignore without error. All configuration is already stored locally in `production/review-mode.txt`.
 
 2. Respond with a single short line: "Type `[skill command]` to begin." Nothing else. Do not re-explain the skill or add encouragement.
 

@@ -3,7 +3,7 @@ name: gate-check
 description: "🎮 [Studio] Validate readiness to advance between development phases. Produces a PASS/CONCERNS/FAIL verdict with specific blockers and required artifacts. Use when user says 'are we ready to move to X', 'can we advance to production', 'check if we can start the next phase', 'pass the gate'."
 model: inherit
 inheritProjectContext: true
-tools: read, glob, grep, bash, write, subagent, ask_user_question, engram_mem_save
+tools: read, glob, grep, bash, write, subagent, ask_user_question
 ---
 
 # Phase Gate Validation
@@ -535,19 +535,9 @@ and let the user decide whether to proceed despite concerns.
 
 ---
 
-## Engram persistence
+## Storage & Persistence (Files First)
 
-If Engram is enabled (check `.pi/game-studio/engram-enabled`), save the gate
-verdict to persistent memory:
-
-```
-engram_mem_save:
-  title: "Gate: <phase> — <verdict>"
-  type: "decision"
-  topic_key: "gates/<phase>"
-  content: |
-    **Verdict**: PASS / CONCERNS / FAIL
-    **Phase**: <phase-name>
-    **Blockers**: <key issues>
-    **Where**: production/gate-checks/<filename>.md
-```
+1. **Primary Source of Truth**: The gate check report is always written to `production/gate-checks/<filename>.md`. The directory and files in Git represent the official phase gate audit trail.
+2. **Engram (Optional Cache)**: If `.pi/game-studio/engram-enabled` is true and persistent memory tools (`mem_save`) or CLI (`engram`) are available:
+   - Save the gate verdict to persistent memory (`type: decision`, `topic_key: gates/<phase>`).
+   - If Engram is disabled or unavailable, skip silently. All gate verdicts and blocker lists are stored in `production/gate-checks/`.

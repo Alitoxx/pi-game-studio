@@ -261,26 +261,26 @@ Or jump directly to a specific skill:
 
 Or edit `.pi/gentle-ai/models.json` directly.
 
-### Connect Engram (optional)
+### Connect Engram (Optional Memory Accelerator)
 
-If you have [Engram](https://pi.dev/engram) installed, `/setup` detects it and asks if you want to use it as a decision repository. You can also connect later:
+**Pi Game Studio follows a "Files First" architecture**: all GDDs, ADRs, phase gates, and sprint stories are committed directly to your Git repository as standard Markdown files. The studio works 100% without any external tools.
+
+If you have [Engram](https://pi.dev/engram) installed, it acts as an **optional persistent memory cache** that accelerates cross-session context. `/setup` detects it automatically, or you can manage it anytime with:
 
 ```bash
 /connect-engram
 ```
 
-This scans your existing project files (GDDs, ADRs, gate checks, stories) and syncs them to Engram for cross-session searchable persistence. Once connected, key skills auto-save decisions:
+When connected, decisions auto-cache to Engram in addition to local files:
 
-| Skill                    | What it persists                         |
-| ------------------------ | ---------------------------------------- |
-| `/brainstorm`            | Game concept (genre, setting, core loop) |
-| `/architecture-decision` | ADR with rationale and alternatives      |
-| `/gate-check`            | Phase gate verdict with blockers         |
-| `/design-system`         | GDD per system with player fantasy       |
-| `/design-review`         | Review findings and recommendations      |
-| `/story-done`            | Story completion with criteria status    |
-
-Engram is **optional** — without it, everything works with project files only, just like the original CCGS.
+| Skill                    | Primary Storage (Git)                   | Engram Memory Cache                     |
+| ------------------------ | --------------------------------------- | --------------------------------------- |
+| `/brainstorm`            | `design/gdd/game-concept.md`            | `game-concept/<slug>`, phase checkpoints |
+| `/architecture-decision` | `docs/architecture/<adr>.md`            | `architecture/<slug>`                   |
+| `/gate-check`            | `production/gate-checks/<gate>.md`      | `gates/<phase>`                         |
+| `/design-system`         | `design/gdd/<system>.md`                | `game-design/<system>`                  |
+| `/design-review`         | `design/gdd/` review reports            | `design-reviews/<document>`             |
+| `/story-done`            | `production/stories/<story>.md`         | `stories/<story-id>`                    |
 
 ---
 

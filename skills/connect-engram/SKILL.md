@@ -1,194 +1,83 @@
 ---
 name: connect-engram
-description: "🎮 [Studio] Sync existing project decisions to Engram. Scans design docs, ADRs, gate verdicts, and story completions — migrates them to persistent memory."
+description: "🎮 [Studio] Diagnostic & sync assistant for Engram persistent memory. Checks connection, enables/disables memory cache, or syncs project decisions to Engram."
 model: inherit
 inheritProjectContext: true
-tools: read, glob, write, ask_user_question, engram_mem_save, engram_mem_search
+tools: read, glob, write, bash, ask_user_question
 ---
 
-# /connect-engram — Sync to Engram
+# /connect-engram — Engram Memory Assistant
 
-This skill scans your existing project files and saves them to Engram for
-cross-session searchable persistence. Run this when:
+This skill manages the connection between **Pi Game Studio** and **Engram** (persistent cross-session memory).
 
-- You installed Engram **after** setting up the game studio
-- You want retroactive persistence of past decisions
-- You switched projects and want continuity
+> **Important**: Engram is strictly **optional**. All game design documents, ADRs, gate checks, and sprint stories are stored permanently in local Markdown files in your Git repository. Engram acts as an accelerated semantic memory cache.
 
 ---
 
-## Phase 1: Verify Engram
+## Phase 1: Environment & Connection Diagnosis
 
-Check if Engram is actually connected:
+Run diagnostic checks via bash:
+1. `which engram 2>/dev/null` — check if Engram CLI is installed.
+2. If installed, run `engram doctor 2>/dev/null` — verify daemon or SQLite storage health.
+3. Check `.pi/mcp.json` or `~/.pi/agent/mcp.json` for engram MCP server configuration.
+4. Read `.pi/game-studio/engram-enabled` to check current studio state.
 
-```
-read: .pi/game-studio/engram-enabled
-```
+### If Engram is NOT detected:
 
-If it says `false` or doesn't exist, check if `engram_mem_save` is available
-by trying a simple call. If not available, inform:
+Inform the user clearly:
 
-```
-Engram is not available. Install it first:
-1. Install the engram package for Pi
-2. Configure it in MCP settings
-3. Ensure directTools: true
-4. Run /connect-engram again
-```
+> "ℹ️ **Engram no está detectado en tu sistema.**
+>
+> **No te preocupes:** Pi Game Studio funciona al 100% sin Engram. Todas las decisiones de diseño, GDDs, ADRs y sprints se guardan directamente en archivos Markdown de tu proyecto (`design/`, `docs/`, `production/`).
+>
+> Si en el futuro deseas memoria persistente semántica entre sesiones:
+> 1. Instala Engram CLI: `npm install -g @gentle-ai/engram`
+> 2. O configura el servidor MCP en `~/.pi/agent/mcp.json`
+> 3. Vuelve a ejecutar `/connect-engram`"
 
----
-
-## Phase 2: Confirm migration mode
-
-```
-ask_user_question: What would you like to sync to Engram?
-  - all: "Scan and sync everything (design docs, ADRs, gates, stories)"
-  - decisions: "Only architecture decisions and design reviews"
-  - gates: "Only gate verdicts and phase completions"
-  - stories: "Only story completions and sprint plans"
-  - incremental: "Sync everything, but skip docs already in Engram"
-```
+Ensure `.pi/game-studio/engram-enabled` is set to `false`. Stop here cleanly.
 
 ---
 
-## Phase 3: Sync design docs
+## Phase 2: Action Selection (When Engram is available)
 
-If mode includes design docs (`all`, `decisions`, or `incremental`):
-
-1. Scan `design/` for markdown files:
+If Engram is detected:
 
 ```
-glob: design/**/*.md
-```
-
-2. For each file (unless `incremental` and already synced):
-
-```
-read: design/gdd/<name>.md
-```
-
-3. Save to Engram:
-
-```
-engram_mem_save:
-  title: "GDD: <system-name>"
-  type: "decision"
-  topic_key: "game-design/<system-name>"
-  content: |
-    **What**: <first heading or summary>
-    **Where**: design/gdd/<name>.md
+ask_user_question: Engram está disponible en tu sistema. ¿Qué deseas hacer?
+  - sync_all: "Activar y sincronizar todo el proyecto (GDDs, ADRs, Gates, Sprints)"
+  - sync_decisions: "Activar y sincronizar solo decisiones de arquitectura y diseño"
+  - status: "Ver estado actual de la conexión y memoria"
+  - disable: "Desactivar Engram (usar solo almacenamiento local en archivos)"
 ```
 
 ---
 
-## Phase 4: Sync architecture docs
+## Phase 3: Sincronización (Si eligió sync)
 
-If mode includes decisions (`all`, `decisions`, or `incremental`):
+Scan project files and register memories using the available Engram interface:
 
-1. Scan for ADRs:
+1. **GDDs** in `design/gdd/*.md` → topic key `game-design/<slug>`
+2. **ADRs** in `docs/architecture/*.md` → topic key `architecture/<slug>`
+3. **Gate checks** in `production/gate-checks/*.md` → topic key `gates/<slug>`
+4. **Stories** in `production/stories/*.md` → topic key `stories/<slug>`
 
-```
-glob: docs/architecture/**/*.md
-```
-
-2. For each ADR:
-
-```
-read: docs/architecture/<name>.md
-```
-
-3. Save to Engram:
-
-```
-engram_mem_save:
-  title: "ADR: <title>"
-  type: "architecture"
-  topic_key: "architecture/<name>"
-  content: |
-    **What**: <decision>
-    **Why**: <rationale>
-    **Where**: docs/architecture/<name>.md
-```
+If an item is already present or sync encounters an error on a specific file, log the notice and continue with the remaining files.
 
 ---
 
-## Phase 5: Sync gate verdicts
+## Phase 4: Update Studio Status
 
-If mode includes gates (`all`, `gates`, or `incremental`):
+Write `.pi/game-studio/engram-enabled`:
+- `true` (si se activó/sincronizó)
+- `false` (si se desactivó)
 
-1. Scan for gate records:
-
+Report summary to the user:
 ```
-glob: production/**/gate-*.md
+# /connect-engram — Estado de Memoria
+
+Estado: [CONECTADO Y ACTIVO / DESACTIVADO]
+Archivos sincronizados: N documentos
+Almacenamiento primario: Archivos locales Git (design/, docs/, production/)
+Memoria semántica: [Activa / Inactiva]
 ```
-
-2. For each gate record, save to Engram:
-
-```
-engram_mem_save:
-  title: "Gate: <phase>"
-  type: "decision"
-  topic_key: "gates/<phase>"
-  content: |
-    **Verdict**: PASS/CONCERNS/FAIL
-    **Where**: production/<file>
-```
-
----
-
-## Phase 6: Sync story completions
-
-If mode includes stories (`all`, `stories`, or `incremental`):
-
-```
-glob: production/stories/**/done.md
-```
-
-For each completion record:
-
-```
-engram_mem_save:
-  title: "Story: <story-name>"
-  type: "pattern"
-  topic_key: "stories/<story-name>"
-  content: |
-    **What**: <story summary>
-    **Where**: production/stories/<path>
-```
-
----
-
-## Phase 7: Update Engram flag
-
-Enable Engram going forward:
-
-```
-write: .pi/game-studio/engram-enabled
-  true
-```
-
----
-
-## Phase 8: Summary
-
-```
-# /connect-engram — Complete
-
-Design docs synced:     N
-Architecture decisions: N
-Gate verdicts:          N
-Story completions:      N
-Engram mode:            ACTIVE
-
-From now on, new decisions in /brainstorm, /architecture-decision,
-/gate-check, and /design-review will auto-save to Engram.
-```
-
----
-
-## Edge cases
-
-- **No Engram available**: Stop and guide user to install Engram first
-- **Already synced**: Deduplicate by checking topic_key (incremental mode)
-- **No project files**: Nothing to sync — just enable Engram for future use
-- **Sync failed on one file**: Log error, continue with next, report at end

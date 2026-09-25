@@ -37,6 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added `sandbox/` and `playground/` to `.gitignore` for isolated testing.
 
 ### Changed
+- **Decoupled Engram ("Files First, Memory Accelerated")**:
+  - Removed hard dependencies on external `engram_mem_save` from skill tool lists across all skills (`architecture-decision`, `brainstorm`, `connect-engram`, `design-review`, `design-system`, `gate-check`, `setup`, `skill-improve`, `start`, `story-done`).
+  - Guaranteed 100% functionality with local Markdown files in Git repository when Engram is not installed.
+  - Refactored `/connect-engram` into an intelligent diagnostic and sync assistant with graceful degradation.
 - Updated `/prototype` skill with concept validation and `--spike` mode (time-boxed 4h technical spikes).
 - Updated `prototyper` agent with spike protocols and risk burn-down templates.
 - Updated `models.default.json` and `scripts/assign-models.js` to assign all 50 agents.

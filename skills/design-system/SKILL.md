@@ -3,7 +3,7 @@ name: design-system
 description: "🎮 [Studio] Guided, section-by-section GDD authoring for a single game system. Gathers context from existing docs, walks through each required section collaboratively, cross-references dependencies, and writes incrementally to file."
 model: inherit
 inheritProjectContext: true
-tools: read, glob, grep, write, edit, subagent, ask_user_question, todo_write, engram_mem_save
+tools: read, glob, grep, write, edit, subagent, ask_user_question
 ---
 
 When this skill is invoked:
@@ -887,19 +887,9 @@ shows context at or above 70%. If so, append this notice to the response:
 
 ---
 
-## Engram persistence
+## Storage & Persistence (Files First)
 
-If Engram is enabled (check `.pi/game-studio/engram-enabled`), save the GDD
-to persistent memory:
-
-```
-engram_mem_save:
-  title: "GDD: <system-name>"
-  type: "decision"
-  topic_key: "game-design/<system-name>"
-  content: |
-    **What**: <system-name> design document
-    **Why**: <core mechanic and purpose>
-    **Player Fantasy**: <fantasy>
-    **Where**: design/gdd/<system-name>.md
-```
+1. **Primary Source of Truth**: The complete Game Design Document (GDD) is saved directly to `design/gdd/<system-name>.md`. This file is the official design spec.
+2. **Engram (Optional Cache)**: If `.pi/game-studio/engram-enabled` is true and persistent memory tools (`mem_save`) or CLI (`engram`) are available:
+   - Save a summary record to persistent memory (`type: decision`, `topic_key: game-design/<system-name>`).
+   - If Engram is disabled or not installed, skip silently. The GDD file in `design/gdd/` contains the full source of truth.

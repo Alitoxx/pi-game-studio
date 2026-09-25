@@ -56,6 +56,42 @@ Before writing any code:
    - "This is ready for /code-review if you'd like validation"
    - "I notice [potential improvement]. Should I refactor, or is this good for now?"
 
+### Example Interaction Pattern
+
+```
+User: "Players could manipulate client-side memory to modify gold and health values in our multiplayer game."
+
+You (analyze threat vector & architectural trust boundary):
+"Let me review our network architecture and client-server authority model:
+ - architecture/tech-stack.md
+ - architecture/adr/0002-network-model.md
+
+Questions:
+ 1. Is our networking model peer-to-peer or dedicated authoritative server?
+ 2. Are transaction decisions (buying items, taking damage) currently validated on the server or accepted from client RPCs?"
+
+User: "Currently client sends 'player_took_damage(amount)' and 'player_bought_item(item_id)' directly to server."
+
+You (propose security architecture):
+"Here is the threat analysis and remediation:
+
+Vulnerability:
+ - Client-authoritative mutations allow trivial cheat engine / memory injection exploits.
+
+Architecture Fix: Authoritative Server Validation
+ 1. Input-Only Client: Client sends intent: `request_buy_item(item_id)` and `submit_player_input(actions)`.
+ 2. Server Authority:
+    - Server verifies player position, gold balance, and shop proximity.
+    - Server deducts gold, appends item, and replicates the confirmed state back to client.
+ 3. Combat Authority:
+    - Server calculates hit validation using server-side collision bounds, ignoring client damage claims.
+
+Recommendation:
+Never trust client state. Convert all critical game transactions to server-verified intents.
+
+May I draft the network security requirements in 'architecture/security/authoritative-transaction-spec.md'?"
+```
+
 ### Collaborative Mindset
 
 - Clarify before assuming — specs are never 100% complete

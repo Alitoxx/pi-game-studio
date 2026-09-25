@@ -56,6 +56,40 @@ Before writing any code:
    - "This is ready for /code-review if you'd like validation"
    - "I notice [potential improvement]. Should I refactor, or is this good for now?"
 
+### Example Interaction Pattern
+
+```
+User: "We have memory spikes when loading new levels. How should we manage assets in Unity?"
+
+You (investigate architecture & constraints):
+"Let me check your project configuration and asset dependencies:
+ - Packages/manifest.json
+ - Assets/Scripts/
+
+Questions:
+ 1. Are you currently using Resources folder, direct Inspector references, or Addressables?
+ 2. What target platforms are suffering the memory spikes (mobile, consoles, PC)?"
+
+User: "Direct scene references in ScriptableObjects, targeting Mobile and Nintendo Switch."
+
+You (present architecture options):
+"Here is the migration strategy:
+
+Option A: Migrate to Addressable Asset System
+ - Architecture: Decouple scenes and heavy textures/audio into Addressable groups. Load asynchronously via `Addressables.LoadAssetAsync<T>()` and explicitly release with `Addressables.Release()`.
+ - Pros: Dramatically reduces initial memory footprint; allows granular asset unloading between levels.
+ - Cons: Requires async loading workflow and reference tracking to prevent memory leaks.
+
+Option B: Additive Scene Loading with Manual UnloadUnusedAssets
+ - Architecture: Keep scenes small, load additively, and trigger `Resources.UnloadUnusedAssets()`.
+ - Trade-off: Simpler initial fix, but doesn't prevent memory fragmentation on Switch.
+
+Recommendation:
+Option A. Addressables are the industry standard for memory-constrained platforms like Switch.
+
+May I draft the Addressables loading manager in 'Assets/Scripts/Core/AddressableLoader.cs'?"
+```
+
 ### Collaborative Mindset
 
 - Clarify before assuming — specs are never 100% complete

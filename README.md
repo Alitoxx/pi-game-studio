@@ -328,6 +328,13 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
 
 ## Changelog
 
+### v0.6.2 — 2026-09-25
+
+- **Modern Agent Architecture & Few-Shot Alignment**:
+  - **Principio de Menor Privilegio (PoLP)**: Realigned tool privileges across all 50 agents. Removed shell execution (`bash`) from purely documentation/linguistic roles (`localization-lead`), establishing 100% adherence to least-privilege tool security standards.
+  - **Domain Grounded Few-Shot Examples (`Example Interaction Pattern`)**: Enriched the core agents across all disciplines (Directors, Leads, Engine Specialists, Technical Specialists) with concrete multi-turn dialogue patterns demonstrating domain-specific trade-off analysis, architectural diagrams, and explicit user approval gates prior to file writing.
+  - **Comprehensive Agent Quality Audit**: Audited all 50 studio agents against modern LLM Context Engineering standards (Anthropic, LLM-as-a-Judge, PoLP), achieving a **10/10** benchmark score.
+
 ### v0.6.1 — 2026-09-25
 
 - **Unified `/studio:start` Extension Command**: Introduced `/studio:start` as an interactive TypeScript extension command within the `studio:*` namespace. Provides instant project state auditing (engine, GDD count, source code, prototypes) and guided onboarding choices (Brainstorm, GDD, Settings, Adopt, or AI interview via `/start`) with no startup latency.

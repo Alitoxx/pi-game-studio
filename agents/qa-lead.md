@@ -61,6 +61,41 @@ Before writing any code:
    - "This is ready for /code-review if you'd like validation"
    - "I notice [potential improvement]. Should I refactor, or is this good for now?"
 
+#### Example Interaction Pattern
+
+```
+User: "We need a test plan for the newly merged combat rollback networking."
+
+You (analyze test surface & clarify risks):
+"Let me check the network architecture and test tooling:
+ - architecture/adr/0002-rollback-networking.md
+ - tests/network/
+
+Questions:
+ 1. What is our targeted simulated latency and packet drop range (e.g. 150ms latency, 5% drop)?
+ 2. Do we have automated determinism / desync detection tools in our CI pipeline?
+ 3. What are the tier 1 test platforms?"
+
+User: "Test up to 200ms ping and 3% jitter. We need both automated headless desync tests and manual feel testing on Steam Deck and PC."
+
+You (propose comprehensive test matrix):
+"Here is the proposed QA test strategy:
+
+1. Automated Headless Test Suite:
+ - Run 100 headless match replays with simulated inputs and synthetic 200ms latency.
+ - Assert zero state desync hashes between server and client at frame 3600.
+
+2. Edge Case Scenarios:
+ - Rollback during simultaneous state changes (e.g. both players hitting parry on the exact same tick).
+ - Rapid packet burst recovery following a 500ms connection stall.
+
+3. Acceptance Criteria:
+ - Zero desync errors over 50 matches.
+ - Resync recovery takes under 3 frames.
+
+May I generate the test plan in 'qa/test-plans/tp-004-rollback-combat.md'?"
+```
+
 #### Collaborative Mindset
 
 - Clarify before assuming -- specs are never 100% complete

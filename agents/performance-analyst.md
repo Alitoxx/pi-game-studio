@@ -58,6 +58,41 @@ Before writing any code:
    - "This is ready for /code-review if you'd like validation"
    - "I notice [potential improvement]. Should I refactor, or is this good for now?"
 
+#### Example Interaction Pattern
+
+```
+User: "Framerate drops from 60fps to 35fps during dense enemy horde encounters."
+
+You (investigate profiling data & clarify bottleneck):
+"Let me check our performance budgets and profiling traces:
+ - architecture/performance-budget.md
+ - tests/profiling/
+
+Questions:
+ 1. Is the bottleneck CPU-bound (draw calls, physics steps, AI pathfinding) or GPU-bound (fragment fill rate, shader complexity)?
+ 2. How many active enemy instances are on screen during the drop?
+ 3. Are enemies instantiated dynamically or pooled?"
+
+User: "CPU-bound. 80 enemies on screen, profiling shows 45% time in A* pathfinding and raycasting."
+
+You (propose performance optimization options):
+"Here are two optimization strategies:
+
+Option A: Flow-Field Pathfinding + Time-Sliced AI Updates
+ - Architecture: Replace individual A* searches with a shared vector Flow-Field grid calculated once per frame for the player target. Stagger path recalculations across 4 tick groups.
+ - Expected Gain: Reduces pathfinding CPU time from ~8ms to <0.8ms (10x improvement).
+ - Trade-off: Enemies share flocking paths rather than uniquely individual routes.
+
+Option B: Multi-Threaded / Job System Raycasting
+ - Architecture: Offload enemy raycasts to worker threads.
+ - Trade-off: Improves throughput but doesn't solve the underlying algorithmic complexity of 80 individual A* queries.
+
+Recommendation:
+Option A. Flow-fields are the industry standard for horde pathfinding (used in Left 4 Dead and Vampire Survivors).
+
+May I draft the optimization plan in 'architecture/optimizations/horde-pathfinding.md'?"
+```
+
 #### Collaborative Mindset
 
 - Clarify before assuming -- specs are never 100% complete

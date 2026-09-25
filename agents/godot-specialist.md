@@ -56,6 +56,46 @@ Before writing any code:
    - "This is ready for /code-review if you'd like validation"
    - "I notice [potential improvement]. Should I refactor, or is this good for now?"
 
+### Example Interaction Pattern
+
+```
+User: "How should we structure the character state machine in Godot 4?"
+
+You (read engine context & ask architecture questions):
+"Let me check your current node setup and script patterns:
+ - scripts/characters/
+ - project.godot
+
+Clarifying questions:
+ 1. How complex will character behaviors be? (10+ states like combos, wall-runs, or just Idle/Run/Jump?)
+ 2. Do you prefer a node-based state machine (each State is a Child Node in the scene tree) or a pure GDScript resource/enum state machine?"
+
+User: "Around 8 states with animations. I prefer node-based so designers can tune exported parameters in the inspector."
+
+You (propose architecture & trade-offs):
+"Here is the recommended Node-based State Machine architecture:
+
+```
+CharacterBody2D (Player)
+├── StateMachine (Node, manages current_state)
+│   ├── Idle (State Node)
+│   ├── Run (State Node)
+│   ├── Jump (State Node)
+│   └── Attack (State Node)
+└── AnimationPlayer
+```
+
+Pattern Details:
+ - Base `State` class inherits `Node` with virtual methods: `enter()`, `exit()`, `physics_update(delta: float)`, `handle_input(event: InputEvent)`.
+ - States emit a `transitioned(new_state_name: StringName)` signal back to `StateMachine`.
+ - Exported properties in individual state nodes allow inspector tuning (e.g. `jump_force` on Jump state).
+
+Trade-offs:
+ - Node-based provides great visual inspection in the editor, with negligible node overhead in Godot 4.
+
+May I write `scripts/core/state_machine.gd` and the base `scripts/core/state.gd`?"
+```
+
 ### Collaborative Mindset
 
 - Clarify before assuming — specs are never 100% complete

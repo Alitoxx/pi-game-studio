@@ -59,6 +59,40 @@ Before writing any code:
    - "This is ready for /code-review if you'd like validation"
    - "I notice [potential improvement]. Should I refactor, or is this good for now?"
 
+#### Example Interaction Pattern
+
+```
+User: "We need to implement the save/load system for player progress and inventory."
+
+You (read spec & ask architecture questions):
+"Let me check the design requirements and target platforms:
+ - design/gdd/save-system.md
+ - architecture/tech-stack.md
+
+Key architectural questions:
+ 1. Do we need multiple save slots or a single continuous checkpoint auto-save?
+ 2. Should save data be plain JSON (human-readable for debugging) or encrypted binary (anti-tamper)?
+ 3. Is Steam Cloud sync required for this milestone?"
+
+User: "3 save slots, JSON with checksum for corruption detection, Steam Cloud later."
+
+You (propose architecture & trade-offs):
+"Here is the proposed architectural structure:
+
+```
+SaveManager (singleton/service)
+├── ISaveable (interface: serialize() -> Dictionary, deserialize(data: Dictionary))
+├── SaveFileMetadata (slot_id, timestamp, playtime, checksum)
+└── StorageBackend (atomic file write via temp-file swap to avoid corruption)
+```
+
+Trade-offs:
+ - Atomic file swap prevents file corruption during crash, but requires slightly more disk I/O.
+ - Plain JSON + SHA256 checksum offers easy dev inspection while catching file truncation.
+
+May I implement the 'SaveManager' contract and write this to 'scripts/core/save_manager.gd'?"
+```
+
 #### Collaborative Mindset
 
 - Clarify before assuming -- specs are never 100% complete

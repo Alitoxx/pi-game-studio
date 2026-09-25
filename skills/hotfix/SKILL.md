@@ -1,6 +1,6 @@
 ---
 name: hotfix
-description: "Emergency fix workflow that bypasses normal sprint processes with a full audit trail. Creates hotfix branch, tracks approvals, and ensures the fix is backported correctly."
+description: "🎮 [Studio] Emergency fix workflow that bypasses normal sprint processes with a full audit trail. Creates hotfix branch, tracks approvals, and ensures the fix is backported correctly."
 model: inherit
 inheritProjectContext: true
 tools: read, glob, grep, write, edit, bash, subagent

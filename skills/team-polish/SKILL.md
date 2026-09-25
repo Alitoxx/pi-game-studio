@@ -1,6 +1,6 @@
 ---
 name: team-polish
-description: "Orchestrate the polish team: coordinates performance-analyst, technical-artist, sound-designer, and qa-tester to optimize, polish, and harden a feature or area for release quality."
+description: "🎮 [Studio] Orchestrate the polish team: coordinates performance-analyst, technical-artist, sound-designer, and qa-tester to optimize, polish, and harden a feature or area for release quality."
 model: inherit
 inheritProjectContext: true
 tools: read, glob, grep, write, edit, bash, subagent, ask_user_question, todo_write

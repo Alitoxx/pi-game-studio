@@ -1,6 +1,6 @@
 ---
 name: playtest-report
-description: "Generates a structured playtest report template or analyzes existing playtest notes into a structured format. Use this to standardize playtest feedback collection and analysis."
+description: "🎮 [Studio] Generates a structured playtest report template or analyzes existing playtest notes into a structured format. Use this to standardize playtest feedback collection and analysis."
 model: inherit
 inheritProjectContext: true
 tools: read, glob, grep, write, subagent, ask_user_question

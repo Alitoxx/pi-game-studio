@@ -1,6 +1,6 @@
 ---
 name: estimate
-description: "Estimates task effort by analyzing complexity, dependencies, historical velocity, and risk factors. Produces a structured estimate with confidence levels."
+description: "🎮 [Studio] Estimates task effort by analyzing complexity, dependencies, historical velocity, and risk factors. Produces a structured estimate with confidence levels."
 model: inherit
 inheritProjectContext: true
 tools: read, glob, grep

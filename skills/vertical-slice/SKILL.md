@@ -1,6 +1,6 @@
 ---
 name: vertical-slice
-description: "Pre-production validation — end-to-end build to confirm the full loop is achievable before committing to Production. After GDDs, architecture, UX specs."
+description: "🎮 [Studio] Pre-production validation — end-to-end build to confirm the full loop is achievable before committing to Production. After GDDs, architecture, UX specs."
 argument-hint: "[--review full|lean|solo]"
 agent: prototyper
 model: inherit

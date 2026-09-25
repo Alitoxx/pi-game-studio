@@ -8,8 +8,20 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
 import { renderBanner } from "./banner.ts";
+import { handleStudioCommand } from "./studio-command.ts";
 
 export default function (pi: ExtensionAPI) {
+	// ──────────────────────────────────────────────
+	// Command: /studio
+	// Interactive catalog & cheatsheet of Pi Game Studio skills
+	// ──────────────────────────────────────────────
+	(pi as any).registerCommand?.("studio", {
+		description: "🎮 [Studio] Explorador y catálogo de comandos de Pi Game Studio",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioCommand(args, ctx);
+		},
+	});
+
 	// ──────────────────────────────────────────────
 	// Hook: Validate git commits
 	// Fires on tool_call for git commit commands

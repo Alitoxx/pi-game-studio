@@ -1,6 +1,6 @@
 ---
 name: assign-models
-description: "Reassign models for Pi Game Studio agents. Change models by tier (director/workhorse/lightweight) or per-agent. Dry-run preview available."
+description: "🎮 [Studio] Reassign models for Pi Game Studio agents. Change models by tier (director/workhorse/lightweight) or per-agent. Dry-run preview available."
 model: inherit
 inheritProjectContext: true
 tools: read, write, ask_user_question

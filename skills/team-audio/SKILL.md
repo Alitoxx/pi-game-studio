@@ -1,6 +1,6 @@
 ---
 name: team-audio
-description: "Orchestrate audio team: audio-director + sound-designer + technical-artist + gameplay-programmer for full audio pipeline from direction to implementation."
+description: "🎮 [Studio] Orchestrate audio team: audio-director + sound-designer + technical-artist + gameplay-programmer for full audio pipeline from direction to implementation."
 model: inherit
 inheritProjectContext: true
 tools: read, glob, grep, write, edit, bash, subagent, ask_user_question, todo_write

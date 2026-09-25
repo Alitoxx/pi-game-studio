@@ -1,6 +1,6 @@
 ---
 name: story-done
-description: "End-of-story completion review. Reads the story file, verifies each acceptance criterion against the implementation, checks for GDD/ADR deviations, prompts code review, updates story status to Complete, and surfaces the next ready story from the sprint."
+description: "🎮 [Studio] End-of-story completion review. Reads the story file, verifies each acceptance criterion against the implementation, checks for GDD/ADR deviations, prompts code review, updates story status to Complete, and surfaces the next ready story from the sprint."
 model: inherit
 inheritProjectContext: true
 tools: read, glob, grep, bash, write, edit, ask_user_question, subagent, engram_mem_save

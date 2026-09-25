@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - **Storage**: Detection of Engram persistent memory vs local storage.
     - **Tips**: Quick shortcuts (`/start`, `/brainstorm`, `/settings`).
   - Integrated with Pi TUI header (`ctx.ui.setHeader`) and fallback console rendering for non-TUI runs.
+- **Studio Command Identity & Prefix (`skills/*/SKILL.md`)**:
+  - Added `🎮 [Studio]` prefix to all 77 skill descriptions so they stand out immediately from native Pi commands in the `/` autocomplete menu.
+  - Added `/studio` slash command (`extensions/hooks/studio-command.ts`, `extensions/hooks/index.ts`) with interactive category browsing and cheat sheets.
 - **Guided & Interactive Setup Flow (`skills/setup/SKILL.md`, `skills/assign-models/SKILL.md`)**:
   - Replaced immediate automated file copies with an interactive interview and explanation step.
   - Displays what will be copied and checks for existing installations before modifying files.

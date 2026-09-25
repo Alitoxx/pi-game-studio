@@ -1,6 +1,6 @@
 ---
 name: skill-improve
-description: "Improve a skill using a test-fix-retest loop. Runs static checks, proposes targeted fixes, rewrites the skill, re-tests, and keeps or reverts based on score change. DEPENDENCY: Requires /skill-test to be functional."
+description: "🎮 [Studio] Improve a skill using a test-fix-retest loop. Runs static checks, proposes targeted fixes, rewrites the skill, re-tests, and keeps or reverts based on score change. DEPENDENCY: Requires /skill-test to be functional."
 model: inherit
 inheritProjectContext: true
 agent: qa-lead

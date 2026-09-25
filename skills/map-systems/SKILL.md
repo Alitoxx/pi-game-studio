@@ -1,6 +1,6 @@
 ---
 name: map-systems
-description: "Decompose a game concept into individual systems, map dependencies, prioritize design order, and create the systems index."
+description: "🎮 [Studio] Decompose a game concept into individual systems, map dependencies, prioritize design order, and create the systems index."
 model: inherit
 inheritProjectContext: true
 tools: read, glob, grep, write, edit, ask_user_question, todo_write, subagent

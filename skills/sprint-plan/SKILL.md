@@ -1,6 +1,6 @@
 ---
 name: sprint-plan
-description: "Generates a new sprint plan or updates an existing one based on the current milestone, completed work, and available capacity. Pulls context from production documents and design backlogs."
+description: "🎮 [Studio] Generates a new sprint plan or updates an existing one based on the current milestone, completed work, and available capacity. Pulls context from production documents and design backlogs."
 model: inherit
 inheritProjectContext: true
 tools: read, glob, grep, write, edit, subagent, ask_user_question

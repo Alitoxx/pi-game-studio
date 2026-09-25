@@ -1,6 +1,6 @@
 ---
 name: connect-engram
-description: "Sync existing project decisions to Engram. Scans design docs, ADRs, gate verdicts, and story completions — migrates them to persistent memory."
+description: "🎮 [Studio] Sync existing project decisions to Engram. Scans design docs, ADRs, gate verdicts, and story completions — migrates them to persistent memory."
 model: inherit
 inheritProjectContext: true
 tools: read, glob, write, ask_user_question, engram_mem_save, engram_mem_search

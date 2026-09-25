@@ -1,6 +1,6 @@
 ---
 name: team-level
-description: "Orchestrate level design team: level-designer + narrative-director + world-builder + art-director + systems-designer + qa-tester for complete area/level creation."
+description: "🎮 [Studio] Orchestrate level design team: level-designer + narrative-director + world-builder + art-director + systems-designer + qa-tester for complete area/level creation."
 model: inherit
 inheritProjectContext: true
 tools: read, glob, grep, write, edit, bash, subagent, ask_user_question, todo_write

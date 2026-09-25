@@ -1,7 +1,7 @@
 ---
 name: start
 agent: game-designer
-description: "First-time onboarding — asks where you are, then guides you to the right workflow. No assumptions."
+description: "🎮 [Studio] First-time onboarding — asks where you are, then guides you to the right workflow. No assumptions."
 model: inherit
 inheritProjectContext: true
 tools: read, glob, grep, write, ask_user_question, bash, engram_mem_save

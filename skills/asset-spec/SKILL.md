@@ -1,6 +1,6 @@
 ---
 name: asset-spec
-description: "Generate per-asset visual specifications and AI generation prompts from GDDs, level docs, or character profiles. Produces structured spec files and updates the master asset manifest. Run after art bible and GDD/level design are approved, before production begins."
+description: "🎮 [Studio] Generate per-asset visual specifications and AI generation prompts from GDDs, level docs, or character profiles. Produces structured spec files and updates the master asset manifest. Run after art bible and GDD/level design are approved, before production begins."
 model: inherit
 inheritProjectContext: true
 tools: read, glob, grep, write, edit, subagent, ask_user_question

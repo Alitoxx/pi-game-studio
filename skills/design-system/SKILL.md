@@ -1,6 +1,6 @@
 ---
 name: design-system
-description: "Guided, section-by-section GDD authoring for a single game system. Gathers context from existing docs, walks through each required section collaboratively, cross-references dependencies, and writes incrementally to file."
+description: "🎮 [Studio] Guided, section-by-section GDD authoring for a single game system. Gathers context from existing docs, walks through each required section collaboratively, cross-references dependencies, and writes incrementally to file."
 model: inherit
 inheritProjectContext: true
 tools: read, glob, grep, write, edit, subagent, ask_user_question, todo_write, engram_mem_save

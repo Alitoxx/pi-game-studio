@@ -1,6 +1,6 @@
 ---
 name: setup
-description: "Interactive guided installation of Pi Game Studio. Explains every step, asks for your confirmation before writing files, and sets up agents and models."
+description: "🎮 [Studio] Interactive guided installation of Pi Game Studio. Explains every step, asks for your confirmation before writing files, and sets up agents and models."
 model: inherit
 inheritProjectContext: true
 tools: read, glob, write, edit, bash, ask_user_question, engram_mem_save, mcp

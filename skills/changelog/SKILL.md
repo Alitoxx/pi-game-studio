@@ -1,6 +1,6 @@
 ---
 name: changelog
-description: "Auto-generates a changelog from git commits, sprint data, and design documents. Produces both internal and player-facing versions."
+description: "🎮 [Studio] Auto-generates a changelog from git commits, sprint data, and design documents. Produces both internal and player-facing versions."
 model: inherit
 inheritProjectContext: true
 tools: read, glob, grep, bash, write

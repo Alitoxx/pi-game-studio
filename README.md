@@ -210,7 +210,7 @@ Type `/` in Pi to browse all 75 skills:
 
 ### Package Admin
 
-`/setup` `/assign-models` `/connect-engram`
+`/studio` `/setup` `/assign-models` `/connect-engram`
 
 ## Getting Started
 

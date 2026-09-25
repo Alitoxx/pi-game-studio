@@ -1,6 +1,6 @@
 ---
 name: propagate-design-change
-description: "When a GDD is revised, scans all ADRs and the traceability index to identify which architectural decisions are now potentially stale. Produces a change impact report and guides the user through resolution."
+description: "🎮 [Studio] When a GDD is revised, scans all ADRs and the traceability index to identify which architectural decisions are now potentially stale. Produces a change impact report and guides the user through resolution."
 agent: technical-director
 model: inherit
 inheritProjectContext: true

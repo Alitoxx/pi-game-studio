@@ -1,6 +1,6 @@
 ---
 name: settings
-description: "View or change project config — effective merged values, or set locally in project.local.yaml."
+description: "🎮 [Studio] View or change project config — effective merged values, or set locally in project.local.yaml."
 argument-hint: "[key | key=value | --local key=value]"
 agent: producer
 model: inherit

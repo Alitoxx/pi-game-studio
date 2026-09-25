@@ -1,6 +1,6 @@
 ---
 name: release-checklist
-description: "Generates a comprehensive pre-release validation checklist covering build verification, certification requirements, store metadata, and launch readiness."
+description: "🎮 [Studio] Generates a comprehensive pre-release validation checklist covering build verification, certification requirements, store metadata, and launch readiness."
 model: inherit
 inheritProjectContext: true
 tools: read, glob, grep, write

@@ -1,6 +1,6 @@
 ---
 name: setup-engine
-description: "Configure the project's game engine and version. Pins the engine in AGENTS.md or package docs, detects knowledge gaps, and populates engine reference docs via web_search when the version is beyond the LLM's training data."
+description: "🎮 [Studio] Configure the project's game engine and version. Pins the engine in AGENTS.md or package docs, detects knowledge gaps, and populates engine reference docs via web_search when the version is beyond the LLM's training data."
 model: inherit
 inheritProjectContext: true
 tools: read, glob, grep, write, edit, web_search, webfetch, subagent, ask_user_question

@@ -13,3 +13,8 @@ false
 # IDE
 .vscode/
 .idea/
+
+# Local testing sandboxes
+sandbox/
+playground/
+

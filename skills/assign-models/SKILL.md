@@ -34,31 +34,36 @@ read: path/to/models.default.json
 Show the current mapping:
 
 ```
-Currently active models:
+Currently active models (50 agents):
   Directors (3 agents):
     creative-director → openai-codex/gpt-5.4-mini
     technical-director → openai-codex/gpt-5.4-mini
     producer → openai-codex/gpt-5.4-mini
 
-  Workhorses (12 agents):
+  Workhorses (44 agents):
     game-designer → openrouter/openai/gpt-oss-120b:free
+    lead-programmer → openrouter/openai/gpt-oss-120b:free
+    bevy-specialist, godot-specialist, unity-specialist, ...
     ...
 
-  Lightweight (34 agents):
+  Lightweight (3 agents):
     community-manager → openrouter/openai/gpt-oss-20b:free
-    ...
+    devops-engineer → openrouter/openai/gpt-oss-20b:free
+    sound-designer → openrouter/openai/gpt-oss-20b:free
 ```
 
 ---
 
 ## Phase 2: Ask what to do
 
+Detect the user's language (Spanish/English).
+
 ```
-ask_user_question: What would you like to change?
-  - tier: "Assign a model to an entire tier (director/workhorse/lightweight)"
-  - agent: "Assign a model to a specific agent"
-  - reset: "Reset all models to package defaults"
-  - preview: "Just show current mapping, no changes"
+ask_user_question: What would you like to change? / ¿Qué deseas modificar?
+  - preview: "Mantener la configuración actual sin cambios (Continuar)"
+  - tier: "Asignar un modelo a un Tier completo (Directores / Workhorses / Ligeros)"
+  - agent: "Asignar un modelo a un agente específico"
+  - reset: "Restaurar modelos a los valores por defecto del paquete"
 ```
 
 ---
@@ -68,10 +73,10 @@ ask_user_question: What would you like to change?
 If `tier`:
 
 ```
-ask_user_question: Which tier?
-  - director: "3 agents — creative-director, technical-director, producer"
-  - workhorse: "12 agents — game-designer, lead-programmer, art-director, ..."
-  - lightweight: "34 agents — all specialists and support roles"
+ask_user_question: Which tier? / ¿A qué nivel de agentes?
+  - director: "3 directores — creative-director, technical-director, producer (Estrategia)"
+  - workhorse: "44 especialistas — leads, programadores, diseñadores, motores (Desarrollo)"
+  - lightweight: "3 auxiliares — community-manager, devops-engineer, sound-designer (Tareas ligeras)"
 ```
 
 Then:

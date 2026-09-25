@@ -1,0 +1,132 @@
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+
+const RESET = "\x1b[0m";
+const BOLD = "\x1b[1m";
+const VIOLET = "\x1b[38;2;167;139;250m";
+const CYAN = "\x1b[38;2;56;189;248m";
+const GREEN = "\x1b[38;2;52;211;153m";
+const GOLD = "\x1b[38;2;251;191;36m";
+const DIM = "\x1b[38;2;107;114;128m";
+const WHITE = "\x1b[38;2;243;244;246m";
+
+function visibleLength(str: string): number {
+	const clean = str.replace(/\x1b\[[0-9;]*m/g, "");
+	let len = 0;
+	for (const ch of clean) {
+		const cp = ch.codePointAt(0) ?? 0;
+		// Emoji & wide unicode range
+		if (cp >= 0x1f000 && cp <= 0x1f9ff) {
+			len += 2;
+		} else {
+			len += 1;
+		}
+	}
+	return len;
+}
+
+function formatRow(styledContent: string, targetWidth = 75): string {
+	const vis = visibleLength(styledContent);
+	const pad = Math.max(0, targetWidth - vis);
+	return `${DIM}  │ ${RESET}${styledContent}${" ".repeat(pad)}${DIM} │${RESET}`;
+}
+
+export function renderBanner(width = 80, cwd = process.cwd()): string[] {
+	const lines: string[] = [];
+
+	// Storage / Engram detection
+	let engramStatus = "Local storage";
+	try {
+		const engramFlag = join(cwd, ".pi", "game-studio", "engram-enabled");
+		if (existsSync(engramFlag) && readFileSync(engramFlag, "utf8").trim() === "true") {
+			engramStatus = "Engram connected";
+		}
+	} catch {}
+
+	// Engine detection
+	let engineInfo = "Godot · Unity · Unreal · Bevy";
+	try {
+		const projectYaml = join(cwd, "project.yaml");
+		if (existsSync(projectYaml)) {
+			const yamlContent = readFileSync(projectYaml, "utf8");
+			const m = yamlContent.match(/^engine:\s*["']?([^\n"']+)["']?/m);
+			if (m && m[1] && m[1] !== "null" && m[1] !== "unknown") {
+				engineInfo = m[1].charAt(0).toUpperCase() + m[1].slice(1);
+			}
+		}
+	} catch {}
+
+	if (engineInfo === "Godot · Unity · Unreal · Bevy") {
+		try {
+			const prefsPath = join(cwd, ".pi", "game-studio", "technical-preferences.md");
+			if (existsSync(prefsPath)) {
+				const prefs = readFileSync(prefsPath, "utf8");
+				const engineMatch = prefs.match(/Engine:\s*([^\n]+)/i);
+				if (engineMatch && !engineMatch[1].includes("[TO BE CONFIGURED]")) {
+					engineInfo = engineMatch[1].trim();
+				}
+			}
+		} catch {}
+	}
+
+	if (width >= 80) {
+		const boxWidth = 75; // inner width between │ and │
+		lines.push("");
+		lines.push(`${VIOLET}${BOLD}   ██████╗ ██╗     ██████╗  █████╗ ███╗   ███╗███████╗${RESET}`);
+		lines.push(`${VIOLET}${BOLD}   ██╔══██╗██║    ██╔════╝ ██╔══██╗████╗ ████║██╔════╝${RESET}`);
+		lines.push(`${VIOLET}${BOLD}   ██████╔╝██║    ██║  ███╗███████║██╔████╔██║█████╗  ${RESET}`);
+		lines.push(`${VIOLET}${BOLD}   ██╔═══╝ ██║    ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝  ${RESET}`);
+		lines.push(`${VIOLET}${BOLD}   ██║     ██║    ╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗${RESET}`);
+		lines.push(`${VIOLET}${BOLD}   ╚═╝     ╚═╝     ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝${RESET}`);
+		lines.push(`${CYAN}                S  T  U  D  I  O   ·   v 0 . 4 . 0${RESET}`);
+		lines.push("");
+		lines.push(`${DIM}  ┌${"─".repeat(boxWidth + 2)}┐${RESET}`);
+
+		lines.push(
+			formatRow(
+				`${VIOLET}${BOLD}DIRECTORS  ${RESET}${DIM}:${RESET} ${WHITE}3 activos${RESET} ${DIM}(Creative · Technical · Producer)${RESET}`,
+				boxWidth,
+			),
+		);
+		lines.push(
+			formatRow(
+				`${VIOLET}${BOLD}WORKHORSES ${RESET}${DIM}:${RESET} ${WHITE}44 especialistas${RESET} ${DIM}(Diseño, Código, Arte, Audio, QA)${RESET}`,
+				boxWidth,
+			),
+		);
+		lines.push(
+			formatRow(
+				`${VIOLET}${BOLD}ENGINES    ${RESET}${DIM}:${RESET} ${CYAN}${engineInfo}${RESET}`,
+				boxWidth,
+			),
+		);
+		lines.push(
+			formatRow(
+				`${VIOLET}${BOLD}SKILLS     ${RESET}${DIM}:${RESET} ${GREEN}77 comandos slash${RESET}  ${DIM}│${RESET}  ${VIOLET}${BOLD}TEMPLATES :${RESET} ${GREEN}43 docs${RESET}`,
+				boxWidth,
+			),
+		);
+		lines.push(
+			formatRow(
+				`${VIOLET}${BOLD}CONFIG     ${RESET}${DIM}:${RESET} ${WHITE}project.yaml${RESET}       ${DIM}│${RESET}  ${VIOLET}${BOLD}STORAGE   :${RESET} ${GREEN}${engramStatus}${RESET}`,
+				boxWidth,
+			),
+		);
+		lines.push(`${DIM}  ├${"─".repeat(boxWidth + 2)}┤${RESET}`);
+		lines.push(
+			formatRow(
+				`${GOLD}${BOLD}💡 TIPS     ${RESET}${DIM}:${RESET} ${WHITE}/start${RESET} ${DIM}(Inicio)${RESET} · ${WHITE}/brainstorm${RESET} ${DIM}(Ideación)${RESET} · ${WHITE}/settings${RESET} ${DIM}(Config)${RESET}`,
+				boxWidth,
+			),
+		);
+		lines.push(`${DIM}  └${"─".repeat(boxWidth + 2)}┘${RESET}`);
+		lines.push("");
+	} else {
+		lines.push(`${VIOLET}${BOLD}🎮 PI GAME STUDIO v0.4.0${RESET}`);
+		lines.push(`${CYAN}50 Agentes · 77 Skills · 43 Templates · 4 Hooks${RESET}`);
+		lines.push(`${WHITE}Motores: ${engineInfo}${RESET}`);
+		lines.push(`${GOLD}💡 Usa /start para inicializar tu estudio de videojuegos${RESET}`);
+	}
+
+	return lines;
+}

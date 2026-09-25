@@ -7,6 +7,7 @@ import { opendir, readFile, writeFile, mkdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
+import { renderBanner } from "./banner.ts";
 
 export default function (pi: ExtensionAPI) {
 	// ──────────────────────────────────────────────
@@ -66,12 +67,32 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// ──────────────────────────────────────────────
-	// Hook: Documentation gap detection
-	// Fires on session_start to check for missing docs
+	// Hook: Session start (banner + gap detection)
+	// Fires on session_start to show studio dashboard and check docs
 	// ──────────────────────────────────────────────
 	pi.on("session_start", async (_event, ctx) => {
+		const isGameStudio =
+			existsSync(join(ctx.cwd, ".pi", "game-studio")) ||
+			existsSync(join(ctx.cwd, "project.yaml"));
+
 		// Only run in the game-studio project context
-		if (!existsSync(join(ctx.cwd, ".pi", "game-studio"))) return;
+		if (!isGameStudio) return;
+
+		// Display startup banner / dashboard
+		try {
+			if ((ctx as any).hasUI && (ctx as any).ui?.setHeader) {
+				(ctx as any).ui.setHeader((_tui: any, _theme: any) => ({
+					render(width: number) {
+						return renderBanner(width, ctx.cwd);
+					},
+				}));
+			} else {
+				const bannerLines = renderBanner(80, ctx.cwd);
+				for (const line of bannerLines) {
+					console.log(line);
+				}
+			}
+		} catch {}
 
 		const gaps: string[] = [];
 

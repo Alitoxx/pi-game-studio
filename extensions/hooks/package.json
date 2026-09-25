@@ -1,6 +1,7 @@
 {
   "name": "pi-game-studio-hooks",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
   "dependencies": {
     "@earendil-works/pi-coding-agent": "^0.8.0",

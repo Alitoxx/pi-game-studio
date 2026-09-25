@@ -118,8 +118,9 @@ export async function handleStudioSetup(
 		const diag = formatSetupDiagnostic(status);
 		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			ctx.ui.notify(diag, "info");
+		} else {
+			console.log(diag);
 		}
-		console.log(diag);
 		return;
 	}
 
@@ -153,18 +154,20 @@ export async function handleStudioSetup(
 				break;
 			case 3: {
 				const diag = formatSetupDiagnostic(status);
-				if (typeof (ctx.ui as any)?.notify === "function") {
+				if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 					ctx.ui.notify(diag, "info");
+				} else {
+					console.log(diag);
 				}
-				console.log(diag);
 				break;
 			}
 			case 4: {
 				const guide = formatGettingStartedGuide();
-				if (typeof (ctx.ui as any)?.notify === "function") {
+				if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 					ctx.ui.notify(guide, "info");
+				} else {
+					console.log(guide);
 				}
-				console.log(guide);
 				break;
 			}
 		}
@@ -245,10 +248,11 @@ export async function runGuidedSetup(
 
 	if (modelStrategyChoice.index === 1) {
 		// Inherit all
-		for (const k of Object.keys(customModels)) customModels[k] = "inherit";
-		customModels.director = "inherit";
-		customModels.workhorse = "inherit";
-		customModels.lightweight = "inherit";
+		customModels = {
+			director: "inherit",
+			workhorse: "inherit",
+			lightweight: "inherit",
+		};
 	} else if (modelStrategyChoice.index === 2) {
 		// Customize by Tiers
 		customModels = await configureModelsByTier(ctx, customModels);
@@ -279,10 +283,11 @@ export async function runGuidedSetup(
 	);
 
 	if (!confirmation || confirmation.index !== 0) {
-		if (typeof (ctx.ui as any)?.notify === "function") {
+		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			ctx.ui.notify("Instalación cancelada por el usuario.", "info");
+		} else {
+			console.log("Instalación cancelada. No se modificó ningún archivo.");
 		}
-		console.log("Instalación cancelada. No se modificó ningún archivo.");
 		return;
 	}
 
@@ -309,9 +314,6 @@ async function configureModelsByTier(
 	);
 	if (dirModel) {
 		config.director = dirModel;
-		config["creative-director"] = dirModel;
-		config["technical-director"] = dirModel;
-		config["producer"] = dirModel;
 	}
 
 	// Tier 2: Workhorses
@@ -334,9 +336,6 @@ async function configureModelsByTier(
 	);
 	if (lightModel) {
 		config.lightweight = lightModel;
-		config["community-manager"] = lightModel;
-		config["devops-engineer"] = lightModel;
-		config["sound-designer"] = lightModel;
 	}
 
 	return config;
@@ -458,19 +457,19 @@ export function installStudioFiles(
 
 	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 		ctx.ui.notify(summaryMsg, "info");
+	} else {
+		console.log("");
+		console.log("\x1b[1m\x1b[38;2;52;211;153m✔ ¡Pi Game Studio instalado con éxito!\x1b[0m");
+		console.log(`  \x1b[38;2;167;139;250m• Agentes:\x1b[0m    ${copiedCount} agentes en \x1b[38;2;243;244;246m.pi/agents/\x1b[0m`);
+		console.log(`  \x1b[38;2;167;139;250m• Motor:\x1b[0m      ${engine} en \x1b[38;2;243;244;246mproject.yaml\x1b[0m`);
+		console.log(`  \x1b[38;2;167;139;250m• Modelos:\x1b[0m    \x1b[38;2;243;244;246m.pi/gentle-ai/models.json\x1b[0m`);
+		console.log(`  \x1b[38;2;167;139;250m• Registro:\x1b[0m   \x1b[38;2;243;244;246m.pi/game-studio/install-log.md\x1b[0m`);
+		console.log("");
+		console.log("\x1b[38;2;251;191;36m💡 Siguiente paso sugerido:\x1b[0m");
+		console.log("  Escribe \x1b[1m\x1b[38;2;56;189;248m/start\x1b[0m para dar inicio al onboarding de tu juego.");
+		console.log("  O escribe \x1b[1m\x1b[38;2;56;189;248m/studio\x1b[0m para explorar los comandos disponibles.");
+		console.log("");
 	}
-
-	console.log("");
-	console.log("\x1b[1m\x1b[38;2;52;211;153m✔ ¡Pi Game Studio instalado con éxito!\x1b[0m");
-	console.log(`  \x1b[38;2;167;139;250m• Agentes:\x1b[0m    ${copiedCount} agentes en \x1b[38;2;243;244;246m.pi/agents/\x1b[0m`);
-	console.log(`  \x1b[38;2;167;139;250m• Motor:\x1b[0m      ${engine} en \x1b[38;2;243;244;246mproject.yaml\x1b[0m`);
-	console.log(`  \x1b[38;2;167;139;250m• Modelos:\x1b[0m    \x1b[38;2;243;244;246m.pi/gentle-ai/models.json\x1b[0m`);
-	console.log(`  \x1b[38;2;167;139;250m• Registro:\x1b[0m   \x1b[38;2;243;244;246m.pi/game-studio/install-log.md\x1b[0m`);
-	console.log("");
-	console.log("\x1b[38;2;251;191;36m💡 Siguiente paso sugerido:\x1b[0m");
-	console.log("  Escribe \x1b[1m\x1b[38;2;56;189;248m/start\x1b[0m para dar inicio al onboarding de tu juego.");
-	console.log("  O escribe \x1b[1m\x1b[38;2;56;189;248m/studio\x1b[0m para explorar los comandos disponibles.");
-	console.log("");
 }
 
 export function installModelsConfig(ctx: ExtensionContext): void {
@@ -485,8 +484,9 @@ export function installModelsConfig(ctx: ExtensionContext): void {
 		const msg = "✔ Modelos recomendados aplicados en .pi/gentle-ai/models.json";
 		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			ctx.ui.notify(msg, "info");
+		} else {
+			console.log(`\x1b[38;2;52;211;153m${msg}\x1b[0m`);
 		}
-		console.log(`\x1b[38;2;52;211;153m${msg}\x1b[0m`);
 	}
 }
 

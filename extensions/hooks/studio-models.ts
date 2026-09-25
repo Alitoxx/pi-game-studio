@@ -53,8 +53,9 @@ export async function handleStudioModels(
 		const list = formatModelsList(currentConfig);
 		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			ctx.ui.notify(list, "info");
+		} else {
+			console.log(list);
 		}
-		console.log(list);
 		return;
 	}
 
@@ -95,10 +96,11 @@ export async function handleStudioModels(
 			}
 			case 4: {
 				const list = formatModelsList(currentConfig);
-				if (typeof (ctx.ui as any)?.notify === "function") {
+				if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 					ctx.ui.notify(list, "info");
+				} else {
+					console.log(list);
 				}
-				console.log(list);
 				break;
 			}
 		}
@@ -127,14 +129,15 @@ function applyDefaultConfig(ctx: ExtensionContext): void {
 		const msg = "✔ Perfil recomendado guardado en .pi/gentle-ai/models.json";
 		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			ctx.ui.notify(msg, "info");
+		} else {
+			console.log(`\x1b[38;2;52;211;153m${msg}\x1b[0m`);
 		}
-		console.log(`\x1b[38;2;52;211;153m${msg}\x1b[0m`);
 	}
 }
 
 function applyInheritConfig(
 	ctx: ExtensionContext,
-	current: Record<string, string>,
+	_current: Record<string, string>,
 ): void {
 	const destDir = join(ctx.cwd, ".pi", "gentle-ai");
 	const destFile = join(destDir, "models.json");
@@ -146,17 +149,14 @@ function applyInheritConfig(
 		lightweight: "inherit",
 	};
 
-	for (const key of Object.keys(current)) {
-		inheritConfig[key] = "inherit";
-	}
-
 	writeFileSync(destFile, JSON.stringify(inheritConfig, null, 2), "utf8");
 
 	const msg = "✔ Modo inherit aplicado: todos los agentes usarán el modelo activo de tu sesión.";
 	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 		ctx.ui.notify(msg, "info");
+	} else {
+		console.log(`\x1b[38;2;52;211;153m${msg}\x1b[0m`);
 	}
-	console.log(`\x1b[38;2;52;211;153m${msg}\x1b[0m`);
 }
 
 function saveModelsConfig(ctx: ExtensionContext, cfg: Record<string, string>): void {
@@ -167,8 +167,9 @@ function saveModelsConfig(ctx: ExtensionContext, cfg: Record<string, string>): v
 	const msg = "✔ Configuración de modelos guardada en .pi/gentle-ai/models.json";
 	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 		ctx.ui.notify(msg, "info");
+	} else {
+		console.log(`\x1b[38;2;52;211;153m${msg}\x1b[0m`);
 	}
-	console.log(`\x1b[38;2;52;211;153m${msg}\x1b[0m`);
 }
 
 async function configureTierModels(
@@ -186,9 +187,6 @@ async function configureTierModels(
 	);
 	if (dirPick) {
 		config.director = dirPick;
-		config["creative-director"] = dirPick;
-		config["technical-director"] = dirPick;
-		config["producer"] = dirPick;
 	}
 
 	// Workhorses
@@ -211,9 +209,6 @@ async function configureTierModels(
 	);
 	if (lightPick) {
 		config.lightweight = lightPick;
-		config["community-manager"] = lightPick;
-		config["devops-engineer"] = lightPick;
-		config["sound-designer"] = lightPick;
 	}
 
 	return config;
@@ -256,7 +251,7 @@ async function configureAgentModel(
 
 	if (chosenModel) {
 		config[target] = chosenModel;
-		if (typeof (ctx.ui as any)?.notify === "function") {
+		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			ctx.ui.notify(`Modelo para '${target}' asignado a: ${chosenModel}`, "info");
 		}
 	}
@@ -265,19 +260,43 @@ async function configureAgentModel(
 }
 
 function formatModelsList(cfg: Record<string, string>): string {
+	const dirModel = cfg.director || "openai-codex/gpt-5.4-mini";
+	const workModel = cfg.workhorse || "openrouter/openai/gpt-oss-120b:free";
+	const lightModel = cfg.lightweight || "openrouter/openai/gpt-oss-20b:free";
+
+	const allInherit = dirModel === "inherit" && workModel === "inherit" && lightModel === "inherit";
+
+	// An override is an agent explicitly configured with a model different from its role/tier default
 	const overrides = Object.entries(cfg)
-		.filter(([k]) => k !== "director" && k !== "workhorse" && k !== "lightweight")
-		.slice(0, 10)
+		.filter(([k, v]) => {
+			if (k === "director" || k === "workhorse" || k === "lightweight") return false;
+			// If all tiers inherit, any agent set to "inherit" is not an override
+			if (allInherit && v === "inherit") return false;
+			// If tier 1 agent equals dirModel, it's not an override
+			if (["creative-director", "technical-director", "producer"].includes(k) && v === dirModel) return false;
+			// If tier 3 agent equals lightModel, it's not an override
+			if (["community-manager", "devops-engineer", "sound-designer"].includes(k) && v === lightModel) return false;
+			// If tier 2 agent equals workModel, it's not an override
+			if (v === workModel) return false;
+			return true;
+		})
 		.map(([k, v]) => `  • ${k}: ${v}`);
 
-	return [
+	const lines = [
 		"🤖 PI GAME STUDIO — ASIGNACIÓN DE MODELOS",
-		`• Tier 1 (Directores):  ${cfg.director || "openai-codex/gpt-5.4-mini"}`,
-		`• Tier 2 (Workhorses):  ${cfg.workhorse || "openrouter/openai/gpt-oss-120b:free"}`,
-		`• Tier 3 (Ligeros):     ${cfg.lightweight || "openrouter/openai/gpt-oss-20b:free"}`,
-		overrides.length > 0 ? "\nAsignaciones específicas por agente:\n" + overrides.join("\n") : "",
-		"\nGuardado en .pi/gentle-ai/models.json",
-	].filter(Boolean).join("\n");
+		`• Tier 1 (Directores):  ${dirModel}`,
+		`• Tier 2 (Workhorses):  ${workModel}`,
+		`• Tier 3 (Ligeros):     ${lightModel}`,
+	];
+
+	if (allInherit && overrides.length === 0) {
+		lines.push("\n✔ Todos los agentes heredan el modelo activo de tu sesión.");
+	} else if (overrides.length > 0) {
+		lines.push("\nAsignaciones específicas por agente:\n" + overrides.slice(0, 15).join("\n"));
+	}
+
+	lines.push("\nGuardado en .pi/gentle-ai/models.json");
+	return lines.join("\n");
 }
 
 async function promptSelectSafe(

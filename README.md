@@ -328,6 +328,11 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
 
 ## Changelog
 
+### v0.5.3 — 2026-09-25
+
+- **Clean Model Inheritance & Overrides Filtering**: When applying `inherit` mode or tier defaults, `.pi/gentle-ai/models.json` now stores a clean tier mapping instead of duplicating 50 redundant agent keys. False agent overrides are automatically filtered out from model listings, displaying `✔ Todos los agentes heredan el modelo activo de tu sesión.`
+- **Pi TUI Render Safety**: Eliminated raw `console.log` invocations when `ctx.hasUI` is active across all studio commands, preventing screen smearing, duplicate printing, and collisions with Pi's interactive status bar / breadcrumbs.
+
 ### v0.5.2 — 2026-09-25
 
 - **Clean Terminal Startup & Scrollback Wiping**: Automatically clears previous terminal scrollback and visible viewport on `session_start` and in `/studio:status`, giving a clean, distraction-free arcade dashboard experience.

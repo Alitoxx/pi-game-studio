@@ -42,7 +42,7 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 	const lines: string[] = [];
 
 	// Package version detection
-	let version = "0.5.2";
+	let version = "0.5.3";
 	try {
 		const pkgUrl = new URL("../../package.json", import.meta.url);
 		if (existsSync(pkgUrl)) {

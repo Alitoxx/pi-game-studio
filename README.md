@@ -237,7 +237,7 @@ pi install ./pi-game-studio -l
 /setup
 ```
 
-This copies the 49 agents to `.pi/agents/` and creates `.pi/gentle-ai/models.json` with the default model mapping.
+This copies the 50 agents to `.pi/agents/` and creates `.pi/gentle-ai/models.json` with the default model mapping.
 
 ### Start
 
@@ -293,9 +293,9 @@ pi-game-studio/                     # Package root
 ├── LICENSE                         # MIT
 ├── AGENTS.md                       # Full agent roster
 ├── models.default.json             # Recommended 3-tier model mapping
-├── agents/                         # 49 source agents (model: inherit)
-├── skills/                         # 75 skills (SKILL.md per directory)
-├── prompts/                        # 38 document templates
+├── agents/                         # 50 source agents (model: inherit)
+├── skills/                         # 77 skills (SKILL.md per directory)
+├── prompts/                        # 43 document templates
 ├── extensions/                     # Hooks extension
 │   └── hooks/
 │       ├── index.ts                # 4 ported hooks
@@ -338,6 +338,8 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
 - **Unified Configuration**: added `project.yaml` support with `/settings` and `scripts/yaml-helper.sh`
 - **Prototype Overhaul**: `/prototype` updated with concept validation, `--spike` mode (4-hour technical spikes), and updated `prototyper` agent
 - **Engine Reference & Support**: Added Bevy Engine reference docs (`docs/engine-reference/bevy/`) and specialist routing in `/setup-engine`
+- **Interactive & Guided Setup Flow**: Redesigned `/setup` and `/assign-models` with bilingual support (ES/EN) and conversational confirmation steps using `ask_user_question` before modifying any project files
+- **Retro Gaming Startup Banner & Live Dashboard**: Added an ASCII art studio banner and status card hook (`extensions/hooks/banner.ts` & `index.ts`) rendered on `session_start` with active directors, specialists, engine detection, skills/templates counts, storage status, and quick-start tips via Pi TUI header (`ctx.ui.setHeader`)
 
 ### v0.3.0 — 2026-05-16
 

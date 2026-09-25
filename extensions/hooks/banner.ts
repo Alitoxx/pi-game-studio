@@ -25,10 +25,17 @@ function visibleLength(str: string): number {
 	return len;
 }
 
+function center(line: string, totalWidth: number): string {
+	const vis = visibleLength(line);
+	if (vis === 0) return "";
+	const pad = Math.max(0, Math.floor((totalWidth - vis) / 2));
+	return " ".repeat(pad) + line;
+}
+
 function formatRow(styledContent: string, targetWidth = 75): string {
 	const vis = visibleLength(styledContent);
 	const pad = Math.max(0, targetWidth - vis);
-	return `${DIM}  │ ${RESET}${styledContent}${" ".repeat(pad)}${DIM} │${RESET}`;
+	return `${DIM}│ ${RESET}${styledContent}${" ".repeat(pad)}${DIM} │${RESET}`;
 }
 
 export function renderBanner(width = 80, cwd = process.cwd()): string[] {
@@ -72,60 +79,85 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 	if (width >= 80) {
 		const boxWidth = 75; // inner width between │ and │
 		lines.push("");
-		lines.push(`${VIOLET}${BOLD}   ██████╗ ██╗     ██████╗  █████╗ ███╗   ███╗███████╗${RESET}`);
-		lines.push(`${VIOLET}${BOLD}   ██╔══██╗██║    ██╔════╝ ██╔══██╗████╗ ████║██╔════╝${RESET}`);
-		lines.push(`${VIOLET}${BOLD}   ██████╔╝██║    ██║  ███╗███████║██╔████╔██║█████╗  ${RESET}`);
-		lines.push(`${VIOLET}${BOLD}   ██╔═══╝ ██║    ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝  ${RESET}`);
-		lines.push(`${VIOLET}${BOLD}   ██║     ██║    ╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗${RESET}`);
-		lines.push(`${VIOLET}${BOLD}   ╚═╝     ╚═╝     ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝${RESET}`);
-		lines.push(`${CYAN}                S  T  U  D  I  O   ·   v 0 . 4 . 0${RESET}`);
+
+		const logoLines = [
+			"██████╗ ██╗     ██████╗  █████╗ ███╗   ███╗███████╗",
+			"██╔══██╗██║    ██╔════╝ ██╔══██╗████╗ ████║██╔════╝",
+			"██████╔╝██║    ██║  ███╗███████║██╔████╔██║█████╗  ",
+			"██╔═══╝ ██║    ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝  ",
+			"██║     ██║    ╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗",
+			"╚═╝     ╚═╝     ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝",
+		];
+		for (const logo of logoLines) {
+			lines.push(center(`${VIOLET}${BOLD}${logo}${RESET}`, width));
+		}
+		lines.push(center(`${CYAN}S  T  U  D  I  O   ·   v 0 . 4 . 0${RESET}`, width));
 		lines.push("");
-		lines.push(`${DIM}  ┌${"─".repeat(boxWidth + 2)}┐${RESET}`);
+
+		lines.push(center(`${DIM}┌${"─".repeat(boxWidth + 2)}┐${RESET}`, width));
 
 		lines.push(
-			formatRow(
-				`${VIOLET}${BOLD}DIRECTORS  ${RESET}${DIM}:${RESET} ${WHITE}3 activos${RESET} ${DIM}(Creative · Technical · Producer)${RESET}`,
-				boxWidth,
+			center(
+				formatRow(
+					`${VIOLET}${BOLD}DIRECTORS  ${RESET}${DIM}:${RESET} ${WHITE}3 activos${RESET} ${DIM}(Creative · Technical · Producer)${RESET}`,
+					boxWidth,
+				),
+				width,
 			),
 		);
 		lines.push(
-			formatRow(
-				`${VIOLET}${BOLD}WORKHORSES ${RESET}${DIM}:${RESET} ${WHITE}44 especialistas${RESET} ${DIM}(Diseño, Código, Arte, Audio, QA)${RESET}`,
-				boxWidth,
+			center(
+				formatRow(
+					`${VIOLET}${BOLD}WORKHORSES ${RESET}${DIM}:${RESET} ${WHITE}44 especialistas${RESET} ${DIM}(Diseño, Código, Arte, Audio, QA)${RESET}`,
+					boxWidth,
+				),
+				width,
 			),
 		);
 		lines.push(
-			formatRow(
-				`${VIOLET}${BOLD}ENGINES    ${RESET}${DIM}:${RESET} ${CYAN}${engineInfo}${RESET}`,
-				boxWidth,
+			center(
+				formatRow(
+					`${VIOLET}${BOLD}ENGINES    ${RESET}${DIM}:${RESET} ${CYAN}${engineInfo}${RESET}`,
+					boxWidth,
+				),
+				width,
 			),
 		);
 		lines.push(
-			formatRow(
-				`${VIOLET}${BOLD}SKILLS     ${RESET}${DIM}:${RESET} ${GREEN}77 comandos slash${RESET}  ${DIM}│${RESET}  ${VIOLET}${BOLD}TEMPLATES :${RESET} ${GREEN}43 docs${RESET}`,
-				boxWidth,
+			center(
+				formatRow(
+					`${VIOLET}${BOLD}SKILLS     ${RESET}${DIM}:${RESET} ${GREEN}77 comandos slash${RESET}  ${DIM}│${RESET}  ${VIOLET}${BOLD}TEMPLATES :${RESET} ${GREEN}43 docs${RESET}`,
+					boxWidth,
+				),
+				width,
 			),
 		);
 		lines.push(
-			formatRow(
-				`${VIOLET}${BOLD}CONFIG     ${RESET}${DIM}:${RESET} ${WHITE}project.yaml${RESET}       ${DIM}│${RESET}  ${VIOLET}${BOLD}STORAGE   :${RESET} ${GREEN}${engramStatus}${RESET}`,
-				boxWidth,
+			center(
+				formatRow(
+					`${VIOLET}${BOLD}CONFIG     ${RESET}${DIM}:${RESET} ${WHITE}project.yaml${RESET}       ${DIM}│${RESET}  ${VIOLET}${BOLD}STORAGE   :${RESET} ${GREEN}${engramStatus}${RESET}`,
+					boxWidth,
+				),
+				width,
 			),
 		);
-		lines.push(`${DIM}  ├${"─".repeat(boxWidth + 2)}┤${RESET}`);
+		lines.push(center(`${DIM}├${"─".repeat(boxWidth + 2)}┤${RESET}`, width));
 		lines.push(
-			formatRow(
-				`${GOLD}${BOLD}💡 TIPS     ${RESET}${DIM}:${RESET} ${WHITE}/start${RESET} ${DIM}(Inicio)${RESET} · ${WHITE}/brainstorm${RESET} ${DIM}(Ideación)${RESET} · ${WHITE}/settings${RESET} ${DIM}(Config)${RESET}`,
-				boxWidth,
+			center(
+				formatRow(
+					`${GOLD}${BOLD}💡 TIPS     ${RESET}${DIM}:${RESET} ${WHITE}/start${RESET} ${DIM}(Inicio)${RESET} · ${WHITE}/brainstorm${RESET} ${DIM}(Ideación)${RESET} · ${WHITE}/settings${RESET} ${DIM}(Config)${RESET}`,
+					boxWidth,
+				),
+				width,
 			),
 		);
-		lines.push(`${DIM}  └${"─".repeat(boxWidth + 2)}┘${RESET}`);
+		lines.push(center(`${DIM}└${"─".repeat(boxWidth + 2)}┘${RESET}`, width));
 		lines.push("");
 	} else {
-		lines.push(`${VIOLET}${BOLD}🎮 PI GAME STUDIO v0.4.0${RESET}`);
-		lines.push(`${CYAN}50 Agentes · 77 Skills · 43 Templates · 4 Hooks${RESET}`);
-		lines.push(`${WHITE}Motores: ${engineInfo}${RESET}`);
-		lines.push(`${GOLD}💡 Usa /start para inicializar tu estudio de videojuegos${RESET}`);
+		lines.push(center(`${VIOLET}${BOLD}🎮 PI GAME STUDIO v0.4.0${RESET}`, width));
+		lines.push(center(`${CYAN}50 Agentes · 77 Skills · 43 Templates · 4 Hooks${RESET}`, width));
+		lines.push(center(`${WHITE}Motores: ${engineInfo}${RESET}`, width));
+		lines.push(center(`${GOLD}💡 Usa /start para inicializar tu estudio de videojuegos${RESET}`, width));
 	}
 
 	return lines;

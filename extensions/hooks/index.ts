@@ -87,7 +87,8 @@ export default function (pi: ExtensionAPI) {
 					},
 				}));
 			} else {
-				const bannerLines = renderBanner(80, ctx.cwd);
+				const termWidth = process.stdout.columns || 80;
+				const bannerLines = renderBanner(termWidth, ctx.cwd);
 				for (const line of bannerLines) {
 					console.log(line);
 				}

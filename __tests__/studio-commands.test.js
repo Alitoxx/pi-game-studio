@@ -24,6 +24,7 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 	test("registers all required studio suite commands", () => {
 		const expectedCommands = [
 			"studio",
+			"studio:start",
 			"studio:setup",
 			"studio:models",
 			"studio:status",
@@ -61,6 +62,7 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 
 	test("all interactive select handlers support Pi string return values", () => {
 		const files = [
+			"studio-start.ts",
 			"studio-setup.ts",
 			"studio-models.ts",
 			"studio-command.ts",

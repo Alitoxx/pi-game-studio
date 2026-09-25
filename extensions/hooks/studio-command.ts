@@ -13,7 +13,7 @@ export const STUDIO_CATEGORIES: StudioCategory[] = [
 		emoji: "🎯",
 		description: "Onboarding, ideación, pitch y validación inicial",
 		commands: [
-			{ cmd: "/start", desc: "Primer onboarding guiado paso a paso" },
+			{ cmd: "/studio:start", desc: "Asistente interactivo de inicio y onboarding (alias /start)" },
 			{ cmd: "/brainstorm", desc: "Ideación estructurada de conceptos de juego" },
 			{ cmd: "/concept-pitch", desc: "Pitch deck y elevator pitch de venta" },
 			{ cmd: "/vertical-slice", desc: "Validación de loop completo pre-producción" },

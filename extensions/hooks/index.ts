@@ -15,6 +15,7 @@ import { handleStudioStatus } from "./studio-status.ts";
 import { handleStudioAgents } from "./studio-agents.ts";
 import { handleStudioSettings } from "./studio-settings.ts";
 import { handleStudioChains } from "./studio-chains.ts";
+import { handleStudioStart } from "./studio-start.ts";
 
 export default function (pi: ExtensionAPI) {
 	// ──────────────────────────────────────────────
@@ -26,6 +27,14 @@ export default function (pi: ExtensionAPI) {
 		description: "🎮 [Studio] Explorador y catálogo de comandos de Pi Game Studio",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioCommand(args, ctx);
+		},
+	});
+
+	// /studio:start — Asistente interactivo de inicio y onboarding
+	(pi as any).registerCommand?.("studio:start", {
+		description: "🎮 [Studio] Asistente interactivo de inicio y onboarding de tu juego",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioStart(args, ctx);
 		},
 	});
 

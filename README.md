@@ -328,6 +328,10 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
 
 ## Changelog
 
+### v0.6.1 — 2026-09-25
+
+- **Unified `/studio:start` Extension Command**: Introduced `/studio:start` as an interactive TypeScript extension command within the `studio:*` namespace. Provides instant project state auditing (engine, GDD count, source code, prototypes) and guided onboarding choices (Brainstorm, GDD, Settings, Adopt, or AI interview via `/start`) with no startup latency.
+
 ### v0.6.0 — 2026-09-25
 
 - **Gentle Shell Architectural Homologation**:

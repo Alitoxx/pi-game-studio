@@ -452,7 +452,7 @@ export function installStudioFiles(
 		`• Modelos: .pi/gentle-ai/models.json`,
 		`• Registro: .pi/game-studio/install-log.md`,
 		``,
-		`💡 Siguiente paso: usa /start para iniciar tu juego o /studio para ver comandos.`,
+		`💡 Siguiente paso: usa /studio:start para iniciar tu juego o /studio para ver comandos.`,
 	].join("\n");
 
 	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
@@ -466,7 +466,7 @@ export function installStudioFiles(
 		console.log(`  \x1b[38;2;167;139;250m• Registro:\x1b[0m   \x1b[38;2;243;244;246m.pi/game-studio/install-log.md\x1b[0m`);
 		console.log("");
 		console.log("\x1b[38;2;251;191;36m💡 Siguiente paso sugerido:\x1b[0m");
-		console.log("  Escribe \x1b[1m\x1b[38;2;56;189;248m/start\x1b[0m para dar inicio al onboarding de tu juego.");
+		console.log("  Escribe \x1b[1m\x1b[38;2;56;189;248m/studio:start\x1b[0m (o \x1b[38;2;56;189;248m/start\x1b[0m) para dar inicio al onboarding de tu juego.");
 		console.log("  O escribe \x1b[1m\x1b[38;2;56;189;248m/studio\x1b[0m para explorar los comandos disponibles.");
 		console.log("");
 	}

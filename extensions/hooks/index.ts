@@ -144,6 +144,14 @@ export default function (pi: ExtensionAPI) {
 		// Only run in the game-studio project context
 		if (!isGameStudio) return;
 
+		// Clear terminal screen and scrollback buffer for a clean studio experience
+		const shouldClear = !existsSync(join(ctx.cwd, ".pi", "game-studio", "no-clear-screen"));
+		if (shouldClear && process.stdout.isTTY) {
+			try {
+				process.stdout.write("\x1b[2J\x1b[3J\x1b[H");
+			} catch {}
+		}
+
 		// Display startup banner / dashboard
 		try {
 			if ((ctx as any).hasUI && (ctx as any).ui?.setHeader) {

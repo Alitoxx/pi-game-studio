@@ -328,6 +328,11 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
 
 ## Changelog
 
+### v0.5.2 — 2026-09-25
+
+- **Clean Terminal Startup & Scrollback Wiping**: Automatically clears previous terminal scrollback and visible viewport on `session_start` and in `/studio:status`, giving a clean, distraction-free arcade dashboard experience.
+- **Configurable Terminal Clear Toggle**: Added interactive toggle in `/studio:settings` (`🧹 Limpiar terminal al iniciar: Activado/Desactivado`) for developer preference.
+
 ### v0.5.1 — 2026-09-25
 
 - **Studio Suite Extension Commands (`studio:*`)**: Implemented dedicated TypeScript extension command namespace inspired by Gentle Shell:

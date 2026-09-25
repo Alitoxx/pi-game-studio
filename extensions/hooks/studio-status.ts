@@ -3,9 +3,14 @@ import { renderBanner } from "./banner.ts";
 import { inspectSetup } from "./studio-setup.ts";
 
 export async function handleStudioStatus(
-	_args: string,
+	args: string,
 	ctx: ExtensionContext,
 ): Promise<void> {
+	if (process.stdout.isTTY && args !== "--no-clear") {
+		try {
+			process.stdout.write("\x1b[2J\x1b[3J\x1b[H");
+		} catch {}
+	}
 	const termWidth = process.stdout.columns || 80;
 	const bannerLines = renderBanner(termWidth, ctx.cwd);
 

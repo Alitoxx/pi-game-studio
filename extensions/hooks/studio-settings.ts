@@ -1,5 +1,5 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, mkdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 
 export async function handleStudioSettings(
@@ -34,9 +34,13 @@ export async function handleStudioSettings(
 
 	// Interactive select
 	if (ctx.hasUI && typeof (ctx.ui as any)?.select === "function") {
+		const noClearFlag = join(ctx.cwd, ".pi", "game-studio", "no-clear-screen");
+		const clearScreenActive = !existsSync(noClearFlag);
+
 		const options = [
 			`🎮 Cambiar Motor de Juego (Actual: ${currentEngine})`,
 			"🌐 Cambiar Idioma del Estudio (Español / English)",
+			`🧹 Limpiar terminal al iniciar: ${clearScreenActive ? "Activado (Recomendado)" : "Desactivado"}`,
 			"📄 Ver archivo de configuración project.yaml",
 		];
 
@@ -81,7 +85,25 @@ export async function handleStudioSettings(
 				}
 				break;
 			}
-			case 2:
+			case 2: {
+				const studioDir = join(ctx.cwd, ".pi", "game-studio");
+				mkdirSync(studioDir, { recursive: true });
+				if (clearScreenActive) {
+					writeFileSync(noClearFlag, "true", "utf8");
+					if (typeof (ctx.ui as any)?.notify === "function") {
+						ctx.ui.notify("🧹 Limpieza de terminal al iniciar: Desactivada", "info");
+					}
+					console.log("\x1b[38;2;251;191;36m🧹 Limpieza de terminal al iniciar: Desactivada\x1b[0m");
+				} else {
+					try { unlinkSync(noClearFlag); } catch {}
+					if (typeof (ctx.ui as any)?.notify === "function") {
+						ctx.ui.notify("🧹 Limpieza de terminal al iniciar: Activada", "info");
+					}
+					console.log("\x1b[38;2;52;211;153m✔ Limpieza de terminal al iniciar: Activada\x1b[0m");
+				}
+				break;
+			}
+			case 3:
 				printYamlConfig(ctx.cwd);
 				break;
 		}

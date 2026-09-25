@@ -7,40 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.4.0] - 2026-09-24
+## [0.5.0] - 2026-09-25
 
 ### Added
-- **Retro Gaming Startup Banner & Dashboard (`extensions/hooks/banner.ts`, `extensions/hooks/index.ts`)**:
-  - Implemented ASCII art studio logo with pixel-perfect visual width calculation.
-  - Studio status card displaying:
-    - **Directors**: 3 active (`creative-director`, `technical-director`, `producer`).
-    - **Workhorses**: 44 domain specialists across design, code, art, audio, and QA.
-    - **Game Engine**: Dynamic detection from `project.yaml` or `.pi/game-studio/technical-preferences.md` (Godot, Unity, Unreal, Bevy).
-    - **Skills & Templates**: Live counts (77 skills, 43 templates).
-    - **Storage**: Detection of Engram persistent memory vs local storage.
-    - **Tips**: Quick shortcuts (`/start`, `/brainstorm`, `/settings`).
-  - Integrated with Pi TUI header (`ctx.ui.setHeader`) and fallback console rendering for non-TUI runs.
-- **Studio Command Identity & Prefix (`skills/*/SKILL.md`)**:
+- **Studio Command Visual Identity (`skills/*/SKILL.md`)**:
   - Added `🎮 [Studio]` prefix to all 77 skill descriptions so they stand out immediately from native Pi commands in the `/` autocomplete menu.
-  - Added `/studio` slash command (`extensions/hooks/studio-command.ts`, `extensions/hooks/index.ts`) with interactive category browsing and cheat sheets.
+  - Added `/studio` slash command (`extensions/hooks/studio-command.ts`, `extensions/hooks/index.ts`) with interactive category browsing (Pre-producción, Diseño, Motores, Arte/Audio, QA, Producción, Configuración) and command cheatsheets.
+- **Retro Gaming Startup Banner & Live Dashboard (`extensions/hooks/banner.ts`, `extensions/hooks/index.ts`)**:
+  - ASCII art studio logo with pixel-perfect mathematical terminal centering (`center(line, width)`).
+  - Live studio status card displaying active directors (3), specialists (44), detected game engine, live skill/template counts (77/43), storage status, and quick-start tips.
+  - Integrated into Pi TUI header (`ctx.ui.setHeader`) on `session_start` with fallback console output.
+  - Dynamic version reading directly from `package.json`.
 - **Guided & Interactive Setup Flow (`skills/setup/SKILL.md`, `skills/assign-models/SKILL.md`)**:
-  - Replaced immediate automated file copies with an interactive interview and explanation step.
-  - Displays what will be copied and checks for existing installations before modifying files.
-  - Added bilingual prompt instructions (detecting user language: Spanish / English) to respond and guide in the user's preferred language.
-  - Interactive confirmation gates via `ask_user_question` before applying agent files or model configurations.
-- **Dual Upstream Homologation (CCGS v1.1.1 + OCGS v0.13.0)**:
-  - Added 50th agent: `agents/bevy-specialist.md` with Bevy 0.19 docs in `docs/engine-reference/bevy/`.
-  - Added 2 new skills: `skills/vertical-slice/SKILL.md` (pre-production gate) and `skills/settings/SKILL.md` (`project.yaml` manager).
-  - Added 5 new templates in `prompts/`: `game-brief.md`, `prototype-report.md`, `vertical-slice-report.md`, `session-state.md`, `SKILL-CONTRACT-TEMPLATE.md`.
-  - Added unified `project.yaml` configuration with `scripts/yaml-helper.sh`.
+  - Transparent step-by-step onboarding interview with bilingual support (ES/EN).
+  - Explicit confirmation prompts (`ask_user_question`) before modifying any project files or copying agents.
 - **Testing Sandbox**:
-  - Added `sandbox/` and `playground/` to `.gitignore` for isolated testing.
+  - Added `sandbox/` and `playground/` to `.gitignore` for isolated development and testing.
 
 ### Changed
 - **Decoupled Engram ("Files First, Memory Accelerated")**:
   - Removed hard dependencies on external `engram_mem_save` from skill tool lists across all skills (`architecture-decision`, `brainstorm`, `connect-engram`, `design-review`, `design-system`, `gate-check`, `setup`, `skill-improve`, `start`, `story-done`).
   - Guaranteed 100% functionality with local Markdown files in Git repository when Engram is not installed.
   - Refactored `/connect-engram` into an intelligent diagnostic and sync assistant with graceful degradation.
+
+---
+
+## [0.4.0] - 2026-09-24
+
+### Added
+- **Dual Upstream Homologation (CCGS v1.1.1 + OCGS v0.13.0)**:
+  - Added 50th agent: `agents/bevy-specialist.md` with Bevy 0.19 docs in `docs/engine-reference/bevy/`.
+  - Added 2 new skills: `skills/vertical-slice/SKILL.md` (pre-production gate) and `skills/settings/SKILL.md` (`project.yaml` manager).
+  - Added 5 new templates in `prompts/`: `game-brief.md`, `prototype-report.md`, `vertical-slice-report.md`, `session-state.md`, `SKILL-CONTRACT-TEMPLATE.md`.
+  - Added unified `project.yaml` configuration with `scripts/yaml-helper.sh`.
+
+### Changed
 - Updated `/prototype` skill with concept validation and `--spike` mode (time-boxed 4h technical spikes).
 - Updated `prototyper` agent with spike protocols and risk burn-down templates.
 - Updated `models.default.json` and `scripts/assign-models.js` to assign all 50 agents.

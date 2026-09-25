@@ -328,6 +328,14 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
 
 ## Changelog
 
+### v0.5.0 — 2026-09-25
+
+- **Studio Command Visual Identity**: Added `🎮 [Studio]` prefix to all 77 skill descriptions in autocomplete menu.
+- **Studio Command Palette (`/studio`)**: Added interactive category browsing and command cheatsheets.
+- **Retro Gaming Startup Banner & Dashboard**: ASCII art logo with mathematical centering and dynamic studio status in Pi TUI header (`ctx.ui.setHeader`).
+- **Guided & Interactive Setup Flow**: Redesigned `/setup` and `/assign-models` with bilingual prompt flow and confirmation gates.
+- **Decoupled Engram ("Files First, Memory Accelerated")**: Removed hard `engram_mem_save` dependencies across all skills; local Git Markdown files are the single source of truth; refactored `/connect-engram` as an optional diagnostic assistant.
+
 ### v0.4.0 — 2026-09-24
 
 - **Dual Upstream Homologation Pass** — synchronized with CCGS (Donchitos v1.1.1) and OCGS (striderZA v0.13.0):
@@ -338,8 +346,6 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
 - **Unified Configuration**: added `project.yaml` support with `/settings` and `scripts/yaml-helper.sh`
 - **Prototype Overhaul**: `/prototype` updated with concept validation, `--spike` mode (4-hour technical spikes), and updated `prototyper` agent
 - **Engine Reference & Support**: Added Bevy Engine reference docs (`docs/engine-reference/bevy/`) and specialist routing in `/setup-engine`
-- **Interactive & Guided Setup Flow**: Redesigned `/setup` and `/assign-models` with bilingual support (ES/EN) and conversational confirmation steps using `ask_user_question` before modifying any project files
-- **Retro Gaming Startup Banner & Live Dashboard**: Added an ASCII art studio banner and status card hook (`extensions/hooks/banner.ts` & `index.ts`) rendered on `session_start` with active directors, specialists, engine detection, skills/templates counts, storage status, and quick-start tips via Pi TUI header (`ctx.ui.setHeader`)
 
 ### v0.3.0 — 2026-05-16
 

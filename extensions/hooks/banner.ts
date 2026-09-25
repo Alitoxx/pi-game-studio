@@ -41,6 +41,16 @@ function formatRow(styledContent: string, targetWidth = 75): string {
 export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 	const lines: string[] = [];
 
+	// Package version detection
+	let version = "0.5.0";
+	try {
+		const pkgUrl = new URL("../../package.json", import.meta.url);
+		if (existsSync(pkgUrl)) {
+			const pkg = JSON.parse(readFileSync(pkgUrl, "utf8"));
+			if (pkg.version) version = pkg.version;
+		}
+	} catch {}
+
 	// Storage / Engram detection
 	let engramStatus = "Local storage";
 	try {
@@ -91,7 +101,7 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 		for (const logo of logoLines) {
 			lines.push(center(`${VIOLET}${BOLD}${logo}${RESET}`, width));
 		}
-		lines.push(center(`${CYAN}S  T  U  D  I  O   ·   v 0 . 4 . 0${RESET}`, width));
+		lines.push(center(`${CYAN}S  T  U  D  I  O   ·   v ${version.split("").join(" ")}${RESET}`, width));
 		lines.push("");
 
 		lines.push(center(`${DIM}┌${"─".repeat(boxWidth + 2)}┐${RESET}`, width));
@@ -154,7 +164,7 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 		lines.push(center(`${DIM}└${"─".repeat(boxWidth + 2)}┘${RESET}`, width));
 		lines.push("");
 	} else {
-		lines.push(center(`${VIOLET}${BOLD}🎮 PI GAME STUDIO v0.4.0${RESET}`, width));
+		lines.push(center(`${VIOLET}${BOLD}🎮 PI GAME STUDIO v${version}${RESET}`, width));
 		lines.push(center(`${CYAN}50 Agentes · 77 Skills · 43 Templates · 4 Hooks${RESET}`, width));
 		lines.push(center(`${WHITE}Motores: ${engineInfo}${RESET}`, width));
 		lines.push(center(`${GOLD}💡 Usa /studio o /start para comenzar con tu videojuego${RESET}`, width));

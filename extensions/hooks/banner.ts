@@ -118,7 +118,7 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 		lines.push(
 			center(
 				formatRow(
-					`${VIOLET}${BOLD}WORKHORSES ${RESET}${DIM}:${RESET} ${WHITE}45 especialistas${RESET} ${DIM}(Diseño, Código, Arte, Audio, QA)${RESET}`,
+					`${VIOLET}${BOLD}WORKHORSES ${RESET}${DIM}:${RESET} ${WHITE}49 especialistas${RESET} ${DIM}(Diseño, Código, Arte, Audio, QA)${RESET}`,
 					boxWidth,
 				),
 				width,
@@ -165,7 +165,7 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 		lines.push("");
 	} else {
 		lines.push(center(`${VIOLET}${BOLD}🎮 PI GAME STUDIO v${version}${RESET}`, width));
-		lines.push(center(`${CYAN}51 Agentes · 77 Skills · 43 Templates · 4 Hooks${RESET}`, width));
+		lines.push(center(`${CYAN}55 Agentes · 77 Skills · 43 Templates · 4 Hooks${RESET}`, width));
 		lines.push(center(`${WHITE}Motores: ${engineInfo}${RESET}`, width));
 		lines.push(center(`${GOLD}💡 Usa /studio o /studio:setup para comenzar con tu videojuego${RESET}`, width));
 	}

@@ -3,12 +3,12 @@
 <p align="center">
   Turn a Pi session into a full game development studio.
   <br />
-  51 agents. 77 skills. 43 templates. One coordinated AI team.
+  55 agents. 77 skills. 43 templates. One coordinated AI team.
 </p>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
-  <a href="agents"><img src="https://img.shields.io/badge/agents-51-blueviolet" alt="51 Agents"></a>
+  <a href="agents"><img src="https://img.shields.io/badge/agents-55-blueviolet" alt="55 Agents"></a>
   <a href="skills"><img src="https://img.shields.io/badge/skills-77-green" alt="77 Skills"></a>
   <a href="prompts"><img src="https://img.shields.io/badge/templates-43-orange" alt="43 Templates"></a>
   <a href="extensions"><img src="https://img.shields.io/badge/hooks-4-red" alt="4 Hooks"></a>
@@ -21,7 +21,7 @@
 
 Building a game solo with AI is powerful — but a single chat session has no structure. No one stops you from hardcoding magic numbers, skipping design docs, or writing spaghetti code. There's no QA pass, no design review, no one asking "does this actually fit the game's vision?"
 
-**Pi Game Studio** solves this by giving your AI session the structure of a real studio. Instead of one general-purpose assistant, you get 51 specialized agents organized into a studio hierarchy — directors who guard the vision, department leads who own their domains, and specialists who do the hands-on work. Each agent has defined responsibilities, escalation paths, and quality gates.
+**Pi Game Studio** solves this by giving your AI session the structure of a real studio. Instead of one general-purpose assistant, you get 55 specialized agents organized into a studio hierarchy — directors who guard the vision, department leads who own their domains, and specialists who do the hands-on work. Each agent has defined responsibilities, escalation paths, and quality gates.
 
 The result: you still make every decision, but now you have a team that asks the right questions, catches mistakes early, and keeps your project organized from first brainstorm to launch.
 
@@ -48,7 +48,7 @@ The result: you still make every decision, but now you have a team that asks the
 
 | Category      | Count | Description                                                                                                              |
 | ------------- | ----- | ------------------------------------------------------------------------------------------------------------------------ |
-| **Agents**    | 51    | Specialized agents across design, programming, art, audio, narrative, QA, and production                                 |
+| **Agents**    | 55    | Specialized agents across design, programming, art, audio, narrative, QA, and production                                 |
 | **Skills**    | 77    | Slash commands for every workflow phase (`/start`, `/settings`, `/prototype`, `/vertical-slice`, `/dev-story`, etc.)     |
 | **Templates** | 43    | Document templates for GDDs, UX specs, ADRs, sprint plans, vertical slice reports, game briefs, and more                  |
 | **Hooks**     | 4     | Automated validation on commits, pushes, skill changes, and session audit/gap detection                                  |
@@ -297,7 +297,7 @@ pi-game-studio/                     # Package root
 ├── LICENSE                         # MIT
 ├── AGENTS.md                       # Full agent roster
 ├── models.default.json             # Recommended 3-tier model mapping
-├── agents/                         # 51 source agents (model: inherit)
+├── agents/                         # 55 source agents (model: inherit)
 ├── skills/                         # 77 skills (SKILL.md per directory)
 ├── prompts/                        # 43 document templates
 ├── extensions/                     # Hooks extension
@@ -331,6 +331,18 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
 - **Quality gates.** Director gates (APPROVE / CONCERNS / REJECT) prevent advancing with unresolved issues.
 
 ## Changelog
+
+### v0.7.1 — 2026-09-26
+
+- **Raylib & C++ Engine Specialist Quintet (55 Agents)**:
+  - **Full Specialist Quintet for Raylib**: Completed the 5-agent specialized engine sub-team following the same architecture as Godot, Unity, and Unreal:
+    - `raylib-specialist` — Engine Lead (architecture, game loop, 2D/isometric camera math, batching).
+    - `raylib-entt-specialist` — ECS & Data (pure POD components, views, pools, cache locality, hordes).
+    - `raylib-shader-specialist` — GPU & Shaders (GLSL 2D/3D shaders, dynamic lighting, fog of war, VFX).
+    - `raylib-ui-specialist` — UI & Tooling (Raygui, health/mana globes, inventory grids, Dear ImGui / rlImGui debug tooling).
+    - `raylib-build-specialist` — CMake & Packaging (FetchContent, multi-platform, emscripten/WASM, optimization flags).
+  - **Studio Expansion**: Roster expanded from 51 to **55 agents** across the studio hierarchy with medium thinking effort and PoLP tool enforcement.
+  - **Engine Routing**: Updated `/setup-engine` file extension and specialist dispatch matrix for `.cpp`, `.hpp`, `.glsl`, CMake, and UI files.
 
 ### v0.7.0 — 2026-09-25
 

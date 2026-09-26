@@ -746,19 +746,20 @@ Use GDScript conventions for `.gd` files and C# conventions for `.cs` files. Mix
 ```markdown
 ## Engine Specialists
 - **Primary**: raylib-specialist
-- **Language/Code Specialist**: raylib-specialist (Modern C++17/20, EnTT ECS, RAII, CMake)
-- **Shader Specialist**: raylib-specialist (GLSL 2D/3D shaders, custom post-processing)
-- **UI Specialist**: raylib-specialist (Raygui, Dear ImGui via rlImGui)
-- **Additional Specialists**: None
-- **Routing Notes**: Invoke primary for all Raylib C++ code, CMake targets, EnTT component models, and isometric / 2D rendering loops.
+- **ECS & Data Specialist**: raylib-entt-specialist (EnTT components, views, pools, DOD architecture)
+- **Shader Specialist**: raylib-shader-specialist (GLSL 2D/3D shaders, dynamic lighting, fog of war, VFX)
+- **UI & Tools Specialist**: raylib-ui-specialist (In-game HUD, Raygui, Dear ImGui debug overlays via rlImGui)
+- **Build Specialist**: raylib-build-specialist (Modern CMake, FetchContent, WebAssembly emscripten, compiler flags)
+- **Routing Notes**: Invoke primary for overall loop architecture, windowing, and 2D/isometric camera math. Invoke EnTT specialist for entity systems and combat data. Invoke shader specialist for GLSL visual effects. Invoke UI specialist for menus and debug tooling. Invoke build specialist for CMake and packaging.
 
 ### File Extension Routing
 
 | File Extension / Type | Specialist to Spawn |
 |-----------------------|---------------------|
-| Game code (.cpp, .hpp, .h, .cxx) | raylib-specialist |
-| Shader files (.fs, .vs, .glsl) | raylib-specialist |
-| Build / project files (CMakeLists.txt, *.cmake) | raylib-specialist |
+| Game code & components (.cpp, .hpp, .h, .cxx) | raylib-specialist / raylib-entt-specialist |
+| Shader files (.fs, .vs, .glsl) | raylib-shader-specialist |
+| Build / project files (CMakeLists.txt, *.cmake) | raylib-build-specialist |
+| UI & debug tooling files (ui_*, debug_*) | raylib-ui-specialist |
 | Data / level files (.json, .ldtk, .tmx) | raylib-specialist |
 | General architecture review | raylib-specialist |
 ```

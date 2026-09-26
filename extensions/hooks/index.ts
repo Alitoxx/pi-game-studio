@@ -62,9 +62,9 @@ export default function (pi: ExtensionAPI) {
 		},
 	});
 
-	// /studio:agents — Catálogo de los 51 agentes
+	// /studio:agents — Catálogo de los 55 agentes
 	(pi as any).registerCommand?.("studio:agents", {
-		description: "🎮 [Studio] Catálogo interactivo de los 51 agentes y sus especialidades",
+		description: "🎮 [Studio] Catálogo interactivo de los 55 agentes y sus especialidades",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioAgents(args, ctx);
 		},

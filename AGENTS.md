@@ -1,6 +1,6 @@
 # Pi Game Studio Agents — Manual y Referencia Oficial
 
-Guía de referencia completa para los **51 agentes especializados** de Pi Game Studio.
+Guía de referencia completa para los **55 agentes especializados** de Pi Game Studio.
 
 ## Jerarquía del Estudio
 
@@ -22,7 +22,8 @@ Tier 3 — Specialists (Implementación, Motores y Operaciones)
   performance-analyst  devops-engineer       analytics-engineer
   security-engineer    qa-tester             accessibility-specialist
   live-ops-designer    community-manager     bevy-specialist
-  raylib-specialist
+  raylib-specialist    raylib-entt-specialist  raylib-shader-specialist
+  raylib-ui-specialist raylib-build-specialist
   godot-specialist     godot-gdscript-specialist  godot-csharp-specialist
   godot-gdextension-specialist  godot-shader-specialist
   unity-specialist     unity-dots-specialist  unity-addressables-specialist
@@ -202,6 +203,26 @@ Tier 3 — Specialists (Implementación, Motores y Operaciones)
 - **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent`
 - **Misión y Alcance:** The Raylib Specialist is the authority on Raylib, modern C++ (C++17/20), and EnTT ECS game development. They guide code-first architecture, 2D/isometric rendering, math, shaders, entity architectures, CMake build pipelines, and performance optimization without visual editor overhead.
 
+#### `raylib-entt-specialist`
+- **Archivo:** [`agents/raylib-entt-specialist.md`](file:///Users/alexis/Developer/pi-game-studio/agents/raylib-entt-specialist.md)
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent`
+- **Misión y Alcance:** The Raylib EnTT Specialist is the authority on Data-Oriented Design and Entity-Component-System (ECS) architecture using EnTT in C++. They guide cache-friendly component design, linear system iterations, memory pools, spatial indexing, and high-performance game logic for entities, hordes, and combat.
+
+#### `raylib-shader-specialist`
+- **Archivo:** [`agents/raylib-shader-specialist.md`](file:///Users/alexis/Developer/pi-game-studio/agents/raylib-shader-specialist.md)
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent`
+- **Misión y Alcance:** The Raylib Shader Specialist is the authority on GLSL shaders, 2D lighting, post-processing, and visual effects in Raylib C++ projects. They guide fragment/vertex shader authoring, custom materials, fog of war, spell effects, screen-space shaders, and GPU performance optimization.
+
+#### `raylib-ui-specialist`
+- **Archivo:** [`agents/raylib-ui-specialist.md`](file:///Users/alexis/Developer/pi-game-studio/agents/raylib-ui-specialist.md)
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent`
+- **Misión y Alcance:** The Raylib UI Specialist is the authority on user interfaces, HUDs, menus, and developer tooling in Raylib C++ projects. They guide Raygui implementation, Dear ImGui integration (via rlImGui), ARPG inventory interfaces, health globes, dialog boxes, and live debug inspectors.
+
+#### `raylib-build-specialist`
+- **Archivo:** [`agents/raylib-build-specialist.md`](file:///Users/alexis/Developer/pi-game-studio/agents/raylib-build-specialist.md)
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent`
+- **Misión y Alcance:** The Raylib Build Specialist is the authority on CMake configuration, multi-platform compilation, dependency management via FetchContent, compiler optimizations, WebAssembly (emscripten), and automated distribution pipelines for Raylib C++ games.
+
 ### Tier 3: Especialistas de Programación e Ingeniería
 
 #### `gameplay-programmer`
@@ -328,5 +349,5 @@ Tier 3 — Specialists (Implementación, Motores y Operaciones)
 ## Notas de Uso
 
 - Los agentes se distribuyen como plantillas de origen en `agents/*.md`.
-- `/setup` o `/studio:setup` copia y activa los 51 agentes en `.pi/agents/` en tu proyecto.
+- `/setup` o `/studio:setup` copia y activa los 55 agentes en `.pi/agents/` en tu proyecto.
 - `/assign-models` o `/studio:models` permite cambiar qué modelo ejecuta cada agente o nivel.

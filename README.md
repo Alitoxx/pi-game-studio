@@ -100,6 +100,8 @@ Tier 3 — Specialists
 | **Unreal Engine 5** | `unreal-specialist` | GAS, Blueprints, Replication, UMG/CommonUI      |
 | **Bevy (Rust)**     | `bevy-specialist`   | ECS, 2D/3D (wgpu), bevy_ui, Assets, Cargo/WASM  |
 
+> 📖 **Guía completa de agentes**: Consulta [`AGENTS.md`](AGENTS.md) para ver la misión detallada, herramientas y responsabilidades de cada uno de los 50 agentes.
+
 ## Model Mapping
 
 Pi Game Studio uses **model inheritance**: all agents ship with `model: inherit`, meaning they use the default model of your Pi session. This avoids hardcoding model choices into agent definitions.
@@ -157,8 +159,10 @@ Agents not listed use the session default.
 | **Ollama** (local)   | `ollama/<model>`                | `ollama/llama3.2`                     |
 
 ## Slash Commands
+ 
+Type `/` in Pi to browse all 77 skills:
 
-Type `/` in Pi to browse all 75 skills:
+> 📖 **Catálogo completo de skills**: Consulta [`docs/skills-reference.md`](docs/skills-reference.md) para ver la tabla detallada de comandos, agentes responsables y archivos que genera cada skill.
 
 ### Onboarding & Navigation
 

@@ -49,6 +49,7 @@
   "ue-replication-specialist": "openrouter/openai/gpt-oss-120b:free",
   "ue-umg-specialist": "openrouter/openai/gpt-oss-120b:free",
   "bevy-specialist": "openrouter/openai/gpt-oss-120b:free",
+  "raylib-specialist": "openrouter/openai/gpt-oss-120b:free",
   "community-manager": "openrouter/openai/gpt-oss-20b:free",
   "devops-engineer": "openrouter/openai/gpt-oss-20b:free",
   "sound-designer": "openrouter/openai/gpt-oss-20b:free"

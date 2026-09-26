@@ -81,6 +81,7 @@ export const AGENT_GROUPS: Array<{
 			"ue-replication-specialist",
 			"ue-umg-specialist",
 			"bevy-specialist",
+			"raylib-specialist",
 		],
 	},
 	{
@@ -133,11 +134,11 @@ export async function handleStudioAgents(
 	if (ctx.hasUI && typeof (ctx.ui as any)?.select === "function" && query !== "all") {
 		const options = [
 			...AGENT_GROUPS.map((g) => `${g.emoji} ${g.name} (${g.agents.length} agentes)`),
-			"📖 Ver los 50 agentes completos",
+			"📖 Ver los 51 agentes completos",
 		];
 
 		const selected = await (ctx.ui as any).select(
-			"🎮 Pi Game Studio — Directorio de Agentes (50)",
+			"🎮 Pi Game Studio — Directorio de Agentes (51)",
 			options,
 		);
 
@@ -178,7 +179,7 @@ function printGroup(
 
 function printAllAgents(cwd: string): void {
 	console.log("");
-	console.log("\x1b[1m\x1b[38;2;167;139;250m🎮 PI GAME STUDIO — CATÁLOGO DE 50 AGENTES\x1b[0m");
+	console.log("\x1b[1m\x1b[38;2;167;139;250m🎮 PI GAME STUDIO — CATÁLOGO DE 51 AGENTES\x1b[0m");
 	console.log("\x1b[38;2;107;114;128m" + "─".repeat(60) + "\x1b[0m");
 
 	for (const group of AGENT_GROUPS) {

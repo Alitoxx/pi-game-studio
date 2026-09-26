@@ -1,6 +1,6 @@
 # Pi Game Studio Agents — Manual y Referencia Oficial
 
-Guía de referencia completa para los **50 agentes especializados** de Pi Game Studio.
+Guía de referencia completa para los **51 agentes especializados** de Pi Game Studio.
 
 ## Jerarquía del Estudio
 
@@ -22,6 +22,7 @@ Tier 3 — Specialists (Implementación, Motores y Operaciones)
   performance-analyst  devops-engineer       analytics-engineer
   security-engineer    qa-tester             accessibility-specialist
   live-ops-designer    community-manager     bevy-specialist
+  raylib-specialist
   godot-specialist     godot-gdscript-specialist  godot-csharp-specialist
   godot-gdextension-specialist  godot-shader-specialist
   unity-specialist     unity-dots-specialist  unity-addressables-specialist
@@ -194,6 +195,13 @@ Tier 3 — Specialists (Implementación, Motores y Operaciones)
 - **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent`
 - **Misión y Alcance:** The Bevy Specialist is the authority on all Bevy-specific patterns, APIs, and build integration. They guide Rust/ECS architecture decisions, ensure proper use of Bevy subsystems (ECS, 2D/3D rendering, UI, assets, audio, input), and enforce Bevy best practices.
 
+### Tier 3: Especialistas de Motor — Raylib & C++ Puro (EnTT)
+
+#### `raylib-specialist`
+- **Archivo:** [`agents/raylib-specialist.md`](file:///Users/alexis/Developer/pi-game-studio/agents/raylib-specialist.md)
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent`
+- **Misión y Alcance:** The Raylib Specialist is the authority on Raylib, modern C++ (C++17/20), and EnTT ECS game development. They guide code-first architecture, 2D/isometric rendering, math, shaders, entity architectures, CMake build pipelines, and performance optimization without visual editor overhead.
+
 ### Tier 3: Especialistas de Programación e Ingeniería
 
 #### `gameplay-programmer`
@@ -320,5 +328,5 @@ Tier 3 — Specialists (Implementación, Motores y Operaciones)
 ## Notas de Uso
 
 - Los agentes se distribuyen como plantillas de origen en `agents/*.md`.
-- `/setup` o `/studio:setup` copia y activa los 50 agentes en `.pi/agents/` en tu proyecto.
+- `/setup` o `/studio:setup` copia y activa los 51 agentes en `.pi/agents/` en tu proyecto.
 - `/assign-models` o `/studio:models` permite cambiar qué modelo ejecuta cada agente o nivel.

@@ -742,3 +742,24 @@ Use GDScript conventions for `.gd` files and C# conventions for `.cs` files. Mix
 | General architecture review | bevy-specialist |
 ```
 
+**Raylib (C++ & EnTT):**
+```markdown
+## Engine Specialists
+- **Primary**: raylib-specialist
+- **Language/Code Specialist**: raylib-specialist (Modern C++17/20, EnTT ECS, RAII, CMake)
+- **Shader Specialist**: raylib-specialist (GLSL 2D/3D shaders, custom post-processing)
+- **UI Specialist**: raylib-specialist (Raygui, Dear ImGui via rlImGui)
+- **Additional Specialists**: None
+- **Routing Notes**: Invoke primary for all Raylib C++ code, CMake targets, EnTT component models, and isometric / 2D rendering loops.
+
+### File Extension Routing
+
+| File Extension / Type | Specialist to Spawn |
+|-----------------------|---------------------|
+| Game code (.cpp, .hpp, .h, .cxx) | raylib-specialist |
+| Shader files (.fs, .vs, .glsl) | raylib-specialist |
+| Build / project files (CMakeLists.txt, *.cmake) | raylib-specialist |
+| Data / level files (.json, .ldtk, .tmx) | raylib-specialist |
+| General architecture review | raylib-specialist |
+```
+

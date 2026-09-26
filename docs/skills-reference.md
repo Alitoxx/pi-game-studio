@@ -167,7 +167,7 @@ Además de las skills ejecutadas por el modelo, Pi Game Studio incluye comandos 
 | **`/studio:setup`** | Comando Extensión | Asistente interactivo de instalación (Modo Automático de 1-click o Manual guiado). |
 | **`/studio:models`** | Comando Extensión | Selector interactivo de modelos de IA por nivel o por agente individual. |
 | **`/studio:chains`** | Comando Extensión | Ejecutor interactivo de pipelines multi-agente guiados. |
-| **`/studio:settings`** | Comando Extensión | Gestor interactivo de motor (Godot, Unity, Unreal, Bevy) e idioma (es/en). |
-| **`/studio:agents`** | Comando Extensión | Navegador interactivo del catálogo de los 50 agentes del estudio. |
+| **`/studio:settings`** | Comando Extensión | Gestor interactivo de motor (Godot, Unity, Unreal, Bevy, Raylib) e idioma (es/en). |
+| **`/studio:agents`** | Comando Extensión | Navegador interactivo del catálogo de los 51 agentes del estudio. |
 | **`/studio:status`** | Comando Extensión | Tablero de salud y diagnóstico en vivo del estudio y archivos de proyecto. |
 | **`/studio:help`** | Comando Extensión | Ayuda rápida y cheatsheet de comandos de Pi Game Studio. |

@@ -233,6 +233,7 @@ async function configureAgentModel(
 		"unity-specialist",
 		"unreal-specialist",
 		"bevy-specialist",
+		"raylib-specialist",
 		"art-director",
 		"qa-lead",
 		"✏️ Escribir otro nombre de agente...",
@@ -242,7 +243,7 @@ async function configureAgentModel(
 	if (!pick) return config;
 
 	let target = agents[pick.index];
-	if (pick.index === 10) {
+	if (pick.index === 11) {
 		target = await promptInputSafe(ctx, "Nombre del agente (ej. level-designer):", "gameplay-programmer");
 	}
 

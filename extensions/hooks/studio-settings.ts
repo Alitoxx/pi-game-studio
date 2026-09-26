@@ -56,12 +56,12 @@ export async function handleStudioSettings(
 
 		switch (idx) {
 			case 0: {
-				const engines = ["Godot (Recomendado)", "Unity", "Unreal Engine", "Bevy (Rust)"];
+				const engines = ["Godot (Recomendado)", "Unity", "Unreal Engine", "Bevy (Rust)", "Raylib (C++ / EnTT)"];
 				const picked = await (ctx.ui as any).select("Selecciona tu motor:", engines);
 				if (picked !== undefined && picked !== null) {
 					const pIdx = typeof picked === "number" ? picked : engines.indexOf(picked);
 					if (pIdx !== -1) {
-						const cleanName = ["Godot", "Unity", "Unreal", "Bevy"][pIdx];
+						const cleanName = ["Godot", "Unity", "Unreal", "Bevy", "Raylib"][pIdx];
 						setEngine(ctx.cwd, cleanName);
 						if (typeof (ctx.ui as any)?.notify === "function") {
 							ctx.ui.notify(`🎮 Motor configurado: ${cleanName}`, "info");

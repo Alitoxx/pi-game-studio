@@ -46,7 +46,7 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 		}
 	});
 
-	test("agent groups cover all 50 agents without duplicates", () => {
+	test("agent groups cover all 51 agents without duplicates", () => {
 		const agentsSource = fs.readFileSync(
 			path.join(__dirname, "..", "extensions", "hooks", "studio-agents.ts"),
 			"utf8",
@@ -57,7 +57,7 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 		].map((m) => m[1]);
 
 		const uniqueAgents = Array.from(new Set(agentMatches));
-		expect(uniqueAgents.length).toBe(50);
+		expect(uniqueAgents.length).toBe(51);
 	});
 
 	test("all interactive select handlers support Pi string return values", () => {
@@ -82,10 +82,10 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 		}
 	});
 
-	test("all 50 agents define structured YAML tools and thinking effort levels", () => {
+	test("all 51 agents define structured YAML tools and thinking effort levels", () => {
 		const agentsDir = path.join(__dirname, "..", "agents");
 		const agentFiles = fs.readdirSync(agentsDir).filter((f) => f.endsWith(".md"));
-		expect(agentFiles.length).toBe(50);
+		expect(agentFiles.length).toBe(51);
 
 		for (const f of agentFiles) {
 			const content = fs.readFileSync(path.join(agentsDir, f), "utf8");

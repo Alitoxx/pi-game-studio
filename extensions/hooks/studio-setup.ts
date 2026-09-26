@@ -127,7 +127,7 @@ export async function handleStudioSetup(
 	// Interactive UI mode
 	if (ctx.hasUI && typeof (ctx.ui as any)?.select === "function") {
 		const options = [
-			`⚡ 1. Instalación Automática (50 agentes + modelos recomendados + ${status.currentEngine})`,
+			`⚡ 1. Instalación Automática (${status.totalPackageAgents || 51} agentes + modelos recomendados + ${status.currentEngine})`,
 			"🛠️ 2. Instalación Manual / Guiada (Elegir modelos por agente/tier, motor e idioma)",
 			"🤖 3. Configurar Modelos de IA (/studio:models)",
 			"📊 4. Ver diagnóstico del estudio (/studio:status)",
@@ -196,6 +196,7 @@ export async function runGuidedSetup(
 		"Unity (C#, 2D/3D, multiplataforma)",
 		"Unreal Engine 5 (C++, Blueprints, high-end)",
 		"Bevy (Rust ECS, moderno y ultra rápido)",
+		"Raylib (C++ / EnTT — puro código, cero editores pesados)",
 	];
 
 	const engineChoice = await promptSelectSafe(
@@ -205,7 +206,7 @@ export async function runGuidedSetup(
 	);
 	if (!engineChoice) return;
 
-	const selectedEngine = ["Godot", "Unity", "Unreal", "Bevy"][engineChoice.index];
+	const selectedEngine = ["Godot", "Unity", "Unreal", "Bevy", "Raylib"][engineChoice.index];
 
 	// ── Paso 2: Idioma del Estudio ──
 	const langOptions = [
@@ -272,7 +273,7 @@ export async function runGuidedSetup(
 	];
 
 	const confirmOptions = [
-		"✔ Confirmar e Instalar Pi Game Studio (50 agentes)",
+		`✔ Confirmar e Instalar Pi Game Studio (${status.totalPackageAgents || 51} agentes)`,
 		"❌ Cancelar sin modificar archivos",
 	];
 
@@ -356,6 +357,7 @@ async function configureSpecificAgents(
 		{ id: "unity-specialist", label: "⚡ unity-specialist (Motor Unity & C#)" },
 		{ id: "unreal-specialist", label: "⚡ unreal-specialist (Motor Unreal & C++)" },
 		{ id: "bevy-specialist", label: "⚡ bevy-specialist (Motor Bevy & Rust)" },
+		{ id: "raylib-specialist", label: "⚡ raylib-specialist (Motor Raylib & C++ / EnTT)" },
 		{ id: "custom", label: "✏️ Asignar a otro agente específico por nombre..." },
 	];
 

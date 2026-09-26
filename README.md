@@ -95,12 +95,16 @@ Tier 3 — Specialists
 
 | Engine              | Lead Agent          | Sub-Specialists                                 |
 | ------------------- | ------------------- | ----------------------------------------------- |
-| **Godot 4**         | `godot-specialist`  | GDScript, Shaders, GDExtension                  |
+| **Godot 4**         | `godot-specialist`  | GDScript, C#, Shaders, GDExtension              |
 | **Unity**           | `unity-specialist`  | DOTS/ECS, Shaders/VFX, Addressables, UI Toolkit |
 | **Unreal Engine 5** | `unreal-specialist` | GAS, Blueprints, Replication, UMG/CommonUI      |
 | **Bevy (Rust)**     | `bevy-specialist`   | ECS, 2D/3D (wgpu), bevy_ui, Assets, Cargo/WASM  |
+| **Raylib (C++)**    | `raylib-specialist` | EnTT ECS, GLSL Shaders, UI & Debug, CMake/WASM  |
 
-> 📖 **Guía completa de agentes**: Consulta [`AGENTS.md`](AGENTS.md) para ver la misión detallada, herramientas y responsabilidades de cada uno de los 50 agentes.
+> 📖 **Manuales del Estudio**:
+> - [`AGENTS.md`](AGENTS.md): Directorio completo y responsabilidades de los **55 agentes**.
+> - [`docs/gamedev-interaction-protocol.md`](docs/gamedev-interaction-protocol.md): **Protocolo de Respuestas y Decisiones** (Pillars Header, Trade-offs Matrix, Choice Envelopes, Radar).
+> - [`docs/skills-reference.md`](docs/skills-reference.md): Catálogo de las **77 skills** organizadas por fases.
 
 ## Model Mapping
 

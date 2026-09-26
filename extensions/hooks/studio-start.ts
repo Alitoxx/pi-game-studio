@@ -154,18 +154,19 @@ export async function handleStudioStart(
 
 function displayProjectAudit(ctx: ExtensionContext, a: ProjectAudit): void {
 	const lines = [
-		"🎮 PI GAME STUDIO — DIAGNÓSTICO DE PROYECTO",
-		`• Motor de juego:       ${a.hasEngine ? `✔ ${a.engineName} (en project.yaml)` : "⚠ No configurado (/studio:settings)"}`,
-		`• Concepto de juego:    ${a.hasConcept ? "✔ design/gdd/game-concept.md" : "Pendiente (/brainstorm)"}`,
-		`• Documentos de diseño: ${a.gddCount} archivos en design/gdd/`,
-		`• Archivos de código:   ${a.srcFileCount} archivos en src/`,
-		`• Prototipos:           ${a.hasPrototypes ? "✔ Carpeta prototypes/ detectada" : "Sin prototipos aún"}`,
-		"",
-		"Rutas de inicio recomendadas:",
-		"  1. Si empiezas de cero:       /brainstorm open",
-		"  2. Si tienes concepto claro:   /game-design-document",
-		"  3. Si ya tienes código:        /project-stage-detect",
-		"  4. Entrevista interactiva:     /start",
+		"┌── 🎮 PI GAME STUDIO — ESTADO Y DIAGNÓSTICO DEL PROYECTO ───┐",
+		`│ • Motor de juego:       ${(a.hasEngine ? `✔ ${a.engineName}` : "⚠ No configurado (/studio:settings)").padEnd(36)} │`,
+		`│ • Concepto de juego:    ${(a.hasConcept ? "✔ game-concept.md" : "Pendiente (/brainstorm)").padEnd(36)} │`,
+		`│ • Documentos de diseño: ${(a.gddCount + " archivos en design/gdd/").padEnd(36)} │`,
+		`│ • Archivos de código:   ${(a.srcFileCount + " archivos en src/").padEnd(36)} │`,
+		`│ • Prototipos:           ${(a.hasPrototypes ? "✔ prototypes/ detectada" : "Sin prototipos aún").padEnd(36)} │`,
+		"├─────────────────────────────────────────────────────────────┤",
+		"│ Siguientes acciones recomendadas (Radar de Inicio):         │",
+		"│ [1] Si empiezas de cero       ➔ /brainstorm open            │",
+		"│ [2] Si tienes concepto claro  ➔ /game-design-document       │",
+		"│ [3] Si ya tienes código       ➔ /project-stage-detect       │",
+		"│ [4] Entrevista interactiva    ➔ /start                      │",
+		"└─────────────────────────────────────────────────────────────┘",
 	];
 
 	notifyOrLog(ctx, lines.join("\n"));

@@ -45,9 +45,18 @@ Tier 3 — Specialists (Implementación, Motores y Operaciones)
 - Todos los agentes se adaptan dinámicamente a la preferencia de idioma configurada en `.pi/game-studio/language` o `project.yaml`.
 - Cuando el idioma activo es español (`es`), todos los agentes responden, estructuran opciones, explican trade-offs y conducen el diálogo en **español**. Los símbolos técnicos, APIs de motor y palabras clave de código se mantienen en su nomenclatura estándar.
 
+## Protocolo de Interacción y Decisiones (Gamedev Decision Protocol)
+
+Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar de alta fidelidad inspirado en **Gentle Shell** adaptado a videojuegos ([`docs/gamedev-interaction-protocol.md`](docs/gamedev-interaction-protocol.md)):
+1. **Pillars & Constraints Header**: Contexto del juego, género, target y pilares siempre visibles.
+2. **Gameplay & Technical Trade-offs Matrix**: Evaluación rigurosa de *Alternativa vs. Game Feel vs. FPS vs. Costo/Scope*.
+3. **Director Gate / Technical Verdict**: Recomendación vinculante fundamentada del Lead/Director responsable.
+4. **Choice Envelope**: Menú cerrado, numerado y sin opciones ambiguas.
+5. **Radar de Próximos Pasos & Recibos de Entrega**: Acciones siguientes claras con sus comandos ejecutables.
+
 ---
 
-## Directorio Detallado de los 50 Agentes
+## Directorio Detallado de los 55 Agentes
 
 ### Tier 1: Directores (Estrategia y Visión)
 

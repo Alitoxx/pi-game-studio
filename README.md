@@ -348,6 +348,11 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
 
 ### v0.8.1 — 2026-09-27
 
+- **Subdirectory Workspace Resolution & TUI Banner Fix (`extensions/hooks/`)**:
+  - **Detección Jerárquica de Raíz (`findStudioRoot`)**: Búsqueda recursiva hacia arriba en el árbol de directorios para detectar `.pi/game-studio`, `project.yaml` o `AGENTS.md` cuando se ejecuta Pi desde subcarpetas (como `sandbox/`, `src/` o `design/`).
+  - **Montaje Robusto de Header en TUI**: Integración limpia en `ctx.ui.setHeader` cumpliendo el contrato de componente `{ render(width), invalidate() }` y notificación `ui.notify` en inicio de sesión.
+  - **Protección de Buffer Alternativo**: Eliminación de secuencias ANSI de borrado en crudo (`\x1b[2J\x1b[3J\x1b[H`) y logs en stdout durante modo interactivo TUI (`hasUI`), previniendo desincronizaciones de pantalla o pantallas en blanco.
+  - **Vinculación Consistente de Herramientas**: Garantía de que `/studio:settings`, `/studio:status`, la política de idioma (`es`) y la detección de gaps auditen la raíz del proyecto correspondiente.
 - **Token Economy & Gentle Shell Return Contract**:
   - **Modularización de Skills Pesadas (`setup-engine`)**:
     - Separación de apéndices monolíticos en referencias cargadas bajo demanda (`skills/setup-engine/references/godot.md`, `bevy.md`, `raylib.md`), reduciendo el consumo base de tokens en más de ~2.500 tokens por invocación.

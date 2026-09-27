@@ -7,6 +7,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.1] - 2026-09-27
+
+### Fixed
+- **Subdirectory Workspace Resolution & TUI Banner Fix (`extensions/hooks/`)**:
+  - Implemented recursive parent directory lookup (`findStudioRoot` in `extensions/hooks/studio-root.ts`) to discover `.pi/game-studio`, `project.yaml`, or `AGENTS.md` when launching Pi from nested folders (such as `sandbox/`, `src/`, or `design/`).
+  - Fixed TUI startup screen and banner loading failure: properly mount custom header via `ctx.ui.setHeader` with component contract `{ render(width), invalidate() }` and `ui.notify` banner.
+  - Eliminated raw terminal clearing (`\x1b[2J\x1b[3J\x1b[H`) and stdout logging in fullscreen TUI mode (`hasUI`), preventing scrollback buffer corruption and blank screen issues.
+  - Ensured language policy (`es`), documentation gap detection, `/studio:settings`, and `/studio:status` reliably bind to the resolved project root.
+
+### Added
+- **Token Economy & Gentle Shell Return Contract**:
+  - Modularized heavy skills (`skills/setup-engine/`) by decoupling engine-specific guides into on-demand references (`references/godot.md`, `bevy.md`, `raylib.md`), saving ~2,500 tokens per invocation.
+  - Formalized standardized YAML Return Contract for delegated specialist subagents (`status`, `summary`, `files_changed`, `validation`, `gameplay_impact`, `risks`, `next_recommended_specialist`).
+  - Compacted few-shot grounding dialogs in Tier 1 director agents (`agents/creative-director.md`).
+
+---
+
+## [0.8.0] - 2026-09-26
+
+### Added
+- **Engine Prerequisite Doctor (`/studio:doctor`)**:
+  - Interactive and automated toolchain verification for Godot, Unity, Unreal, Bevy, and Raylib (compilers, build tools, runtimes).
+- **GameForge Suite Integration (80 Skills & 44 Templates)**:
+  - `/jam` (Game Jam 48-72h rapid development mode).
+  - `/market-research` (Steam market intelligence, competitor mining, tag optimization).
+  - Enhanced `/reverse-document` for brownfield repository adoption.
+  - Formal Game Design Frameworks (`prompts/game-design-frameworks.md`: MDA, Flow, SDT, Bartle).
+- **Live Engine MCP Layer ("Files First, MCP Accelerated")**:
+  - `/connect-engine-mcp` hub for Godot, Unity, Unreal, and Bevy MCP servers.
+
+---
+
+## [0.7.1] - 2026-09-26
+
+### Added
+- **Raylib & C++ Specialist Quintet (55 Agents)**:
+  - `raylib-specialist` (Modern C++17/20, Raylib architecture).
+  - `raylib-entt-specialist` (ECS data-oriented architecture with EnTT).
+  - `raylib-shader-specialist` (GLSL shaders, 2D lighting, post-processing).
+  - `raylib-ui-specialist` (Raygui, Dear ImGui, ARPG interfaces).
+  - `raylib-build-specialist` (CMake, FetchContent, WebAssembly emscripten pipelines).
+
+---
+
+## [0.6.3] - 2026-09-26
+
+### Added
+- **Automatic Language Detection & Bilingual Localization**:
+  - Auto-detection of language preference (`es` / `en`) via `project.yaml` or `.pi/game-studio/language`.
+  - Automatic injection of Spanish language policy in `before_agent_start`.
+
+---
+
+## [0.6.0] - 2026-09-25
+
+### Added
+- **Multi-Agent Guided Chains (`/studio:chains`)**:
+  - Step-by-step sequential multi-agent execution pipelines for GDD reviews, feature implementation, and release gates (`chains/*.chain.md`).
+- **Thinking Budgets & Structured YAML Tools**:
+  - Tier-based reasoning budgets (`high`, `medium`, `low`) and structured tool definitions across all agents.
+
+---
+
 ## [0.5.0] - 2026-09-25
 
 ### Added

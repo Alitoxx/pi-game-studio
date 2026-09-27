@@ -6,9 +6,9 @@ Este protocolo establece el estándar de comunicación, diseño de respuestas y 
 
 ---
 
-## Los 5 Bloques del Protocolo
+## Los 6 Bloques del Protocolo
 
-Toda decisión arquitectural, técnica o de diseño de mecánicas debe estructurarse utilizando los siguientes 5 bloques:
+Toda decisión arquitectural, técnica o de diseño de mecánicas debe estructurarse utilizando los siguientes 6 bloques:
 
 ```text
 1. 🎮 Pillars & Constraints Header (Contexto del juego)
@@ -16,6 +16,7 @@ Toda decisión arquitectural, técnica o de diseño de mecánicas debe estructur
 3. 👑 Director Gate / Technical Verdict (Recomendación con autoridad)
 4. 🗳️ Choice Envelope (Opciones cerradas y numeradas)
 5. 📡 Next Steps Radar (Radar de próximos pasos y comandos)
+6. 📋 Return Contract de Especialistas (Economía extrema de tokens en subagentes)
 ```
 
 ---

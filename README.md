@@ -342,6 +342,7 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
 - **Familiar hierarchy.** Agents mirror real game studio roles. If you've worked in a studio, the structure makes immediate sense.
 - **Review work matters.** No design doc, architecture decision, or implementation passes without review from the right agent.
 - **Quality gates.** Director gates (APPROVE / CONCERNS / REJECT) prevent advancing with unresolved issues.
+- **Token economy & structured return contracts.** Inspirado en Gentle Shell, las skills pesadas cargan manuales bajo demanda y los subagentes retornan contratos YAML cerrados sin prosa redundante para máxima eficiencia de contexto.
 
 ## Changelog
 

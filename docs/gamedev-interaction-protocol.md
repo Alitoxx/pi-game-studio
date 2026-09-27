@@ -108,3 +108,28 @@ Siguientes acciones recomendadas:
 [2] Redactar pruebas o revisar código    ➔ /code-review
 [3] Configurar shaders de iluminación    ➔ raylib-shader-specialist
 ```
+
+---
+
+## 6. Return Contract de Especialistas (Economía Extrema de Tokens)
+
+> **Inspirado en el Return Contract de Gentle Shell / Gentle AI**:
+> Cuando un especialista (Tier 2 o 3) es delegado mediante `subagent` o ejecuta una tarea puntual de implementación, **tiene estrictamente prohibido emitir prosa conversacional innecesaria o saludos**.
+
+Debe retornar su resultado compactado bajo el siguiente esquema estándar:
+
+```yaml
+status: completed | partial | blocked | interaction_required
+summary: <resumen en 1 oración de lo que se implementó o cambió y por qué>
+files_changed:
+  - <ruta/al/archivo>: <cambio concreto realizado>
+validation:
+  - <comando de test o build ejecutado>: <resultado observado (e.g. PASS, 0 errors)>
+gameplay_impact:
+  - <métrica o sensación de juego afectada (e.g. 60 FPS estables, cero allocs)>
+risks:
+  - <riesgo técnico remanente o ninguno>
+next_recommended_specialist: <especialista que debe continuar la tarea>
+```
+
+**Regla de oro de tokens**: Si la tarea fue completada exitosamente, el especialista devuelve solo el bloque estructurado anterior. El Director o Lead sintetiza para el usuario sin duplicar información.

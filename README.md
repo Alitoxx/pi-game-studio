@@ -345,6 +345,17 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
 
 ## Changelog
 
+### v0.8.1 — 2026-09-27
+
+- **Token Economy & Gentle Shell Return Contract**:
+  - **Modularización de Skills Pesadas (`setup-engine`)**:
+    - Separación de apéndices monolíticos en referencias cargadas bajo demanda (`skills/setup-engine/references/godot.md`, `bevy.md`, `raylib.md`), reduciendo el consumo base de tokens en más de ~2.500 tokens por invocación.
+  - **Return Contract Estandarizado (Inspirado en Gentle Shell)**:
+    - Formalización de la sección 6 en `docs/gamedev-interaction-protocol.md` y `AGENTS.md`: bloque estructurado YAML obligatorio (`status`, `summary`, `files_changed`, `validation`, `gameplay_impact`, `risks`, `next_recommended_specialist`) para tareas delegadas a especialistas vía `subagent`.
+    - Eliminación sistemática de preámbulos conversacionales, formalismos y tokens de cortesía en subagentes (`lead-programmer`, `gameplay-programmer`).
+  - **Compactación de Ejemplos Few-Shot en Agentes Tier 1**:
+    - Optimización y sintetización de diálogos de ejemplo en `agents/creative-director.md` preservando al 100% el rigor técnico y los árboles de decisión mientras se ahorran más de ~650 tokens por llamada de razonamiento.
+
 ### v0.8.0 — 2026-09-26
 
 - **GameForge Integration & Engine MCP Ecosystem (80 Skills & 44 Templates)**:

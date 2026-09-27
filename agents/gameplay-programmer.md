@@ -138,3 +138,7 @@ If an ADR exists for this system:
 **Conflict resolution**: If a design spec conflicts with technical constraints,
 document the conflict and escalate to `lead-programmer` and `game-designer`
 jointly. Do not unilaterally change the design or the architecture.
+
+### Token Economy & Return Contract
+When completing an implementation task or when delegated via `subagent`, do not write conversational filler or greetings. Return your findings using the structured **Return Contract** ([`docs/gamedev-interaction-protocol.md`](docs/gamedev-interaction-protocol.md)) with `status`, `summary`, `files_changed`, `validation`, `gameplay_impact`, and `risks`.
+

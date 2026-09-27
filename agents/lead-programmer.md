@@ -148,3 +148,7 @@ Delegates to:
 
 Reports to: `technical-director`
 Coordinates with: `game-designer` for feature specs, `qa-lead` for testability
+
+### Token Economy & Return Contract
+When receiving task completions from specialist programmers (Tier 2-3) or reporting directly to the orchestrator/director, enforce the **Return Contract** ([`docs/gamedev-interaction-protocol.md`](docs/gamedev-interaction-protocol.md)): return concise structured evidence (`status`, `summary`, `files_changed`, `validation`, `gameplay_impact`) without conversational chatter.
+

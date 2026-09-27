@@ -208,18 +208,18 @@ export default function (pi: ExtensionAPI) {
 
 		// Display startup banner / dashboard
 		try {
+			const termWidth = process.stdout.columns || 80;
+			const bannerLines = renderBanner(termWidth, ctx.cwd);
+			for (const line of bannerLines) {
+				console.log(line);
+			}
+
 			if ((ctx as any).hasUI && (ctx as any).ui?.setHeader) {
 				(ctx as any).ui.setHeader((_tui: any, _theme: any) => ({
 					render(width: number) {
 						return renderBanner(width, ctx.cwd);
 					},
 				}));
-			} else {
-				const termWidth = process.stdout.columns || 80;
-				const bannerLines = renderBanner(termWidth, ctx.cwd);
-				for (const line of bannerLines) {
-					console.log(line);
-				}
 			}
 		} catch {}
 

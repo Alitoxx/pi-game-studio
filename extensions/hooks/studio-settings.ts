@@ -2,14 +2,16 @@ import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { existsSync, readFileSync, writeFileSync, mkdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { auditEnginePrerequisites, formatAuditReport } from "./studio-doctor.ts";
+import { findStudioRoot } from "./studio-root.ts";
 
 export async function handleStudioSettings(
 	args: string,
 	ctx: ExtensionContext,
 ): Promise<void> {
 	const query = args?.trim().toLowerCase() || "";
-	const projectYamlPath = join(ctx.cwd, "project.yaml");
-	const studioDir = join(ctx.cwd, ".pi", "game-studio");
+	const rootDir = findStudioRoot(ctx.cwd) || ctx.cwd;
+	const projectYamlPath = join(rootDir, "project.yaml");
+	const studioDir = join(rootDir, ".pi", "game-studio");
 	const prefsPath = join(studioDir, "technical-preferences.md");
 
 	let currentEngine = "Godot";
@@ -24,7 +26,7 @@ export async function handleStudioSettings(
 	if (query.startsWith("engine=")) {
 		const eng = query.split("=")[1]?.trim();
 		if (eng) {
-			setEngine(ctx.cwd, eng);
+			setEngine(rootDir, eng);
 			if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 				ctx.ui.notify(`🎮 Motor configurado a: ${eng}`, "info");
 			}
@@ -35,7 +37,7 @@ export async function handleStudioSettings(
 
 	// Interactive select
 	if (ctx.hasUI && typeof (ctx.ui as any)?.select === "function") {
-		const noClearFlag = join(ctx.cwd, ".pi", "game-studio", "no-clear-screen");
+		const noClearFlag = join(rootDir, ".pi", "game-studio", "no-clear-screen");
 		const clearScreenActive = !existsSync(noClearFlag);
 
 		const options = [
@@ -63,7 +65,7 @@ export async function handleStudioSettings(
 					const pIdx = typeof picked === "number" ? picked : engines.indexOf(picked);
 					if (pIdx !== -1) {
 						const cleanName = ["Godot", "Unity", "Unreal", "Bevy", "Raylib"][pIdx];
-						setEngine(ctx.cwd, cleanName);
+						setEngine(rootDir, cleanName);
 						if (typeof (ctx.ui as any)?.notify === "function") {
 							ctx.ui.notify(`🎮 Motor configurado: ${cleanName}`, "info");
 						}
@@ -81,7 +83,7 @@ export async function handleStudioSettings(
 					const pIdx = typeof picked === "number" ? picked : langs.indexOf(picked);
 					if (pIdx !== -1) {
 						const lang = pIdx === 0 ? "es" : "en";
-						setLanguage(ctx.cwd, lang);
+						setLanguage(rootDir, lang);
 						if (typeof (ctx.ui as any)?.notify === "function") {
 							ctx.ui.notify(`🌐 Idioma configurado: ${lang}`, "info");
 						}
@@ -90,7 +92,7 @@ export async function handleStudioSettings(
 				break;
 			}
 			case 2: {
-				const studioDir = join(ctx.cwd, ".pi", "game-studio");
+				const studioDir = join(rootDir, ".pi", "game-studio");
 				mkdirSync(studioDir, { recursive: true });
 				if (clearScreenActive) {
 					writeFileSync(noClearFlag, "true", "utf8");
@@ -108,14 +110,14 @@ export async function handleStudioSettings(
 				break;
 			}
 			case 3:
-				printYamlConfig(ctx.cwd);
+				printYamlConfig(rootDir);
 				break;
 		}
 		return;
 	}
 
 	// CLI Fallback
-	printYamlConfig(ctx.cwd);
+	printYamlConfig(rootDir);
 	console.log("\x1b[38;2;167;139;250m\x1b[1mUso rápido:\x1b[0m");
 	console.log("  \x1b[38;2;56;189;248m/studio:settings engine=Godot\x1b[0m   (Godot | Unity | Unreal | Bevy)");
 	console.log("  \x1b[38;2;56;189;248m/settings\x1b[0m                        Asistente de configuración");
@@ -145,7 +147,8 @@ function setEngine(cwd: string, engineName: string): void {
 }
 
 export function getLanguage(cwd: string): string {
-	const studioDir = join(cwd, ".pi", "game-studio");
+	const root = findStudioRoot(cwd) || cwd;
+	const studioDir = join(root, ".pi", "game-studio");
 	const langFile = join(studioDir, "language");
 	if (existsSync(langFile)) {
 		try {
@@ -153,7 +156,7 @@ export function getLanguage(cwd: string): string {
 			if (lang === "es" || lang === "en") return lang;
 		} catch {}
 	}
-	const projectYamlPath = join(cwd, "project.yaml");
+	const projectYamlPath = join(root, "project.yaml");
 	if (existsSync(projectYamlPath)) {
 		try {
 			const content = readFileSync(projectYamlPath, "utf8");
@@ -168,7 +171,8 @@ export function getLanguage(cwd: string): string {
 }
 
 export function setLanguage(cwd: string, lang: string): void {
-	const studioDir = join(cwd, ".pi", "game-studio");
+	const root = findStudioRoot(cwd) || cwd;
+	const studioDir = join(root, ".pi", "game-studio");
 	mkdirSync(studioDir, { recursive: true });
 	const langFile = join(studioDir, "language");
 	writeFileSync(langFile, lang, "utf8");

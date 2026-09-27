@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { findStudioRoot } from "./studio-root.ts";
 
 const RESET = "\x1b[0m";
 const BOLD = "\x1b[1m";
@@ -40,6 +41,7 @@ function formatRow(styledContent: string, targetWidth = 75): string {
 
 export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 	const lines: string[] = [];
+	const root = findStudioRoot(cwd) || cwd;
 
 	// Package version detection
 	let version = "0.6.3";
@@ -54,7 +56,7 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 	// Storage / Engram detection
 	let engramStatus = "Local storage";
 	try {
-		const engramFlag = join(cwd, ".pi", "game-studio", "engram-enabled");
+		const engramFlag = join(root, ".pi", "game-studio", "engram-enabled");
 		if (existsSync(engramFlag) && readFileSync(engramFlag, "utf8").trim() === "true") {
 			engramStatus = "Engram connected";
 		}
@@ -63,7 +65,7 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 	// Engine detection
 	let engineInfo = "Godot · Unity · Unreal · Bevy";
 	try {
-		const projectYaml = join(cwd, "project.yaml");
+		const projectYaml = join(root, "project.yaml");
 		if (existsSync(projectYaml)) {
 			const yamlContent = readFileSync(projectYaml, "utf8");
 			const m = yamlContent.match(/^engine:\s*["']?([^\n"']+)["']?/m);
@@ -75,7 +77,7 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 
 	if (engineInfo === "Godot · Unity · Unreal · Bevy") {
 		try {
-			const prefsPath = join(cwd, ".pi", "game-studio", "technical-preferences.md");
+			const prefsPath = join(root, ".pi", "game-studio", "technical-preferences.md");
 			if (existsSync(prefsPath)) {
 				const prefs = readFileSync(prefsPath, "utf8");
 				const engineMatch = prefs.match(/Engine:\s*([^\n]+)/i);

@@ -119,4 +119,45 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 		expect(resolverSource).toContain("export async function promptModelForRole");
 		expect(resolverSource).toContain("KNOWN_PROVIDER_RECOMMENDATIONS");
 	});
+
+	test("findStudioRoot resolves project root from root and any subdirectory", () => {
+		const source = fs.readFileSync(
+			path.join(__dirname, "..", "extensions", "hooks", "studio-root.ts"),
+			"utf8",
+		);
+		expect(source).toContain("export function findStudioRoot");
+		expect(source).toContain(".pi");
+		expect(source).toContain("game-studio");
+		expect(source).toContain("project.yaml");
+		expect(source).toContain("AGENTS.md");
+
+		// Evaluate root resolution logic
+		function testResolve(startDir) {
+			let current = path.resolve(startDir);
+			while (true) {
+				if (
+					fs.existsSync(path.join(current, ".pi", "game-studio")) ||
+					fs.existsSync(path.join(current, "project.yaml")) ||
+					fs.existsSync(path.join(current, "AGENTS.md"))
+				) {
+					return current;
+				}
+				const parent = path.dirname(current);
+				if (parent === current) break;
+				current = parent;
+			}
+			return null;
+		}
+
+		const studioRoot = path.resolve(__dirname, "..");
+		expect(testResolve(studioRoot)).toBe(studioRoot);
+
+		const sandboxDir = path.join(studioRoot, "sandbox");
+		expect(testResolve(sandboxDir)).toBe(studioRoot);
+
+		const nestedSubdir = path.join(studioRoot, "sandbox", "production");
+		expect(testResolve(nestedSubdir)).toBe(studioRoot);
+
+		expect(testResolve("/tmp")).toBeNull();
+	});
 });

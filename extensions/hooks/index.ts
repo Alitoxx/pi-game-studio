@@ -8,6 +8,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
 import { renderBanner } from "./banner.ts";
+import { findStudioRoot } from "./studio-root.ts";
 import { handleStudioCommand } from "./studio-command.ts";
 import { handleStudioSetup } from "./studio-setup.ts";
 import { handleStudioModels } from "./studio-models.ts";
@@ -167,12 +168,10 @@ export default function (pi: ExtensionAPI) {
 		await appendToFile(join(logDir, "agent-audit.log"), line).catch(() => {});
 
 		// Active language policy enforcement
-		const isGameStudio =
-			existsSync(join(ctx.cwd, ".pi", "game-studio")) ||
-			existsSync(join(ctx.cwd, "project.yaml"));
+		const studioRoot = findStudioRoot(ctx.cwd);
 
-		if (isGameStudio) {
-			const activeLang = getLanguage(ctx.cwd);
+		if (studioRoot) {
+			const activeLang = getLanguage(studioRoot);
 			if (activeLang === "es" && (event as any)?.systemPromptOptions) {
 				if (!(event as any).systemPromptOptions.promptGuidelines) {
 					(event as any).systemPromptOptions.promptGuidelines = [];
@@ -191,16 +190,14 @@ export default function (pi: ExtensionAPI) {
 	// Fires on session_start to show studio dashboard and check docs
 	// ──────────────────────────────────────────────
 	pi.on("session_start", async (_event, ctx) => {
-		const isGameStudio =
-			existsSync(join(ctx.cwd, ".pi", "game-studio")) ||
-			existsSync(join(ctx.cwd, "project.yaml"));
+		const studioRoot = findStudioRoot(ctx.cwd);
 
 		// Only run in the game-studio project context
-		if (!isGameStudio) return;
+		if (!studioRoot) return;
 
-		// Clear terminal screen and scrollback buffer for a clean studio experience
-		const shouldClear = !existsSync(join(ctx.cwd, ".pi", "game-studio", "no-clear-screen"));
-		if (shouldClear && process.stdout.isTTY) {
+		// Clear terminal screen and scrollback buffer for a clean studio experience in non-UI mode
+		const shouldClear = !existsSync(join(studioRoot, ".pi", "game-studio", "no-clear-screen"));
+		if (shouldClear && process.stdout.isTTY && !(ctx as any).hasUI) {
 			try {
 				process.stdout.write("\x1b[2J\x1b[3J\x1b[H");
 			} catch {}
@@ -208,18 +205,19 @@ export default function (pi: ExtensionAPI) {
 
 		// Display startup banner / dashboard
 		try {
-			const termWidth = process.stdout.columns || 80;
-			const bannerLines = renderBanner(termWidth, ctx.cwd);
-			for (const line of bannerLines) {
-				console.log(line);
-			}
-
 			if ((ctx as any).hasUI && (ctx as any).ui?.setHeader) {
 				(ctx as any).ui.setHeader((_tui: any, _theme: any) => ({
 					render(width: number) {
-						return renderBanner(width, ctx.cwd);
+						return renderBanner(width, studioRoot);
 					},
+					invalidate() {},
 				}));
+			} else {
+				const termWidth = process.stdout.columns || 80;
+				const bannerLines = renderBanner(termWidth, studioRoot);
+				for (const line of bannerLines) {
+					console.log(line);
+				}
 			}
 
 			if ((ctx as any).hasUI && typeof (ctx as any).ui?.notify === "function") {
@@ -235,20 +233,20 @@ export default function (pi: ExtensionAPI) {
 		const gaps: string[] = [];
 
 		// Check 1: Code without design docs
-		const srcExists = existsSync(join(ctx.cwd, "src"));
-		const designExists = existsSync(join(ctx.cwd, "design", "gdd"));
+		const srcExists = existsSync(join(studioRoot, "src"));
+		const designExists = existsSync(join(studioRoot, "design", "gdd"));
 
 		if (srcExists) {
 			let srcCount = 0;
 			try {
-				const dir = await opendir(join(ctx.cwd, "src"));
+				const dir = await opendir(join(studioRoot, "src"));
 				for await (const _ of dir) srcCount++;
 			} catch {}
 
 			let designCount = 0;
 			if (designExists) {
 				try {
-					const dir = await opendir(join(ctx.cwd, "design", "gdd"));
+					const dir = await opendir(join(studioRoot, "design", "gdd"));
 					for await (const _ of dir) designCount++;
 				} catch {}
 			}
@@ -261,13 +259,13 @@ export default function (pi: ExtensionAPI) {
 		}
 
 		// Check 2: Prototypes without README
-		const protoExists = existsSync(join(ctx.cwd, "prototypes"));
+		const protoExists = existsSync(join(studioRoot, "prototypes"));
 		if (protoExists) {
 			try {
-				const dir = await opendir(join(ctx.cwd, "prototypes"));
+				const dir = await opendir(join(studioRoot, "prototypes"));
 				for await (const entry of dir) {
 					if (entry.isDirectory()) {
-						const protoDir = join(ctx.cwd, "prototypes", entry.name);
+						const protoDir = join(studioRoot, "prototypes", entry.name);
 						if (
 							!existsSync(join(protoDir, "README.md")) &&
 							!existsSync(join(protoDir, "CONCEPT.md"))
@@ -283,9 +281,9 @@ export default function (pi: ExtensionAPI) {
 
 		// Check 3: Core systems without architecture docs
 		const coreExists =
-			existsSync(join(ctx.cwd, "src", "core")) ||
-			existsSync(join(ctx.cwd, "src", "engine"));
-		const archExists = existsSync(join(ctx.cwd, "docs", "architecture"));
+			existsSync(join(studioRoot, "src", "core")) ||
+			existsSync(join(studioRoot, "src", "engine"));
+		const archExists = existsSync(join(studioRoot, "docs", "architecture"));
 
 		if (coreExists && !archExists) {
 			gaps.push(
@@ -294,7 +292,7 @@ export default function (pi: ExtensionAPI) {
 		}
 
 		if (gaps.length > 0) {
-			ctx.ui.notify(`Documentation gaps found: ${gaps.length}`, "info");
+			(ctx as any).ui?.notify?.(`Documentation gaps found: ${gaps.length}`, "info");
 		}
 	});
 }

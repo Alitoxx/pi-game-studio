@@ -1,0 +1,11 @@
+[package]
+name = "bevy_arpg_adventure"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy = { version = "0.15", features = ["dynamic_linking"] }
+
+# Compile dependencies with high optimization in dev mode for faster builds
+[profile.dev.package."*"]
+opt-level = 3

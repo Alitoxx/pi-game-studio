@@ -227,7 +227,7 @@ Type `/` in Pi to browse all 80 skills:
 
 ### Studio Suite & Admin (`studio:*`)
 
-`/studio` `/studio:setup` `/studio:doctor` `/studio:models` `/studio:status` `/studio:agents` `/studio:settings` `/setup` `/assign-models` `/connect-engram`
+`/studio` `/studio:start` `/studio:new` `/studio:setup` `/studio:doctor` `/studio:models` `/studio:status` `/studio:agents` `/studio:chains` `/studio:settings` `/setup` `/assign-models` `/connect-engram`
 
 ## Getting Started
 
@@ -345,6 +345,22 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
 - **Token economy & structured return contracts.** Inspirado en Gentle Shell, las skills pesadas cargan manuales bajo demanda y los subagentes retornan contratos YAML cerrados sin prosa redundante para máxima eficiencia de contexto.
 
 ## Changelog
+
+### v0.8.2 — 2026-09-27
+
+- **Autodetección Proactiva de Motor y Versión (Zero-Config Sniffing)**:
+  - Detección automática en tiempo de ejecución de motor, versión y lenguaje (`extensions/hooks/engine-detector.ts`) mediante inspección de archivos clave (`Cargo.toml` para Bevy, `project.godot` para Godot, `CMakeLists.txt` para Raylib, `ProjectVersion.txt` para Unity y `*.uproject` para Unreal).
+  - Los banners del estudio y comandos adaptan automáticamente el contexto sin necesidad de configuración manual en `project.yaml`.
+- **Plantillas de Inicio Rápido (`/studio:new`)**:
+  - Nuevo comando para crear proyectos jugables desde plantillas preconfiguradas:
+    - `bevy-2d-arpg`: Starter 2D cenital/isométrico en Bevy 0.15 con cámara ortográfica y controles WASD/ataque.
+    - `raylib-cpp-entt`: Starter C++20 con arquitectura ECS EnTT y build pipeline CMake FetchContent.
+    - `godot-2d-character`: Escena 2D con CharacterBody2D en Godot 4.3 y GDScript estáticamente tipado.
+- **Auditoría de Versiones y Alertas de Conocimiento en `/studio:doctor`**:
+  - Auditoría cruzada entre la versión del proyecto y la base técnica del estudio (`docs/engine-reference/`).
+  - Alertas proactivas sobre breaking changes y soporte de versiones para Bevy, Godot, Raylib, Unity y Unreal.
+- **Inclusión Oficial de Raylib en Banner**:
+  - Banner actualizado con la lista simétrica de los 5 motores oficiales (`Godot · Unity · Unreal · Bevy · Raylib`) y métrica corregida a `52 especialistas & leads` (55 agentes en total).
 
 ### v0.8.1 — 2026-09-27
 

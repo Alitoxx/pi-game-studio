@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.2] - 2026-09-27
+
+### Added
+- **Autodetección Proactiva de Motor y Versión (Zero-Config Engine Sniffing)**:
+  - Creado módulo `extensions/hooks/engine-detector.ts` que escanea automáticamente los archivos clave del repositorio:
+    - `Cargo.toml` con dependencia `bevy` $\rightarrow$ Detecta **Bevy** y extrae la versión y lenguaje (Rust).
+    - `project.godot` $\rightarrow$ Detecta **Godot 4.x** e inspecciona si es GDScript o C#.
+    - `CMakeLists.txt` con `raylib` o fuentes C/C++ $\rightarrow$ Detecta **Raylib** y su versión/lenguaje.
+    - `ProjectSettings/ProjectVersion.txt` $\rightarrow$ Detecta **Unity** y la versión exacta del editor.
+    - `*.uproject` $\rightarrow$ Detecta **Unreal Engine** y `EngineAssociation`.
+  - Integrado en `banner.ts`, `session_start`, y `inspectSetup`: el estudio y el banner reconocen el motor y versión al instante sin requerir configuración manual previa.
+- **Starters / Boilerplates de Inicio Rápido (`/studio:new`)**:
+  - Nuevo comando `/studio:new` para inicializar proyectos listos para compilar:
+    - `bevy-2d-arpg`: Starter 2D cenital/isométrico en Rust con Bevy 0.15, cámara ortográfica, movimiento en 8 direcciones y trigger de ataque.
+    - `raylib-cpp-entt`: Starter C++20 con arquitectura ECS EnTT, ventana Raylib y configuración CMake FetchContent.
+    - `godot-2d-character`: Escena base Godot 4.3 con CharacterBody2D, movimiento suave y cámara.
+- **Auditoría de Versiones y Alertas de Conocimiento en `/studio:doctor`**:
+  - Comprobación cruzada entre la versión detectada en el proyecto y la base técnica del estudio (`docs/engine-reference/`).
+  - Avisos inteligentes sobre versiones de Bevy (breaking changes documentados hasta Bevy 0.19) o versiones heredadas de Godot (3.x vs 4.x).
+  - Creada documentación simétrica de versiones para todos los motores: `docs/engine-reference/` (Bevy, Godot, Raylib, Unity, Unreal).
+
+### Fixed
+- **Inclusión de Raylib en Banner y Métricas de Agentes (`banner.ts`)**:
+  - Actualizada la lista fallback de motores a `"Godot · Unity · Unreal · Bevy · Raylib"`.
+  - Corregida la métrica del banner a `52 especialistas & leads` (+ 3 directores = 55 agentes en total).
+
+---
+
 ## [0.8.1] - 2026-09-27
 
 ### Fixed

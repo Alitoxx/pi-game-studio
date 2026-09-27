@@ -1,8 +1,22 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { execSync } from "node:child_process";
-import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { inspectSetup } from "./studio-setup.ts";
+import { findStudioRoot } from "./studio-root.ts";
+import { detectProjectEngine } from "./engine-detector.ts";
+
+function resolvePackageRoot(): string {
+	try {
+		const candidate1 = resolve(
+			new URL(".", import.meta.url).pathname,
+			"..",
+			"..",
+		);
+		if (existsSync(join(candidate1, "docs"))) return candidate1;
+	} catch {}
+	return process.cwd();
+}
 
 export interface PrerequisiteCheck {
 	name: string;
@@ -17,10 +31,20 @@ export interface PrerequisiteCheck {
 	};
 }
 
+export interface VersionAuditResult {
+	projectVersion?: string;
+	referenceVersion?: string;
+	sourceFile?: string;
+	status: "ok" | "warning" | "info";
+	summary: string;
+	advice?: string;
+}
+
 export interface EngineAuditReport {
 	engine: string;
 	ready: boolean;
 	checks: PrerequisiteCheck[];
+	versionAudit?: VersionAuditResult;
 	recommendations: string[];
 }
 
@@ -36,7 +60,7 @@ function runCommandSilent(cmd: string): string | null {
 	}
 }
 
-export function auditEnginePrerequisites(engine: string): EngineAuditReport {
+export function auditEnginePrerequisites(engine: string, dir = process.cwd()): EngineAuditReport {
 	const normalized = engine.trim().toLowerCase();
 	const checks: PrerequisiteCheck[] = [];
 	const recommendations: string[] = [];
@@ -252,13 +276,130 @@ export function auditEnginePrerequisites(engine: string): EngineAuditReport {
 		}
 	}
 
+	const versionAudit = auditEngineVersion(engine, dir);
+	if (versionAudit.advice) {
+		recommendations.push(versionAudit.advice);
+	}
+
 	const ready = checks.filter((c) => c.required).every((c) => c.satisfied);
 
 	return {
 		engine,
 		ready,
 		checks,
+		versionAudit,
 		recommendations,
+	};
+}
+
+export function auditEngineVersion(engine: string, dir = process.cwd()): VersionAuditResult {
+	const studioRoot = findStudioRoot(dir) || dir;
+	const detected = detectProjectEngine(studioRoot);
+	const normalized = engine.trim().toLowerCase();
+
+	let engineDir = "godot";
+	if (normalized.includes("bevy")) engineDir = "bevy";
+	else if (normalized.includes("raylib")) engineDir = "raylib";
+	else if (normalized.includes("unity")) engineDir = "unity";
+	else if (normalized.includes("unreal")) engineDir = "unreal";
+
+	let refVersion: string | undefined;
+	const candidatePaths = [
+		join(studioRoot, "docs", "engine-reference", engineDir, "VERSION.md"),
+		join(resolvePackageRoot(), "docs", "engine-reference", engineDir, "VERSION.md"),
+	];
+
+	for (const p of candidatePaths) {
+		if (existsSync(p)) {
+			try {
+				const content = readFileSync(p, "utf8");
+				const m = content.match(/\*\*Engine Version\*\*\s*\|\s*([^|\n]+)/);
+				if (m) {
+					refVersion = m[1].trim();
+					break;
+				}
+			} catch {}
+		}
+	}
+
+	const isTargetEngine = detected.detected && detected.engine.toLowerCase() === engineDir;
+	const projVer = isTargetEngine ? detected.version : undefined;
+
+	if (normalized.includes("bevy")) {
+		if (projVer) {
+			const numProj = parseFloat(projVer.replace(/^[^0-9]*/, ""));
+			if (!isNaN(numProj) && numProj < 0.17) {
+				return {
+					projectVersion: projVer,
+					referenceVersion: refVersion || "Bevy 0.19.0",
+					sourceFile: detected.sourceFile,
+					status: "info",
+					summary: `Versión en proyecto: Bevy ${projVer} (referencia técnica en estudio: ${refVersion || "0.19.0"})`,
+					advice: `Tu proyecto usa Bevy ${projVer}. Pi Game Studio incluye guías de migración y breaking changes hasta Bevy 0.19 en docs/engine-reference/bevy/breaking-changes.md.`,
+				};
+			} else if (!isNaN(numProj) && numProj > 0.19) {
+				return {
+					projectVersion: projVer,
+					referenceVersion: refVersion || "Bevy 0.19.0",
+					sourceFile: detected.sourceFile,
+					status: "warning",
+					summary: `Versión en proyecto: Bevy ${projVer} (más reciente que la base técnica local: ${refVersion || "0.19.0"})`,
+					advice: `Tu versión (${projVer}) supera la referencia local (0.19.0). Si encuentras diferencias de API, el bevy-specialist consultará la documentación oficial en línea.`,
+				};
+			}
+			return {
+				projectVersion: projVer,
+				referenceVersion: refVersion || "Bevy 0.19.0",
+				sourceFile: detected.sourceFile,
+				status: "ok",
+				summary: `Versión en proyecto: Bevy ${projVer} (sincronizada con la base técnica del estudio)`,
+			};
+		}
+	} else if (normalized.includes("godot")) {
+		if (projVer && projVer.startsWith("3.")) {
+			return {
+				projectVersion: projVer,
+				referenceVersion: refVersion || "Godot 4.3",
+				sourceFile: detected.sourceFile,
+				status: "warning",
+				summary: `Versión en proyecto: Godot ${projVer} (desactualizada frente a Godot 4.x)`,
+				advice: "Pi Game Studio está diseñado para Godot 4.x. Se recomienda migrar a Godot 4 para compatibilidad total con los agentes.",
+			};
+		} else if (projVer) {
+			return {
+				projectVersion: projVer,
+				referenceVersion: refVersion || "Godot 4.3",
+				sourceFile: detected.sourceFile,
+				status: "ok",
+				summary: `Versión en proyecto: Godot ${projVer} (${detected.language})`,
+			};
+		}
+	} else if (normalized.includes("raylib")) {
+		if (projVer) {
+			return {
+				projectVersion: projVer,
+				referenceVersion: refVersion || "Raylib 5.5 / EnTT 3.13",
+				sourceFile: detected.sourceFile,
+				status: "ok",
+				summary: `Versión en proyecto: Raylib ${projVer} (${detected.language})`,
+			};
+		}
+	} else if (projVer) {
+		return {
+			projectVersion: projVer,
+			referenceVersion: refVersion,
+			sourceFile: detected.sourceFile,
+			status: "ok",
+			summary: `Versión en proyecto: ${detected.engine} ${projVer}`,
+		};
+	}
+
+	return {
+		referenceVersion: refVersion,
+		status: "info",
+		summary: detected.detected
+			? `Proyecto configurado con ${detected.engine}, sin versión estricta declarada`
+			: `Sin archivos de proyecto específicos en el directorio actual`,
 	};
 }
 
@@ -299,6 +440,27 @@ export function formatAuditReport(report: EngineAuditReport): string[] {
 		}
 	}
 
+	if (report.versionAudit) {
+		lines.push("");
+		lines.push(
+			`  \x1b[1m\x1b[38;2;56;189;248m📦 Auditoría de Versión y Base de Conocimiento:\x1b[0m`,
+		);
+		const va = report.versionAudit;
+		const sym = va.status === "ok"
+			? "\x1b[38;2;52;211;153m✔\x1b[0m"
+			: va.status === "warning"
+			? "\x1b[38;2;239;68;68m⚠️\x1b[0m"
+			: "\x1b[38;2;251;191;36mℹ\x1b[0m";
+
+		lines.push(`     ${sym} ${va.summary}`);
+		if (va.referenceVersion) {
+			lines.push(`       \x1b[38;2;107;114;128mBase local de referencia: ${va.referenceVersion}\x1b[0m`);
+		}
+		if (va.advice) {
+			lines.push(`       \x1b[38;2;251;191;36m💡 Recomendación: ${va.advice}\x1b[0m`);
+		}
+	}
+
 	lines.push("");
 	if (isReady) {
 		lines.push(
@@ -323,11 +485,17 @@ export async function handleStudioDoctor(
 ): Promise<void> {
 	let targetEngine = args?.trim();
 	if (!targetEngine) {
-		const status = inspectSetup(ctx.cwd);
-		targetEngine = status.currentEngine || "Godot";
+		const studioRoot = findStudioRoot(ctx.cwd) || ctx.cwd;
+		const detected = detectProjectEngine(studioRoot);
+		if (detected.detected) {
+			targetEngine = detected.engine;
+		} else {
+			const status = inspectSetup(studioRoot);
+			targetEngine = status.currentEngine || "Godot";
+		}
 	}
 
-	const audit = auditEnginePrerequisites(targetEngine);
+	const audit = auditEnginePrerequisites(targetEngine, studioRoot);
 	const lines = formatAuditReport(audit);
 	for (const l of lines) console.log(l);
 

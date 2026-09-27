@@ -1,0 +1,7 @@
+title: "Bevy 2D ARPG Starter"
+engine: "bevy"
+genre: "2d-arpg"
+platforms:
+  - "pc"
+  - "web"
+language: "es"

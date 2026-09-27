@@ -18,6 +18,8 @@ import { handleStudioSettings, getLanguage } from "./studio-settings.ts";
 import { handleStudioChains } from "./studio-chains.ts";
 import { handleStudioStart } from "./studio-start.ts";
 import { handleStudioDoctor } from "./studio-doctor.ts";
+import { handleStudioNew } from "./studio-new.ts";
+import { detectProjectEngine, formatEngineBadge } from "./engine-detector.ts";
 
 export default function (pi: ExtensionAPI) {
 	// ──────────────────────────────────────────────
@@ -45,6 +47,14 @@ export default function (pi: ExtensionAPI) {
 		description: "🎮 [Studio] Asistente interactivo de instalación, verificación y actualización del estudio",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioSetup(args, ctx);
+		},
+	});
+
+	// /studio:new — Crear nuevo juego desde plantilla o starter
+	(pi as any).registerCommand?.("studio:new", {
+		description: "🎮 [Studio] Crear nuevo proyecto desde plantilla/starter (Bevy, Raylib, Godot)",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioNew(args, ctx);
 		},
 	});
 
@@ -221,8 +231,11 @@ export default function (pi: ExtensionAPI) {
 			}
 
 			if ((ctx as any).hasUI && typeof (ctx as any).ui?.notify === "function") {
+				const detected = detectProjectEngine(studioRoot);
+				const engineBadge = formatEngineBadge(detected);
 				const notifyBanner = [
-					"🎮 PI GAME STUDIO v0.8.1 CARGADO",
+					"🎮 PI GAME STUDIO CARGADO",
+					`Motor: ${engineBadge}`,
 					"55 Agentes · 80 Skills · 44 Templates",
 					"Escribe /studio para ver el menú o /start para comenzar.",
 				].join("\n");

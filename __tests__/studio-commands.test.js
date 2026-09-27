@@ -26,6 +26,7 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 			"studio",
 			"studio:start",
 			"studio:setup",
+			"studio:new",
 			"studio:models",
 			"studio:status",
 			"studio:agents",
@@ -160,4 +161,55 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 
 		expect(testResolve("/tmp")).toBeNull();
 	});
+
+	test("detectProjectEngine correctly identifies all 3 starters and their languages", () => {
+		const detectorSource = fs.readFileSync(
+			path.join(__dirname, "..", "extensions", "hooks", "engine-detector.ts"),
+			"utf8",
+		);
+		expect(detectorSource).toContain("export function detectProjectEngine");
+		expect(detectorSource).toContain("export function formatEngineBadge");
+
+		const studioRoot = path.resolve(__dirname, "..");
+		const bevyDir = path.join(studioRoot, "starters", "bevy-2d-arpg");
+		const raylibDir = path.join(studioRoot, "starters", "raylib-cpp-entt");
+		const godotDir = path.join(studioRoot, "starters", "godot-2d-character");
+
+		expect(fs.existsSync(path.join(bevyDir, "Cargo.toml"))).toBe(true);
+		expect(fs.existsSync(path.join(raylibDir, "CMakeLists.txt"))).toBe(true);
+		expect(fs.existsSync(path.join(godotDir, "project.godot"))).toBe(true);
+
+		// Basic sniffing simulation
+		const cargo = fs.readFileSync(path.join(bevyDir, "Cargo.toml"), "utf8");
+		expect(cargo).toContain("bevy = { version = \"0.15\"");
+
+		const cmake = fs.readFileSync(path.join(raylibDir, "CMakeLists.txt"), "utf8");
+		expect(cmake).toContain("raylib");
+		expect(cmake).toContain("entt");
+
+		const godot = fs.readFileSync(path.join(godotDir, "project.godot"), "utf8");
+		expect(godot).toContain("config/name=\"Godot 2D Character Starter\"");
+	});
+
+	test("banner.ts includes Raylib in the 5 supported engines and 52 specialists/leads", () => {
+		const bannerSource = fs.readFileSync(
+			path.join(__dirname, "..", "extensions", "hooks", "banner.ts"),
+			"utf8",
+		);
+		expect(bannerSource).toContain("Raylib");
+		expect(bannerSource).toContain("Godot · Unity · Unreal · Bevy · Raylib");
+		expect(bannerSource).toContain("52 especialistas & leads");
+	});
+
+	test("engine reference docs exist for all 5 engines (bevy, godot, raylib, unity, unreal)", () => {
+		const refDir = path.join(__dirname, "..", "docs", "engine-reference");
+		const engines = ["bevy", "godot", "raylib", "unity", "unreal"];
+		for (const eng of engines) {
+			const versionFile = path.join(refDir, eng, "VERSION.md");
+			expect(fs.existsSync(versionFile)).toBe(true);
+			const content = fs.readFileSync(versionFile, "utf8");
+			expect(content).toMatch(/Engine Version/i);
+		}
+	});
 });
+

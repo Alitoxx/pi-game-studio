@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
+import { detectProjectEngine, formatEngineBadge } from "./engine-detector.ts";
 
 const RESET = "\x1b[0m";
 const BOLD = "\x1b[1m";
@@ -62,20 +63,12 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 		}
 	} catch {}
 
-	// Engine detection
-	let engineInfo = "Godot · Unity · Unreal · Bevy";
-	try {
-		const projectYaml = join(root, "project.yaml");
-		if (existsSync(projectYaml)) {
-			const yamlContent = readFileSync(projectYaml, "utf8");
-			const m = yamlContent.match(/^engine:\s*["']?([^\n"']+)["']?/m);
-			if (m && m[1] && m[1] !== "null" && m[1] !== "unknown") {
-				engineInfo = m[1].charAt(0).toUpperCase() + m[1].slice(1);
-			}
-		}
-	} catch {}
+	// Engine detection & auto-sniffing
+	const engineResult = detectProjectEngine(root);
+	let engineInfo = formatEngineBadge(engineResult);
 
-	if (engineInfo === "Godot · Unity · Unreal · Bevy") {
+	if (!engineResult.detected) {
+		engineInfo = "Godot · Unity · Unreal · Bevy · Raylib";
 		try {
 			const prefsPath = join(root, ".pi", "game-studio", "technical-preferences.md");
 			if (existsSync(prefsPath)) {
@@ -120,7 +113,7 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 		lines.push(
 			center(
 				formatRow(
-					`${VIOLET}${BOLD}WORKHORSES ${RESET}${DIM}:${RESET} ${WHITE}49 especialistas${RESET} ${DIM}(Diseño, Código, Arte, Audio, QA)${RESET}`,
+					`${VIOLET}${BOLD}WORKHORSES ${RESET}${DIM}:${RESET} ${WHITE}52 especialistas & leads${RESET} ${DIM}(Diseño, Código, Arte, Audio, QA)${RESET}`,
 					boxWidth,
 				),
 				width,

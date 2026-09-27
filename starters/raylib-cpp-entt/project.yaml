@@ -1,0 +1,7 @@
+title: "Raylib EnTT ECS Starter"
+engine: "raylib"
+genre: "action-arcade"
+platforms:
+  - "pc"
+  - "web"
+language: "es"

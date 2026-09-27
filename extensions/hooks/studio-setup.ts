@@ -9,6 +9,7 @@ import {
 import { join, resolve } from "node:path";
 import { promptModelForRole } from "./provider-resolver.ts";
 import { auditEnginePrerequisites, formatAuditReport } from "./studio-doctor.ts";
+import { detectProjectEngine } from "./engine-detector.ts";
 
 function resolvePackageRoot(): string {
 	try {
@@ -84,6 +85,11 @@ export function inspectSetup(cwd: string): SetupStatus {
 			const m = readFileSync(projectYaml, "utf8").match(/^engine:\s*["']?([^\n"']+)["']?/m);
 			if (m && m[1]) currentEngine = m[1];
 		} catch {}
+	} else {
+		const autoEngine = detectProjectEngine(cwd);
+		if (autoEngine.detected) {
+			currentEngine = autoEngine.engine;
+		}
 	}
 
 	return {

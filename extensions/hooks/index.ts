@@ -221,6 +221,15 @@ export default function (pi: ExtensionAPI) {
 					},
 				}));
 			}
+
+			if ((ctx as any).hasUI && typeof (ctx as any).ui?.notify === "function") {
+				const notifyBanner = [
+					"🎮 PI GAME STUDIO v0.8.1 CARGADO",
+					"55 Agentes · 80 Skills · 44 Templates",
+					"Escribe /studio para ver el menú o /start para comenzar.",
+				].join("\n");
+				(ctx as any).ui.notify(notifyBanner, "info");
+			}
 		} catch {}
 
 		const gaps: string[] = [];

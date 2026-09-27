@@ -109,10 +109,11 @@ Tier 3 — Specialists
 | **Bevy (Rust)**     | `bevy-specialist`   | ECS, 2D/3D (wgpu), bevy_ui, Assets, Cargo/WASM  |
 | **Raylib (C++)**    | `raylib-specialist` | EnTT ECS, GLSL Shaders, UI & Debug, CMake/WASM  |
 
-> 📖 **Manuales del Estudio**:
+> 📖 **Manuales y Herramientas del Estudio**:
 > - [`AGENTS.md`](AGENTS.md): Directorio completo y responsabilidades de los **55 agentes**.
 > - [`docs/gamedev-interaction-protocol.md`](docs/gamedev-interaction-protocol.md): **Protocolo de Respuestas y Decisiones** (Pillars Header, Trade-offs Matrix, Choice Envelopes, Radar).
-> - [`docs/skills-reference.md`](docs/skills-reference.md): Catálogo de las **80 skills** organizadas por fases.
+> - [`docs/skills-reference.md`](docs/skills-reference.md): Catálogo de las **80 skills** y comandos `studio:*` organizados por fases.
+> - **Diagnóstico Multiplataforma (`/studio:doctor`)**: Auditoría automática de compiladores, toolchains y SDKs locales para los 5 motores (macOS, Linux y Windows).
 
 ## Model Mapping
 

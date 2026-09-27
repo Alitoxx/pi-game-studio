@@ -8,6 +8,7 @@ import {
 } from "node:fs";
 import { join, resolve } from "node:path";
 import { promptModelForRole } from "./provider-resolver.ts";
+import { auditEnginePrerequisites, formatAuditReport } from "./studio-doctor.ts";
 
 function resolvePackageRoot(): string {
 	try {
@@ -204,9 +205,28 @@ export async function runGuidedSetup(
 		"Paso 1/3 — Selecciona el Motor de Juego principal:",
 		engineOptions,
 	);
-	if (!engineChoice) return;
-
 	const selectedEngine = ["Godot", "Unity", "Unreal", "Bevy", "Raylib"][engineChoice.index];
+
+	// Auditoría de Prerrequisitos del Motor
+	const audit = auditEnginePrerequisites(selectedEngine);
+	const reportLines = formatAuditReport(audit);
+	for (const line of reportLines) {
+		console.log(line);
+	}
+
+	if (!audit.ready) {
+		const proceedChoice = await promptSelectSafe(
+			ctx,
+			`⚠️ Faltan herramientas para ${selectedEngine}. ¿Deseas continuar configurando o cambiar de motor?`,
+			[
+				"Continuar de todos modos (instalaré los requisitos más tarde)",
+				"Volver a elegir motor",
+			],
+		);
+		if (proceedChoice && proceedChoice.index === 1) {
+			return handleManualSetup(ctx, status);
+		}
+	}
 
 	// ── Paso 2: Idioma del Estudio ──
 	const langOptions = [

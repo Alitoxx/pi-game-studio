@@ -1,6 +1,7 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { renderBanner } from "./banner.ts";
 import { inspectSetup } from "./studio-setup.ts";
+import { auditEnginePrerequisites, formatAuditReport } from "./studio-doctor.ts";
 
 export async function handleStudioStatus(
 	args: string,
@@ -19,8 +20,13 @@ export async function handleStudioStatus(
 	}
 
 	const status = inspectSetup(ctx.cwd);
+	const audit = auditEnginePrerequisites(status.currentEngine);
+	const auditLines = formatAuditReport(audit);
+	for (const l of auditLines) console.log(l);
+
 	const summary = [
 		`🎮 Pi Game Studio — Estado del Sistema`,
+		`• Motor activo: ${status.currentEngine} (${audit.ready ? "Herramientas OK" : "Faltan herramientas"})`,
 		`• Agentes instalados: ${status.agentsInstalled}/${status.totalPackageAgents}`,
 		`• Configuración de modelos: ${status.hasModelsConfig ? "Configurada" : "Pendiente"}`,
 		`• Memoria persistente: ${status.engramEnabled ? "Engram activo" : "Archivos locales"}`,

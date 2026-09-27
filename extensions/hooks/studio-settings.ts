@@ -1,6 +1,7 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { existsSync, readFileSync, writeFileSync, mkdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
+import { auditEnginePrerequisites, formatAuditReport } from "./studio-doctor.ts";
 
 export async function handleStudioSettings(
 	args: string,
@@ -66,6 +67,9 @@ export async function handleStudioSettings(
 						if (typeof (ctx.ui as any)?.notify === "function") {
 							ctx.ui.notify(`🎮 Motor configurado: ${cleanName}`, "info");
 						}
+						const audit = auditEnginePrerequisites(cleanName);
+						const lines = formatAuditReport(audit);
+						for (const l of lines) console.log(l);
 					}
 				}
 				break;

@@ -40,6 +40,7 @@ export const STUDIO_CATEGORIES: StudioCategory[] = [
 		description: "Arquitectura, prototipos y motores de juego",
 		commands: [
 			{ cmd: "/setup-engine", desc: "Configuración de Godot, Unity, Unreal, Bevy o Raylib" },
+			{ cmd: "/studio:doctor", desc: "Diagnóstico de requisitos locales y toolchain del motor" },
 			{ cmd: "/connect-engine-mcp", desc: "Hub de conexión MCP para Godot, Unity, Unreal y Bevy" },
 			{ cmd: "/engine-capabilities", desc: "Auditoría de features soportadas por el motor" },
 			{ cmd: "/architecture-decision", desc: "Crear ADR para decisiones técnicas clave" },

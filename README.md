@@ -226,7 +226,7 @@ Type `/` in Pi to browse all 80 skills:
 
 ### Studio Suite & Admin (`studio:*`)
 
-`/studio` `/studio:setup` `/studio:models` `/studio:status` `/studio:agents` `/studio:settings` `/setup` `/assign-models` `/connect-engram`
+`/studio` `/studio:setup` `/studio:doctor` `/studio:models` `/studio:status` `/studio:agents` `/studio:settings` `/setup` `/assign-models` `/connect-engram`
 
 ## Getting Started
 
@@ -355,6 +355,9 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
   - **Live Engine MCP Layer ("Files First, MCP Accelerated")**:
     - `/connect-engine-mcp` — Interactive diagnostic and connection hub for Godot, Unity, Unreal, and Bevy MCP servers.
     - Updated engine leads (`godot-specialist`, `unity-specialist`, `unreal-specialist`, `bevy-specialist`) with real-time scene inspection and node tree query capabilities.
+  - **Toolchain & Engine Prerequisite Doctor (`/studio:doctor`)**:
+    - Automatic hardware and environment check for all 5 engines (compilers, build tools, SDKs, and editor binaries).
+    - Integrated gate into `/setup-engine`, `/studio:setup`, and `/studio:status` with exact installation commands for macOS, Linux, and Windows.
   - **Studio Expansion**: Scaled studio toolset to **80 skills** and **44 templates** with full test coverage and automated symmetry validation.
 
 ### v0.7.1 — 2026-09-26

@@ -3,7 +3,7 @@ name: setup-engine
 description: "🎮 [Studio] Configure the project's game engine and version. Pins the engine in AGENTS.md or package docs, detects knowledge gaps, and populates engine reference docs via web_search when the version is beyond the LLM's training data."
 model: inherit
 inheritProjectContext: true
-tools: read, glob, grep, write, edit, web_search, webfetch, subagent, ask_user_question
+tools: read, glob, grep, write, edit, web_search, webfetch, subagent, ask_user_question, bash
 ---
 
 When this skill is invoked:
@@ -135,6 +135,59 @@ Once the engine is chosen:
 - If no version provided, use web_search to find the latest stable release:
   - Search: `"[engine] latest stable version [current year]"`
   - Confirm with the user: "The latest stable [engine] is [version]. Use this?"
+
+---
+
+## 3b. Audit Local System Prerequisites & Toolchain (MANDATORY)
+
+Before proceeding to configure documents and templates, **audit the developer's local machine** to verify whether the necessary compilers, SDKs, or engine binaries are installed and accessible:
+
+Execute verification commands via `bash`:
+
+### For Bevy (Rust):
+1. Run `rustc --version` and `cargo --version`.
+2. Run `clang --version` or `gcc --version` (native C toolchain for audio/windowing dependencies).
+3. If missing:
+   - Report clearly that Rust is not installed.
+   - Provide the exact installation command:
+     - **macOS/Linux**: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+     - **Windows**: `https://rustup.rs`
+   - Recommend installing the `rust-analyzer` extension in their editor (VS Code, Cursor, Zed).
+
+### For Raylib (C++ & EnTT):
+1. Run `cmake --version` (verify $\ge$ 3.20).
+2. Run `clang++ --version` or `g++ --version` (verify C++17/20 support).
+3. Run `git --version` (required for CMake `FetchContent`).
+4. If missing:
+   - Provide installation commands (e.g. `brew install cmake` on macOS, `sudo apt install build-essential cmake` on Linux).
+
+### For Godot 4:
+1. Run `which godot` or `which godot4`.
+2. On macOS, check if `/Applications/Godot.app` or `~/Applications/Godot.app` exists.
+3. If using Godot C#: run `dotnet --version` (verify .NET 8+ SDK).
+4. If missing:
+   - Recommend downloading Godot 4.x from `https://godotengine.org` or `brew install --cask godot`.
+   - If C# is chosen and `dotnet` is missing: `brew install --cask dotnet-sdk` or `https://dotnet.microsoft.com/download`.
+
+### For Unity:
+1. Check if Unity Hub exists in standard paths:
+   - macOS: `/Applications/Unity Hub.app`
+   - Windows: `C:\Program Files\Unity Hub\Unity Hub.exe`
+2. If missing: provide download link `https://unity.com/download` and recommend an LTS release (Unity 6 or 2022.3 LTS).
+
+### For Unreal Engine 5:
+1. Check if Epic Games Launcher / Unreal Editor exists in standard paths:
+   - macOS: `/Applications/Epic Games Launcher.app` or `/Users/Shared/Epic Games`
+   - Windows: `C:\Program Files (x86)\Epic Games\Launcher`
+2. Verify C++ build tools (Xcode on macOS, Visual Studio 2022 with "Game Development with C++" workload on Windows).
+3. If missing: provide setup guidance.
+
+### Diagnostic Gate:
+Display a clean status table:
+- Show `[✔ OK]` for satisfied tools and `[❌ MISSING]` with the exact fix command.
+- If critical tools are missing, ask the user via `ask_user_question`:
+  - `[A] Proceed with setup (I will install the prerequisites later)`
+  - `[B] Pick a different engine`
 
 ---
 

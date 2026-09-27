@@ -16,6 +16,7 @@ import { handleStudioAgents } from "./studio-agents.ts";
 import { handleStudioSettings, getLanguage } from "./studio-settings.ts";
 import { handleStudioChains } from "./studio-chains.ts";
 import { handleStudioStart } from "./studio-start.ts";
+import { handleStudioDoctor } from "./studio-doctor.ts";
 
 export default function (pi: ExtensionAPI) {
 	// ──────────────────────────────────────────────
@@ -91,6 +92,14 @@ export default function (pi: ExtensionAPI) {
 		description: "🎮 [Studio] Configuración interactiva del proyecto (motor, plataformas, idioma)",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioSettings(args, ctx);
+		},
+	});
+
+	// /studio:doctor — Diagnóstico de prerrequisitos de compilación y motor
+	(pi as any).registerCommand?.("studio:doctor", {
+		description: "🎮 [Studio] Diagnóstico de prerrequisitos, herramientas y compiladores del motor de juego",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioDoctor(args, ctx);
 		},
 	});
 

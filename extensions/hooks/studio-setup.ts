@@ -43,7 +43,7 @@ export interface StudioInstallOptions {
 
 export function inspectSetup(cwd: string): SetupStatus {
 	const pkgRoot = resolvePackageRoot();
-	let totalPackageAgents = 50;
+	let totalPackageAgents = 55;
 	try {
 		if (existsSync(join(pkgRoot, "agents"))) {
 			totalPackageAgents = readdirSync(join(pkgRoot, "agents")).filter((f) =>
@@ -127,7 +127,7 @@ export async function handleStudioSetup(
 	// Interactive UI mode
 	if (ctx.hasUI && typeof (ctx.ui as any)?.select === "function") {
 		const options = [
-			`⚡ 1. Instalación Automática (${status.totalPackageAgents || 51} agentes + modelos recomendados + ${status.currentEngine})`,
+			`⚡ 1. Instalación Automática (${status.totalPackageAgents || 55} agentes + modelos recomendados + ${status.currentEngine})`,
 			"🛠️ 2. Instalación Manual / Guiada (Elegir modelos por agente/tier, motor e idioma)",
 			"🤖 3. Configurar Modelos de IA (/studio:models)",
 			"📊 4. Ver diagnóstico del estudio (/studio:status)",
@@ -273,7 +273,7 @@ export async function runGuidedSetup(
 	];
 
 	const confirmOptions = [
-		`✔ Confirmar e Instalar Pi Game Studio (${status.totalPackageAgents || 51} agentes)`,
+		`✔ Confirmar e Instalar Pi Game Studio (${status.totalPackageAgents || 55} agentes)`,
 		"❌ Cancelar sin modificar archivos",
 	];
 

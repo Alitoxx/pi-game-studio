@@ -34,16 +34,16 @@ read: path/to/models.default.json
 Show the current mapping:
 
 ```
-Currently active models (50 agents):
+Currently active models (55 agents):
   Directors (3 agents):
     creative-director → openai-codex/gpt-5.4-mini
     technical-director → openai-codex/gpt-5.4-mini
     producer → openai-codex/gpt-5.4-mini
 
-  Workhorses (44 agents):
+  Workhorses (49 agents):
     game-designer → openrouter/openai/gpt-oss-120b:free
     lead-programmer → openrouter/openai/gpt-oss-120b:free
-    bevy-specialist, godot-specialist, unity-specialist, ...
+    bevy-specialist, godot-specialist, unity-specialist, raylib-specialist, ...
     ...
 
   Lightweight (3 agents):

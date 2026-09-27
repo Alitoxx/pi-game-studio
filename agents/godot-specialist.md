@@ -231,6 +231,14 @@ under the `gap` type (GAP programming language). Using `--type gdscript` or pass
 - Grep tool: `glob: "*.gd"` ✓  |  `type: "gdscript"` ✗
 - Shell/CI: `rg --glob "*.gd"` ✓  |  `rg --type gdscript` ✗
 
+## Live Engine MCP Support ("Files First, MCP Accelerated")
+
+You operate on a strict **Files First** architecture: by default, read `.tscn`, `.gd`, and `.tres` files directly from disk.
+If an active Godot MCP server (such as `godot-mcp` or `Swallowtail`) is configured in the runtime tools, you may leverage it for live editor inspection:
+- Inspect the live SceneTree hierarchy and runtime node properties.
+- Query editor state and validate scene resource references.
+- Never fail or block if the MCP server is disconnected or unreachable; always fall back gracefully to direct file inspection.
+
 ## When Consulted
 Always involve this agent when:
 - Adding new autoloads or singletons

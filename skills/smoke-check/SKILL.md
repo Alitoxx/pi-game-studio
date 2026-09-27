@@ -105,6 +105,18 @@ ls -t Saved/Logs/ 2>/dev/null | grep -i "test\|automation" | head -5
 If no matching log found: "UE automation tests must be run via the Session
 Frontend or CI pipeline. Please confirm test status manually."
 
+**Bevy (Rust):**
+```bash
+cargo test 2>&1
+```
+Parse standard cargo test output: `test result: ok. X passed; Y failed; Z ignored`.
+
+**Raylib & C++ (CMake / CTest):**
+```bash
+ctest --test-dir build --output-on-failure 2>&1 || ./build/tests/game_tests 2>&1
+```
+If neither is found, check if a test executable exists in `build/` or run `cmake --build build --target test`.
+
 **Unknown engine / not configured:**
 "Engine not configured in `.pi/game-studio/technical-preferences.md`. Run
 `/setup-engine` to specify the engine, then re-run `/smoke-check`."

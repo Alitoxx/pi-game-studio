@@ -3,14 +3,14 @@
 <p align="center">
   Turn a Pi session into a full game development studio.
   <br />
-  55 agents. 77 skills. 43 templates. One coordinated AI team.
+  55 agents. 80 skills. 44 templates. One coordinated AI team.
 </p>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
   <a href="agents"><img src="https://img.shields.io/badge/agents-55-blueviolet" alt="55 Agents"></a>
-  <a href="skills"><img src="https://img.shields.io/badge/skills-77-green" alt="77 Skills"></a>
-  <a href="prompts"><img src="https://img.shields.io/badge/templates-43-orange" alt="43 Templates"></a>
+  <a href="skills"><img src="https://img.shields.io/badge/skills-80-green" alt="80 Skills"></a>
+  <a href="prompts"><img src="https://img.shields.io/badge/templates-44-orange" alt="44 Templates"></a>
   <a href="extensions"><img src="https://img.shields.io/badge/hooks-4-red" alt="4 Hooks"></a>
   <img src="https://img.shields.io/badge/built%20for-Pi-8B5CF6?logo=pinokio" alt="Built for Pi">
 </p>
@@ -49,8 +49,8 @@ The result: you still make every decision, but now you have a team that asks the
 | Category      | Count | Description                                                                                                              |
 | ------------- | ----- | ------------------------------------------------------------------------------------------------------------------------ |
 | **Agents**    | 55    | Specialized agents across design, programming, art, audio, narrative, QA, and production                                 |
-| **Skills**    | 77    | Slash commands for every workflow phase (`/start`, `/settings`, `/prototype`, `/vertical-slice`, `/dev-story`, etc.)     |
-| **Templates** | 43    | Document templates for GDDs, UX specs, ADRs, sprint plans, vertical slice reports, game briefs, and more                  |
+| **Skills**    | 80    | Slash commands for every workflow phase (`/start`, `/settings`, `/prototype`, `/vertical-slice`, `/dev-story`, etc.)     |
+| **Templates** | 44    | Document templates for GDDs, UX specs, ADRs, sprint plans, vertical slice reports, game briefs, and more                  |
 | **Hooks**     | 4     | Automated validation on commits, pushes, skill changes, and session audit/gap detection                                  |
 | **Engram**    | 1     | Optional persistent memory — decisions auto-save across sessions when Engram is connected                                |
 | **Setup**     | 2     | `/setup` — install agents and model config; `/assign-models` — customize models per agent                                |
@@ -89,6 +89,14 @@ Tier 3 — Specialists
   performance-analyst  devops-engineer       analytics-engineer
   security-engineer    qa-tester             accessibility-specialist
   live-ops-designer    community-manager     bevy-specialist
+  raylib-specialist    raylib-entt-specialist  raylib-shader-specialist
+  raylib-ui-specialist raylib-build-specialist
+  godot-specialist     godot-gdscript-specialist  godot-csharp-specialist
+  godot-gdextension-specialist  godot-shader-specialist
+  unity-specialist     unity-dots-specialist  unity-addressables-specialist
+  unity-shader-specialist  unity-ui-specialist
+  unreal-specialist    ue-gas-specialist     ue-blueprint-specialist
+  ue-replication-specialist   ue-umg-specialist
 ```
 
 ### Engine Specialists
@@ -104,7 +112,7 @@ Tier 3 — Specialists
 > 📖 **Manuales del Estudio**:
 > - [`AGENTS.md`](AGENTS.md): Directorio completo y responsabilidades de los **55 agentes**.
 > - [`docs/gamedev-interaction-protocol.md`](docs/gamedev-interaction-protocol.md): **Protocolo de Respuestas y Decisiones** (Pillars Header, Trade-offs Matrix, Choice Envelopes, Radar).
-> - [`docs/skills-reference.md`](docs/skills-reference.md): Catálogo de las **77 skills** organizadas por fases.
+> - [`docs/skills-reference.md`](docs/skills-reference.md): Catálogo de las **80 skills** organizadas por fases.
 
 ## Model Mapping
 
@@ -164,7 +172,7 @@ Agents not listed use the session default.
 
 ## Slash Commands
  
-Type `/` in Pi to browse all 77 skills:
+Type `/` in Pi to browse all 80 skills:
 
 > 📖 **Catálogo completo de skills**: Consulta [`docs/skills-reference.md`](docs/skills-reference.md) para ver la tabla detallada de comandos, agentes responsables y archivos que genera cada skill.
 
@@ -172,9 +180,9 @@ Type `/` in Pi to browse all 77 skills:
 
 `/start` `/help` `/project-stage-detect` `/setup-engine` `/adopt`
 
-### Game Design
+### Game Design & Research
 
-`/brainstorm` `/map-systems` `/design-system` `/quick-design` `/review-all-gdds` `/propagate-design-change`
+`/brainstorm` `/market-research` `/jam` `/map-systems` `/design-system` `/quick-design` `/review-all-gdds` `/propagate-design-change`
 
 ### Art & Assets
 
@@ -184,9 +192,9 @@ Type `/` in Pi to browse all 77 skills:
 
 `/ux-design` `/ux-review`
 
-### Architecture
+### Architecture & Engine Tools
 
-`/create-architecture` `/architecture-decision` `/architecture-review` `/create-control-manifest`
+`/create-architecture` `/architecture-decision` `/architecture-review` `/create-control-manifest` `/connect-engine-mcp`
 
 ### Stories & Sprints
 
@@ -302,8 +310,8 @@ pi-game-studio/                     # Package root
 ├── AGENTS.md                       # Full agent roster
 ├── models.default.json             # Recommended 3-tier model mapping
 ├── agents/                         # 55 source agents (model: inherit)
-├── skills/                         # 77 skills (SKILL.md per directory)
-├── prompts/                        # 43 document templates
+├── skills/                         # 80 skills (SKILL.md per directory)
+├── prompts/                        # 44 document templates
 ├── extensions/                     # Hooks extension
 │   └── hooks/
 │       ├── index.ts                # 4 ported hooks
@@ -335,6 +343,19 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
 - **Quality gates.** Director gates (APPROVE / CONCERNS / REJECT) prevent advancing with unresolved issues.
 
 ## Changelog
+
+### v0.8.0 — 2026-09-26
+
+- **GameForge Integration & Engine MCP Ecosystem (80 Skills & 44 Templates)**:
+  - **GameForge Tooling Integration**:
+    - `/jam` — Game Jam mode for 48–72h hackathons, relaxing rigid documentation while enforcing rapid 2h sprints and 30m commits.
+    - `/market-research` — Steam market intelligence, competitor comp mining, tag optimization, and pricing analysis.
+    - Enhanced `/reverse-document` — Full repository brownfield adoption and subsystem reverse-engineering from code to GDD.
+    - Formal Game Design Frameworks (`prompts/game-design-frameworks.md`) — MDA Framework, Flow Theory, Self-Determination Theory (SDT), and Bartle Player Taxonomy.
+  - **Live Engine MCP Layer ("Files First, MCP Accelerated")**:
+    - `/connect-engine-mcp` — Interactive diagnostic and connection hub for Godot, Unity, Unreal, and Bevy MCP servers.
+    - Updated engine leads (`godot-specialist`, `unity-specialist`, `unreal-specialist`, `bevy-specialist`) with real-time scene inspection and node tree query capabilities.
+  - **Studio Expansion**: Scaled studio toolset to **80 skills** and **44 templates** with full test coverage and automated symmetry validation.
 
 ### v0.7.1 — 2026-09-26
 
@@ -406,7 +427,7 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
   - `/studio:settings` — Interactive project configuration manager for game engine and language.
   - `/studio:help` / `/studio` — Comprehensive studio command palette and category navigator.
 - **Dynamic Provider & Model Discovery Engine**: Automatic detection of configured providers from Pi runtime (`ctx.modelRegistry`, `~/.pi/agent/models-store.json`, `auth.json`) with role-tailored model recommendations (Directors, Workhorses, Lightweight).
-- **Dual Setup Mode (Automatic vs Manual)**: Choose between 1-click instant setup or step-by-step customization of game engine (Godot, Unity, Unreal, Bevy), language (es/en), and model assignments per tier or agent.
+- **Dual Setup Mode (Automatic vs Manual)**: Choose between 1-click instant setup or step-by-step customization of game engine (Godot, Unity, Unreal, Bevy, Raylib), language (es/en), and model assignments per tier or agent.
 - **Pi TUI Compatibility**: Fixed `ctx.ui.select` string return handling and integrated `ctx.ui.notify` for visual feedback in Pi TUI mode.
 
 ### v0.5.0 — 2026-09-25
@@ -467,13 +488,17 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
 
 This project is a migration of **Claude Code Game Studios** to run natively on Pi. All the credit for the original work goes to its creators.
 
-### Original creators
+### Original creators & Inspirations
 
 - **[Donchitos](https://github.com/Donchitos)** — creador de [Claude Code Game Studios](https://github.com/Donchitos/Claude-Code-Game-Studios) (CCGS), el framework original de 49 agents y 72 skills para Claude Code. Es la fuente primaria de todo en este package: agents, skills, templates, hooks, y la jerarquía del estudio.
 
 - **[striderZA](https://github.com/striderZA)** — creador de [OpenCode Game Studios](https://github.com/striderZA/OpenCodeGameStudios) (OCGS), el port a OpenCode que pioneeró los patrones de migración cross-platform, el utility de model assignment (`assign-models.js`), y el formato de documentación de port status.
 
 - **[Gentle Programming](https://github.com/gentleprogramming)** — creador de [Gentle AI](https://github.com/gentleprogramming/gentle-ai) y del sistema **Engram**, la memoria persistente para agentes que permite el seguimiento de decisiones cross-session. La integración con Engram en este package sigue el modelo iniciado por Gentle AI.
+
+- **[AlterLab GameForge](https://github.com/AlterLab)** — inspiración para el pack ágil de desarrollo y game design formal: modo Game Jam (`/jam`), análisis competitivo de mercado (`/market-research`), ingeniería inversa de repositorios existentes (`/reverse-document`) y formalización de frameworks de diseño (MDA, Flow Theory, SDT, Bartle).
+
+- **Ecosistema de Engine MCPs (Godot, Unity, Unreal, Bevy BRP)** — inspiración para el puente de comunicación e inspección de motores en tiempo real (`/connect-engine-mcp`), integrando las capacidades de los Model Context Protocols oficiales y comunitarios de motores bajo la arquitectura híbrida *"Files First, MCP Accelerated"*.
 
 ### Qué cambia este port
 
@@ -483,10 +508,11 @@ This project is a migration of **Claude Code Game Studios** to run natively on P
 - **Arquitectura de modelos**: Todos los agents usan `model: inherit` en vez de tiers hardcodeados — los modelos se asignan via `models.json` (estilo Gentle AI)
 - **Sistema de package**: Todo se distribuye como un Pi package instalable (`pi install`), no una copia de archivos
 - **Integración con Engram**: Memoria persistente opcional para seguimiento de decisiones cross-session
+- **Soporte de 5 Motores**: Paridad simétrica completa para Godot 4, Unity, Unreal Engine 5, Bevy (Rust) y Raylib (C++ / EnTT).
 
 ### Homologation note
 
-- Imported counts were normalized to the current Pi tree: 50 agents, 77 skills, 43 templates, 4 runtime hooks.
+- Imported counts were normalized to the current Pi tree: 55 agents, 80 skills, 44 templates, 4 runtime hooks.
 - `extensions/hooks/index.ts` remains the single hook entrypoint; hook behavior is split across four handlers.
 
 Este port no existiría sin el trabajo fundacional de Donchitos y striderZA. Gracias.

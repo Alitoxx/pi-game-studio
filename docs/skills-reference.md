@@ -1,6 +1,6 @@
 # Pi Game Studio Skills — Catálogo y Referencia Oficial
 
-Guía de referencia completa para las **77 skills** (comandos slash) de Pi Game Studio, organizadas por etapas del ciclo de desarrollo de videojuegos.
+Guía de referencia completa para las **80 skills** (comandos slash) de Pi Game Studio, organizadas por etapas del ciclo de desarrollo de videojuegos.
 
 ---
 
@@ -24,6 +24,8 @@ Guía de referencia completa para las **77 skills** (comandos slash) de Pi Game 
 |---|---|---|
 | **`/start`** | `game-designer` | First-time onboarding — asks where you are, then guides you to the right workflow. No assumptions. |
 | **`/brainstorm`** | `creative-director` | Guided game concept ideation — from zero idea to a structured game concept document. Uses professional studio ideation techniques, player psychology frameworks, and structured creative exploration. |
+| **`/market-research`** | `game-designer` | Market Research & Competitive Analysis — analyze Steam genres, competitor comps, player sentiment, tags, and audience viability. |
+| **`/jam`** | `producer` | Game Jam Mode — compressed 48-72h development workflow. Suspends heavy bureaucracy and enforces rapid iteration. |
 | **`/art-bible`** | _Dinámico / Contextual_ | Guided, section-by-section Art Bible authoring. Creates the visual identity specification that gates all asset production. Run after /brainstorm is approved and before /map-systems or any GDD authoring begins. |
 | **`/design-system`** | _Dinámico / Contextual_ | Guided, section-by-section GDD authoring for a single game system. Gathers context from existing docs, walks through each required section collaboratively, cross-references dependencies, and writes incrementally to file. |
 | **`/map-systems`** | _Dinámico / Contextual_ | Decompose a game concept into individual systems, map dependencies, prioritize design order, and create the systems index. |
@@ -48,6 +50,7 @@ Guía de referencia completa para las **77 skills** (comandos slash) de Pi Game 
 | **`/architecture-review`** | `technical-director` | Validates completeness and consistency of the project architecture against all GDDs. Builds a traceability matrix mapping every GDD technical requirement to ADRs, identifies coverage gaps, detects cross-ADR conflicts, verifies engine compatibility consistency across all decisions, and produces a PASS/CONCERNS/FAIL verdict. The architecture equivalent of /design-review. |
 | **`/security-audit`** | `security-engineer` | Audit the game for security vulnerabilities: save tampering, cheat vectors, network exploits, data exposure, and input validation gaps. Produces a prioritised security report with remediation guidance. Run before any public release or multiplayer launch. |
 | **`/connect-engram`** | _Dinámico / Contextual_ | Diagnostic & sync assistant for Engram persistent memory. Checks connection, enables/disables memory cache, or syncs project decisions to Engram. |
+| **`/connect-engine-mcp`** | _Dinámico / Contextual_ | Live Engine MCP hub — diagnostics, inspection, and connection assistant for Godot, Unity, Unreal, and Bevy MCP servers ("Files First, MCP Accelerated"). |
 | **`/perf-profile`** | `performance-analyst` | Structured performance profiling workflow. Identifies bottlenecks, measures against budgets, and generates optimization recommendations with priority rankings. |
 
 ---

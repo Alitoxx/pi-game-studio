@@ -23,7 +23,7 @@ Present a clear, friendly briefing explaining what Pi Game Studio is and what th
 > Vamos a transformar este proyecto en un estudio de desarrollo de videojuegos completo con un equipo de IA coordinado.
 >
 > **Esto es lo que configuraremos:**
-> 1. **50 Agentes especializados** en `.pi/agents/` (Directores, Leads de área, Programadores, Diseñadores, Artistas, QA y Especialistas de Motor: Godot, Unity, Unreal y Bevy).
+> 1. **55 Agentes especializados** en `.pi/agents/` (Directores, Leads de área, Programadores, Diseñadores, Artistas, QA y Especialistas de Motor: Godot, Unity, Unreal, Bevy y Raylib).
 > 2. **Configuración de modelos de IA** en `.pi/gentle-ai/models.json` optimizada por niveles de responsabilidad (Estrategia, Desarrollo y Tareas ligeras).
 > 3. **Registro de 77 skills** de diseño, prototipado y producción en `.pi/settings.json`.
 > 4. **Detección de memoria persistente (Engram)** para recordar tus decisiones cross-session."
@@ -32,7 +32,7 @@ Ask using `ask_user_question`:
 
 ```
 ask_user_question: "¿Cómo deseas proceder con la instalación?"
-  - standard: "1. Instalación recomendada (Rápida y balanceada — 50 agentes + modelos sugeridos)"
+  - standard: "1. Instalación recomendada (Rápida y balanceada — 55 agentes + modelos sugeridos)"
   - custom: "2. Instalación guiada paso a paso (Revisar y personalizar cada opción)"
   - cancel: "3. Cancelar instalación"
 ```
@@ -119,7 +119,7 @@ Display a clean, celebratory summary:
 
 > "🎉 **¡Pi Game Studio ha sido instalado con éxito!**
 >
-> • **Agentes listos**: 50 agentes en `.pi/agents/`
+> • **Agentes listos**: 55 agentes en `.pi/agents/`
 > • **Configuración de modelos**: `.pi/gentle-ai/models.json`
 > • **Skills registradas**: 77 comandos slash listos
 > • **Modo de almacenamiento**: [Engram activo / Archivos Markdown locales]
@@ -130,4 +130,4 @@ Display a clean, celebratory summary:
 > Para dar los primeros pasos con tu juego, escribe:
 > **`/start`** — Onboarding interactivo para definir tu idea o proyecto existente.
 >
-> *(Otras opciones: `/brainstorm` para idear mecánicas, `/setup-engine` para configurar Godot/Unity/Unreal/Bevy, o `/settings` para ajustar preferencias).* "
+> *(Otras opciones: `/brainstorm` para idear mecánicas, `/setup-engine` para configurar Godot/Unity/Unreal/Bevy/Raylib, o `/settings` para ajustar preferencias).* "

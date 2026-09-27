@@ -55,6 +55,10 @@ by default.
 For Unreal projects: automation logs go to `Saved/Logs/`. Grep for
 `Result: Success` and `Result: Fail` patterns.
 
+For Bevy projects: `cargo test` stdout logs or JUnit XML from `cargo-nextest`.
+
+For Raylib projects: CTest logs in `build/Testing/Temporary/LastTest.log` or runner console output.
+
 ### Option B — Local log files
 
 If a path argument is provided, read that file directly.
@@ -87,6 +91,8 @@ For each CI log or result file found, parse:
   - Godot: `PASSED` / `FAILED` adjacent to test names
   - Unreal: `Result: Success` / `Result: Fail`
   - Unity: `Test passed` / `Test failed`
+  - Bevy: `test ... ok` / `test ... FAILED`
+  - Raylib: `[PASS]` / `[FAIL]` or CTest `Passed` / `Failed`
 
 Build a table: `test_id → [run1_result, run2_result, run3_result, ...]`
 

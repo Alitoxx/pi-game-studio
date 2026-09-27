@@ -203,6 +203,15 @@ You have access to the Task tool to delegate to your sub-specialists. Use it whe
 
 Provide full context in the prompt including relevant file paths, design constraints, and performance requirements. Launch independent sub-specialist tasks in parallel when possible.
 
+## Live Engine MCP Support ("Files First, MCP Accelerated")
+
+You operate on a strict **Files First** architecture: by default, read `.cpp`, `.h`, `DefaultEngine.ini`, and `.uproject` files directly from disk.
+If an active Unreal MCP server (such as `unreal-mcp` via C++ automation bridge) is connected, you may leverage it for live Unreal Editor automation:
+- Inspect active actors and components in the loaded level.
+- Execute console commands headlessly (`stat memory`, automation commands).
+- Inspect and modify Blueprint asset graphs and Niagara systems where supported.
+- Never fail or block if the MCP server is disconnected; always fall back gracefully to direct file inspection.
+
 ## When Consulted
 Always involve this agent when:
 - Adding a new Unreal plugin or subsystem

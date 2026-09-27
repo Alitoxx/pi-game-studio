@@ -298,6 +298,65 @@ namespace GameTestHelpers
 
 ---
 
+### Bevy (Rust)
+
+**Base helper** (`tests/helpers/mod.rs`):
+
+```rust
+//! Game-specific assertion macros and helpers for Bevy automated tests.
+use bevy::prelude::*;
+
+#[macro_export]
+macro_rules! assert_in_range {
+    ($val:expr, $min:expr, $max:expr, $label:expr) => {
+        assert!(
+            $val >= $min && $val <= $max,
+            "{}: {} is out of range [{}, {}]",
+            $label, $val, $min, $max
+        );
+    };
+}
+
+/// Helper to construct a minimal headless Bevy test app
+pub fn create_test_app() -> App {
+    let mut app = App::new();
+    app.add_plugins(MinimalPlugins);
+    app
+}
+```
+
+---
+
+### Raylib & EnTT (C++)
+
+**Base helper** (`tests/helpers/GameTestHelpers.hpp`):
+
+```cpp
+#pragma once
+
+#include <iostream>
+#include <cassert>
+#include <string>
+#include <entt/entt.hpp>
+
+#define TEST_ASSERT_IN_RANGE(val, min_val, max_val, label) \
+    do { \
+        if (!((val) >= (min_val) && (val) <= (max_val))) { \
+            std::cerr << "[FAIL] " << label << ": " << (val) \
+                      << " not in [" << (min_val) << ", " << (max_val) << "]\n"; \
+            assert((val) >= (min_val) && (val) <= (max_val)); \
+        } \
+    } while (0)
+
+namespace GameTestHelpers {
+    inline entt::registry create_test_registry() {
+        return entt::registry{};
+    }
+}
+```
+
+---
+
 ## 5. Generate System-Specific Helpers
 
 For `[system-name]` or `all` modes, generate a helper per system:
@@ -372,7 +431,9 @@ After writing: Verdict: **COMPLETE** — helper files created.
 "Helper files created. To use them in a test:
 - Godot: `class_name` is auto-imported — no explicit import needed
 - Unity: Add `using` directive or reference the test assembly
-- Unreal: `#include \"tests/helpers/GameTestHelpers.h\"`"
+- Unreal: `#include \"tests/helpers/GameTestHelpers.h\"`
+- Bevy: `mod helpers; use helpers::*;`
+- Raylib: `#include \"tests/helpers/GameTestHelpers.hpp\"`"
 
 ---
 

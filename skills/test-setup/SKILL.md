@@ -201,6 +201,75 @@ Test class naming: F[SystemName]Test
 Test category naming: "MyGame.[System].[Feature]"
 ```
 
+#### Bevy (`Engine: Bevy`)
+
+Create `tests/README.md`:
+```markdown
+# Bevy Integration & Unit Tests
+Tests run using standard Rust test harness: `cargo test`
+
+- **Unit tests**: Located alongside systems in `src/` inside `#[cfg(test)] mod tests { ... }`
+- **Integration tests**: Located in `tests/` directory (e.g. `tests/combat_integration.rs`)
+- Headless testing: Bevy apps can be run headlessly using `.add_plugins(MinimalPlugins)` for fast CI validation.
+```
+
+Create `tests/combat_integration_test.rs`:
+```rust
+//! Minimal Bevy headless test harness example
+use bevy::prelude::*;
+
+#[test]
+fn test_app_minimal_headless_loop() {
+    let mut app = App::new();
+    app.add_plugins(MinimalPlugins);
+    // Add components, resources, and systems under test
+    app.update();
+    assert!(true, "Minimal headless update succeeded");
+}
+```
+
+#### Raylib & EnTT (`Engine: Raylib`)
+
+Create `tests/README.md`:
+```markdown
+# Raylib & EnTT Tests
+Tests run via CMake CTest test runner: `ctest --output-on-failure`
+
+- **Harness**: Lightweight test runner (CTest + custom assertions or header-only Catch2/doctest).
+- **Unit tests**: Pure logic, EnTT ECS views, math, formulas, state machines without Raylib window initialization (`InitWindow` not needed).
+- **Integration tests**: Headless simulations iterating EnTT registry and checking component updates.
+```
+
+Create `tests/test_main.cpp`:
+```cpp
+#include <iostream>
+#include <cassert>
+#include <entt/entt.hpp>
+
+struct Health {
+    int current;
+    int max;
+};
+
+void test_entt_health_component() {
+    entt::registry registry;
+    auto entity = registry.create();
+    registry.emplace<Health>(entity, 100, 100);
+
+    auto& h = registry.get<Health>(entity);
+    h.current -= 25;
+    assert(h.current == 75);
+    std::cout << "[PASS] test_entt_health_component\n";
+}
+
+int main() {
+    std::cout << "Running Raylib/EnTT unit tests...\n";
+    test_entt_health_component();
+    std::cout << "All tests passed successfully.\n";
+    return 0;
+}
+```
+
 ---
 
 ## Phase 4: Create CI/CD Workflow
@@ -339,6 +408,77 @@ jobs:
 
 Note: UE CI requires a self-hosted runner with Unreal Editor installed.
 Set the `UE_EDITOR_PATH` environment variable on the runner.
+
+### Bevy (Rust)
+
+Create `.github/workflows/tests.yml`:
+
+```yaml
+name: Automated Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Run Cargo Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Linux dependencies (Bevy)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev libudev-dev pkg-config
+
+      - name: Run Tests
+        run: cargo test --workspace --verbose
+```
+
+### Raylib & C++ (CMake)
+
+Create `.github/workflows/tests.yml`:
+
+```yaml
+name: Automated Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Run CMake CTest
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Linux dependencies (Raylib / OpenGL)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential libgl1-mesa-dev libx11-dev libxcursor-dev libxinerama-dev libxrandr-dev libxi-dev
+
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Run Tests
+        run: ctest --test-dir build --output-on-failure
+```
 
 ---
 

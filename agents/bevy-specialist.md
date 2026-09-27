@@ -185,9 +185,13 @@ If an API you plan to suggest does not appear in the reference docs and was intr
 
 When in doubt, prefer the API documented in the reference files over your training data.
 
-## MCP Integration (document-only)
+## Live Engine MCP Support ("Files First, MCP Accelerated")
 
-Bevy has no official MCP server. Community options exist via the Bevy Remote Protocol (BRP): `bevy_brp_mcp` and `bevy_debugger_mcp` (the app must enable `RemotePlugin` from `bevy::remote`). Document availability and usage patterns only — do NOT install, configure, or scaffold BRP unless explicitly delegated and approved.
+You operate on a strict **Files First** architecture: by default, read `.rs`, `Cargo.toml`, and `.ron` files directly from disk.
+If the Bevy Remote Protocol (BRP) or a BRP-backed MCP bridge is connected (with `bevy::remote::RemotePlugin` on port 15702), you may leverage it for runtime inspection:
+- Query active entities, components, and resources in real-time.
+- Inspect system schedules and runtime state.
+- Never fail or block if BRP is not enabled; always fall back gracefully to direct file inspection.
 
 ## When Consulted
 

@@ -75,3 +75,64 @@ describe("Homologation metadata", () => {
 		);
 	});
 });
+
+describe("Engine Support Symmetry (Godot, Unity, Unreal, Bevy, Raylib)", () => {
+	const engines = ["Godot", "Unity", "Unreal", "Bevy", "Raylib"];
+
+	test("setup-engine skill covers all 5 engines in Guided Mode, Stack templates, and Routing", () => {
+		const content = fs.readFileSync(
+			path.join(__dirname, "..", "skills", "setup-engine", "SKILL.md"),
+			"utf8",
+		);
+
+		for (const engine of engines) {
+			expect(content).toContain(engine);
+		}
+		expect(content).toContain("Appendix A — Godot");
+		expect(content).toContain("Appendix B — Bevy");
+		expect(content).toContain("Appendix C — Raylib");
+	});
+
+	test("dev-story skill routing table includes all 5 engines", () => {
+		const content = fs.readFileSync(
+			path.join(__dirname, "..", "skills", "dev-story", "SKILL.md"),
+			"utf8",
+		);
+
+		for (const engine of engines) {
+			expect(content).toContain(engine);
+		}
+	});
+
+	test("test-setup and smoke-check skills include test execution for all 5 engines", () => {
+		const testSetup = fs.readFileSync(
+			path.join(__dirname, "..", "skills", "test-setup", "SKILL.md"),
+			"utf8",
+		);
+		const smokeCheck = fs.readFileSync(
+			path.join(__dirname, "..", "skills", "smoke-check", "SKILL.md"),
+			"utf8",
+		);
+
+		for (const engine of engines) {
+			expect(testSetup).toContain(engine);
+			expect(smokeCheck).toContain(engine);
+		}
+	});
+
+	test("models.default.json maps all 5 engine primary specialists", () => {
+		const defaultModels = JSON.parse(
+			fs.readFileSync(
+				path.join(__dirname, "..", "models.default.json"),
+				"utf8",
+			),
+		);
+
+		expect(defaultModels["godot-specialist"]).toBeDefined();
+		expect(defaultModels["unity-specialist"]).toBeDefined();
+		expect(defaultModels["unreal-specialist"]).toBeDefined();
+		expect(defaultModels["bevy-specialist"]).toBeDefined();
+		expect(defaultModels["raylib-specialist"]).toBeDefined();
+	});
+});
+

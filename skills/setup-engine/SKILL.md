@@ -36,7 +36,7 @@ If no engine is specified, run an interactive engine selection process:
 
 **Question 1 — Prior experience** (ask this first, always, via `ask_user_question`):
 - Prompt: "Have you worked in any of these engines before?"
-- Options: `Godot` / `Unity` / `Unreal Engine 5` / `Bevy (Rust engine)` / `Multiple — I'll explain` / `None of them`
+- Options: `Godot` / `Unity` / `Unreal Engine 5` / `Bevy (Rust engine)` / `Raylib (C++ / EnTT)` / `Multiple — I'll explain` / `None of them`
 - If they pick a specific engine → recommend that engine. Prior experience outweighs all other factors. Confirm with them and skip the matrix.
 - If "None" or "Multiple" → continue to the questions below.
 
@@ -88,18 +88,25 @@ Do NOT use a simple scoring matrix that eliminates engines. Instead, reason thro
 - Licensing reality: MIT OR Apache-2.0 — completely free with no restrictions whatsoever
 - Best fit: Systems-heavy 2D or 3D games; teams already proficient in Rust; projects that value data-oriented ECS architecture; prototypes to mid-scope games
 
+**Raylib & C++ (EnTT)**
+- Genuine strengths: Pure code-first development in modern C++ (C++17/20); zero editor overhead or sluggish GUI; minimal executable sizes (<10MB); lightning-fast compile and launch times; cache-friendly ECS performance with EnTT; extreme simplicity and hardware control; cross-platform (desktop, WebAssembly via Emscripten); zlib/libpng license (100% free, no royalties, no strings)
+- Real limitations: No official scene editor or visual animation graph — all scene layout, entity placement, and asset packing must be scripted or loaded via third-party formats (e.g. LDtk/Tiled); manual memory and pointer discipline required; no built-in high-level networking or 3D physics engine out of the box (must integrate Box2D, PhysX, or header-only libs)
+- Licensing reality: zlib/libpng — completely free for commercial and non-commercial games without any fees or attribution requirements
+- Best fit: 2D and isometric ARPGs, roguelikes, arcade games, and horde/swarm games with thousands of entities; developers who want pure C++ without engine bloat; educational/engine architecture mastery projects; web/desktop low-spec targets
+
 **Genre-specific guidance** (factor this into the recommendation):
 - 2D any style → Godot strongly preferred
 - 3D stylized / atmospheric / contained world → Godot viable, Unity solid alternative
 - Rust teams / systems-heavy gameplay → Bevy (ECS-first; capable in both 2D and 3D)
+- Code-first C++ / ARPG / high-entity horde 2D/isometric → Raylib (with EnTT ECS)
 - 3D open world (large, seamless) → Unity or Unreal; Godot is not production-proven for this
 - 3D photorealistic / AAA-quality → Unreal
 - Mobile-first → Unity strongly preferred
 - Console-first → Unity or Unreal; Godot console support requires extra work
 - Horror / narrative / walking sim → any engine; match to art style and team experience
-- Action RPG / Soulslike → Unity or Unreal for 3D; community support and assets matter here
-- Platformer 2D → Godot
-- Strategy / top-down / RTS → Godot or Unity depending on 2D vs 3D
+- Action RPG / Soulslike → Unity or Unreal for 3D; Raylib (EnTT) or Godot for 2D/isometric
+- Platformer 2D → Godot or Raylib
+- Strategy / top-down / RTS → Godot, Unity, or Raylib (EnTT) depending on visual requirements
 
 **Recommendation format:**
 1. Show a comparison table with the user's specific factors as rows
@@ -174,6 +181,22 @@ Update the Technology Stack section, replacing the `[CHOOSE]` placeholders with 
 - **Asset Pipeline**: Unreal Content Pipeline
 ```
 
+**For Bevy:**
+```markdown
+- **Engine**: Bevy [version]
+- **Language**: Rust
+- **Build System**: Cargo
+- **Asset Pipeline**: Bevy AssetServer
+```
+
+**For Raylib:**
+```markdown
+- **Engine**: Raylib [version] & EnTT
+- **Language**: Modern C++ (C++17/20)
+- **Build System**: Modern CMake (FetchContent)
+- **Asset Pipeline**: Custom / Raylib LoadTexture & LoadSound
+```
+
 ---
 
 ## 5. Populate Technical Preferences
@@ -202,6 +225,19 @@ engine-appropriate defaults. Read the existing template first, then fill in:
 - Functions: PascalCase (e.g., `TakeDamage()`)
 - Booleans: `b` prefix (e.g., `bIsAlive`)
 - Files: Match class without prefix (e.g., `PlayerController.h`)
+
+**For Bevy (Rust):**
+- Structs / Enums / Components / Systems: UpperCamelCase (e.g., `PlayerController`, `Velocity`, `Health`)
+- Functions / Methods / Variables: snake_case (e.g., `take_damage()`, `move_speed`)
+- Modules / Files: snake_case (e.g., `player_controller.rs`, `combat/mod.rs`)
+- Constants / Statics: SCREAMING_SNAKE_CASE (e.g., `MAX_HEALTH`, `BASE_SPEED`)
+
+**For Raylib & EnTT (C++):**
+- Classes / Structs / Components: PascalCase (e.g., `PlayerController`, `PositionComponent`, `HealthComponent`)
+- Functions / Methods: PascalCase or camelCase (matching project convention, e.g., `TakeDamage()` or `takeDamage()`)
+- Member variables: `m_` prefix or camelCase (e.g., `m_moveSpeed` or `moveSpeed`)
+- Files: snake_case or PascalCase (matching project layout, e.g., `player_controller.hpp`, `player_controller.cpp`)
+- Constants: UPPER_SNAKE_CASE (e.g., `MAX_HEALTH`, `SCREEN_WIDTH`)
 
 ### Input & Platform Section
 
@@ -298,6 +334,49 @@ Also populate the `## Engine Specialists` section in `technical-preferences.md` 
 | General architecture review | unreal-specialist |
 ```
 
+**For Bevy (Rust):**
+```markdown
+## Engine Specialists
+- **Primary**: bevy-specialist
+- **Language/Code Specialist**: bevy-specialist (Rust — single specialist covers all code)
+- **Shader Specialist**: bevy-specialist (WGSL shaders, wgpu materials)
+- **UI Specialist**: bevy-specialist (bevy_ui)
+- **Additional Specialists**: None
+- **Routing Notes**: Invoke primary for all Bevy code, Cargo build, and architecture decisions. The single specialist covers ECS, rendering, UI, assets, audio, and input.
+
+### File Extension Routing
+
+| File Extension / Type | Specialist to Spawn |
+|-----------------------|---------------------|
+| Game code (.rs files) | bevy-specialist |
+| Shader files (.wgsl) | bevy-specialist |
+| Asset / scene files (.ron, .gltf, .scene) | bevy-specialist |
+| Cargo / build files (Cargo.toml, Cargo.lock) | bevy-specialist |
+| General architecture review | bevy-specialist |
+```
+
+**For Raylib (C++ & EnTT):**
+```markdown
+## Engine Specialists
+- **Primary**: raylib-specialist
+- **ECS & Data Specialist**: raylib-entt-specialist (EnTT components, views, pools, DOD architecture)
+- **Shader Specialist**: raylib-shader-specialist (GLSL 2D/3D shaders, dynamic lighting, fog of war, VFX)
+- **UI & Tools Specialist**: raylib-ui-specialist (In-game HUD, Raygui, Dear ImGui debug overlays via rlImGui)
+- **Build Specialist**: raylib-build-specialist (Modern CMake, FetchContent, WebAssembly emscripten, compiler flags)
+- **Routing Notes**: Invoke primary for overall loop architecture, windowing, and 2D/isometric camera math. Invoke EnTT specialist for entity systems and combat data. Invoke shader specialist for GLSL visual effects. Invoke UI specialist for menus and debug tooling. Invoke build specialist for CMake and packaging.
+
+### File Extension Routing
+
+| File Extension / Type | Specialist to Spawn |
+|-----------------------|---------------------|
+| Game code & components (.cpp, .hpp, .h, .cxx) | raylib-specialist / raylib-entt-specialist |
+| Shader files (.fs, .vs, .glsl) | raylib-shader-specialist |
+| Build / project files (CMakeLists.txt, *.cmake) | raylib-build-specialist |
+| UI & debug tooling files (ui_*, debug_*) | raylib-ui-specialist |
+| Data / level files (.json, .ldtk, .tmx) | raylib-specialist |
+| General architecture review | raylib-specialist |
+```
+
 ### Collaborative Step
 Present the filled-in preferences to the user. For Godot, include the chosen language and note where the full naming conventions and routing tables live:
 > "Here are the default technical preferences for [engine] ([language if Godot]). The naming conventions and specialist routing are in Appendix A of this skill — I'll apply the [GDScript/C#/Both] variant. Want to customize any of these, or shall I save the defaults?"
@@ -317,6 +396,8 @@ Check whether the engine version is likely beyond the LLM's training data.
 - Godot: training data likely covers up to ~4.3
 - Unity: training data likely covers up to ~2023.x / early 6000.x
 - Unreal: training data likely covers up to ~5.3 / early 5.4
+- Bevy: training data likely covers up to ~0.15 (0.16+ is beyond training cutoff)
+- Raylib: training data covers Raylib 5.0 (5.5+ is beyond training cutoff)
 
 Compare the user's chosen version against these baselines:
 
@@ -721,7 +802,25 @@ Use GDScript conventions for `.gd` files and C# conventions for `.cs` files. Mix
 | General architecture review | godot-specialist |
 ```
 
-**Bevy (Rust):**
+---
+
+## Appendix B — Bevy (Rust) Configuration Reference
+
+### B1. CLAUDE.md Technology Stack
+```markdown
+- **Engine**: Bevy [version]
+- **Language**: Rust
+- **Build System**: Cargo
+- **Asset Pipeline**: Bevy AssetServer
+```
+
+### B2. Naming Conventions
+- Structs / Enums / Components / Systems: UpperCamelCase (`PlayerController`, `Velocity`, `Health`)
+- Functions / Methods / Variables: snake_case (`take_damage()`, `move_speed`)
+- Modules / Files: snake_case (`player_controller.rs`, `combat/mod.rs`)
+- Constants / Statics: SCREAMING_SNAKE_CASE (`MAX_HEALTH`, `BASE_SPEED`)
+
+### B3. Engine Specialists Routing
 ```markdown
 ## Engine Specialists
 - **Primary**: bevy-specialist
@@ -742,7 +841,26 @@ Use GDScript conventions for `.gd` files and C# conventions for `.cs` files. Mix
 | General architecture review | bevy-specialist |
 ```
 
-**Raylib (C++ & EnTT):**
+---
+
+## Appendix C — Raylib & C++ Configuration Reference
+
+### C1. CLAUDE.md Technology Stack
+```markdown
+- **Engine**: Raylib [version] & EnTT
+- **Language**: Modern C++ (C++17/20)
+- **Build System**: Modern CMake (FetchContent)
+- **Asset Pipeline**: Custom / Raylib LoadTexture & LoadSound
+```
+
+### C2. Naming Conventions
+- Classes / Structs / Components: PascalCase (`PlayerController`, `PositionComponent`, `HealthComponent`)
+- Functions / Methods: PascalCase or camelCase (`TakeDamage()` or `takeDamage()`)
+- Member variables: `m_` prefix or camelCase (`m_moveSpeed` or `moveSpeed`)
+- Files: snake_case or PascalCase (`player_controller.hpp`, `player_controller.cpp`)
+- Constants: UPPER_SNAKE_CASE (`MAX_HEALTH`, `SCREEN_WIDTH`)
+
+### C3. Engine Specialists Routing
 ```markdown
 ## Engine Specialists
 - **Primary**: raylib-specialist

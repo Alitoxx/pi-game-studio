@@ -15,6 +15,8 @@ export const STUDIO_CATEGORIES: StudioCategory[] = [
 		commands: [
 			{ cmd: "/studio:start", desc: "Asistente interactivo de inicio y onboarding (alias /start)" },
 			{ cmd: "/brainstorm", desc: "Ideación estructurada de conceptos de juego" },
+			{ cmd: "/market-research", desc: "Investigación de mercado, competidores en Steam y tags" },
+			{ cmd: "/jam", desc: "Modo Game Jam de 48-72h (reglas relajadas y entrega rápida)" },
 			{ cmd: "/concept-pitch", desc: "Pitch deck y elevator pitch de venta" },
 			{ cmd: "/vertical-slice", desc: "Validación de loop completo pre-producción" },
 			{ cmd: "/gate-check", desc: "Evaluación formal de directores para cambio de fase" },
@@ -37,10 +39,12 @@ export const STUDIO_CATEGORIES: StudioCategory[] = [
 		emoji: "💻",
 		description: "Arquitectura, prototipos y motores de juego",
 		commands: [
-			{ cmd: "/setup-engine", desc: "Configuración de Godot, Unity, Unreal o Bevy" },
+			{ cmd: "/setup-engine", desc: "Configuración de Godot, Unity, Unreal, Bevy o Raylib" },
+			{ cmd: "/connect-engine-mcp", desc: "Hub de conexión MCP para Godot, Unity, Unreal y Bevy" },
 			{ cmd: "/engine-capabilities", desc: "Auditoría de features soportadas por el motor" },
 			{ cmd: "/architecture-decision", desc: "Crear ADR para decisiones técnicas clave" },
 			{ cmd: "/architecture-review", desc: "Revisar arquitectura frente a requerimientos GDD" },
+			{ cmd: "/reverse-document", desc: "Documentación inversa y adopción de código existente" },
 			{ cmd: "/prototype", desc: "Prototipado rápido y spikes de investigación (4h)" },
 		],
 	},

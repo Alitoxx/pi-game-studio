@@ -146,35 +146,56 @@ export async function handleStudioCommand(
 		if (selectedIndex === -1) return;
 
 		if (selectedIndex < STUDIO_CATEGORIES.length) {
-			renderCategory(STUDIO_CATEGORIES[selectedIndex]);
+			renderCategory(STUDIO_CATEGORIES[selectedIndex], ctx);
 		} else {
-			renderAll();
+			renderAll(ctx);
 		}
 		return;
 	}
 
 	// Fallback print
-	renderAll();
+	renderAll(ctx);
 }
 
-function renderCategory(cat: StudioCategory): void {
-	console.log("");
-	console.log(`\x1b[1m\x1b[38;2;167;139;250m${cat.emoji} ${cat.name}\x1b[0m — \x1b[38;2;107;114;128m${cat.description}\x1b[0m`);
-	console.log("\x1b[38;2;107;114;128m" + "─".repeat(70) + "\x1b[0m");
-	for (const item of cat.commands) {
-		const cmdPadded = item.cmd.padEnd(26);
-		console.log(`  \x1b[38;2;56;189;248m\x1b[1m${cmdPadded}\x1b[0m \x1b[38;2;243;244;246m${item.desc}\x1b[0m`);
+function renderCategory(cat: StudioCategory, ctx?: ExtensionContext): void {
+	const lines = [
+		`🎮 ${cat.emoji} ${cat.name} — ${cat.description}`,
+		"─".repeat(50),
+		...cat.commands.map((item) => `• ${item.cmd.padEnd(24)} ${item.desc}`),
+	];
+	const msg = lines.join("\n");
+
+	if (ctx?.hasUI && typeof (ctx.ui as any)?.notify === "function") {
+		ctx.ui.notify(msg, "info");
+	} else {
+		console.log("");
+		console.log(`\x1b[1m\x1b[38;2;167;139;250m${cat.emoji} ${cat.name}\x1b[0m — \x1b[38;2;107;114;128m${cat.description}\x1b[0m`);
+		console.log("\x1b[38;2;107;114;128m" + "─".repeat(70) + "\x1b[0m");
+		for (const item of cat.commands) {
+			const cmdPadded = item.cmd.padEnd(26);
+			console.log(`  \x1b[38;2;56;189;248m\x1b[1m${cmdPadded}\x1b[0m \x1b[38;2;243;244;246m${item.desc}\x1b[0m`);
+		}
+		console.log("");
 	}
-	console.log("");
 }
 
-function renderAll(): void {
-	console.log("");
-	console.log("\x1b[1m\x1b[38;2;167;139;250m🎮 PI GAME STUDIO — CATÁLOGO DE COMANDOS\x1b[0m");
-	console.log("\x1b[38;2;107;114;128mTodos los comandos del estudio llevan el prefijo 🎮 [Studio] en el menú /\x1b[0m");
-	console.log("");
+function renderAll(ctx?: ExtensionContext): void {
+	if (ctx?.hasUI && typeof (ctx.ui as any)?.notify === "function") {
+		const lines = [
+			"🎮 PI GAME STUDIO — CATÁLOGO DE COMANDOS",
+			"Todos los comandos llevan el prefijo 🎮 [Studio] en el menú /",
+			"",
+			...STUDIO_CATEGORIES.map((c) => `${c.emoji} ${c.name} (${c.commands.length} comandos)`),
+		];
+		ctx.ui.notify(lines.join("\n"), "info");
+	} else {
+		console.log("");
+		console.log("\x1b[1m\x1b[38;2;167;139;250m🎮 PI GAME STUDIO — CATÁLOGO DE COMANDOS\x1b[0m");
+		console.log("\x1b[38;2;107;114;128mTodos los comandos del estudio llevan el prefijo 🎮 [Studio] en el menú /\x1b[0m");
+		console.log("");
 
-	for (const cat of STUDIO_CATEGORIES) {
-		renderCategory(cat);
+		for (const cat of STUDIO_CATEGORIES) {
+			renderCategory(cat);
+		}
 	}
 }

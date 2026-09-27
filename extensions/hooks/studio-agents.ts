@@ -152,42 +152,66 @@ export async function handleStudioAgents(
 		if (idx === -1) return;
 
 		if (idx < AGENT_GROUPS.length) {
-			printGroup(AGENT_GROUPS[idx], ctx.cwd);
+			printGroup(AGENT_GROUPS[idx], ctx);
 		} else {
-			printAllAgents(ctx.cwd);
+			printAllAgents(ctx);
 		}
 		return;
 	}
 
-	printAllAgents(ctx.cwd);
+	printAllAgents(ctx);
 }
 
 function printGroup(
 	group: { name: string; emoji: string; agents: string[] },
-	cwd: string,
+	ctx: ExtensionContext,
 ): void {
-	console.log("");
-	console.log(`\x1b[1m\x1b[38;2;167;139;250m${group.emoji} ${group.name}\x1b[0m`);
-	console.log("\x1b[38;2;107;114;128m" + "─".repeat(60) + "\x1b[0m");
-
 	const pkgRoot = resolvePackageRoot();
+	const lines = [
+		`🎮 ${group.emoji} ${group.name}`,
+		"─".repeat(50),
+	];
 
 	for (const agentName of group.agents) {
-		const agentInfo = readAgentInfo(agentName, cwd, pkgRoot);
-		console.log(
-			`  \x1b[38;2;56;189;248m\x1b[1m${agentName.padEnd(28)}\x1b[0m \x1b[38;2;243;244;246m${agentInfo.title}\x1b[0m`,
-		);
+		const agentInfo = readAgentInfo(agentName, ctx.cwd, pkgRoot);
+		lines.push(`• ${agentName.padEnd(26)} ${agentInfo.title}`);
 	}
-	console.log("");
+
+	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
+		ctx.ui.notify(lines.join("\n"), "info");
+	} else {
+		console.log("");
+		console.log(`\x1b[1m\x1b[38;2;167;139;250m${group.emoji} ${group.name}\x1b[0m`);
+		console.log("\x1b[38;2;107;114;128m" + "─".repeat(60) + "\x1b[0m");
+
+		for (const agentName of group.agents) {
+			const agentInfo = readAgentInfo(agentName, ctx.cwd, pkgRoot);
+			console.log(
+				`  \x1b[38;2;56;189;248m\x1b[1m${agentName.padEnd(28)}\x1b[0m \x1b[38;2;243;244;246m${agentInfo.title}\x1b[0m`,
+			);
+		}
+		console.log("");
+	}
 }
 
-function printAllAgents(cwd: string): void {
-	console.log("");
-	console.log("\x1b[1m\x1b[38;2;167;139;250m🎮 PI GAME STUDIO — CATÁLOGO DE 55 AGENTES\x1b[0m");
-	console.log("\x1b[38;2;107;114;128m" + "─".repeat(60) + "\x1b[0m");
+function printAllAgents(ctx: ExtensionContext): void {
+	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
+		const lines = [
+			"🎮 PI GAME STUDIO — CATÁLOGO DE 55 AGENTES",
+			"─".repeat(50),
+			...AGENT_GROUPS.map((g) => `${g.emoji} ${g.name}: ${g.agents.length} agentes`),
+			"",
+			"Usa /studio:agents <grupo> para ver los especialistas de un área.",
+		];
+		ctx.ui.notify(lines.join("\n"), "info");
+	} else {
+		console.log("");
+		console.log("\x1b[1m\x1b[38;2;167;139;250m🎮 PI GAME STUDIO — CATÁLOGO DE 55 AGENTES\x1b[0m");
+		console.log("\x1b[38;2;107;114;128m" + "─".repeat(60) + "\x1b[0m");
 
-	for (const group of AGENT_GROUPS) {
-		printGroup(group, cwd);
+		for (const group of AGENT_GROUPS) {
+			printGroup(group, ctx);
+		}
 	}
 }
 

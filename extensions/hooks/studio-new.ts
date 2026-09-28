@@ -5,6 +5,7 @@ import {
 	readdirSync,
 	copyFileSync,
 	statSync,
+	writeFileSync,
 } from "node:fs";
 import { join, resolve, basename } from "node:path";
 import { detectProjectEngine, formatEngineBadge } from "./engine-detector.ts";
@@ -174,12 +175,25 @@ export async function handleStudioNew(
 	const studioDir = join(targetDir, ".pi", "game-studio");
 	mkdirSync(studioDir, { recursive: true });
 
+	// Configure local package binding in .pi/settings.json so Pi Game Studio stays isolated only to this game project
+	const localSettings = join(targetDir, ".pi", "settings.json");
+	if (!existsSync(localSettings)) {
+		try {
+			writeFileSync(
+				localSettings,
+				JSON.stringify({ packages: [resolvePackageRoot()] }, null, 2),
+				"utf8",
+			);
+		} catch {}
+	}
+
 	// Auto-detect engine to verify installation
 	const detection = detectProjectEngine(targetDir);
 
 	console.log("\x1b[38;2;107;114;128m" + "─".repeat(70) + "\x1b[0m");
 	console.log(`  \x1b[38;2;52;211;153m✔ Archivos base instalados en:\x1b[0m ${targetDir}`);
 	console.log(`  \x1b[38;2;52;211;153m✔ Motor detectado automáticamente:\x1b[0m ${formatEngineBadge(detection)}`);
+	console.log(`  \x1b[38;2;52;211;153m✔ Aislamiento de proyecto:\x1b[0m .pi/settings.json (no contamina otros proyectos)`);
 	console.log(`  \x1b[38;2;52;211;153m✔ Configuración persistida en:\x1b[0m project.yaml`);
 	console.log("");
 	console.log("\x1b[1m\x1b[38;2;251;191;36m👉 Siguiente paso para probar tu juego:\x1b[0m");

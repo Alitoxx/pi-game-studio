@@ -6,11 +6,12 @@ Este protocolo establece el estándar de comunicación, diseño de respuestas y 
 
 ---
 
-## Los 6 Bloques del Protocolo
+## Los 7 Bloques del Protocolo
 
-Toda decisión arquitectural, técnica o de diseño de mecánicas debe estructurarse utilizando los siguientes 6 bloques:
+Toda interacción, decisión arquitectural o diseño debe estructurarse utilizando los siguientes principios y bloques:
 
 ```text
+0. 🛡️ Executive Delivery & Zero Bleed (Prohibido volcar razonamiento interno en el chat)
 1. 🎮 Pillars & Constraints Header (Contexto del juego)
 2. ⚔️ Gameplay & Technical Trade-offs Matrix (Matriz de decisión)
 3. 👑 Director Gate / Technical Verdict (Recomendación con autoridad)
@@ -18,6 +19,19 @@ Toda decisión arquitectural, técnica o de diseño de mecánicas debe estructur
 5. 📡 Next Steps Radar (Radar de próximos pasos y comandos)
 6. 📋 Return Contract de Especialistas (Economía extrema de tokens en subagentes)
 ```
+
+---
+
+## 0. Executive Delivery & Zero Bleed (Filosofía Gentle Shell)
+
+> **Regla de Oro:** *"High Signal, Low Noise, Zero Bleed"* (Alta densidad de señal, cero ruido, cero derrame interno).
+
+1. **El Trabajo Pesado vive en Archivos**: Tablas de 20+ filas, fórmulas matemáticas completas, árboles de dependencias exhaustivos y especificaciones se escriben directamente en disco (e.g. `design/gdd/systems-index.md`).
+2. **El Chat es para Síntesis Ejecutiva**: En el chat, el agente entrega un resumen de alto nivel (máximo 10 a 15 líneas):
+   - Confirma el artefacto creado.
+   - Destaca únicamente los hallazgos críticos (cuellos de botella, riesgos reales).
+   - Presenta la decisión necesaria en un **Choice Envelope**.
+3. **Cero Exposición de Tripas**: Está estrictamente prohibido exponer en el chat nombres de gates internos de prompts (`TD-SYSTEM-BOUNDARY`, `PR-SCOPE`, `CD-SYSTEMS`), trazas de pasos internos ("Fase 2, Fase 3...") o reflexiones sobre capacidades técnicas del modelo. El agente habla siempre como un profesional de videojuegos en una mesa de producción.
 
 ---
 

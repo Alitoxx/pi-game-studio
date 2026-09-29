@@ -288,19 +288,25 @@ function formatModelsList(cfg: Record<string, string>): string {
 		.map(([k, v]) => `  • ${k}: ${v}`);
 
 	const lines = [
-		"🤖 PI GAME STUDIO — ASIGNACIÓN DE MODELOS",
-		`• Tier 1 (Directores):  ${dirModel}`,
-		`• Tier 2 (Workhorses):  ${workModel}`,
-		`• Tier 3 (Ligeros):     ${lightModel}`,
+		"┌── STUDIO MODELS: ASIGNACIÓN Y MONITOR DE CUOTAS POR TIER ──────┐",
+		`│ • Tier 1 (Directores - Visión & Gating):   ${dirModel.padEnd(27)} │`,
+		`│ • Tier 2 (Workhorses - Código & Sistemas): ${workModel.padEnd(27)} │`,
+		`│ • Tier 3 (Ligeros - Ops & Comunidad):      ${lightModel.padEnd(27)} │`,
+		"├─────────────────────────────────────────────────────────────────┤",
+		"│ PRESUPUESTO & REASONING BUDGET:                                 │",
+		"│ • Tier 1: Thinking 'high'   (Estrategia, arquitectura, triaje)  │",
+		"│ • Tier 2: Thinking 'medium' (Implementación, mecánicas, tests) │",
+		"│ • Tier 3: Thinking 'low'    (Scripts, logs, tareas operativas)  │",
+		"└─────────────────────────────────────────────────────────────────┘",
 	];
 
 	if (allInherit && overrides.length === 0) {
-		lines.push("\n✔ Todos los agentes heredan el modelo activo de tu sesión.");
+		lines.push("\n✔ Modo inherit: todos los agentes heredan el modelo activo de tu sesión.");
 	} else if (overrides.length > 0) {
 		lines.push("\nAsignaciones específicas por agente:\n" + overrides.slice(0, 15).join("\n"));
 	}
 
-	lines.push("\nGuardado en .pi/gentle-ai/models.json");
+	lines.push("\nConfiguración persistida en .pi/gentle-ai/models.json");
 	return lines.join("\n");
 }
 

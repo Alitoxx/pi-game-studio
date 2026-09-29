@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.15] - 2026-09-29
+
+### Added
+- **Punto 8: Usage & Tier Quota Monitor (`/studio:models`)**:
+  - Estandarización del monitor de asignaciones y presupuesto de razonamiento (*Reasoning Budget*) en `extensions/hooks/studio-models.ts`.
+  - Mapeo visible y transparente de los 3 niveles del estudio:
+    - Tier 1 (Directores): Thinking `high` (gpt-5.4-mini / arquitectura, visión, triaje).
+    - Tier 2 (Workhorses & Leads): Thinking `medium` (gpt-oss-120b / código, mecánicas, testing).
+    - Tier 3 (Ligeros & Soporte): Thinking `low` (gpt-oss-20b / ops, comunidad, logs).
+  - Eliminación de emojis en los informes de modelos y presentación limpia en caja ASCII.
+
+---
+
 ## [0.8.14] - 2026-09-29
 
 ### Added

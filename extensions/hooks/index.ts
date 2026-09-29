@@ -16,7 +16,7 @@ import { handleStudioStatus } from "./studio-status.ts";
 import { handleStudioAgents } from "./studio-agents.ts";
 import { handleStudioSettings, getLanguage } from "./studio-settings.ts";
 import { handleStudioChains } from "./studio-chains.ts";
-import { handleStudioStart } from "./studio-start.ts";
+import { handleStudioStart, readProducerState } from "./studio-start.ts";
 import { handleStudioDoctor } from "./studio-doctor.ts";
 import { handleStudioNew } from "./studio-new.ts";
 import { detectProjectEngine, formatEngineBadge } from "./engine-detector.ts";
@@ -197,13 +197,21 @@ export default function (pi: ExtensionAPI) {
 					);
 				}
 
-				// Environment Status & Greeting Orchestration Guard
+				// Environment Status & Producer Line Guidance
 				if (setup.isConfigured) {
+					const { hasRoadmap, state: prodState } = readProducerState(studioRoot);
+					let roadmapDirective = "";
+					if (hasRoadmap && prodState?.gameTitle) {
+						roadmapDirective = ` Active Project Line: Game="${prodState.gameTitle}", Engine="${prodState.engine || setup.currentEngine}", Milestone="${prodState.milestone || 'In progress'}", Sprint="${prodState.sprint || 'Active'}", InProgress="${prodState.inProgress || 'Development'}", NextStep="${prodState.nextStep || 'Continue development'}".`;
+					} else {
+						roadmapDirective = " Active Project Line: Concept & Inception phase (no active production/roadmap.md yet).";
+					}
+
 					(event as any).systemPromptOptions.promptGuidelines.push(
-						`Studio Environment Status: OK. All 55 agents are installed and ready, engine is configured as "${setup.currentEngine}". ` +
+						`Studio Environment Status: OK. All 55 agents are installed and ready, engine is configured as "${setup.currentEngine}".${roadmapDirective} ` +
 						"IMPORTANT: The environment is ALREADY fully configured. Do NOT ask the user to configure or run setup again. " +
-						"If the user greets (e.g. 'hola', 'buenas'), acknowledge that the studio environment is verified and OK (55 agents, engine and language ready), " +
-						"and immediately offer to continue with game development tasks according to the project phase (e.g. /brainstorm, /game-design-document, /dev-story)."
+						"When communicating as or with the Producer, DO NOT ask speculative questions about where the project is at; state the current project line directly. " +
+						"If the user greets (e.g. 'hola', 'buenas'), acknowledge the OK environment and IMMEDIATELY state the exact current line and next concrete action without waiting."
 					);
 				} else {
 					(event as any).systemPromptOptions.promptGuidelines.push(

@@ -1,7 +1,16 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { inspectSetup, installStudioFiles, runGuidedSetup } from "./studio-setup.ts";
+
+export interface ProducerState {
+	gameTitle?: string;
+	engine?: string;
+	milestone?: string;
+	sprint?: string;
+	inProgress?: string;
+	nextStep?: string;
+}
 
 export interface ProjectAudit {
 	hasEngine: boolean;
@@ -12,11 +21,51 @@ export interface ProjectAudit {
 	hasPrototypes: boolean;
 	agentsInstalled: number;
 	isConfigured: boolean;
+	hasRoadmap: boolean;
+	producerState?: ProducerState;
+}
+
+export function readProducerState(cwd: string): { hasRoadmap: boolean; state?: ProducerState } {
+	const roadmapPath = join(cwd, "production", "roadmap.md");
+	if (!existsSync(roadmapPath)) {
+		return { hasRoadmap: false };
+	}
+	try {
+		const content = readFileSync(roadmapPath, "utf8");
+		const match = content.match(/<!--\s*PRODUCER_STATE\s*([\s\S]*?)<!--\s*\/PRODUCER_STATE\s*-->/i);
+		if (!match || !match[1]) return { hasRoadmap: true };
+
+		const block = match[1];
+		const state: ProducerState = {};
+
+		const game = block.match(/Juego:\s*([^\n]+)/i);
+		if (game) state.gameTitle = game[1].trim();
+
+		const engine = block.match(/Motor:\s*([^\n]+)/i);
+		if (engine) state.engine = engine[1].trim();
+
+		const milestone = block.match(/Hito Actual:\s*([^\n]+)/i);
+		if (milestone) state.milestone = milestone[1].trim();
+
+		const sprint = block.match(/Sprint Activo:\s*([^\n]+)/i);
+		if (sprint) state.sprint = sprint[1].trim();
+
+		const inProgress = block.match(/En Progreso:\s*([^\n]+)/i);
+		if (inProgress) state.inProgress = inProgress[1].trim();
+
+		const nextStep = block.match(/Siguiente Paso:\s*([^\n]+)/i);
+		if (nextStep) state.nextStep = nextStep[1].trim();
+
+		return { hasRoadmap: true, state };
+	} catch {
+		return { hasRoadmap: true };
+	}
 }
 
 export function auditProject(cwd: string): ProjectAudit {
 	const setup = inspectSetup(cwd);
 	const hasConcept = existsSync(join(cwd, "design", "gdd", "game-concept.md"));
+	const { hasRoadmap, state: producerState } = readProducerState(cwd);
 
 	let gddCount = 0;
 	const gddDir = join(cwd, "design", "gdd");
@@ -46,6 +95,8 @@ export function auditProject(cwd: string): ProjectAudit {
 		hasPrototypes,
 		agentsInstalled: setup.agentsInstalled,
 		isConfigured: setup.isConfigured,
+		hasRoadmap,
+		producerState,
 	};
 }
 
@@ -159,8 +210,14 @@ export async function handleStudioStart(
 			];
 		}
 
+		let promptHeadline = `🎮 Producer: ${phaseLabel} — ¿Cuál es el siguiente paso?`;
+		if (audit.producerState?.gameTitle) {
+			const st = audit.producerState;
+			promptHeadline = `🎮 Producer: [${st.gameTitle} · ${st.milestone || phaseLabel}] — Siguiente paso activo: ${st.nextStep || "Continuar desarrollo"}`;
+		}
+
 		const selected = await (ctx.ui as any).select(
-			`🎮 Producer: ${phaseLabel} — ¿Cuál es el siguiente paso?`,
+			promptHeadline,
 			options,
 		);
 
@@ -181,9 +238,14 @@ function displayProjectAudit(ctx: ExtensionContext, a: ProjectAudit): void {
 	const envStatus = a.isConfigured
 		? "✔ Entorno OK (55 agentes)"
 		: "⚠ Incompleto (/studio:setup)";
+	const roadmapStatus = a.hasRoadmap
+		? (a.producerState?.milestone ? `✔ ${a.producerState.milestone}` : "✔ Roadmap activo")
+		: "Pendiente (production/roadmap.md)";
+
 	const lines = [
 		"┌── 🎮 PI GAME STUDIO — ESTADO Y DIAGNÓSTICO DEL PROYECTO ───┐",
 		`│ • Estado Ambiente:      ${envStatus.padEnd(36)} │`,
+		`│ • Línea / Hito Actual:  ${roadmapStatus.padEnd(36)} │`,
 		`│ • Motor de juego:       ${(a.hasEngine ? `✔ ${a.engineName}` : "⚠ No configurado (/studio:settings)").padEnd(36)} │`,
 		`│ • Concepto de juego:    ${(a.hasConcept ? "✔ game-concept.md" : "Pendiente (/brainstorm)").padEnd(36)} │`,
 		`│ • Documentos de diseño: ${(a.gddCount + " archivos en design/gdd/").padEnd(36)} │`,

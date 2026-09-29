@@ -88,8 +88,14 @@ export interface ProjectAudit {
 }
 
 export function readProducerState(cwd: string): { hasRoadmap: boolean; state?: ProducerState } {
-	const roadmapPath = join(cwd, "production", "roadmap.md");
-	if (!existsSync(roadmapPath)) {
+	const possibleRoadmaps = [
+		join(cwd, "production", "roadmap.md"),
+		join(cwd, "roadmap.md"),
+		join(cwd, "docs", "roadmap.md"),
+	];
+
+	const roadmapPath = possibleRoadmaps.find((p) => existsSync(p));
+	if (!roadmapPath) {
 		return { hasRoadmap: false };
 	}
 	try {
@@ -126,15 +132,30 @@ export function readProducerState(cwd: string): { hasRoadmap: boolean; state?: P
 
 export function auditProject(cwd: string): ProjectAudit {
 	const setup = inspectSetup(cwd);
-	const hasConcept = existsSync(join(cwd, "design", "gdd", "game-concept.md"));
+
+	const possibleConcepts = [
+		join(cwd, "design", "gdd", "game-concept.md"),
+		join(cwd, "production", "design", "concept.md"),
+		join(cwd, "production", "concept.md"),
+		join(cwd, "design", "concept.md"),
+		join(cwd, "docs", "concept.md"),
+	];
+	const hasConcept = possibleConcepts.some((p) => existsSync(p));
+
 	const { hasRoadmap, state: producerState } = readProducerState(cwd);
 
 	let gddCount = 0;
-	const gddDir = join(cwd, "design", "gdd");
-	if (existsSync(gddDir)) {
-		try {
-			gddCount = readdirSync(gddDir).filter((f) => f.endsWith(".md")).length;
-		} catch {}
+	const possibleGddDirs = [
+		join(cwd, "design", "gdd"),
+		join(cwd, "production", "design"),
+		join(cwd, "docs", "design"),
+	];
+	for (const gddDir of possibleGddDirs) {
+		if (existsSync(gddDir)) {
+			try {
+				gddCount += readdirSync(gddDir).filter((f) => f.endsWith(".md")).length;
+			} catch {}
+		}
 	}
 
 	let srcFileCount = 0;

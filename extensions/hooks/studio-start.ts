@@ -83,68 +83,64 @@ export async function handleStudioStart(
 		return;
 	}
 
-	// Interactive mode
+	// Interactive mode: Producer-led guidance (maximum 3 clear choices)
 	if (ctx.hasUI && typeof (ctx.ui as any)?.select === "function") {
-		const stateSummary = [
-			`Motor: ${audit.hasEngine ? audit.engineName : "No configurado"}`,
-			`GDDs: ${audit.gddCount} docs`,
-			`Código: ${audit.srcFileCount} archivos`,
-		].join(" | ");
+		let phaseLabel = "Fase 1: Concepción / Idea";
+		let options: string[] = [];
+		let actions: Array<() => void> = [];
 
-		const options = [
-			"💡 1. Comenzar desde cero / Lluvia de ideas (Exploración guiada con /brainstorm)",
-			"📋 2. Formalizar concepto en GDD (Crear documento de diseño de juego)",
-			"⚙️ 3. Configurar motor de juego y arquitectura (/studio:settings)",
-			"🔍 4. Escanear y auditar proyecto existente (/project-stage-detect)",
-			"🤖 5. Entrevista conversacional con el Game Designer (Lanzar /start)",
-			"📊 6. Ver diagnóstico actual del proyecto",
-		];
+		if (!audit.hasConcept && audit.srcFileCount === 0) {
+			// Early stage: No concept, no code
+			phaseLabel = "Fase 1: Concepción & Prototipo";
+			options = [
+				"💡 1. Definir la idea y fantasía de mi juego (/brainstorm)",
+				"⚡ 2. Crear un prototipo rápido con código listo para jugar (/studio:new)",
+				"💬 3. Hablar directamente con el equipo (Escribe libremente en el chat)",
+			];
+			actions = [
+				() => notifyOrLog(ctx, "💡 Escribe /brainstorm open para explorar temas, género y mecánicas."),
+				() => notifyOrLog(ctx, "⚡ Escribe /studio:new para crear una plantilla jugable (Bevy, Raylib o Godot)."),
+				() => notifyOrLog(ctx, "💬 Escribe en el chat lo que tienes en mente y el equipo te responderá."),
+			];
+		} else if (audit.hasConcept && audit.srcFileCount === 0) {
+			// Mid stage: Has concept, needs GDD & first systems
+			phaseLabel = "Fase 2: Diseño de Sistemas & Motor";
+			options = [
+				"📋 1. Redactar el documento de diseño y mecánicas (/game-design-document)",
+				"⚙️ 2. Auditar herramientas y requisitos del motor (/studio:doctor)",
+				"🎨 3. Definir la identidad visual y arte (/art-bible)",
+			];
+			actions = [
+				() => notifyOrLog(ctx, "📋 Escribe /game-design-document para estructurar core loop y mecánicas."),
+				() => notifyOrLog(ctx, "⚙️ Escribe /studio:doctor para verificar tus compiladores y motor."),
+				() => notifyOrLog(ctx, "🎨 Escribe /art-bible para definir paleta de colores y estética."),
+			];
+		} else {
+			// Production stage: Has code and systems
+			phaseLabel = "Fase 3: Desarrollo & Validación";
+			options = [
+				"💻 1. Implementar una nueva mecánica de juego (/dev-story)",
+				"🧪 2. Probar y revisar la calidad del código (/code-review)",
+				"📊 3. Ver diagnóstico y métricas de avance del estudio (/studio:status)",
+			];
+			actions = [
+				() => notifyOrLog(ctx, "💻 Escribe /dev-story para implementar la siguiente mecánica."),
+				() => notifyOrLog(ctx, "🧪 Escribe /code-review para auditar tu código actual."),
+				() => displayProjectAudit(ctx, audit),
+			];
+		}
 
 		const selected = await (ctx.ui as any).select(
-			`🎮 Pi Game Studio — Asistente de Inicio (${stateSummary})`,
+			`🎮 Producer: ${phaseLabel} — ¿Cuál es el siguiente paso?`,
 			options,
 		);
 
 		if (selected === undefined || selected === null) return;
 
 		const idx = typeof selected === "number" ? selected : options.indexOf(selected);
-		if (idx === -1) return;
+		if (idx === -1 || !actions[idx]) return;
 
-		switch (idx) {
-			case 0:
-				notifyOrLog(
-					ctx,
-					"💡 Escribe /brainstorm open en el chat de Pi para explorar temas, mecánicas y fantasía de jugador.",
-				);
-				break;
-			case 1:
-				notifyOrLog(
-					ctx,
-					"📋 Escribe /game-design-document para redactar el primer GDD con pilares y core loop.",
-				);
-				break;
-			case 2:
-				notifyOrLog(
-					ctx,
-					"⚙️ Escribe /studio:settings para seleccionar tu motor (Godot, Unity, Unreal, Bevy) e idioma.",
-				);
-				break;
-			case 3:
-				notifyOrLog(
-					ctx,
-					"🔍 Escribe /project-stage-detect o /adopt para auditar tu código y documentos existentes.",
-				);
-				break;
-			case 4:
-				notifyOrLog(
-					ctx,
-					"🤖 Escribe /start en el chat de Pi para iniciar la entrevista conversacional completa con el Game Designer.",
-				);
-				break;
-			case 5:
-				displayProjectAudit(ctx, audit);
-				break;
-		}
+		actions[idx]();
 		return;
 	}
 

@@ -19,6 +19,7 @@ import { handleStudioChains } from "./studio-chains.ts";
 import { handleStudioStart, readProducerState, recordFlowCompletion } from "./studio-start.ts";
 import { handleStudioDoctor } from "./studio-doctor.ts";
 import { handleStudioNew } from "./studio-new.ts";
+import { handleStudioChanges } from "./studio-changes.ts";
 import { detectProjectEngine, formatEngineBadge } from "./engine-detector.ts";
 
 export default function (pi: ExtensionAPI) {
@@ -71,6 +72,14 @@ export default function (pi: ExtensionAPI) {
 		description: "[Studio] Dashboard en vivo de estado, agentes y métricas del estudio",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioStatus(args, ctx);
+		},
+	});
+
+	// /studio:changes — Clasificación de cambios gamedev (Gentle Changes)
+	(pi as any).registerCommand?.("studio:changes", {
+		description: "[Studio] Clasificación de cambios pendientes en diseño, código, assets y drift de ODD",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioChanges(args, ctx);
 		},
 	});
 

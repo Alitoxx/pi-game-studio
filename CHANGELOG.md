@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.11] - 2026-09-29
+
+### Added
+- **Punto 4: Gentle Changes para Videojuegos (`/studio:changes`)**:
+  - Implementación del nuevo comando `/studio:changes` en `extensions/hooks/studio-changes.ts` y registro en Pi CLI.
+  - Clasificación automática y rigurosa de archivos modificados por su naturaleza en gamedev:
+    - `[DESIGN]`: Especificaciones vivas en `design/gdd/`, arte conceptual y audio (`design/art/`, `design/audio/`).
+    - `[CODE]`: Código fuente de motor, sistemas y shaders (`src/`, `.rs`, `.cpp`, `.gd`, `.cs`, `.glsl`, `.shader`).
+    - `[DATA/ASSETS]`: Sprites, texturas, audios, tablas de datos y balance (`assets/`, `data/`, `.png`, `.ogg`, `.json`, `.ron`, `.tres`, `.tscn`).
+    - `[PRODUCTION]`: Roadmap de producción y logs de sesión (`production/roadmap.md`, `production/session-logs/`).
+    - `[CONFIG]`: Configuración de proyecto y motor (`project.yaml`, `.pi/`, `Cargo.toml`, `CMakeLists.txt`).
+  - Detección de *Drift* de ODD: Alerta si hay código de gameplay modificado sin haber actualizado la spec viva en `design/gdd/*.md`.
+  - Integración en el catálogo interactivo de comandos `/studio` bajo la categoría `CONFIGURACION & ADMIN`.
+
+---
+
 ## [0.8.10] - 2026-09-29
 
 ### Added

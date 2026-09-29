@@ -29,6 +29,7 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 			"studio:new",
 			"studio:models",
 			"studio:status",
+			"studio:changes",
 			"studio:agents",
 			"studio:chains",
 			"studio:settings",
@@ -210,6 +211,23 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 			const content = fs.readFileSync(versionFile, "utf8");
 			expect(content).toMatch(/Engine Version/i);
 		}
+	});
+
+	test("studio-changes exposes classification and gamedev change inspector", () => {
+		const source = fs.readFileSync(
+			path.join(__dirname, "..", "extensions", "hooks", "studio-changes.ts"),
+			"utf8",
+		);
+		expect(source).toContain("export function classifyFile");
+		expect(source).toContain("export function inspectChanges");
+		expect(source).toContain("export function formatChangesOutput");
+		expect(source).toContain("export async function handleStudioChanges");
+		expect(source).toContain("DESIGN");
+		expect(source).toContain("CODE");
+		expect(source).toContain("DATA_ASSETS");
+		expect(source).toContain("PRODUCTION");
+		expect(source).toContain("CONFIG");
+		expect(source).toContain("ALERTA DRIFT");
 	});
 });
 

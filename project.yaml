@@ -1,6 +1,8 @@
 # Pi Game Studio project configuration — single source of truth for project settings.
 
 schema_version: 1
+engine: "Bevy"
+language: "es"
 
 framework:
   version: 0.3.0

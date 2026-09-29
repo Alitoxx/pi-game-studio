@@ -136,25 +136,62 @@ export async function handleStudioAgents(
 	}
 
 	if (ctx.hasUI && typeof (ctx.ui as any)?.select === "function" && query !== "all") {
-		const options = [
-			...AGENT_GROUPS.map((g) => `${g.emoji} ${g.name} (${g.agents.length} agentes)`),
-			"📖 Ver los 55 agentes completos",
+		const objectiveOptions = [
+			"🎯 1. Quiero diseñar mecánicas, combate o balance → game-designer",
+			"💻 2. Quiero programar, resolver arquitectura o motor → technical-director / leads",
+			"🎨 3. Quiero definir arte, audio o historia → art-director / audio / narrativa",
+			"🧪 4. Quiero probar, optimizar o reportar bugs → qa-lead / qa-tester",
+			"👑 5. Quiero visión global o planificar entregas → producer / creative-director",
+			"📂 6. Explorar agentes por área técnica (Directores, Leads, Motores...)",
+			"📖 7. Ver el catálogo completo de los 55 agentes",
 		];
 
 		const selected = await (ctx.ui as any).select(
-			"🎮 Pi Game Studio — Directorio de Agentes (55)",
-			options,
+			"🎮 Pi Game Studio — ¿Con qué parte de tu juego quieres avanzar?",
+			objectiveOptions,
 		);
 
 		if (selected === undefined || selected === null) return;
 
-		const idx = typeof selected === "number" ? selected : options.indexOf(selected);
+		const idx = typeof selected === "number" ? selected : objectiveOptions.indexOf(selected);
 		if (idx === -1) return;
 
-		if (idx < AGENT_GROUPS.length) {
-			printGroup(AGENT_GROUPS[idx], ctx);
-		} else {
-			printAllAgents(ctx);
+		switch (idx) {
+			case 0:
+				// Mecánicas & Balance
+				printGroup(AGENT_GROUPS[4] || AGENT_GROUPS[1], ctx);
+				break;
+			case 1:
+				// Programación & Motor
+				printGroup(AGENT_GROUPS[2], ctx);
+				break;
+			case 2:
+				// Arte, Audio & Narrativa
+				printGroup(AGENT_GROUPS[5], ctx);
+				break;
+			case 3:
+				// QA & Rendimiento
+				printGroup(AGENT_GROUPS[6], ctx);
+				break;
+			case 4:
+				// Visión & Directores
+				printGroup(AGENT_GROUPS[0], ctx);
+				break;
+			case 5: {
+				// Submenú por grupos
+				const groupOpts = AGENT_GROUPS.map((g) => `${g.emoji} ${g.name} (${g.agents.length} agentes)`);
+				const groupPick = await (ctx.ui as any).select("Selecciona un área del estudio:", groupOpts);
+				if (groupPick !== undefined && groupPick !== null) {
+					const gIdx = typeof groupPick === "number" ? groupPick : groupOpts.indexOf(groupPick);
+					if (gIdx !== -1 && gIdx < AGENT_GROUPS.length) {
+						printGroup(AGENT_GROUPS[gIdx], ctx);
+					}
+				}
+				break;
+			}
+			case 6:
+				printAllAgents(ctx);
+				break;
 		}
 		return;
 	}

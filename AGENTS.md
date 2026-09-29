@@ -45,6 +45,17 @@ Tier 3 — Specialists (Implementación, Motores y Operaciones)
 - Todos los agentes se adaptan dinámicamente a la preferencia de idioma configurada en `.pi/game-studio/language` o `project.yaml`.
 - Cuando el idioma activo es español (`es`), todos los agentes responden, estructuran opciones, explican trade-offs y conducen el diálogo en **español**. Los símbolos técnicos, APIs de motor y palabras clave de código se mantienen en su nomenclatura estándar.
 
+## Política de Instalación por Motor (Enfoque A — Selective Installation)
+
+Para evitar saturar `.pi/agents/` con especialistas de motores no utilizados, el instalador (`/setup` o `/studio:setup`) despliega únicamente:
+- **34 Agentes Base (Core Studio)**: Directores, leads departamentales y especialistas generales (gameplay, AI, red, shaders/arte técnico, audio, QA, DevOps, live-ops, economía).
+- **Especialistas dedicados del motor activo** definido en `project.yaml`:
+  - **Bevy (Rust)**: 34 + 1 = **35 agentes** (`bevy-specialist`).
+  - **Godot 4**: 34 + 5 = **39 agentes** (General, GDScript, C#, GDExtension, Shaders).
+  - **Raylib (C++ / EnTT)**: 34 + 5 = **39 agentes** (General, EnTT ECS, Shaders, UI/Dear ImGui, CMake/Build).
+  - **Unity**: 34 + 5 = **39 agentes** (General, DOTS/ECS, Shaders, Addressables, UI).
+  - **Unreal Engine 5**: 34 + 5 = **39 agentes** (General, GAS, Blueprints, Replication, UMG).
+
 ## Protocolo de Interacción y Decisiones (Gamedev Decision Protocol)
 
 Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar de alta fidelidad inspirado en **Gentle Shell** adaptado a videojuegos ([`docs/gamedev-interaction-protocol.md`](docs/gamedev-interaction-protocol.md)):

@@ -37,7 +37,7 @@ int main() {
     registry.emplace<Velocity>(player, 0.0f, 0.0f);
     registry.emplace<Renderable>(player, 36.0f, 36.0f, SKYBLUE);
 
-    std::cout << "🎮 Raylib + EnTT Starter inicializado correctamente!" << std::endl;
+    std::cout << "[Studio] Raylib + EnTT Starter inicializado correctamente!" << std::endl;
 
     while (!WindowShouldClose()) {
         float dt = GetFrameTime();

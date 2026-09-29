@@ -41,7 +41,7 @@ fn setup(mut commands: Commands) {
         Transform::from_xyz(0.0, 0.0, 0.0),
     ));
 
-    info!("🎮 ARPG Adventure starter initialized! Use WASD/Arrows to move, Space to attack.");
+    info!("[Studio] ARPG Adventure starter initialized! Use WASD/Arrows to move, Space to attack.");
 }
 
 fn player_movement(

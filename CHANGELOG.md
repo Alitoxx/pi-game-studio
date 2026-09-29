@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.9] - 2026-09-29
+
+### Added
+- **Punto 2: Persona de Estudio Senior (Cero Complacencia & Directivos Reales)**:
+  - Inyectada la regla estricta de personalidad senior en el protocolo general ([`docs/gamedev-interaction-protocol.md`](docs/gamedev-interaction-protocol.md)), en el catálogo oficial ([`AGENTS.md`](AGENTS.md)) y en los **55 archivos de agentes** (`agents/*.md`).
+  - Prohibidos los halagos vacíos, la condescendencia y las frases complacientes de chatbot (*"¡Excelente idea!", "¡Qué gran diseño!"*).
+  - Tono de directores y leads de consola/PC: directo, fundamentado en *Game Feel / Jugabilidad, Rendimiento / FPS, Allocations en Bucle y Scope / Costo*.
+  - Refuerzo en las directrices de runtime de los hooks de Pi (`extensions/hooks/index.ts`) para garantizar respuestas profesionales, sobrias y sin relleno conversacional.
+
+---
+
 ## [0.8.8] - 2026-09-29
 
 ### Changed

@@ -59,16 +59,17 @@ Para evitar saturar `.pi/agents/` con especialistas de motores no utilizados, el
 ## Protocolo de Interacción y Decisiones (Gamedev Decision Protocol)
 
 Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar de alta fidelidad inspirado en **Gentle Shell** adaptado a videojuegos ([`docs/gamedev-interaction-protocol.md`](docs/gamedev-interaction-protocol.md)):
-1. **Executive Delivery & Zero Bleed**: Prohibido volcar monólogos internos, tablas raw de 20+ filas o trazas de ejecución en el chat. Los datos exhaustivos viven en disco (`design/gdd/`); el chat es para síntesis ejecutiva (10-15 líneas) y decisiones.
-2. **Zero Emojis in CLI & Sober TUI**: Prohibidos los emojis decorativos en encabezados y menús. Bloques estándar limpios en mayúsculas (`STUDIO CONTEXT:`, `TRADE-OFF MATRIX:`, `CHOICE REQUIRED:`, `DELIVERY RECEIPT:`).
-3. **Senior Studio Persona (Cero Complacencia)**: Sin halagos vacíos ni adulación. Tono de director de consola/PC evaluando alternativas por *Game Feel, Target FPS, Allocations y Scope*.
-4. **Pillars & Constraints Header**: Contexto del juego, género, target y pilares siempre visibles.
-5. **Gameplay & Technical Trade-offs Matrix**: Evaluación rigurosa de *Alternativa vs. Game Feel vs. FPS vs. Costo/Scope*.
-6. **Director Gate / Technical Verdict**: Recomendación vinculante fundamentada del Lead/Director responsable.
-7. **Lossless Choice Envelope**: Menú cerrado, numerado y sin opciones ambiguas ([1], [2], [3]).
-8. **Radar de Próximos Pasos & Recibos de Entrega**: Acciones siguientes claras con sus comandos ejecutables.
-9. **Return Contract de Especialistas**: En delegaciones `subagent`, los especialistas devuelven exclusivamente un bloque YAML compacto (`status`, `summary`, `files_changed`, `validation`, `gameplay_impact`) eliminando prosa conversacional redundante.
-10. **Flow Completion & Producer Auto-Handoff Protocol**: Cierre automático de tareas con actualización instantánea de `production/roadmap.md` (`<!-- PRODUCER_STATE -->`) y relevo directo al siguiente especialista sin preguntas especulativas.
+1. **Organic Driven Development (ODD) como Flujo Oficial Único**: El desarrollo sigue estrictamente [`docs/odd-gamedev-workflow.md`](docs/odd-gamedev-workflow.md). Cero burocracia documental ni especificaciones muertas; diseño vivo en `design/gdd/<feature>.md`, tareas atómicas de ~400 líneas y validación directa en motor (*Game Feel*, FPS estables, cero allocs innecesarias).
+2. **Executive Delivery & Zero Bleed**: Prohibido volcar monólogos internos, tablas raw de 20+ filas o trazas de ejecución en el chat. Los datos exhaustivos viven en disco (`design/gdd/`); el chat es para síntesis ejecutiva (10-15 líneas) y decisiones.
+3. **Zero Emojis in CLI & Sober TUI**: Prohibidos los emojis decorativos en encabezados y menús. Bloques estándar limpios en mayúsculas (`STUDIO CONTEXT:`, `TRADE-OFF MATRIX:`, `CHOICE REQUIRED:`, `DELIVERY RECEIPT:`).
+4. **Senior Studio Persona (Cero Complacencia)**: Sin halagos vacíos ni adulación. Tono de director de consola/PC evaluando alternativas por *Game Feel, Target FPS, Allocations y Scope*.
+5. **Pillars & Constraints Header**: Contexto del juego, género, target y pilares siempre visibles.
+6. **Gameplay & Technical Trade-offs Matrix**: Evaluación rigurosa de *Alternativa vs. Game Feel vs. FPS vs. Costo/Scope*.
+7. **Director Gate / Technical Verdict**: Recomendación vinculante fundamentada del Lead/Director responsable.
+8. **Lossless Choice Envelope**: Menú cerrado, numerado y sin opciones ambiguas ([1], [2], [3]).
+9. **Radar de Próximos Pasos & Recibos de Entrega**: Acciones siguientes claras con sus comandos ejecutables.
+10. **Return Contract de Especialistas**: En delegaciones `subagent`, los especialistas devuelven exclusivamente un bloque YAML compacto (`status`, `summary`, `files_changed`, `validation`, `gameplay_impact`) eliminando prosa conversacional redundante.
+11. **Flow Completion & Producer Auto-Handoff Protocol**: Cierre automático de tareas con actualización instantánea de `production/roadmap.md` (`<!-- PRODUCER_STATE -->`) y relevo directo al siguiente especialista sin preguntas especulativas.
 
 ---
 

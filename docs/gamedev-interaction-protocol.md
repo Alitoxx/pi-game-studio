@@ -12,12 +12,14 @@ Toda interacción, decisión arquitectural o diseño debe estructurarse utilizan
 
 ```text
 0. Executive Delivery & Zero Bleed (Prohibido volcar razonamiento interno en el chat)
-1. Pillars & Constraints Header (Contexto del juego)
-2. Gameplay & Technical Trade-offs Matrix (Matriz de decisión)
-3. Director Gate / Technical Verdict (Recomendación con autoridad)
-4. Choice Envelope (Opciones cerradas y numeradas)
-5. Next Steps Radar & Delivery Receipts (Radar de próximos pasos y recibos)
-6. Return Contract de Especialistas (Economía extrema de tokens en subagentes)
+1. Organic Driven Development (ODD) como Flujo Oficial Único (docs/odd-gamedev-workflow.md)
+2. Pillars & Constraints Header (Contexto del juego)
+3. Gameplay & Technical Trade-offs Matrix (Matriz de decisión)
+4. Director Gate / Technical Verdict (Recomendación con autoridad)
+5. Choice Envelope (Opciones cerradas y numeradas)
+6. Next Steps Radar & Delivery Receipts (Radar de próximos pasos y recibos)
+7. Return Contract de Especialistas (Economía extrema de tokens en subagentes)
+8. Flow Completion & Producer Auto-Handoff Protocol (Cierre y relevo sin fricción)
 ```
 
 ---
@@ -43,7 +45,18 @@ Toda interacción, decisión arquitectural o diseño debe estructurarse utilizan
 
 ---
 
-## 1. Pillars & Constraints Header (Contexto del Juego)
+## 1. Organic Driven Development (ODD) como Flujo Oficial Único
+
+> **Referencia completa y detallada:** [`docs/odd-gamedev-workflow.md`](odd-gamedev-workflow.md)
+
+Pi Game Studio opera bajo **ODD (Organic Driven Development)** como único modelo de desarrollo:
+- **Cero burocracia de especificaciones muertas**: Se prohíben pipelines multi-documento con propuestas, specs formales, planes de tareas separados y reportes de archivo que generen *Paper Game Design*.
+- **Live Spec en `design/gdd/<feature>.md`**: Para features sustanciales (≥ 2 pasos), se mantiene un único archivo vivo que agrupa la fantasía del jugador, fórmulas, checklist de tareas y evidencia de validación.
+- **Validación continua en motor**: Cada tarea se implementa en bloques de ~400 líneas y se verifica de inmediato con el compilador del motor, métricas de FPS y cero allocations innecesarias en el game loop.
+
+---
+
+## 2. Pillars & Constraints Header (Contexto del Juego)
 
 Antes de profundizar en cualquier dilema técnico o de diseño, el agente debe recordar los pilares que delimitan el proyecto. Esto evita que decisiones aisladas rompan la fantasía del jugador o el rendimiento objetivo.
 
@@ -56,7 +69,7 @@ Antes de profundizar en cualquier dilema técnico o de diseño, el agente debe r
 
 ---
 
-## 2. Gameplay & Technical Trade-offs Matrix
+## 3. Gameplay & Technical Trade-offs Matrix
 
 Las comparaciones no se presentan en prosa desordenada. Se evalúan en una tabla con las 4 dimensiones reales de un videojuego:
 
@@ -81,7 +94,7 @@ Las comparaciones no se presentan en prosa desordenada. Se evalúan en una tabla
 
 ---
 
-## 3. Director Gate / Technical Verdict (Recomendación con Autoridad)
+## 4. Director Gate / Technical Verdict (Recomendación con Autoridad)
 
 El agente responsable de la disciplina debe emitir un veredicto claro y argumentado, respaldado por el Director correspondiente (Tier 1):
 
@@ -92,7 +105,7 @@ El agente responsable de la disciplina debe emitir un veredicto claro y argument
 
 ---
 
-## 4. Choice Envelope (Menú de Elección Cerrado)
+## 5. Choice Envelope (Menú de Elección Cerrado)
 
 Las preguntas nunca quedan flotando en el aire. Se presentan en un marco delimitado (*Choice Envelope*) con opciones auto-contenidas y numeradas para que el usuario responda con un solo número o frase corta:
 
@@ -109,7 +122,7 @@ Responde con [1], [2] o [3]:
 
 ---
 
-## 5. Next Steps Radar & Delivery Receipts
+## 6. Next Steps Radar & Delivery Receipts
 
 Al concluir una entrega o hito, el especialista entrega un **Recibo de Entrega** y proyecta las siguientes acciones en el radar:
 
@@ -134,7 +147,7 @@ NEXT STEPS:
 
 ---
 
-## 6. Return Contract de Especialistas (Economía Extrema de Tokens)
+## 7. Return Contract de Especialistas (Economía Extrema de Tokens)
 
 > **Inspirado en el Return Contract de Gentle Shell / Gentle AI**:
 > Cuando un especialista (Tier 2 o 3) es delegado mediante `subagent` o ejecuta una tarea puntual de implementación, **tiene estrictamente prohibido emitir prosa conversacional innecesaria o saludos**.
@@ -159,7 +172,7 @@ next_recommended_specialist: <especialista que debe continuar la tarea>
 
 ---
 
-## 7. Flow Completion & Producer Auto-Handoff Protocol
+## 8. Flow Completion & Producer Auto-Handoff Protocol
 
 Para mantener el ritmo de desarrollo sin fricciones ni preguntas redundantes:
 

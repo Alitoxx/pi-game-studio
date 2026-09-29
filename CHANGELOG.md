@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.10] - 2026-09-29
+
+### Added
+- **Punto 3: Organic Driven Development (ODD) como Flujo Oficial Único**:
+  - Creación de la especificación completa en [`docs/odd-gamedev-workflow.md`](docs/odd-gamedev-workflow.md): pipeline de 7 pasos (*Authorize, Explore, Resolve Uncertainty, Classify, Live Spec, Implement, Validate & Close*).
+  - Eliminación total de la burocracia de especificaciones muertas (SDD tradicional: propuestas, specs formales, planes de tareas separados y reportes de archivo que inducen *Paper Game Design*).
+  - Adopción de la **Live Spec** única en `design/gdd/<feature>.md` para features sustanciales (≥ 2 pasos) y tareas atómicas de ~400 líneas.
+  - Validación continua directa en pantalla y motor: compilación limpia, smoke test, estabilidad de FPS y bucle de cero allocations.
+  - Actualización de [`docs/gamedev-interaction-protocol.md`](docs/gamedev-interaction-protocol.md), [`AGENTS.md`](AGENTS.md) y de los runtime prompt guidelines en `extensions/hooks/index.ts`.
+
+---
+
 ## [0.8.9] - 2026-09-29
 
 ### Added

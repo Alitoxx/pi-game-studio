@@ -95,8 +95,8 @@ export async function handleStudioStart(
 			const setupChoice = await (ctx.ui as any).select(
 				"🎮 Producer: ¡Bienvenido al estudio! Para empezar necesitamos desplegar tu equipo. ¿Cómo prefieres configurarlo?",
 				[
-					`⚡ 1. Instalación Automática (Recomendada: 55 agentes + modelos equilibrados + motor ${audit.engineName || "Godot 4"} en español)`,
-					"🛠️ 2. Instalación Manual / Guiada (Tú eliges el motor de juego, tu idioma preferido y los modelos de IA por rol)",
+					`⚡ 1. Instalación Automática (Recomendada: 55 agentes en modo 'inherit' que usan tu modelo activo en Pi, motor ${audit.engineName || "Godot 4"} en español)`,
+					"🛠️ 2. Instalación Manual / Guiada (Tú eliges el motor de juego, tu idioma preferido y personalizas los modelos de IA por rol)",
 				],
 			);
 

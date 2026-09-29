@@ -20,11 +20,11 @@ export interface FlowCompletionReceipt {
 }
 
 export function recordFlowCompletion(cwd: string, receipt: FlowCompletionReceipt): void {
+	const { hasRoadmap, roadmapPath: existingRoadmap, state } = readProducerState(cwd);
 	const prodDir = join(cwd, "production");
-	mkdirSync(prodDir, { recursive: true });
-	const roadmapPath = join(prodDir, "roadmap.md");
+	const roadmapPath = existingRoadmap || join(prodDir, "roadmap.md");
+	mkdirSync(join(roadmapPath, ".."), { recursive: true });
 
-	const { hasRoadmap, state } = readProducerState(cwd);
 	const gameTitle = state?.gameTitle || "Mi Videojuego";
 	const engine = state?.engine || "Bevy";
 	const milestone = state?.milestone || "M1 — Prototipo Jugable";
@@ -87,7 +87,7 @@ export interface ProjectAudit {
 	producerState?: ProducerState;
 }
 
-export function readProducerState(cwd: string): { hasRoadmap: boolean; state?: ProducerState } {
+export function readProducerState(cwd: string): { hasRoadmap: boolean; roadmapPath?: string; state?: ProducerState } {
 	const possibleRoadmaps = [
 		join(cwd, "production", "roadmap.md"),
 		join(cwd, "roadmap.md"),
@@ -101,7 +101,7 @@ export function readProducerState(cwd: string): { hasRoadmap: boolean; state?: P
 	try {
 		const content = readFileSync(roadmapPath, "utf8");
 		const match = content.match(/<!--\s*PRODUCER_STATE\s*([\s\S]*?)<!--\s*\/PRODUCER_STATE\s*-->/i);
-		if (!match || !match[1]) return { hasRoadmap: true };
+		if (!match || !match[1]) return { hasRoadmap: true, roadmapPath };
 
 		const block = match[1];
 		const state: ProducerState = {};
@@ -124,9 +124,9 @@ export function readProducerState(cwd: string): { hasRoadmap: boolean; state?: P
 		const nextStep = block.match(/Siguiente Paso:\s*([^\n]+)/i);
 		if (nextStep) state.nextStep = nextStep[1].trim();
 
-		return { hasRoadmap: true, state };
+		return { hasRoadmap: true, roadmapPath, state };
 	} catch {
-		return { hasRoadmap: true };
+		return { hasRoadmap: true, roadmapPath };
 	}
 }
 

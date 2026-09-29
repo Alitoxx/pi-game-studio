@@ -168,21 +168,40 @@ export default function (pi: ExtensionAPI) {
 		// Auto-detect production deliveries and update Producer roadmap
 		const studioRoot = findStudioRoot(ctx.cwd);
 		if (studioRoot) {
-			if (filePath.includes("design/gdd/") && filePath.endsWith(".md")) {
-				const docName = filePath.split("/").pop()?.replace(".md", "") || "Documento GDD";
-				recordFlowCompletion(studioRoot, {
-					task: `Diseño completado: ${docName}`,
-					agent: "game-designer",
-					filesChanged: [filePath],
-					nextStep: "Implementar prototipo / mecánicas del sistema",
-				});
-			} else if (filePath.includes("design/art/") || filePath.includes("art-bible.md")) {
-				recordFlowCompletion(studioRoot, {
-					task: "Identidad visual y biblia de arte completada",
-					agent: "art-director",
-					filesChanged: [filePath],
-					nextStep: "Diseñar assets y paleta de audio",
-				});
+			if (
+				(filePath.includes("design/") || filePath.includes("docs/")) &&
+				filePath.endsWith(".md")
+			) {
+				const fileName = filePath.split("/").pop()?.replace(".md", "") || "Documento";
+				if (fileName.includes("concept") || fileName.includes("brainstorm")) {
+					recordFlowCompletion(studioRoot, {
+						task: `Concepto aprobado: ${fileName}`,
+						agent: "creative-director",
+						filesChanged: [filePath],
+						nextStep: "Mapear sistemas y arquitectura de dependencias (/map-systems)",
+					});
+				} else if (fileName.includes("art-bible") || filePath.includes("design/art/")) {
+					recordFlowCompletion(studioRoot, {
+						task: "Identidad visual y biblia de arte completada",
+						agent: "art-director",
+						filesChanged: [filePath],
+						nextStep: "Diseñar assets y paleta de audio",
+					});
+				} else if (fileName.includes("systems") || fileName.includes("architecture")) {
+					recordFlowCompletion(studioRoot, {
+						task: `Arquitectura de sistemas definida: ${fileName}`,
+						agent: "systems-designer",
+						filesChanged: [filePath],
+						nextStep: "Diseño detallado de mecánicas y GDDs",
+					});
+				} else {
+					recordFlowCompletion(studioRoot, {
+						task: `Diseño completado: ${fileName}`,
+						agent: "game-designer",
+						filesChanged: [filePath],
+						nextStep: "Implementar prototipo / mecánicas del sistema",
+					});
+				}
 			}
 		}
 	});

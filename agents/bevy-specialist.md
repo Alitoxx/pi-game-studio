@@ -181,7 +181,7 @@ May I write this system into 'src/systems/movement.rs'?"
 3. Check `docs/engine-reference/bevy/deprecated-apis.md` for relevant version transitions
 4. For subsystem-specific work, read the relevant `docs/engine-reference/bevy/modules/*.md`
 
-If an API you plan to suggest does not appear in the reference docs and was introduced after May 2025, use webfetch to verify it exists in the current version.
+If an API you plan to suggest does not appear in the reference docs and was introduced after May 2025, use web_search to verify it exists in the current version.
 
 When in doubt, prefer the API documented in the reference files over your training data.
 

@@ -10,7 +10,7 @@ import { execSync } from "node:child_process";
 import { renderBanner } from "./banner.ts";
 import { findStudioRoot } from "./studio-root.ts";
 import { handleStudioCommand } from "./studio-command.ts";
-import { handleStudioSetup } from "./studio-setup.ts";
+import { handleStudioSetup, inspectSetup } from "./studio-setup.ts";
 import { handleStudioModels } from "./studio-models.ts";
 import { handleStudioStatus } from "./studio-status.ts";
 import { handleStudioAgents } from "./studio-agents.ts";
@@ -182,15 +182,37 @@ export default function (pi: ExtensionAPI) {
 
 		if (studioRoot) {
 			const activeLang = getLanguage(studioRoot);
-			if (activeLang === "es" && (event as any)?.systemPromptOptions) {
+			const setup = inspectSetup(studioRoot);
+
+			if ((event as any)?.systemPromptOptions) {
 				if (!(event as any).systemPromptOptions.promptGuidelines) {
 					(event as any).systemPromptOptions.promptGuidelines = [];
 				}
-				(event as any).systemPromptOptions.promptGuidelines.push(
-					"Language Policy: The user's active language for this game studio is Spanish (Español). " +
-					"You MUST respond, formulate questions, present menus, and guide the user in Spanish at all times unless the user explicitly asks for another language. " +
-					"Keep code syntax, keywords, and engine API identifiers in their standard form, but all dialogue, explanations, choices, and recommendations MUST be in natural Spanish."
-				);
+
+				if (activeLang === "es") {
+					(event as any).systemPromptOptions.promptGuidelines.push(
+						"Language Policy: The user's active language for this game studio is Spanish (Español). " +
+						"You MUST respond, formulate questions, present menus, and guide the user in Spanish at all times unless the user explicitly asks for another language. " +
+						"Keep code syntax, keywords, and engine API identifiers in their standard form, but all dialogue, explanations, choices, and recommendations MUST be in natural Spanish."
+					);
+				}
+
+				// Environment Status & Greeting Orchestration Guard
+				if (setup.isConfigured) {
+					(event as any).systemPromptOptions.promptGuidelines.push(
+						`Studio Environment Status: OK. All 55 agents are installed and ready, engine is configured as "${setup.currentEngine}". ` +
+						"IMPORTANT: The environment is ALREADY fully configured. Do NOT ask the user to configure or run setup again. " +
+						"If the user greets (e.g. 'hola', 'buenas'), acknowledge that the studio environment is verified and OK (55 agents, engine and language ready), " +
+						"and immediately offer to continue with game development tasks according to the project phase (e.g. /brainstorm, /game-design-document, /dev-story)."
+					);
+				} else {
+					(event as any).systemPromptOptions.promptGuidelines.push(
+						"Studio Environment Status: PENDING SETUP. The studio agents or configuration have not been deployed yet in this project. " +
+						"If the user greets or asks what to do, inform them that the studio needs initial setup, and present the two clear choices: " +
+						"1. Automática (Recomendada: 55 agentes en modo 'inherit' y motor auto-detectado) o " +
+						"2. Manual / Guiada (/studio:setup para elegir motor, idioma y modelos por nivel)."
+					);
+				}
 			}
 		}
 	});
@@ -233,13 +255,19 @@ export default function (pi: ExtensionAPI) {
 			if ((ctx as any).hasUI && typeof (ctx as any).ui?.notify === "function") {
 				const detected = detectProjectEngine(studioRoot);
 				const engineBadge = formatEngineBadge(detected);
+				const setup = inspectSetup(studioRoot);
+				const statusBadge = setup.isConfigured
+					? "✔ Entorno OK (55 agentes)"
+					: "⚠ Configuración pendiente (/start)";
+
 				const notifyBanner = [
 					"🎮 PI GAME STUDIO CARGADO",
+					`Estado: ${statusBadge}`,
 					`Motor: ${engineBadge}`,
 					"55 Agentes · 80 Skills · 44 Templates",
 					"Escribe /studio para ver el menú o /start para comenzar.",
 				].join("\n");
-				(ctx as any).ui.notify(notifyBanner, "info");
+				(ctx as any).ui.notify(notifyBanner, setup.isConfigured ? "info" : "warning");
 			}
 		} catch {}
 

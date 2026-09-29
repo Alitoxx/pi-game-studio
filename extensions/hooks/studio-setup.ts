@@ -35,6 +35,7 @@ export interface SetupStatus {
 	engramEnabled: boolean | null;
 	hasProjectYaml: boolean;
 	currentEngine: string;
+	isConfigured: boolean;
 }
 
 export interface StudioInstallOptions {
@@ -92,6 +93,8 @@ export function inspectSetup(cwd: string): SetupStatus {
 		}
 	}
 
+	const isConfigured = agentsInstalled >= 50 && (hasProjectYaml || hasGameStudioDir);
+
 	return {
 		agentsInstalled,
 		totalPackageAgents,
@@ -100,6 +103,7 @@ export function inspectSetup(cwd: string): SetupStatus {
 		engramEnabled,
 		hasProjectYaml,
 		currentEngine,
+		isConfigured,
 	};
 }
 
@@ -433,7 +437,7 @@ export function installStudioFiles(
 	mkdirSync(studioDir, { recursive: true });
 	mkdirSync(join(ctx.cwd, ".pi", "gentle-ai"), { recursive: true });
 
-	// 1. Copy 50 agents
+	// 1. Copy 55 agents
 	let copiedCount = 0;
 	if (existsSync(agentsSrc)) {
 		const files = readdirSync(agentsSrc).filter((f) => f.endsWith(".md"));

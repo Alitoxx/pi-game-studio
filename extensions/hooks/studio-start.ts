@@ -11,6 +11,7 @@ export interface ProjectAudit {
 	srcFileCount: number;
 	hasPrototypes: boolean;
 	agentsInstalled: number;
+	isConfigured: boolean;
 }
 
 export function auditProject(cwd: string): ProjectAudit {
@@ -44,6 +45,7 @@ export function auditProject(cwd: string): ProjectAudit {
 		srcFileCount,
 		hasPrototypes,
 		agentsInstalled: setup.agentsInstalled,
+		isConfigured: setup.isConfigured,
 	};
 }
 
@@ -91,9 +93,9 @@ export async function handleStudioStart(
 		let options: string[] = [];
 		let actions: Array<() => void> = [];
 
-		if (audit.agentsInstalled === 0) {
+		if (!audit.isConfigured) {
 			const setupChoice = await (ctx.ui as any).select(
-				"🎮 Producer: ¡Bienvenido al estudio! Para empezar necesitamos desplegar tu equipo. ¿Cómo prefieres configurarlo?",
+				"🎮 Producer: ¡Bienvenido al estudio! Tu entorno aún no está configurado. ¿Cómo prefieres inicializarlo?",
 				[
 					`⚡ 1. Instalación Automática (Recomendada: 55 agentes en modo 'inherit' que usan tu modelo activo en Pi, motor ${audit.engineName || "Godot 4"} en español)`,
 					"🛠️ 2. Instalación Manual / Guiada (Tú eliges el motor de juego, tu idioma preferido y personalizas los modelos de IA por rol)",
@@ -106,6 +108,7 @@ export async function handleStudioStart(
 			if (choiceIdx === 0) {
 				installStudioFiles(ctx);
 				audit.agentsInstalled = 55;
+				audit.isConfigured = true;
 			} else if (choiceIdx === 1) {
 				const currentStatus = inspectSetup(ctx.cwd);
 				await runGuidedSetup(ctx, currentStatus);
@@ -175,8 +178,12 @@ export async function handleStudioStart(
 }
 
 function displayProjectAudit(ctx: ExtensionContext, a: ProjectAudit): void {
+	const envStatus = a.isConfigured
+		? "✔ Entorno OK (55 agentes)"
+		: "⚠ Incompleto (/studio:setup)";
 	const lines = [
 		"┌── 🎮 PI GAME STUDIO — ESTADO Y DIAGNÓSTICO DEL PROYECTO ───┐",
+		`│ • Estado Ambiente:      ${envStatus.padEnd(36)} │`,
 		`│ • Motor de juego:       ${(a.hasEngine ? `✔ ${a.engineName}` : "⚠ No configurado (/studio:settings)").padEnd(36)} │`,
 		`│ • Concepto de juego:    ${(a.hasConcept ? "✔ game-concept.md" : "Pendiente (/brainstorm)").padEnd(36)} │`,
 		`│ • Documentos de diseño: ${(a.gddCount + " archivos en design/gdd/").padEnd(36)} │`,

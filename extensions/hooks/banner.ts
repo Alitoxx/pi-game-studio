@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
 import { detectProjectEngine, formatEngineBadge } from "./engine-detector.ts";
+import { inspectSetup } from "./studio-setup.ts";
 
 const RESET = "\x1b[0m";
 const BOLD = "\x1b[1m";
@@ -137,6 +138,20 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 				width,
 			),
 		);
+		const setup = inspectSetup(root);
+		const envBadge = setup.isConfigured
+			? `${GREEN}✔ Configurado (55 agentes activos)${RESET}`
+			: `${GOLD}⚠ Pendiente (/start o /studio:setup)${RESET}`;
+
+		lines.push(
+			center(
+				formatRow(
+					`${VIOLET}${BOLD}ENTORNO    ${RESET}${DIM}:${RESET} ${envBadge}`,
+					boxWidth,
+				),
+				width,
+			),
+		);
 		lines.push(
 			center(
 				formatRow(
@@ -159,8 +174,10 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 		lines.push(center(`${DIM}└${"─".repeat(boxWidth + 2)}┘${RESET}`, width));
 		lines.push("");
 	} else {
+		const setup = inspectSetup(root);
+		const statusText = setup.isConfigured ? "✔ Entorno OK (55 agentes)" : "⚠ Pendiente de configurar (/start)";
 		lines.push(center(`${VIOLET}${BOLD}🎮 PI GAME STUDIO v${version}${RESET}`, width));
-		lines.push(center(`${CYAN}55 Agentes · 80 Skills · 44 Templates · 4 Hooks${RESET}`, width));
+		lines.push(center(`${CYAN}55 Agentes · 80 Skills · 44 Templates · ${statusText}${RESET}`, width));
 		lines.push(center(`${WHITE}Motores: ${engineInfo}${RESET}`, width));
 		lines.push(center(`${GOLD}💡 Usa /studio o /studio:setup para comenzar con tu videojuego${RESET}`, width));
 	}

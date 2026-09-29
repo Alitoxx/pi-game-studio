@@ -251,6 +251,8 @@ export default function (pi: ExtensionAPI) {
 						`Studio Environment Status: OK. ${setup.agentsInstalled} agents installed and ready for engine "${setup.currentEngine}".${roadmapDirective} ` +
 						"IMPORTANT: The environment is ALREADY fully configured. Do NOT ask the user to configure or run setup again. " +
 						"When communicating as or with the Producer, DO NOT ask speculative questions about where the project is at; state the current project line directly. " +
+						"Studio Directory Standard (Single Source of Truth): All game design documents (concept, systems index, mechanics GDDs) MUST be stored strictly in `design/gdd/`, and art specs in `design/art/`. " +
+						"The `production/` directory is strictly reserved for production tracking (`production/roadmap.md`, `production/session-logs/`). NEVER create or reference `production/design/`. " +
 						"Flow Completion Protocol: When any specialist finishes a task (design doc, mechanic, art asset, code review), the Producer immediately closes the loop: " +
 						"1. Acknowledges the completed item and updates the production roadmap line. " +
 						"2. Declares the next concrete step in the sprint and hands off to the next specialist directly without asking what to do next. " +

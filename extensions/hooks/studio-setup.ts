@@ -577,26 +577,10 @@ export function installStudioFiles(
 	}
 	writeFileSync(projectYamlPath, yamlContent, "utf8");
 
-	// 5. Establish standard design directory and seamless compatibility links
-	const designDir = join(ctx.cwd, "design");
-	const designGddDir = join(designDir, "gdd");
-	const prodDesignDir = join(ctx.cwd, "production", "design");
-	mkdirSync(designGddDir, { recursive: true });
-	mkdirSync(prodDesignDir, { recursive: true });
-
-	// Cross-link design and production/design so both conventions work transparently
-	try {
-		const symlinkTarget = join(prodDesignDir, "gdd");
-		if (!existsSync(symlinkTarget)) {
-			let isSymlink = false;
-			try {
-				isSymlink = lstatSync(symlinkTarget).isSymbolicLink();
-			} catch {}
-			if (!isSymlink) {
-				symlinkSync("../../design/gdd", symlinkTarget, "dir");
-			}
-		}
-	} catch {}
+	// 5. Establish standard project structure: design/ (GDDs & Art) and production/ (Tracking & Sprints)
+	mkdirSync(join(ctx.cwd, "design", "gdd"), { recursive: true });
+	mkdirSync(join(ctx.cwd, "design", "art"), { recursive: true });
+	mkdirSync(join(ctx.cwd, "production"), { recursive: true });
 
 	// 6. Configure language preference
 	if (options.language) {

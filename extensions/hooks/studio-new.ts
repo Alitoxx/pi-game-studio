@@ -100,22 +100,22 @@ export async function handleStudioNew(
 
 	if (!selectedStarter) {
 		if (ctx.hasUI && typeof (ctx.ui as any)?.select === "function") {
-			const options = starters.map((s) => ({
-				value: s.id,
-				label: `🎮 ${s.name} (${s.engine} · ${s.language})`,
-				description: s.description,
-			}));
+			const options = starters.map(
+				(s) => `🎮 ${s.name} (${s.engine} · ${s.language}) — ${s.description}`,
+			);
 
-			const choice = await (ctx.ui as any).select({
-				title: "🎮 Pi Game Studio — Crear nuevo juego desde plantilla",
+			const selected = await (ctx.ui as any).select(
+				"🎮 Pi Game Studio — Crear nuevo juego desde plantilla",
 				options,
-			});
+			);
 
-			if (!choice) {
+			if (selected === undefined || selected === null) {
 				console.log("Creación cancelada.");
 				return;
 			}
-			selectedStarter = starters.find((s) => s.id === choice);
+			const idx = typeof selected === "number" ? selected : options.indexOf(selected);
+			if (idx === -1) return;
+			selectedStarter = starters[idx];
 		} else {
 			console.log("");
 			console.log(

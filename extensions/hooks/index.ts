@@ -270,7 +270,7 @@ export default function (pi: ExtensionAPI) {
 					if (hasRoadmap && prodState?.gameTitle) {
 						roadmapDirective = ` Active Project Line: Game="${prodState.gameTitle}", Engine="${prodState.engine || setup.currentEngine}", Milestone="${prodState.milestone || 'In progress'}", Sprint="${prodState.sprint || 'Active'}", InProgress="${prodState.inProgress || 'Development'}", NextStep="${prodState.nextStep || 'Continue development'}".`;
 					} else {
-						roadmapDirective = " Active Project Line: Concept & Inception phase (no active production/roadmap.md yet).";
+						roadmapDirective = " Active Project Line: Concept & Inception phase (no concept doc or prototype yet). In this phase, do NOT suggest downstream tasks like mapping systems or defining an art bible, as those strictly require a concept first. The only valid starting actions are: 1. Brainstorm concept (/brainstorm), 2. Write concept from user premise, or 3. Code-first prototype starter (/studio:new).";
 					}
 
 					event.systemPromptOptions.promptGuidelines.push(

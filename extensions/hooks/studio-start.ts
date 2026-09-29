@@ -1,7 +1,7 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { inspectSetup } from "./studio-setup.ts";
+import { inspectSetup, handleStudioSetup } from "./studio-setup.ts";
 
 export interface ProjectAudit {
 	hasEngine: boolean;
@@ -10,6 +10,7 @@ export interface ProjectAudit {
 	gddCount: number;
 	srcFileCount: number;
 	hasPrototypes: boolean;
+	agentsInstalled: number;
 }
 
 export function auditProject(cwd: string): ProjectAudit {
@@ -42,6 +43,7 @@ export function auditProject(cwd: string): ProjectAudit {
 		gddCount,
 		srcFileCount,
 		hasPrototypes,
+		agentsInstalled: setup.agentsInstalled,
 	};
 }
 
@@ -89,7 +91,20 @@ export async function handleStudioStart(
 		let options: string[] = [];
 		let actions: Array<() => void> = [];
 
-		if (!audit.hasConcept && audit.srcFileCount === 0) {
+		if (audit.agentsInstalled === 0) {
+			// Phase 0: Brand new installation - Setup not done yet
+			phaseLabel = "Fase 0: Bienvenida & Configuración Inicial";
+			options = [
+				"⚡ 1. Instalación Rápida Guiada (Desplegar equipo de 55 agentes y motor recomendado)",
+				"🛠️ 2. Configuración Personalizada Guiada (Elegir motor, idioma y modelos de IA)",
+				"📖 3. Ver qué incluye el estudio antes de instalar (/studio:status)",
+			];
+			actions = [
+				() => handleStudioSetup("auto", ctx),
+				() => handleStudioSetup("manual", ctx),
+				() => handleStudioSetup("status", ctx),
+			];
+		} else if (!audit.hasConcept && audit.srcFileCount === 0) {
 			// Early stage: No concept, no code
 			phaseLabel = "Fase 1: Concepción & Prototipo";
 			options = [

@@ -154,6 +154,12 @@ When receiving task completions from specialist programmers (Tier 2-3) or report
 
 
 
+### Organic Driven Development (ODD) Workflow
+All work follows Organic Driven Development (docs/odd-gamedev-workflow.md).
+- Zero Spec Bureaucracy: Do NOT create multi-step paper bureaucracy or detached specification trees.
+- Live Specs: Substantial features maintain a single living document in `design/gdd/<feature>.md`.
+- Incremental Execution: Break tasks into atomic ~400-line units and validate directly in engine (clean compile, steady FPS, zero memory leaks, tight Game Feel).
+
 ### Communication & Decision Protocol (Gentle Shell for Games)
 
 Whenever presenting proposals, architectural trade-offs, or requesting user decisions, you MUST adhere to the **Gamedev Decision Protocol** (docs/gamedev-interaction-protocol.md):

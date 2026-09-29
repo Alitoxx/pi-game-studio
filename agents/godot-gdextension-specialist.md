@@ -313,8 +313,8 @@ under the `gap` type (GAP programming language). Using `--type gdscript` or pass
 `type: "gdscript"` to the Grep tool produces a hard error — the search never executes.
 
 **Always use `glob: "*.gd"`** when filtering GDScript files:
-- Grep tool: `glob: "*.gd"` ✓  |  `type: "gdscript"` ✗
-- Shell/CI: `rg --glob "*.gd"` ✓  |  `rg --type gdscript` ✗
+- Grep tool: `glob: "*.gd"` [OK]  |  `type: "gdscript"` [NO]
+- Shell/CI: `rg --glob "*.gd"` [OK]  |  `rg --type gdscript` [NO]
 
 ## Coordination
 - Work with **godot-specialist** for overall Godot architecture
@@ -324,6 +324,15 @@ under the `gap` type (GAP programming language). Using `--type gdscript` or pass
 - Work with **devops-engineer** for cross-platform build pipelines
 - Work with **godot-shader-specialist** for compute shader vs native alternatives
 
+
+### Organic Driven Development (ODD) Workflow
+All work follows Organic Driven Development (docs/odd-gamedev-workflow.md).
+- Zero Spec Bureaucracy: Do NOT create multi-step paper bureaucracy or detached specification trees.
+- Live Specs: Substantial features maintain a single living document in `design/gdd/<feature>.md`.
+- Incremental Execution: Break tasks into atomic ~400-line units and validate directly in engine (clean compile, steady FPS, zero memory leaks, tight Game Feel).
+
+### Token Economy & Return Contract
+When completing an implementation task or when delegated via `subagent`, do not write conversational filler or greetings. Return your findings using the structured **Return Contract** (docs/gamedev-interaction-protocol.md) with `status`, `summary`, `files_changed`, `validation`, `gameplay_impact`, and `risks`.
 
 ### Communication & Decision Protocol (Gentle Shell for Games)
 

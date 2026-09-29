@@ -189,9 +189,9 @@ export default function (pi: ExtensionAPI) {
 
 	// ──────────────────────────────────────────────
 	// Hook: Agent turn & language policy enforcement
-	// Logs agent calls and injects active language rules
+	// Logs agent calls and injects active language rules & producer guidance
 	// ──────────────────────────────────────────────
-	pi.on("turn_start", async (event, ctx) => {
+	const handleAgentTurnStart = async (event: any, ctx: ExtensionContext) => {
 		const logDir = join(ctx.cwd, "production", "session-logs");
 		await mkdir(logDir, { recursive: true }).catch(() => {});
 
@@ -205,13 +205,13 @@ export default function (pi: ExtensionAPI) {
 			const activeLang = getLanguage(studioRoot);
 			const setup = inspectSetup(studioRoot);
 
-			if ((event as any)?.systemPromptOptions) {
-				if (!(event as any).systemPromptOptions.promptGuidelines) {
-					(event as any).systemPromptOptions.promptGuidelines = [];
+			if (event?.systemPromptOptions) {
+				if (!event.systemPromptOptions.promptGuidelines) {
+					event.systemPromptOptions.promptGuidelines = [];
 				}
 
 				if (activeLang === "es") {
-					(event as any).systemPromptOptions.promptGuidelines.push(
+					event.systemPromptOptions.promptGuidelines.push(
 						"Language Policy: The user's active language for this game studio is Spanish (Español). " +
 						"You MUST respond, formulate questions, present menus, and guide the user in Spanish at all times unless the user explicitly asks for another language. " +
 						"Keep code syntax, keywords, and engine API identifiers in their standard form, but all dialogue, explanations, choices, and recommendations MUST be in natural Spanish."
@@ -228,7 +228,7 @@ export default function (pi: ExtensionAPI) {
 						roadmapDirective = " Active Project Line: Concept & Inception phase (no active production/roadmap.md yet).";
 					}
 
-					(event as any).systemPromptOptions.promptGuidelines.push(
+					event.systemPromptOptions.promptGuidelines.push(
 						`Studio Environment Status: OK. All 55 agents are installed and ready, engine is configured as "${setup.currentEngine}".${roadmapDirective} ` +
 						"IMPORTANT: The environment is ALREADY fully configured. Do NOT ask the user to configure or run setup again. " +
 						"When communicating as or with the Producer, DO NOT ask speculative questions about where the project is at; state the current project line directly. " +
@@ -238,7 +238,7 @@ export default function (pi: ExtensionAPI) {
 						"If the user greets (e.g. 'hola', 'buenas'), acknowledge the OK environment and IMMEDIATELY state the exact current line and next concrete action without waiting."
 					);
 				} else {
-					(event as any).systemPromptOptions.promptGuidelines.push(
+					event.systemPromptOptions.promptGuidelines.push(
 						"Studio Environment Status: PENDING SETUP. The studio agents or configuration have not been deployed yet in this project. " +
 						"If the user greets or asks what to do, inform them that the studio needs initial setup, and present the two clear choices: " +
 						"1. Automática (Recomendada: 55 agentes en modo 'inherit' y motor auto-detectado) o " +
@@ -247,7 +247,10 @@ export default function (pi: ExtensionAPI) {
 				}
 			}
 		}
-	});
+	};
+
+	pi.on("before_agent_start" as any, handleAgentTurnStart);
+	pi.on("turn_start", handleAgentTurnStart);
 
 	// ──────────────────────────────────────────────
 	// Hook: Session start (banner + gap detection)

@@ -236,27 +236,42 @@ Type `/` in Pi to browse all 80 skills:
 - [Pi](https://pi.dev) (`npm install -g @earendil-works/pi-coding-agent`)
 - [Git](https://git-scm.com/)
 
-### Install
+### Install (Isolated to your game project — Recommended)
+
+To keep your game studio tools completely isolated to your game folder and avoid polluting other projects (like Gentle Shell or web apps), always install locally using the `-l` flag:
 
 ```bash
-pi install git:github.com/<your-org>/pi-game-studio
+# 1. Create and enter your game project folder
+mkdir my-game
+cd my-game
+
+# 2. Install Pi Game Studio locally in this project
+pi install git:github.com/AlexisSan/pi-game-studio -l
 ```
 
-Or from a local path during development:
+> 💡 **Development mode**: If you cloned the repo locally, link it with:
+> ```bash
+> pi install /path/to/pi-game-studio -l
+> ```
+
+### Setup & Onboarding
+
+Start `pi` inside your game folder:
 
 ```bash
-pi install ./pi-game-studio -l
+pi
 ```
 
-### Setup
+The violet **Pi Game Studio** dashboard will welcome you automatically. Then run the setup assistant:
 
 ```bash
-/setup
+/studio:setup auto
 ```
+*(Or `/studio:setup manual` to interactively choose your engine, language, and AI models).*
 
-This copies the 50 agents to `.pi/agents/` and creates `.pi/gentle-ai/models.json` with the default model mapping.
+This deploys the 55 agents to `.pi/agents/`, configures `.pi/gentle-ai/models.json`, and sets up `project.yaml`.
 
-### Start
+### Start Developing
 
 ```bash
 /start
@@ -264,10 +279,12 @@ This copies the 50 agents to `.pi/agents/` and creates `.pi/gentle-ai/models.jso
 
 The system asks where you are — no idea, vague concept, clear design, or existing work — and guides you to the right workflow. No assumptions.
 
-Or jump directly to a specific skill:
+Or jump directly to a specific skill or template:
 
+- `/studio:new` — instantiate a ready-to-run starter (Bevy 2D ARPG, Raylib C++ EnTT, or Godot 4)
 - `/brainstorm` — explore game ideas from scratch
-- `/setup-engine godot 4.6` — configure your engine
+- `/setup-engine godot 4.3` — configure your engine
+- `/studio:doctor` — audit your local toolchain, compilers, and SDKs
 - `/project-stage-detect` — analyze an existing project
 
 ### Customize models (optional)

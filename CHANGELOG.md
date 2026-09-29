@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.3] - 2026-09-29
+
+### Added
+- **Aislamiento Local Inmediato y Reconocimiento de Raíz (`studio-root.ts`)**:
+  - Detección automática de Pi Game Studio en carpetas vinculadas mediante `.pi/settings.json` local.
+  - El dashboard y banner de bienvenida de Pi Game Studio ahora se muestran de inmediato al abrir `pi` en cualquier proyecto recién enlazado con `pi install ... -l`, sin requerir comandos intermedios.
+  - Documentación de instalación limpia y aislada por proyecto con flag `-l` para evitar contaminación cruzada con herramientas globales o Gentle Shell.
+
+### Fixed
+- **Firma de Parámetros en TUI Selector (`studio-new.ts`)**:
+  - Corregido el llamado a `ctx.ui.select` en `/studio:new`, pasando `(prompt, optionsArray)` en lugar de un objeto, eliminando el crash `Cannot read properties of undefined (reading 'length')`.
+
+---
+
 ## [0.8.2] - 2026-09-27
 
 ### Added

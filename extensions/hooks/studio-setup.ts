@@ -5,6 +5,8 @@ import {
 	writeFileSync,
 	mkdirSync,
 	readdirSync,
+	symlinkSync,
+	lstatSync,
 } from "node:fs";
 import { join, resolve } from "node:path";
 import { promptModelForRole } from "./provider-resolver.ts";
@@ -575,12 +577,33 @@ export function installStudioFiles(
 	}
 	writeFileSync(projectYamlPath, yamlContent, "utf8");
 
-	// 5. Configure language preference
+	// 5. Establish standard design directory and seamless compatibility links
+	const designDir = join(ctx.cwd, "design");
+	const designGddDir = join(designDir, "gdd");
+	const prodDesignDir = join(ctx.cwd, "production", "design");
+	mkdirSync(designGddDir, { recursive: true });
+	mkdirSync(prodDesignDir, { recursive: true });
+
+	// Cross-link design and production/design so both conventions work transparently
+	try {
+		const symlinkTarget = join(prodDesignDir, "gdd");
+		if (!existsSync(symlinkTarget)) {
+			let isSymlink = false;
+			try {
+				isSymlink = lstatSync(symlinkTarget).isSymbolicLink();
+			} catch {}
+			if (!isSymlink) {
+				symlinkSync("../../design/gdd", symlinkTarget, "dir");
+			}
+		}
+	} catch {}
+
+	// 6. Configure language preference
 	if (options.language) {
 		writeFileSync(join(studioDir, "language"), options.language, "utf8");
 	}
 
-	// 5. Install log
+	// 7. Install log
 	const logPath = join(studioDir, "install-log.md");
 	const logEntry = `\n## Setup: ${new Date().toISOString()}\n- Agents installed: ${copiedCount}\n- Engine: ${engine}\n- Language: ${options.language || "es"}\n- Source: ${pkgRoot}\n`;
 	const currentLog = existsSync(logPath) ? readFileSync(logPath, "utf8") : "# Pi Game Studio Install Log\n";

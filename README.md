@@ -111,9 +111,10 @@ Tier 3 — Specialists
 
 > 📖 **Manuales y Herramientas del Estudio**:
 > - [`AGENTS.md`](AGENTS.md): Directorio completo y responsabilidades de los **55 agentes**.
-> - [`docs/gamedev-interaction-protocol.md`](docs/gamedev-interaction-protocol.md): **Protocolo de Respuestas y Decisiones** (Pillars Header, Trade-offs Matrix, Choice Envelopes, Radar, Return Contracts y **Flow Completion Protocol**).
+> - [`docs/gamedev-interaction-protocol.md`](docs/gamedev-interaction-protocol.md): **Protocolo de Respuestas y Decisiones (Gentle Shell for Games)** — Bloque 0: *Executive Delivery & Zero Bleed*, Pillars Header, Trade-offs Matrix, Choice Envelopes, Radar, Return Contracts y **Flow Completion Protocol**.
 > - [`docs/skills-reference.md`](docs/skills-reference.md): Catálogo de las **80 skills** y comandos `studio:*` organizados por fases.
-> - **Diagnóstico y Salud de Entorno**: Detección automática al iniciar o decir *"hola"* (`Estado: ✔ Entorno OK`), con setup Automático o Manual sin preguntas redundantes.
+> - **Única Fuente de Verdad (Single Source of Truth)**: `design/gdd/` y `design/art/` exclusivos para diseño y arte; `production/` exclusivo para roadmaps y sprints.
+> - **Diagnóstico y Salud de Entorno**: Detección automática al iniciar o decir *"hola"` (`Estado: ✔ Entorno OK`), con setup Automático o Manual sin preguntas redundantes.
 > - **Brújula de Producción del Producer**: Lectura y actualización automática de `production/roadmap.md` (`<!-- PRODUCER_STATE -->`) para saber en qué línea va el proyecto en todo momento.
 > - **Diagnóstico Multiplataforma (`/studio:doctor`)**: Auditoría automática de compiladores, toolchains y SDKs locales para los 5 motores (macOS, Linux y Windows).
 

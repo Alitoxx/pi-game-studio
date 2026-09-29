@@ -59,13 +59,14 @@ Para evitar saturar `.pi/agents/` con especialistas de motores no utilizados, el
 ## Protocolo de Interacción y Decisiones (Gamedev Decision Protocol)
 
 Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar de alta fidelidad inspirado en **Gentle Shell** adaptado a videojuegos ([`docs/gamedev-interaction-protocol.md`](docs/gamedev-interaction-protocol.md)):
-1. **Pillars & Constraints Header**: Contexto del juego, género, target y pilares siempre visibles.
-2. **Gameplay & Technical Trade-offs Matrix**: Evaluación rigurosa de *Alternativa vs. Game Feel vs. FPS vs. Costo/Scope*.
-3. **Director Gate / Technical Verdict**: Recomendación vinculante fundamentada del Lead/Director responsable.
-4. **Choice Envelope**: Menú cerrado, numerado y sin opciones ambiguas.
-5. **Radar de Próximos Pasos & Recibos de Entrega**: Acciones siguientes claras con sus comandos ejecutables.
-6. **Return Contract de Especialistas**: En delegaciones `subagent`, los especialistas devuelven exclusivamente un bloque YAML compacto (`status`, `summary`, `files_changed`, `validation`, `gameplay_impact`) eliminando prosa conversacional redundante.
-7. **Flow Completion & Producer Auto-Handoff Protocol**: Cierre automático de tareas con actualización instantánea de `production/roadmap.md` (`<!-- PRODUCER_STATE -->`) y relevo directo al siguiente especialista sin preguntas especulativas.
+1. **Executive Delivery & Zero Bleed**: Prohibido volcar monólogos internos, tablas raw de 20+ filas o trazas de ejecución en el chat. Los datos exhaustivos viven en disco (`design/gdd/`); el chat es para síntesis ejecutiva (10-15 líneas) y decisiones.
+2. **Pillars & Constraints Header**: Contexto del juego, género, target y pilares siempre visibles.
+3. **Gameplay & Technical Trade-offs Matrix**: Evaluación rigurosa de *Alternativa vs. Game Feel vs. FPS vs. Costo/Scope*.
+4. **Director Gate / Technical Verdict**: Recomendación vinculante fundamentada del Lead/Director responsable.
+5. **Choice Envelope**: Menú cerrado, numerado y sin opciones ambiguas.
+6. **Radar de Próximos Pasos & Recibos de Entrega**: Acciones siguientes claras con sus comandos ejecutables.
+7. **Return Contract de Especialistas**: En delegaciones `subagent`, los especialistas devuelven exclusivamente un bloque YAML compacto (`status`, `summary`, `files_changed`, `validation`, `gameplay_impact`) eliminando prosa conversacional redundante.
+8. **Flow Completion & Producer Auto-Handoff Protocol**: Cierre automático de tareas con actualización instantánea de `production/roadmap.md` (`<!-- PRODUCER_STATE -->`) y relevo directo al siguiente especialista sin preguntas especulativas.
 
 ---
 

@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.6] - 2026-09-29
+
+### Added
+- **Gentle Shell Interaction Standards (Executive Delivery & Zero Bleed)**:
+  - Integrado formalmente el **Bloque 0: Executive Delivery & Zero Bleed** en [`docs/gamedev-interaction-protocol.md`](docs/gamedev-interaction-protocol.md).
+  - Actualizados los **55 archivos de agentes** en `agents/*.md` con la directiva explícita de comunicación Gentle Shell.
+  - Prohibido volcar borradores internos, tablas raw de 20+ filas o desgloses paso a paso en el chat: las especificaciones exhaustivas viven exclusivamente en disco (`design/gdd/systems-index.md`).
+  - Prohibido exponer nombres de gates internos de prompts (`TD-SYSTEM-BOUNDARY`, `PR-SCOPE`, `CD-SYSTEMS`) o trazas de ejecución en las respuestas del chat.
+  - El orquestador entrega únicamente síntesis ejecutivas concisas (10-15 líneas) con Choice Envelopes cerrados (`[1]`, `[2]`, `[3]`) y Recibos de Entrega.
+- **Unificación de Rutas (Single Source of Truth)**:
+  - Eliminada la duplicación y confusión de rutas entre `design/gdd/` y `production/design/`.
+  - Estándar estricto del estudio:
+    - `design/gdd/` y `design/art/`: Única fuente de verdad para el diseño de juego, mecánicas, conceptos y arte.
+    - `production/`: Única fuente para seguimiento de proyectos (`production/roadmap.md`, `production/session-logs/`).
+
+### Fixed
+- **Corrección de Bug Latente en `runGuidedSetup`**:
+  - Reemplazada la llamada inexistente a `handleManualSetup` por `runGuidedSetup` al volver a elegir motor tras la auditoría de prerrequisitos.
+- **Limpieza de Código Muerto**:
+  - Eliminados imports obsoletos (`symlinkSync`, `lstatSync`) en `studio-setup.ts`.
+
+---
+
 ## [0.8.5] - 2026-09-29
 
 ### Added

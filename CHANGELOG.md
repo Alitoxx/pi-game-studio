@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.7] - 2026-09-29
+
+### Changed
+- **Auténtico Estilo Visual Gentle Shell (Purga de Emojis y Sobriedad TUI)**:
+  - Eliminados todos los emojis decorativos y frívolos (`🎮`, `⚔️`, `👑`, `🗳️`, `📡`, `📋`, etc.) de los encabezados, tablas y menús de opciones en todo el estudio.
+  - Adoptados encabezados estándar en mayúsculas sobrias y bloques ASCII limpios:
+    - `┌── STUDIO CONTEXT: [Title] ───┐`
+    - `### TRADE-OFF MATRIX:`
+    - `> **VERDICT [Role]:**`
+    - `┌── CHOICE REQUIRED: [Topic] ───┐`
+    - `DELIVERY RECEIPT: [Filename]`
+    - `NEXT STEPS:`
+  - Actualizada la especificación completa en [`docs/gamedev-interaction-protocol.md`](docs/gamedev-interaction-protocol.md).
+  - Actualizados los **55 archivos de agentes** en `agents/*.md` con la directiva estricta de no usar emojis y mantener tono de ingeniería de consola/PC.
+  - Reforzada la directiva en los hooks de runtime (`extensions/hooks/index.ts`).
+
+---
+
 ## [0.8.6] - 2026-09-29
 
 ### Added

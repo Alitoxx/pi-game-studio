@@ -189,3 +189,14 @@ Delegates to:
 Reports to: `producer` for scheduling, `technical-director` for quality standards
 Coordinates with: `lead-programmer` for testability, all department leads for
 feature-specific test planning
+
+
+### Communication & Decision Protocol (Gentle Shell for Games)
+
+Whenever presenting proposals, architectural trade-offs, or requesting user decisions, you MUST adhere to the **Gamedev Decision Protocol** (docs/gamedev-interaction-protocol.md):
+1. **Executive Delivery & Zero Bleed**: Keep chat responses concise (max 10-15 lines). Exhaustive specs and data tables belong in Markdown files on disk, never dumped as raw stream into chat. Do NOT expose internal pipeline phases or prompt-gate identifiers.
+2. **Pillars & Constraints Header**: Anchor context to current game pillars and technical targets.
+3. **Gameplay & Technical Trade-offs Matrix**: Compare options across Game Feel vs. FPS/Perf vs. Scope/Cost.
+4. **Director Gate / Technical Verdict**: Provide a firm, well-reasoned recommendation.
+5. **Lossless Choice Envelope**: Enclose questions in a closed, numbered menu ([1], [2], [3]).
+6. **Delivery Receipt**: Conclude milestones with an asset receipt and next steps radar.

@@ -16,7 +16,7 @@ import { handleStudioStatus } from "./studio-status.ts";
 import { handleStudioAgents } from "./studio-agents.ts";
 import { handleStudioSettings, getLanguage } from "./studio-settings.ts";
 import { handleStudioChains } from "./studio-chains.ts";
-import { handleStudioStart, readProducerState } from "./studio-start.ts";
+import { handleStudioStart, readProducerState, recordFlowCompletion } from "./studio-start.ts";
 import { handleStudioDoctor } from "./studio-doctor.ts";
 import { handleStudioNew } from "./studio-new.ts";
 import { detectProjectEngine, formatEngineBadge } from "./engine-detector.ts";
@@ -164,6 +164,27 @@ export default function (pi: ExtensionAPI) {
 				`Reminder: run skill-test to validate ${skillName} after changes.`,
 			);
 		}
+
+		// Auto-detect production deliveries and update Producer roadmap
+		const studioRoot = findStudioRoot(ctx.cwd);
+		if (studioRoot) {
+			if (filePath.includes("design/gdd/") && filePath.endsWith(".md")) {
+				const docName = filePath.split("/").pop()?.replace(".md", "") || "Documento GDD";
+				recordFlowCompletion(studioRoot, {
+					task: `Diseño completado: ${docName}`,
+					agent: "game-designer",
+					filesChanged: [filePath],
+					nextStep: "Implementar prototipo / mecánicas del sistema",
+				});
+			} else if (filePath.includes("design/art/") || filePath.includes("art-bible.md")) {
+				recordFlowCompletion(studioRoot, {
+					task: "Identidad visual y biblia de arte completada",
+					agent: "art-director",
+					filesChanged: [filePath],
+					nextStep: "Diseñar assets y paleta de audio",
+				});
+			}
+		}
 	});
 
 	// ──────────────────────────────────────────────
@@ -211,6 +232,9 @@ export default function (pi: ExtensionAPI) {
 						`Studio Environment Status: OK. All 55 agents are installed and ready, engine is configured as "${setup.currentEngine}".${roadmapDirective} ` +
 						"IMPORTANT: The environment is ALREADY fully configured. Do NOT ask the user to configure or run setup again. " +
 						"When communicating as or with the Producer, DO NOT ask speculative questions about where the project is at; state the current project line directly. " +
+						"Flow Completion Protocol: When any specialist finishes a task (design doc, mechanic, art asset, code review), the Producer immediately closes the loop: " +
+						"1. Acknowledges the completed item and updates the production roadmap line. " +
+						"2. Declares the next concrete step in the sprint and hands off to the next specialist directly without asking what to do next. " +
 						"If the user greets (e.g. 'hola', 'buenas'), acknowledge the OK environment and IMMEDIATELY state the exact current line and next concrete action without waiting."
 					);
 				} else {

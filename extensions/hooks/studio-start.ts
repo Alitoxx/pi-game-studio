@@ -1,5 +1,5 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { inspectSetup, installStudioFiles, runGuidedSetup } from "./studio-setup.ts";
 
@@ -10,6 +10,68 @@ export interface ProducerState {
 	sprint?: string;
 	inProgress?: string;
 	nextStep?: string;
+}
+
+export interface FlowCompletionReceipt {
+	task: string;
+	agent?: string;
+	filesChanged?: string[];
+	nextStep?: string;
+}
+
+export function recordFlowCompletion(cwd: string, receipt: FlowCompletionReceipt): void {
+	const prodDir = join(cwd, "production");
+	mkdirSync(prodDir, { recursive: true });
+	const roadmapPath = join(prodDir, "roadmap.md");
+
+	const { hasRoadmap, state } = readProducerState(cwd);
+	const gameTitle = state?.gameTitle || "Mi Videojuego";
+	const engine = state?.engine || "Bevy";
+	const milestone = state?.milestone || "M1 — Prototipo Jugable";
+	const sprint = state?.sprint || "Sprint 1";
+	const next = receipt.nextStep || state?.nextStep || "Siguiente tarea de desarrollo";
+
+	const newBlock = [
+		"<!-- PRODUCER_STATE -->",
+		`Juego: ${gameTitle}`,
+		`Motor: ${engine}`,
+		`Hito Actual: ${milestone}`,
+		`Sprint Activo: ${sprint}`,
+		`Última Tarea Completada: ${receipt.task}`,
+		`En Progreso: ${next}`,
+		`Siguiente Paso: ${next}`,
+		`Actualizado: ${new Date().toISOString()}`,
+		"<!-- /PRODUCER_STATE -->",
+	].join("\n");
+
+	if (hasRoadmap && existsSync(roadmapPath)) {
+		try {
+			let content = readFileSync(roadmapPath, "utf8");
+			if (/<!--\s*PRODUCER_STATE\s*[\s\S]*?<!--\s*\/PRODUCER_STATE\s*-->/i.test(content)) {
+				content = content.replace(
+					/<!--\s*PRODUCER_STATE\s*[\s\S]*?<!--\s*\/PRODUCER_STATE\s*-->/i,
+					newBlock,
+				);
+			} else {
+				content = newBlock + "\n\n" + content;
+			}
+			writeFileSync(roadmapPath, content, "utf8");
+		} catch {}
+	} else {
+		const initialRoadmap = [
+			`# 🗺️ Roadmap de Producción — ${gameTitle}`,
+			"",
+			newBlock,
+			"",
+			"## 🎯 Hitos del Proyecto",
+			"",
+			`### 🟡 ${milestone}`,
+			`- [x] ${receipt.task}`,
+			`- [/] ${next}`,
+			"",
+		].join("\n");
+		writeFileSync(roadmapPath, initialRoadmap, "utf8");
+	}
 }
 
 export interface ProjectAudit {

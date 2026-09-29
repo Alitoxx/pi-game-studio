@@ -134,3 +134,17 @@ next_recommended_specialist: <especialista que debe continuar la tarea>
 ```
 
 **Regla de oro de tokens**: Si la tarea fue completada exitosamente, el especialista devuelve solo el bloque estructurado anterior. El Director o Lead sintetiza para el usuario sin duplicar información.
+
+---
+
+## 7. Flow Completion & Producer Auto-Handoff Protocol
+
+Para mantener el ritmo de desarrollo sin fricciones ni preguntas redundantes:
+
+1. **Captura Automática de Entregas**: Cuando un especialista genera un documento (`design/gdd/*.md`, `design/art/*.md`) o modifica código de mecánicas, el hook del estudio invoca `recordFlowCompletion()` y actualiza el roadmap de producción (`production/roadmap.md`).
+2. **Cierre de Ciclo del Producer**:
+   - El Producer valida el recibo de entrega.
+   - Marca la tarea previa como completada `[x]`.
+   - Declara la siguiente tarea del sprint y pasa el control al siguiente especialista de forma directa, sin preguntar al usuario *"¿qué hacemos ahora?"*.
+3. **Persistencia en `production/roadmap.md`**: El bloque `<!-- PRODUCER_STATE -->` se mantiene como la única fuente de verdad (Single Source of Truth) para la sesión actual y futuras sesiones.
+

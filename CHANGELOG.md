@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.4] - 2026-09-29
+
+### Added
+- **Detección Automática de Salud del Entorno (`isConfigured`)**:
+  - Implementada inspección inteligente en `inspectSetup()` y `turn_start`: al iniciar Pi o escribir `"hola"`, el orquestador valida si los 55 agentes, el motor y las configuraciones están listos.
+  - Si el ambiente está OK, confirma el estado del estudio y entra directo a la fase del proyecto sin preguntas de setup innecesarias.
+  - Si el entorno está pendiente de configuración, ofrece de inmediato la elección clara entre **Instalación Automática** (recomendada, 55 agentes en modo 'inherit' y motor auto-sniffed) o **Instalación Manual / Guiada** (elección de motor, idioma y modelos).
+  - Badge de salud de entorno añadido al banner TUI y a la notificación de arranque de sesión.
+- **Seguimiento Directo de Línea de Producción para el Producer**:
+  - El Producer ahora lee directamente `production/roadmap.md` (`<!-- PRODUCER_STATE -->`) para conocer con precisión el juego, hito activo, sprint en curso y siguiente tarea concreta.
+  - Eliminadas las preguntas especulativas redundantes: el Producer toma el liderazgo directo del proyecto y presenta el siguiente paso sin rodeos.
+- **Protocolo de Cierre Automático de Flujo (Flow Completion Protocol)**:
+  - Nueva utilidad `recordFlowCompletion()` y captura automática de entregas en `tool_call`: al escribir artefactos en `design/gdd/` o `design/art/`, el roadmap se actualiza automáticamente con la tarea completada `[x]` y el relevo al siguiente especialista.
+
+### Fixed
+- **Homologación de Conteos y Textos de Agentes**:
+  - Actualizado el conteo y comentarios residuales de 50 a 55 agentes en todos los scripts de instalación (`studio-setup.ts`).
+
+---
+
 ## [0.8.3] - 2026-09-29
 
 ### Added

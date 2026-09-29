@@ -54,6 +54,7 @@ Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar 
 4. **Choice Envelope**: Menú cerrado, numerado y sin opciones ambiguas.
 5. **Radar de Próximos Pasos & Recibos de Entrega**: Acciones siguientes claras con sus comandos ejecutables.
 6. **Return Contract de Especialistas**: En delegaciones `subagent`, los especialistas devuelven exclusivamente un bloque YAML compacto (`status`, `summary`, `files_changed`, `validation`, `gameplay_impact`) eliminando prosa conversacional redundante.
+7. **Flow Completion & Producer Auto-Handoff Protocol**: Cierre automático de tareas con actualización instantánea de `production/roadmap.md` (`<!-- PRODUCER_STATE -->`) y relevo directo al siguiente especialista sin preguntas especulativas.
 
 ---
 

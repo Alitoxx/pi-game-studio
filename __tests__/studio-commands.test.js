@@ -30,6 +30,7 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 			"studio:models",
 			"studio:status",
 			"studio:changes",
+			"studio:tasks",
 			"studio:agents",
 			"studio:chains",
 			"studio:settings",
@@ -239,6 +240,19 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 		expect(source).toContain("status:");
 		expect(source).toContain("summary:");
 		expect(source).toContain("FORBIDDEN_CONVERSATIONAL_PHRASES");
+	});
+
+	test("studio-tasks exposes task inspector and stale detector", () => {
+		const source = fs.readFileSync(
+			path.join(__dirname, "..", "extensions", "hooks", "studio-tasks.ts"),
+			"utf8",
+		);
+		expect(source).toContain("export function inspectStudioTasks");
+		expect(source).toContain("export function formatTasksOutput");
+		expect(source).toContain("export async function handleStudioTasks");
+		expect(source).toContain("STALE_THRESHOLD_DAYS");
+		expect(source).toContain("design/gdd");
+		expect(source).toContain("production/roadmap.md");
 	});
 });
 

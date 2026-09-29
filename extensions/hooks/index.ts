@@ -20,6 +20,7 @@ import { handleStudioStart, readProducerState, recordFlowCompletion } from "./st
 import { handleStudioDoctor } from "./studio-doctor.ts";
 import { handleStudioNew } from "./studio-new.ts";
 import { handleStudioChanges } from "./studio-changes.ts";
+import { handleStudioTasks } from "./studio-tasks.ts";
 import { detectProjectEngine, formatEngineBadge } from "./engine-detector.ts";
 
 export default function (pi: ExtensionAPI) {
@@ -80,6 +81,14 @@ export default function (pi: ExtensionAPI) {
 		description: "[Studio] Clasificación de cambios pendientes en diseño, código, assets y drift de ODD",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioChanges(args, ctx);
+		},
+	});
+
+	// /studio:tasks — Gestión de tareas y radar de obsolescencia (Gentle Todo)
+	(pi as any).registerCommand?.("studio:tasks", {
+		description: "[Studio] Gestión de tareas del sprint, Live Specs y radar de tareas obsoletas (Stale)",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioTasks(args, ctx);
 		},
 	});
 

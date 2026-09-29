@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.13] - 2026-09-29
+
+### Added
+- **Punto 6: Gentle Todo + `production/roadmap.md` con Stale Detection (`/studio:tasks`)**:
+  - Implementación del nuevo comando `/studio:tasks` en `extensions/hooks/studio-tasks.ts` y registro en Pi CLI.
+  - Parseo unificado de tareas atómicas desde `production/roadmap.md` y desde todas las Live Specs vivas en `design/gdd/*.md`.
+  - Detección automática de tareas obsoletas (*Stale Tasks*): alerta con `⚠ STALE` si una tarea o su spec lleva más de 3 días sin registrar actividad o modificaciones.
+  - Integración en el catálogo `/studio` bajo la categoría `PRODUCCION & RELEASES`.
+
+---
+
 ## [0.8.12] - 2026-09-29
 
 ### Added

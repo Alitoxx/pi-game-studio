@@ -80,6 +80,7 @@ export const STUDIO_CATEGORIES: StudioCategory[] = [
 		emoji: "•",
 		description: "Hitos, retrospectivas y lanzamiento",
 		commands: [
+			{ cmd: "/studio:tasks", desc: "Gestión de tareas, Live Specs y radar de obsolescencia (Stale Tasks)" },
 			{ cmd: "/milestone-review", desc: "Cierre de hito con directores y evaluación de riesgo" },
 			{ cmd: "/retrospective", desc: "Retrospectiva del equipo de desarrollo" },
 			{ cmd: "/release-checklist", desc: "Auditoría técnica antes de generar build" },

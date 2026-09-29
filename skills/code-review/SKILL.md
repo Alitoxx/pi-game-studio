@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: "🎮 [Studio] Performs an architectural and quality code review on a specified file or set of files. Checks for coding standard compliance, architectural pattern adherence, SOLID principles, testability, and performance concerns."
+description: "[Studio] Ejecuta una revisión técnica de código bajo las 3 lentes nativas de videojuegos: Game Feel & Controles, Rendimiento & FPS (Zero Alloc Loop) y Robustez de QA & Edge Cases."
 agent: lead-programmer
 model: inherit
 inheritProjectContext: true
@@ -116,43 +116,37 @@ Collect all specialist findings before producing output.
 
 ---
 
-## Phase 8: Output Review
+## Phase 8: Output Review (Native Gamedev Lenses)
 
-```
-## Code Review: [File/System Name]
+```text
+┌── GAME ENGINE TECHNICAL REVIEW: [File / System] ────────────────────┐
+│ Revisor Principal: lead-programmer & engine-programmer             │
+│ Target & Motor:    [Engine Activo] · Target FPS: [60/144]          │
+└─────────────────────────────────────────────────────────────────────┘
 
-### Engine Specialist Findings: [N/A — no engine configured / CLEAN / ISSUES FOUND]
-[Findings from engine specialist(s), or "No engine configured." if skipped]
+### LENTE 1: GAME FEEL & CONTROLS (Jugabilidad & Latencia)
+• Latencia de Input:      [ZERO DELAY / SMOOTH / BUFFERING ISSUES]
+• Frame-Rate Delta:       [INDEPENDENT / DEPENDENT ON FPS (FIX!)]
+• Tuning Knobs Expuestos: [DATA DRIVEN / HARDCODED VALUES FOUND]
+• Veredicto Game Feel:    [APROBADO / AJUSTES REQUERIDOS]
 
-### Testability: [N/A — Visual/Feel or Config story / TESTABLE / GAPS / BLOCKING]
-[qa-tester findings: test hooks, coverage gaps, untestable paths, new edge cases]
-[If BLOCKING: implementation must expose [X] before tests in ## QA Test Cases can run]
+### LENTE 2: PERFORMANCE & FPS (Cero Allocations & Memoria)
+• Hot Path Loop Allocations: [0 ALLOCS (PASS) / ALLOCATIONS DETECTED (FAIL)]
+• Cache & Memory Layout:     [DATA-ORIENTED CONTIGUOUS / OOP POINTER SCATTER]
+• Shaders & GPU Overhead:    [CLEAN BATCHING / HIGH DRAW CALLS]
+• Veredicto Rendimiento:     [APROBADO / BLOQUEANTE]
 
-### ADR Compliance: [NO ADRS FOUND / COMPLIANT / DRIFT / VIOLATION]
-[List each ADR checked, result, and any deviations with severity]
+### LENTE 3: QA ROBUSTNESS & EDGE CASES (qa-lead & qa-tester)
+• Testability & Inyección:   [SEAMS EXPOSED / TIGHTLY COUPLED]
+• Edge Cases de Física/Sync: [HANDLED / RISK DETECTED]
+• Resource Cleanup:          [0 LEAKS VERIFIED / RISK FOUND]
+• Veredicto QA:              [APROBADO / TESTS REQUERIDOS]
 
-### Standards Compliance: [X/6 passing]
-[List failures with line references]
-
-### Architecture: [CLEAN / MINOR ISSUES / VIOLATIONS FOUND]
-[List specific architectural concerns]
-
-### SOLID: [COMPLIANT / ISSUES FOUND]
-[List specific violations]
-
-### Game-Specific Concerns
-[List game development specific issues]
-
-### Positive Observations
-[What is done well -- always include this section]
-
-### Required Changes
-[Must-fix items before approval — ARCHITECTURAL VIOLATIONs always appear here]
-
-### Suggestions
-[Nice-to-have improvements]
-
-### Verdict: [APPROVED / APPROVED WITH SUGGESTIONS / CHANGES REQUIRED]
+───────────────────────────────────────────────────────────────────────
+VERDICT FINAL: [APPROVED / CHANGES REQUIRED]
+• Acciones Obligatorias: [Lista de cambios bloqueantes o 'Ninguno']
+• Recomendaciones:       [Optimizaciones de pulido o jugo]
+───────────────────────────────────────────────────────────────────────
 ```
 
 This skill is read-only — no files are written.
@@ -161,6 +155,5 @@ This skill is read-only — no files are written.
 
 ## Phase 9: Next Steps
 
-- If verdict is APPROVED: run `/story-done [story-path]` to close the story.
-- If verdict is CHANGES REQUIRED: fix the issues and re-run `/code-review`.
-- If an ARCHITECTURAL VIOLATION is found: run `/architecture-decision` to record the correct approach.
+- If verdict is APPROVED: run `/story-done [story-path]` or proceed to next task.
+- If verdict is CHANGES REQUIRED: fix the blocking issues and re-run `/code-review`.

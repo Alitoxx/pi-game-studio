@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.14] - 2026-09-29
+
+### Added
+- **Punto 7: Game Engine Native Review Lenses (`/code-review`)**:
+  - Reestructuración de la habilidad `code-review` (`skills/code-review/SKILL.md`) bajo las 3 lentes nativas de desarrollo de videojuegos:
+    - **Lente 1 (Game Feel & Controls)**: Latencia de input, fluidez, independencia de frame-rate (`delta_time`) y exposición de knobs de balance data-driven.
+    - **Lente 2 (Performance & FPS)**: Bucle de cero allocations en hot paths, layout de memoria contigua en caché (Data-Oriented vs OOP scatter), y optimización de shaders/draw calls.
+    - **Lente 3 (QA Robustness & Edge Cases)**: Testability de inyección, edge cases de física/red, sincronización y verificación de cero memory leaks (`qa-lead`, `qa-tester`).
+  - Purga de emojis decorativos en las cabeceras de la habilidad y estandarización a la plantilla sobria ASCII.
+
+---
+
 ## [0.8.13] - 2026-09-29
 
 ### Added

@@ -1,7 +1,7 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { inspectSetup, installStudioFiles } from "./studio-setup.ts";
+import { inspectSetup, installStudioFiles, runGuidedSetup } from "./studio-setup.ts";
 
 export interface ProjectAudit {
 	hasEngine: boolean;
@@ -92,9 +92,27 @@ export async function handleStudioStart(
 		let actions: Array<() => void> = [];
 
 		if (audit.agentsInstalled === 0) {
-			// Silent auto-provisioning with smart defaults: no tech questionnaire
-			installStudioFiles(ctx);
-			audit.agentsInstalled = 55;
+			const setupChoice = await (ctx.ui as any).select(
+				"🎮 Producer: ¡Bienvenido al estudio! Para empezar necesitamos desplegar tu equipo. ¿Cómo prefieres configurarlo?",
+				[
+					`⚡ 1. Instalación Automática (Recomendada: 55 agentes + modelos equilibrados + motor ${audit.engineName || "Godot 4"} en español)`,
+					"🛠️ 2. Instalación Manual / Guiada (Tú eliges el motor de juego, tu idioma preferido y los modelos de IA por rol)",
+				],
+			);
+
+			if (setupChoice === undefined || setupChoice === null) return;
+
+			const choiceIdx = typeof setupChoice === "number" ? setupChoice : [0, 1].indexOf(setupChoice);
+			if (choiceIdx === 0) {
+				installStudioFiles(ctx);
+				audit.agentsInstalled = 55;
+			} else if (choiceIdx === 1) {
+				const currentStatus = inspectSetup(ctx.cwd);
+				await runGuidedSetup(ctx, currentStatus);
+				return;
+			} else {
+				return;
+			}
 		}
 
 		if (!audit.hasConcept && audit.srcFileCount === 0) {

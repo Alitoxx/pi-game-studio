@@ -5,8 +5,6 @@ import {
 	writeFileSync,
 	mkdirSync,
 	readdirSync,
-	symlinkSync,
-	lstatSync,
 } from "node:fs";
 import { join, resolve } from "node:path";
 import { promptModelForRole } from "./provider-resolver.ts";
@@ -333,7 +331,7 @@ export async function runGuidedSetup(
 			],
 		);
 		if (proceedChoice && proceedChoice.index === 1) {
-			return handleManualSetup(ctx, status);
+			return runGuidedSetup(ctx, status);
 		}
 	}
 

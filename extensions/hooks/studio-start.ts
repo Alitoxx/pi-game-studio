@@ -135,10 +135,11 @@ export function auditProject(cwd: string): ProjectAudit {
 
 	const possibleConcepts = [
 		join(cwd, "design", "gdd", "game-concept.md"),
-		join(cwd, "production", "design", "concept.md"),
-		join(cwd, "production", "concept.md"),
 		join(cwd, "design", "concept.md"),
+		join(cwd, "design", "gdd", "concept.md"),
 		join(cwd, "docs", "concept.md"),
+		// Legacy fallback if migrating from an older repo
+		join(cwd, "production", "design", "concept.md"),
 	];
 	const hasConcept = possibleConcepts.some((p) => existsSync(p));
 
@@ -147,7 +148,7 @@ export function auditProject(cwd: string): ProjectAudit {
 	let gddCount = 0;
 	const possibleGddDirs = [
 		join(cwd, "design", "gdd"),
-		join(cwd, "production", "design"),
+		join(cwd, "design"),
 		join(cwd, "docs", "design"),
 	];
 	for (const gddDir of possibleGddDirs) {

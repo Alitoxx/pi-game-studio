@@ -6,7 +6,7 @@ describe("Pi Game Studio Package", () => {
 	});
 
 	test("should have correct version", () => {
-		expect(pkg.version).toBe("0.8.4");
+		expect(pkg.version).toBe("0.8.5");
 		expect(pkg.version).toMatch(/^\d+\.\d+\.\d+$/);
 	});
 

@@ -229,7 +229,7 @@ export default function (pi: ExtensionAPI) {
 					}
 
 					event.systemPromptOptions.promptGuidelines.push(
-						`Studio Environment Status: OK. All 55 agents are installed and ready, engine is configured as "${setup.currentEngine}".${roadmapDirective} ` +
+						`Studio Environment Status: OK. ${setup.agentsInstalled} agents installed and ready for engine "${setup.currentEngine}".${roadmapDirective} ` +
 						"IMPORTANT: The environment is ALREADY fully configured. Do NOT ask the user to configure or run setup again. " +
 						"When communicating as or with the Producer, DO NOT ask speculative questions about where the project is at; state the current project line directly. " +
 						"Flow Completion Protocol: When any specialist finishes a task (design doc, mechanic, art asset, code review), the Producer immediately closes the loop: " +
@@ -241,7 +241,7 @@ export default function (pi: ExtensionAPI) {
 					event.systemPromptOptions.promptGuidelines.push(
 						"Studio Environment Status: PENDING SETUP. The studio agents or configuration have not been deployed yet in this project. " +
 						"If the user greets or asks what to do, inform them that the studio needs initial setup, and present the two clear choices: " +
-						"1. Automática (Recomendada: 55 agentes en modo 'inherit' y motor auto-detectado) o " +
+						"1. Automática (Recomendada: Agentes optimizados para tu motor en modo 'inherit') o " +
 						"2. Manual / Guiada (/studio:setup para elegir motor, idioma y modelos por nivel)."
 					);
 				}
@@ -249,8 +249,8 @@ export default function (pi: ExtensionAPI) {
 		}
 	};
 
-	pi.on("before_agent_start" as any, handleAgentTurnStart);
 	pi.on("turn_start", handleAgentTurnStart);
+	(pi as any).on?.("before_agent_start", handleAgentTurnStart);
 
 	// ──────────────────────────────────────────────
 	// Hook: Session start (banner + gap detection)
@@ -292,14 +292,13 @@ export default function (pi: ExtensionAPI) {
 				const engineBadge = formatEngineBadge(detected);
 				const setup = inspectSetup(studioRoot);
 				const statusBadge = setup.isConfigured
-					? "✔ Entorno OK (55 agentes)"
+					? `✔ Entorno OK (${setup.agentsInstalled} agentes)`
 					: "⚠ Configuración pendiente (/start)";
-
 				const notifyBanner = [
 					"🎮 PI GAME STUDIO CARGADO",
 					`Estado: ${statusBadge}`,
 					`Motor: ${engineBadge}`,
-					"55 Agentes · 80 Skills · 44 Templates",
+					`${setup.agentsInstalled > 0 ? setup.agentsInstalled : setup.expectedAgents} Agentes · 80 Skills · 44 Templates`,
 					"Escribe /studio para ver el menú o /start para comenzar.",
 				].join("\n");
 				(ctx as any).ui.notify(notifyBanner, setup.isConfigured ? "info" : "warning");

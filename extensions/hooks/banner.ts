@@ -140,7 +140,7 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 		);
 		const setup = inspectSetup(root);
 		const envBadge = setup.isConfigured
-			? `${GREEN}✔ Configurado (55 agentes activos)${RESET}`
+			? `${GREEN}✔ Configurado (${setup.agentsInstalled} agentes activos)${RESET}`
 			: `${GOLD}⚠ Pendiente (/start o /studio:setup)${RESET}`;
 
 		lines.push(

@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.5] - 2026-09-29
+
+### Added
+- **Instalación Selectiva de Agentes por Motor (Enfoque A)**:
+  - En lugar de saturar `.pi/agents/` con los 55 agentes (que incluye especialistas de motores no utilizados), el instalador ahora copia:
+    - Los **34 agentes base (Core Studio)**: Directores, Leads y especialistas universales (diseño, mecánicas, arte, audio, narrativa, QA).
+    - Los **especialistas dedicados del motor seleccionado**:
+      - **Bevy**: +1 especialista (`bevy-specialist`) → 35 agentes en total.
+      - **Godot**: +5 especialistas (General, GDScript, C#, GDExtension, Shaders) → 39 agentes en total.
+      - **Raylib**: +5 especialistas (General, EnTT ECS, Shaders, UI/Dear ImGui, Build/CMake) → 39 agentes en total.
+      - **Unity**: +5 especialistas (General, DOTS/ECS, Shaders, Addressables, UI Toolkit) → 39 agentes en total.
+      - **Unreal**: +5 especialistas (General, GAS, Blueprints, Replication, UMG) → 39 agentes en total.
+  - El setup interactivo solicita o valida el motor primero y crea `project.yaml`.
+  - `inspectSetup()` y `isConfigured` calculan dinámicamente el umbral esperado según el motor seleccionado en vez de forzar un valor fijo de 50+.
+  - Diagnósticos, banner TUI y resúmenes de instalación adaptados para reportar con exactitud los agentes instalados y activos.
+
+---
+
 ## [0.8.4] - 2026-09-29
 
 ### Added

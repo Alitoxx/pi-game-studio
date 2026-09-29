@@ -30,6 +30,7 @@ function resolvePackageRoot(): string {
 export interface SetupStatus {
 	agentsInstalled: number;
 	totalPackageAgents: number;
+	expectedAgents: number;
 	hasModelsConfig: boolean;
 	hasGameStudioDir: boolean;
 	engramEnabled: boolean | null;
@@ -42,6 +43,97 @@ export interface StudioInstallOptions {
 	engine?: string;
 	language?: string;
 	modelsConfig?: Record<string, string>;
+	installAllAgents?: boolean;
+}
+
+export const CORE_STUDIO_AGENTS: string[] = [
+	// Tier 1 — Directores
+	"creative-director",
+	"technical-director",
+	"producer",
+	// Tier 2 — Leads
+	"game-designer",
+	"lead-programmer",
+	"art-director",
+	"audio-director",
+	"narrative-director",
+	"qa-lead",
+	"release-manager",
+	"localization-lead",
+	// Tier 3 — Especialistas Fundamentales
+	"gameplay-programmer",
+	"engine-programmer",
+	"ai-programmer",
+	"network-programmer",
+	"tools-programmer",
+	"ui-programmer",
+	"systems-designer",
+	"level-designer",
+	"economy-designer",
+	"ux-designer",
+	"prototyper",
+	"technical-artist",
+	"sound-designer",
+	"writer",
+	"world-builder",
+	"qa-tester",
+	"performance-analyst",
+	"devops-engineer",
+	"accessibility-specialist",
+	"live-ops-designer",
+	"community-manager",
+	"security-engineer",
+	"analytics-engineer",
+];
+
+export const ENGINE_AGENTS_MAP: Record<string, string[]> = {
+	Godot: [
+		"godot-specialist",
+		"godot-gdscript-specialist",
+		"godot-shader-specialist",
+		"godot-gdextension-specialist",
+		"godot-csharp-specialist",
+	],
+	Unity: [
+		"unity-specialist",
+		"unity-dots-specialist",
+		"unity-shader-specialist",
+		"unity-addressables-specialist",
+		"unity-ui-specialist",
+	],
+	Unreal: [
+		"unreal-specialist",
+		"ue-gas-specialist",
+		"ue-blueprint-specialist",
+		"ue-replication-specialist",
+		"ue-umg-specialist",
+	],
+	Bevy: [
+		"bevy-specialist",
+	],
+	Raylib: [
+		"raylib-specialist",
+		"raylib-entt-specialist",
+		"raylib-shader-specialist",
+		"raylib-ui-specialist",
+		"raylib-build-specialist",
+	],
+};
+
+export function getEngineAgents(engineName: string): string[] {
+	const norm = engineName.toLowerCase();
+	if (norm.includes("godot")) return ENGINE_AGENTS_MAP.Godot;
+	if (norm.includes("unity")) return ENGINE_AGENTS_MAP.Unity;
+	if (norm.includes("unreal")) return ENGINE_AGENTS_MAP.Unreal;
+	if (norm.includes("bevy")) return ENGINE_AGENTS_MAP.Bevy;
+	if (norm.includes("raylib")) return ENGINE_AGENTS_MAP.Raylib;
+	return ENGINE_AGENTS_MAP.Godot;
+}
+
+export function filterAgentsForEngine(engineName: string, all = false): string[] {
+	if (all) return [];
+	const engineAgents = getEngineAgents(engineName);
+	return [...CORE_STUDIO_AGENTS, ...engineAgents];
 }
 
 export function inspectSetup(cwd: string): SetupStatus {
@@ -93,11 +185,16 @@ export function inspectSetup(cwd: string): SetupStatus {
 		}
 	}
 
-	const isConfigured = agentsInstalled >= 50 && (hasProjectYaml || hasGameStudioDir);
+	const expectedEngineAgents = filterAgentsForEngine(currentEngine);
+	const expectedAgents = expectedEngineAgents.length > 0 ? expectedEngineAgents.length : 35;
+
+	// Configured if the engine's required agents are installed (or all 55) and project.yaml/studio dir exists
+	const isConfigured = agentsInstalled >= (expectedAgents - 2) && (hasProjectYaml || hasGameStudioDir);
 
 	return {
 		agentsInstalled,
 		totalPackageAgents,
+		expectedAgents,
 		hasModelsConfig,
 		hasGameStudioDir,
 		engramEnabled,
@@ -138,8 +235,8 @@ export async function handleStudioSetup(
 	// Interactive UI mode
 	if (ctx.hasUI && typeof (ctx.ui as any)?.select === "function") {
 		const options = [
-			`⚡ 1. Instalación Automática (${status.totalPackageAgents || 55} agentes + modelos recomendados + ${status.currentEngine})`,
-			"🛠️ 2. Instalación Manual / Guiada (Elegir modelos por agente/tier, motor e idioma)",
+			`⚡ 1. Instalación Automática (${status.expectedAgents} agentes recomendados para ${status.currentEngine} en modo 'inherit')`,
+			"🛠️ 2. Instalación Manual / Guiada (Elegir motor, idioma y modelos por nivel)",
 			"🤖 3. Configurar Modelos de IA (/studio:models)",
 			"📊 4. Ver diagnóstico del estudio (/studio:status)",
 			"📖 5. Ver guía rápida de inicio",
@@ -292,10 +389,14 @@ export async function runGuidedSetup(
 		customModels = await configureSpecificAgents(ctx, customModels);
 	}
 
+	const engineAgents = filterAgentsForEngine(selectedEngine);
+	const targetCount = engineAgents.length;
+
 	// ── Confirmación Final ──
 	const confirmSummary = [
 		"🎮 RESUMEN DE INSTALACIÓN PERSONALIZADA:",
 		`• Motor de juego:   ${selectedEngine}`,
+		`• Agentes a desplegar: ${targetCount} agentes (34 Core + ${targetCount - 34} especialistas de ${selectedEngine})`,
 		`• Idioma preferido:  ${selectedLang === "es" ? "Español (es)" : "English (en)"}`,
 		`• Modelos Directores: ${customModels.director || "gpt-5.4-mini"}`,
 		`• Modelos Workhorse:  ${customModels.workhorse || "gpt-oss-120b:free"}`,
@@ -303,7 +404,7 @@ export async function runGuidedSetup(
 	];
 
 	const confirmOptions = [
-		`✔ Confirmar e Instalar Pi Game Studio (${status.totalPackageAgents || 55} agentes)`,
+		`✔ Confirmar e Instalar Pi Game Studio (${targetCount} agentes para ${selectedEngine})`,
 		"❌ Cancelar sin modificar archivos",
 	];
 
@@ -437,11 +538,20 @@ export function installStudioFiles(
 	mkdirSync(studioDir, { recursive: true });
 	mkdirSync(join(ctx.cwd, ".pi", "gentle-ai"), { recursive: true });
 
-	// 1. Copy 55 agents
+	// 1. Determine engine and allowed agents
+	const engine = options.engine || "Godot";
+	const allowedAgentNames = filterAgentsForEngine(engine, options.installAllAgents);
+	const allowedSet = allowedAgentNames.length > 0 ? new Set(allowedAgentNames) : null;
+
+	// 2. Copy selected agents (Core + Selected Engine Specialists)
 	let copiedCount = 0;
 	if (existsSync(agentsSrc)) {
 		const files = readdirSync(agentsSrc).filter((f) => f.endsWith(".md"));
 		for (const file of files) {
+			const agentId = file.replace(/\.md$/, "");
+			if (allowedSet && !allowedSet.has(agentId)) {
+				continue;
+			}
 			const srcPath = join(agentsSrc, file);
 			const destPath = join(destDir, file);
 			writeFileSync(destPath, readFileSync(srcPath));
@@ -449,15 +559,14 @@ export function installStudioFiles(
 		}
 	}
 
-	// 2. Deploy models configuration
+	// 3. Deploy models configuration
 	if (options.modelsConfig) {
 		writeFileSync(modelsDest, JSON.stringify(options.modelsConfig, null, 2), "utf8");
 	} else if (!existsSync(modelsDest) && existsSync(modelsSrc)) {
 		writeFileSync(modelsDest, readFileSync(modelsSrc));
 	}
 
-	// 3. Configure engine in project.yaml
-	const engine = options.engine || "Godot";
+	// 4. Configure engine in project.yaml
 	let yamlContent = existsSync(projectYamlPath) ? readFileSync(projectYamlPath, "utf8") : "";
 	if (/^engine:\s*.*/m.test(yamlContent)) {
 		yamlContent = yamlContent.replace(/^engine:\s*.*/m, `engine: "${engine}"`);
@@ -466,7 +575,7 @@ export function installStudioFiles(
 	}
 	writeFileSync(projectYamlPath, yamlContent, "utf8");
 
-	// 4. Configure language preference
+	// 5. Configure language preference
 	if (options.language) {
 		writeFileSync(join(studioDir, "language"), options.language, "utf8");
 	}
@@ -525,7 +634,7 @@ export function installModelsConfig(ctx: ExtensionContext): void {
 export function formatSetupDiagnostic(s: SetupStatus): string {
 	return [
 		"📊 PI GAME STUDIO — ESTADO DE INSTALACIÓN",
-		`• Agentes instalados:  ${s.agentsInstalled}/${s.totalPackageAgents} (.pi/agents/)`,
+		`• Agentes instalados:  ${s.agentsInstalled}/${s.expectedAgents} para ${s.currentEngine} (.pi/agents/)`,
 		`• Motor actual:        ${s.currentEngine}`,
 		`• Config de modelos:   ${s.hasModelsConfig ? "✔ Presente (.pi/gentle-ai/models.json)" : "⚠ No encontrada"}`,
 		`• Directorio estudio:  ${s.hasGameStudioDir ? "✔ Activo (.pi/game-studio/)" : "- No creado aún"}`,

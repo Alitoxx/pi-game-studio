@@ -210,7 +210,7 @@ export async function handleStudioStart(
 			const setupChoice = await (ctx.ui as any).select(
 				"🎮 Producer: ¡Bienvenido al estudio! Tu entorno aún no está configurado. ¿Cómo prefieres inicializarlo?",
 				[
-					`⚡ 1. Instalación Automática (Recomendada: 55 agentes en modo 'inherit' que usan tu modelo activo en Pi, motor ${audit.engineName || "Godot 4"} en español)`,
+					`⚡ 1. Instalación Automática (Recomendada: Agentes optimizados para ${audit.engineName || "Godot 4"} en modo 'inherit')`,
 					"🛠️ 2. Instalación Manual / Guiada (Tú eliges el motor de juego, tu idioma preferido y personalizas los modelos de IA por rol)",
 				],
 			);
@@ -219,9 +219,10 @@ export async function handleStudioStart(
 
 			const choiceIdx = typeof setupChoice === "number" ? setupChoice : [0, 1].indexOf(setupChoice);
 			if (choiceIdx === 0) {
-				installStudioFiles(ctx);
-				audit.agentsInstalled = 55;
-				audit.isConfigured = true;
+				installStudioFiles(ctx, { engine: audit.engineName || "Godot" });
+				const updated = inspectSetup(ctx.cwd);
+				audit.agentsInstalled = updated.agentsInstalled;
+				audit.isConfigured = updated.isConfigured;
 			} else if (choiceIdx === 1) {
 				const currentStatus = inspectSetup(ctx.cwd);
 				await runGuidedSetup(ctx, currentStatus);

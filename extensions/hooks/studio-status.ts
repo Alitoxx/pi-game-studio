@@ -27,7 +27,7 @@ export async function handleStudioStatus(
 	for (const l of auditLines) console.log(l);
 
 	const summary = [
-		`🎮 Pi Game Studio — Estado del Sistema`,
+		`PI GAME STUDIO — ESTADO DEL SISTEMA`,
 		`• Motor activo: ${status.currentEngine} (${audit.ready ? "Herramientas OK" : "Faltan herramientas"})`,
 		`• Agentes instalados: ${status.agentsInstalled}/${status.totalPackageAgents}`,
 		`• Configuración de modelos: ${status.hasModelsConfig ? "Configurada" : "Pendiente"}`,

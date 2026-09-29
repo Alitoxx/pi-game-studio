@@ -101,11 +101,11 @@ export async function handleStudioNew(
 	if (!selectedStarter) {
 		if (ctx.hasUI && typeof (ctx.ui as any)?.select === "function") {
 			const options = starters.map(
-				(s) => `🎮 ${s.name} (${s.engine} · ${s.language}) — ${s.description}`,
+				(s) => `${s.name} (${s.engine} · ${s.language}) — ${s.description}`,
 			);
 
 			const selected = await (ctx.ui as any).select(
-				"🎮 Pi Game Studio — Crear nuevo juego desde plantilla",
+				"PI GAME STUDIO — Crear nuevo juego desde plantilla",
 				options,
 			);
 
@@ -119,7 +119,7 @@ export async function handleStudioNew(
 		} else {
 			console.log("");
 			console.log(
-				"\x1b[1m\x1b[38;2;167;139;250m🎮 Plantillas de Inicio Rápido Disponibles (Starters):\x1b[0m",
+				"\x1b[1m\x1b[38;2;167;139;250mPlantillas de Inicio Rápido Disponibles (Starters):\x1b[0m",
 			);
 			console.log("\x1b[38;2;107;114;128m" + "─".repeat(70) + "\x1b[0m");
 			starters.forEach((s, idx) => {
@@ -166,7 +166,7 @@ export async function handleStudioNew(
 	// Scaffold files
 	console.log("");
 	console.log(
-		`\x1b[1m\x1b[38;2;167;139;250m🚀 Creando proyecto desde plantilla: ${selectedStarter.name}...\x1b[0m`,
+		`\x1b[1m\x1b[38;2;167;139;250mCreando proyecto desde plantilla: ${selectedStarter.name}...\x1b[0m`,
 	);
 
 	copyRecursive(selectedStarter.sourceDir, targetDir);

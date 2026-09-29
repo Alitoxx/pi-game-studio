@@ -28,7 +28,7 @@ export async function handleStudioSettings(
 		if (eng) {
 			setEngine(rootDir, eng);
 			if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
-				ctx.ui.notify(`🎮 Motor configurado a: ${eng}`, "info");
+				ctx.ui.notify(`Motor configurado a: ${eng}`, "info");
 			}
 			console.log(`\x1b[38;2;52;211;153m✔ Motor de juego actualizado a: ${eng}\x1b[0m`);
 			return;
@@ -41,14 +41,14 @@ export async function handleStudioSettings(
 		const clearScreenActive = !existsSync(noClearFlag);
 
 		const options = [
-			`🎮 Cambiar Motor de Juego (Actual: ${currentEngine})`,
-			"🌐 Cambiar Idioma del Estudio (Español / English)",
-			`🧹 Limpiar terminal al iniciar: ${clearScreenActive ? "Activado (Recomendado)" : "Desactivado"}`,
-			"📄 Ver archivo de configuración project.yaml",
+			`Cambiar Motor de Juego (Actual: ${currentEngine})`,
+			"Cambiar Idioma del Estudio (Español / English)",
+			`Limpiar terminal al iniciar: ${clearScreenActive ? "Activado (Recomendado)" : "Desactivado"}`,
+			"Ver archivo de configuración project.yaml",
 		];
 
 		const selected = await (ctx.ui as any).select(
-			"🎮 Pi Game Studio — Configuración del Estudio",
+			"PI GAME STUDIO — Configuración del Estudio",
 			options,
 		);
 
@@ -67,7 +67,7 @@ export async function handleStudioSettings(
 						const cleanName = ["Godot", "Unity", "Unreal", "Bevy", "Raylib"][pIdx];
 						setEngine(rootDir, cleanName);
 						if (typeof (ctx.ui as any)?.notify === "function") {
-							ctx.ui.notify(`🎮 Motor configurado: ${cleanName}`, "info");
+							ctx.ui.notify(`Motor configurado: ${cleanName}`, "info");
 						}
 						const audit = auditEnginePrerequisites(cleanName);
 						const lines = formatAuditReport(audit);

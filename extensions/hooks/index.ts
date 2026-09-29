@@ -28,7 +28,7 @@ export default function (pi: ExtensionAPI) {
 
 	// /studio — Hub principal y catálogo
 	(pi as any).registerCommand?.("studio", {
-		description: "🎮 [Studio] Explorador y catálogo de comandos de Pi Game Studio",
+		description: "[Studio] Explorador y catálogo de comandos de Pi Game Studio",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioCommand(args, ctx);
 		},
@@ -36,7 +36,7 @@ export default function (pi: ExtensionAPI) {
 
 	// /studio:start — Asistente interactivo de inicio y onboarding
 	(pi as any).registerCommand?.("studio:start", {
-		description: "🎮 [Studio] Asistente interactivo de inicio y onboarding de tu juego",
+		description: "[Studio] Asistente interactivo de inicio y onboarding de tu juego",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioStart(args, ctx);
 		},
@@ -44,7 +44,7 @@ export default function (pi: ExtensionAPI) {
 
 	// /studio:setup — Asistente interactivo de instalación y actualización
 	(pi as any).registerCommand?.("studio:setup", {
-		description: "🎮 [Studio] Asistente interactivo de instalación, verificación y actualización del estudio",
+		description: "[Studio] Asistente interactivo de instalación, verificación y actualización del estudio",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioSetup(args, ctx);
 		},
@@ -52,7 +52,7 @@ export default function (pi: ExtensionAPI) {
 
 	// /studio:new — Crear nuevo juego desde plantilla o starter
 	(pi as any).registerCommand?.("studio:new", {
-		description: "🎮 [Studio] Crear nuevo proyecto desde plantilla/starter (Bevy, Raylib, Godot)",
+		description: "[Studio] Crear nuevo proyecto desde plantilla/starter (Bevy, Raylib, Godot)",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioNew(args, ctx);
 		},
@@ -60,7 +60,7 @@ export default function (pi: ExtensionAPI) {
 
 	// /studio:models — Asignación interactiva de modelos por nivel
 	(pi as any).registerCommand?.("studio:models", {
-		description: "🎮 [Studio] Configuración interactiva de modelos de IA por nivel de agente",
+		description: "[Studio] Configuración interactiva de modelos de IA por nivel de agente",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioModels(args, ctx);
 		},
@@ -68,7 +68,7 @@ export default function (pi: ExtensionAPI) {
 
 	// /studio:status — Dashboard y diagnóstico en vivo
 	(pi as any).registerCommand?.("studio:status", {
-		description: "🎮 [Studio] Dashboard en vivo de estado, agentes y métricas del estudio",
+		description: "[Studio] Dashboard en vivo de estado, agentes y métricas del estudio",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioStatus(args, ctx);
 		},
@@ -76,7 +76,7 @@ export default function (pi: ExtensionAPI) {
 
 	// /studio:agents — Catálogo de los 55 agentes
 	(pi as any).registerCommand?.("studio:agents", {
-		description: "🎮 [Studio] Catálogo interactivo de los 55 agentes y sus especialidades",
+		description: "[Studio] Catálogo interactivo de los 55 agentes y sus especialidades",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioAgents(args, ctx);
 		},
@@ -84,7 +84,7 @@ export default function (pi: ExtensionAPI) {
 
 	// /studio:chains — Cadenas multi-agente guiadas
 	(pi as any).registerCommand?.("studio:chains", {
-		description: "🎮 [Studio] Cadenas de ejecución multi-agente para GDD, mecánicas y release",
+		description: "[Studio] Cadenas de ejecución multi-agente para GDD, mecánicas y release",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioChains(args, ctx);
 		},
@@ -92,7 +92,7 @@ export default function (pi: ExtensionAPI) {
 
 	// /studio:chain — Alias singular de cadenas
 	(pi as any).registerCommand?.("studio:chain", {
-		description: "🎮 [Studio] Cadenas de ejecución multi-agente para GDD, mecánicas y release",
+		description: "[Studio] Cadenas de ejecución multi-agente para GDD, mecánicas y release",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioChains(args, ctx);
 		},
@@ -100,7 +100,7 @@ export default function (pi: ExtensionAPI) {
 
 	// /studio:settings — Configuración interactiva del proyecto
 	(pi as any).registerCommand?.("studio:settings", {
-		description: "🎮 [Studio] Configuración interactiva del proyecto (motor, plataformas, idioma)",
+		description: "[Studio] Configuración interactiva del proyecto (motor, plataformas, idioma)",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioSettings(args, ctx);
 		},
@@ -108,7 +108,7 @@ export default function (pi: ExtensionAPI) {
 
 	// /studio:doctor — Diagnóstico de prerrequisitos de compilación y motor
 	(pi as any).registerCommand?.("studio:doctor", {
-		description: "🎮 [Studio] Diagnóstico de prerrequisitos, herramientas y compiladores del motor de juego",
+		description: "[Studio] Diagnóstico de prerrequisitos, herramientas y compiladores del motor de juego",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioDoctor(args, ctx);
 		},
@@ -116,7 +116,7 @@ export default function (pi: ExtensionAPI) {
 
 	// /studio:help — Alias de ayuda
 	(pi as any).registerCommand?.("studio:help", {
-		description: "🎮 [Studio] Ayuda rápida y catálogo de comandos de Pi Game Studio",
+		description: "[Studio] Ayuda rápida y catálogo de comandos de Pi Game Studio",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioCommand(args, ctx);
 		},
@@ -324,7 +324,7 @@ export default function (pi: ExtensionAPI) {
 					? `✔ Entorno OK (${setup.agentsInstalled} agentes)`
 					: "⚠ Configuración pendiente (/start)";
 				const notifyBanner = [
-					"🎮 PI GAME STUDIO CARGADO",
+					"PI GAME STUDIO CARGADO",
 					`Estado: ${statusBadge}`,
 					`Motor: ${engineBadge}`,
 					`${setup.agentsInstalled > 0 ? setup.agentsInstalled : setup.expectedAgents} Agentes · 80 Skills · 44 Templates`,

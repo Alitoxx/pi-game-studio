@@ -62,17 +62,17 @@ export async function handleStudioModels(
 	// Interactive select
 	if (ctx.hasUI && typeof (ctx.ui as any)?.select === "function") {
 		const options = [
-			"⚡ Aplicar perfil recomendado (Director: gpt-5.4-mini, Workhorse: 120b, Light: 20b)",
-			"🔄 Modo 'inherit' (Heredar el modelo activo de la sesión de Pi en todos los agentes)",
-			"🎯 Personalizar modelos por Nivel / Tier (Directores, Workhorses, Ligeros)",
-			"👤 Asignar modelo a un agente específico",
-			"🧠 Ajustar presupuesto de razonamiento (Thinking Effort: High, Medium, Low)",
-			"📋 Ver asignación actual de modelos",
+			"1. Aplicar perfil recomendado (Director: gpt-5.4-mini, Workhorse: 120b, Light: 20b)",
+			"2. Modo 'inherit' (Heredar el modelo activo de la sesión de Pi en todos los agentes)",
+			"3. Personalizar modelos por Nivel / Tier (Directores, Workhorses, Ligeros)",
+			"4. Asignar modelo a un agente específico",
+			"5. Ajustar presupuesto de razonamiento (Thinking Effort: High, Medium, Low)",
+			"6. Ver asignación actual de modelos",
 		];
 
 		const choice = await promptSelectSafe(
 			ctx,
-			"🎮 Pi Game Studio — Configuración de Modelos de IA",
+			"PI GAME STUDIO — Configuración de Modelos de IA",
 			options,
 		);
 
@@ -185,7 +185,7 @@ async function configureTierModels(
 	// Directores
 	const dirPick = await promptModelForRole(
 		ctx,
-		"👑 Tier 1 — Directores (Visión y Calidad)",
+		"Tier 1 — Directores (Visión y Calidad)",
 		"director",
 		config.director || "openai-codex/gpt-5.4-mini",
 	);
@@ -196,7 +196,7 @@ async function configureTierModels(
 	// Workhorses
 	const workPick = await promptModelForRole(
 		ctx,
-		"💻 Tier 2 — Workhorses / Especialistas (Código y Diseño)",
+		"Tier 2 — Workhorses / Especialistas (Código y Diseño)",
 		"workhorse",
 		config.workhorse || "openrouter/openai/gpt-oss-120b:free",
 	);
@@ -207,7 +207,7 @@ async function configureTierModels(
 	// Ligeros
 	const lightPick = await promptModelForRole(
 		ctx,
-		"🚀 Tier 3 — Ligeros (Comunidad, DevOps, Sonido)",
+		"Tier 3 — Ligeros (Comunidad, DevOps, Sonido)",
 		"lightweight",
 		config.lightweight || "openrouter/openai/gpt-oss-20b:free",
 	);
@@ -333,10 +333,10 @@ async function promptInputSafe(
 
 async function configureThinkingEffort(ctx: ExtensionContext): Promise<void> {
 	const targets = [
-		"👑 Tier 1 — Directores (creative-director, technical-director, producer)",
-		"💻 Tier 2 — Workhorses & Leads (gameplay, engine, systems, etc.)",
-		"🚀 Tier 3 — Ligeros & Soporte (community-manager, devops, sound)",
-		"👤 Personalizar un agente específico...",
+		"Tier 1 — Directores (creative-director, technical-director, producer)",
+		"Tier 2 — Workhorses & Leads (gameplay, engine, systems, etc.)",
+		"Tier 3 — Ligeros & Soporte (community-manager, devops, sound)",
+		"Personalizar un agente específico...",
 	];
 
 	const targetChoice = await promptSelectSafe(

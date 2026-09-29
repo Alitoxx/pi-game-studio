@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.8] - 2026-09-29
+
+### Changed
+- **Punto 1: Consolidación Zero Bleed & Eliminación Total de Emojis en CLI**:
+  - Purga completa de emojis en todos los comandos y menús interactivos de Pi (`studio`, `studio:start`, `studio:setup`, `studio:models`, `studio:chains`, `studio:agents`, `studio:settings`, `studio:new`).
+  - Categorías de comandos reformuladas a mayúsculas sobrias (`PRE-PRODUCCION & VISION`, `DISENO & SISTEMAS`, `INGENIERIA & MOTORES`, `ARTE & AUDIO`, `QA & TESTING`, `PRODUCCION & RELEASES`, `CONFIGURACION & ADMIN`).
+  - Áreas técnicas de agentes convertidas a nomenclatura formal de ingeniería (`TIER 1 — DIRECTORES`, `TIER 2 — LEADS DE DEPARTAMENTO`, etc.).
+  - Eliminados badges con emoji de los registros de comandos en Pi TUI (`[Studio]` en vez de `🎮 [Studio]`).
+  - Homologación de todas las suites de tests unitarios (`npm test`: 160 tests pasados).
+
+---
+
 ## [0.8.7] - 2026-09-29
 
 ### Changed

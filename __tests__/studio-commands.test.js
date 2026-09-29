@@ -44,7 +44,7 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 
 	test("every studio command has a descriptive label with the studio badge", () => {
 		for (const cmd of registered) {
-			expect(cmd.description).toContain("🎮 [Studio]");
+			expect(cmd.description).toContain("[Studio]");
 		}
 	});
 

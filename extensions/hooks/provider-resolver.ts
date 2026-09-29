@@ -203,9 +203,9 @@ export async function promptModelForRole(
 	// ── Paso 2: Seleccionar Modelo del Proveedor ──
 	const recommended = getRecommendedList(selectedProviderObj, tier);
 	const modelOptions: string[] = [
-		...recommended.map((m) => `⭐ ${m}`),
-		`📋 Ver todos los modelos de ${providerId}`,
-		`✏️ Escribir otro modelo de ${providerId}...`,
+		...recommended.map((m) => `(Recomendado) ${m}`),
+		`Ver todos los modelos de ${providerId}`,
+		`Escribir otro modelo de ${providerId}...`,
 	];
 
 	const pickedModel = await promptSelectSafe(
@@ -216,10 +216,10 @@ export async function promptModelForRole(
 	if (!pickedModel) return undefined;
 
 	// Submenu: Ver todos los modelos
-	if (pickedModel.label.startsWith("📋 Ver todos")) {
+	if (pickedModel.label.startsWith("Ver todos")) {
 		if (selectedProviderObj.models.length > 0) {
 			const allModelOptions = selectedProviderObj.models.map((m) => m.id);
-			allModelOptions.push("✏️ Escribir otro modelo...");
+			allModelOptions.push("Escribir otro modelo...");
 			const allPick = await promptSelectSafe(
 				ctx,
 				`Todos los modelos de ${providerId} (${selectedProviderObj.models.length}):`,

@@ -9,8 +9,8 @@ export interface StudioCategory {
 
 export const STUDIO_CATEGORIES: StudioCategory[] = [
 	{
-		name: "Pre-producción & Visión",
-		emoji: "🎯",
+		name: "PRE-PRODUCCION & VISION",
+		emoji: "•",
 		description: "Onboarding, ideación, pitch y validación inicial",
 		commands: [
 			{ cmd: "/studio:start", desc: "Asistente interactivo de inicio y onboarding (alias /start)" },
@@ -23,8 +23,8 @@ export const STUDIO_CATEGORIES: StudioCategory[] = [
 		],
 	},
 	{
-		name: "Diseño & Sistemas",
-		emoji: "📋",
+		name: "DISENO & SISTEMAS",
+		emoji: "•",
 		description: "Mecánicas, loops, economía y niveles",
 		commands: [
 			{ cmd: "/game-design-document", desc: "GDD por sistema con player fantasy y fórmulas" },
@@ -35,8 +35,8 @@ export const STUDIO_CATEGORIES: StudioCategory[] = [
 		],
 	},
 	{
-		name: "Ingeniería & Motores",
-		emoji: "💻",
+		name: "INGENIERIA & MOTORES",
+		emoji: "•",
 		description: "Arquitectura, prototipos y motores de juego",
 		commands: [
 			{ cmd: "/studio:new", desc: "Crear nuevo juego desde plantilla/starter (Bevy 2D, Raylib C++, Godot)" },
@@ -51,8 +51,8 @@ export const STUDIO_CATEGORIES: StudioCategory[] = [
 		],
 	},
 	{
-		name: "Arte & Audio",
-		emoji: "🎨",
+		name: "ARTE & AUDIO",
+		emoji: "•",
 		description: "Identidad visual, sonido, foley y pulido",
 		commands: [
 			{ cmd: "/art-bible", desc: "Biblia de arte: estética, guías y especificaciones" },
@@ -64,8 +64,8 @@ export const STUDIO_CATEGORIES: StudioCategory[] = [
 		],
 	},
 	{
-		name: "QA & Testing",
-		emoji: "🧪",
+		name: "QA & TESTING",
+		emoji: "•",
 		description: "Planes de prueba, smoke checks y triaje",
 		commands: [
 			{ cmd: "/qa-plan", desc: "Estrategia y suites de prueba por hito" },
@@ -76,8 +76,8 @@ export const STUDIO_CATEGORIES: StudioCategory[] = [
 		],
 	},
 	{
-		name: "Producción & Releases",
-		emoji: "🚀",
+		name: "PRODUCCION & RELEASES",
+		emoji: "•",
 		description: "Hitos, retrospectivas y lanzamiento",
 		commands: [
 			{ cmd: "/milestone-review", desc: "Cierre de hito con directores y evaluación de riesgo" },
@@ -88,8 +88,8 @@ export const STUDIO_CATEGORIES: StudioCategory[] = [
 		],
 	},
 	{
-		name: "Configuración & Admin",
-		emoji: "⚙️",
+		name: "CONFIGURACION & ADMIN",
+		emoji: "•",
 		description: "Ajustes de estudio, modelos y memoria",
 		commands: [
 			{ cmd: "/studio:setup", desc: "Instalación guiada de agentes y configuración inicial" },
@@ -131,13 +131,13 @@ export async function handleStudioCommand(
 	) {
 		const options = [
 			...STUDIO_CATEGORIES.map(
-				(c) => `${c.emoji} ${c.name} — ${c.description}`,
+				(c) => `${c.name} — ${c.description}`,
 			),
-			"📖 Ver todos los comandos",
+			"Ver todos los comandos",
 		];
 
 		const selected = await (ctx.ui as any).select(
-			"🎮 Pi Game Studio — Catálogo de Comandos",
+			"PI GAME STUDIO — Catálogo de Comandos",
 			options,
 		);
 
@@ -160,7 +160,7 @@ export async function handleStudioCommand(
 
 function renderCategory(cat: StudioCategory, ctx?: ExtensionContext): void {
 	const lines = [
-		`🎮 ${cat.emoji} ${cat.name} — ${cat.description}`,
+		`${cat.name} — ${cat.description}`,
 		"─".repeat(50),
 		...cat.commands.map((item) => `• ${item.cmd.padEnd(24)} ${item.desc}`),
 	];
@@ -170,7 +170,7 @@ function renderCategory(cat: StudioCategory, ctx?: ExtensionContext): void {
 		ctx.ui.notify(msg, "info");
 	} else {
 		console.log("");
-		console.log(`\x1b[1m\x1b[38;2;167;139;250m${cat.emoji} ${cat.name}\x1b[0m — \x1b[38;2;107;114;128m${cat.description}\x1b[0m`);
+		console.log(`\x1b[1m\x1b[38;2;167;139;250m${cat.name}\x1b[0m — \x1b[38;2;107;114;128m${cat.description}\x1b[0m`);
 		console.log("\x1b[38;2;107;114;128m" + "─".repeat(70) + "\x1b[0m");
 		for (const item of cat.commands) {
 			const cmdPadded = item.cmd.padEnd(26);
@@ -183,16 +183,16 @@ function renderCategory(cat: StudioCategory, ctx?: ExtensionContext): void {
 function renderAll(ctx?: ExtensionContext): void {
 	if (ctx?.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 		const lines = [
-			"🎮 PI GAME STUDIO — CATÁLOGO DE COMANDOS",
-			"Todos los comandos llevan el prefijo 🎮 [Studio] en el menú /",
+			"PI GAME STUDIO — CATÁLOGO DE COMANDOS",
+			"Todos los comandos llevan el prefijo [Studio] en el menú /",
 			"",
-			...STUDIO_CATEGORIES.map((c) => `${c.emoji} ${c.name} (${c.commands.length} comandos)`),
+			...STUDIO_CATEGORIES.map((c) => `${c.name} (${c.commands.length} comandos)`),
 		];
 		ctx.ui.notify(lines.join("\n"), "info");
 	} else {
 		console.log("");
-		console.log("\x1b[1m\x1b[38;2;167;139;250m🎮 PI GAME STUDIO — CATÁLOGO DE COMANDOS\x1b[0m");
-		console.log("\x1b[38;2;107;114;128mTodos los comandos del estudio llevan el prefijo 🎮 [Studio] en el menú /\x1b[0m");
+		console.log("\x1b[1m\x1b[38;2;167;139;250mPI GAME STUDIO — CATÁLOGO DE COMANDOS\x1b[0m");
+		console.log("\x1b[38;2;107;114;128mTodos los comandos del estudio llevan el prefijo [Studio] en el menú /\x1b[0m");
 		console.log("");
 
 		for (const cat of STUDIO_CATEGORIES) {

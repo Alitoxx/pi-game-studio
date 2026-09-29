@@ -175,11 +175,11 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 		lines.push("");
 	} else {
 		const setup = inspectSetup(root);
-		const statusText = setup.isConfigured ? "✔ Entorno OK (55 agentes)" : "⚠ Pendiente de configurar (/start)";
-		lines.push(center(`${VIOLET}${BOLD}🎮 PI GAME STUDIO v${version}${RESET}`, width));
+		const statusText = setup.isConfigured ? "Entorno OK (55 agentes)" : "Pendiente de configurar (/start)";
+		lines.push(center(`${VIOLET}${BOLD}PI GAME STUDIO v${version}${RESET}`, width));
 		lines.push(center(`${CYAN}55 Agentes · 80 Skills · 44 Templates · ${statusText}${RESET}`, width));
 		lines.push(center(`${WHITE}Motores: ${engineInfo}${RESET}`, width));
-		lines.push(center(`${GOLD}💡 Usa /studio o /studio:setup para comenzar con tu videojuego${RESET}`, width));
+		lines.push(center(`${GOLD}Usa /studio o /studio:setup para comenzar con tu videojuego${RESET}`, width));
 	}
 
 	return lines;

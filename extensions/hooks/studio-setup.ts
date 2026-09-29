@@ -235,16 +235,16 @@ export async function handleStudioSetup(
 	// Interactive UI mode
 	if (ctx.hasUI && typeof (ctx.ui as any)?.select === "function") {
 		const options = [
-			`⚡ 1. Instalación Automática (${status.expectedAgents} agentes recomendados para ${status.currentEngine} en modo 'inherit')`,
-			"🛠️ 2. Instalación Manual / Guiada (Elegir motor, idioma y modelos por nivel)",
-			"🤖 3. Configurar Modelos de IA (/studio:models)",
-			"📊 4. Ver diagnóstico del estudio (/studio:status)",
-			"📖 5. Ver guía rápida de inicio",
+			`1. Instalación Automática (${status.expectedAgents} agentes recomendados para ${status.currentEngine} en modo 'inherit')`,
+			"2. Instalación Manual / Guiada (Elegir motor, idioma y modelos por nivel)",
+			"3. Configurar Modelos de IA (/studio:models)",
+			"4. Ver diagnóstico del estudio (/studio:status)",
+			"5. Ver guía rápida de inicio",
 		];
 
 		const choice = await promptSelectSafe(
 			ctx,
-			"🎮 Pi Game Studio — Asistente de Configuración",
+			"PI GAME STUDIO — Asistente de Configuración",
 			options,
 		);
 
@@ -352,15 +352,15 @@ export async function runGuidedSetup(
 
 	// ── Paso 3: Configuración de Modelos ──
 	const modelStrategyOptions = [
-		"⚡ Perfil Recomendado (Directores: gpt-5.4-mini, Especialistas: 120b, Ligeros: 20b)",
-		"🔄 Modo 'inherit' (Todos los 55 agentes usan el modelo activo en tu sesión Pi)",
-		"🎯 Personalizar modelos por Nivel / Tier (Directores, Workhorses, Ligeros)",
-		"👤 Personalizar agentes individuales (asignar modelo a roles específicos)",
+		"1. Perfil Recomendado (Directores: gpt-5.4-mini, Especialistas: 120b, Ligeros: 20b)",
+		"2. Modo 'inherit' (Todos los agentes usan el modelo activo en tu sesión Pi)",
+		"3. Personalizar modelos por Nivel / Tier (Directores, Workhorses, Ligeros)",
+		"4. Personalizar agentes individuales (asignar modelo a roles específicos)",
 	];
 
 	const modelStrategyChoice = await promptSelectSafe(
 		ctx,
-		"Paso 3/3 — ¿Cómo deseas configurar los modelos de los 55 agentes?",
+		"Paso 3/3 — ¿Cómo deseas configurar los modelos de los agentes?",
 		modelStrategyOptions,
 	);
 	if (!modelStrategyChoice) return;
@@ -394,7 +394,7 @@ export async function runGuidedSetup(
 
 	// ── Confirmación Final ──
 	const confirmSummary = [
-		"🎮 RESUMEN DE INSTALACIÓN PERSONALIZADA:",
+		"RESUMEN DE INSTALACION PERSONALIZADA:",
 		`• Motor de juego:   ${selectedEngine}`,
 		`• Agentes a desplegar: ${targetCount} agentes (34 Core + ${targetCount - 34} especialistas de ${selectedEngine})`,
 		`• Idioma preferido:  ${selectedLang === "es" ? "Español (es)" : "English (en)"}`,
@@ -440,7 +440,7 @@ async function configureModelsByTier(
 	// Tier 1: Directores
 	const dirModel = await promptModelForRole(
 		ctx,
-		"👑 Tier 1 — Directores (Visión, GDD y Arquitectura)",
+		"Tier 1 — Directores (Visión, GDD y Arquitectura)",
 		"director",
 		config.director || "openai-codex/gpt-5.4-mini",
 	);
@@ -451,7 +451,7 @@ async function configureModelsByTier(
 	// Tier 2: Workhorses
 	const workModel = await promptModelForRole(
 		ctx,
-		"💻 Tier 2 — Workhorses / Especialistas (Código, Diseño, QA)",
+		"Tier 2 — Workhorses / Especialistas (Código, Diseño, QA)",
 		"workhorse",
 		config.workhorse || "openrouter/openai/gpt-oss-120b:free",
 	);
@@ -462,7 +462,7 @@ async function configureModelsByTier(
 	// Tier 3: Ligeros
 	const lightModel = await promptModelForRole(
 		ctx,
-		"🚀 Tier 3 — Tareas Ligeras (Comunidad, DevOps, Sonido)",
+		"Tier 3 — Tareas Ligeras (Comunidad, DevOps, Sonido)",
 		"lightweight",
 		config.lightweight || "openrouter/openai/gpt-oss-20b:free",
 	);
@@ -480,16 +480,16 @@ async function configureSpecificAgents(
 	const config = { ...base };
 
 	const featuredAgents = [
-		{ id: "creative-director", label: "👑 creative-director (Visión del juego y pilares)" },
-		{ id: "technical-director", label: "💻 technical-director (Arquitectura de software)" },
-		{ id: "game-designer", label: "📋 game-designer (Mecánicas, core loop y balance)" },
-		{ id: "lead-programmer", label: "⚙️ lead-programmer (Desarrollo y gameplay)" },
-		{ id: "godot-specialist", label: "⚡ godot-specialist (Motor Godot 4 & GDScript)" },
-		{ id: "unity-specialist", label: "⚡ unity-specialist (Motor Unity & C#)" },
-		{ id: "unreal-specialist", label: "⚡ unreal-specialist (Motor Unreal & C++)" },
-		{ id: "bevy-specialist", label: "⚡ bevy-specialist (Motor Bevy & Rust)" },
-		{ id: "raylib-specialist", label: "⚡ raylib-specialist (Motor Raylib & C++ / EnTT)" },
-		{ id: "custom", label: "✏️ Asignar a otro agente específico por nombre..." },
+		{ id: "creative-director", label: "creative-director (Visión del juego y pilares)" },
+		{ id: "technical-director", label: "technical-director (Arquitectura de software)" },
+		{ id: "game-designer", label: "game-designer (Mecánicas, core loop y balance)" },
+		{ id: "lead-programmer", label: "lead-programmer (Desarrollo y gameplay)" },
+		{ id: "godot-specialist", label: "godot-specialist (Motor Godot 4 & GDScript)" },
+		{ id: "unity-specialist", label: "unity-specialist (Motor Unity & C#)" },
+		{ id: "unreal-specialist", label: "unreal-specialist (Motor Unreal & C++)" },
+		{ id: "bevy-specialist", label: "bevy-specialist (Motor Bevy & Rust)" },
+		{ id: "raylib-specialist", label: "raylib-specialist (Motor Raylib & C++ / EnTT)" },
+		{ id: "custom", label: "Asignar a otro agente específico por nombre..." },
 	];
 
 	const agentPick = await promptSelectSafe(
@@ -638,23 +638,23 @@ export function installModelsConfig(ctx: ExtensionContext): void {
 
 export function formatSetupDiagnostic(s: SetupStatus): string {
 	return [
-		"📊 PI GAME STUDIO — ESTADO DE INSTALACIÓN",
+		"PI GAME STUDIO — ESTADO DE INSTALACION",
 		`• Agentes instalados:  ${s.agentsInstalled}/${s.expectedAgents} para ${s.currentEngine} (.pi/agents/)`,
 		`• Motor actual:        ${s.currentEngine}`,
-		`• Config de modelos:   ${s.hasModelsConfig ? "✔ Presente (.pi/gentle-ai/models.json)" : "⚠ No encontrada"}`,
-		`• Directorio estudio:  ${s.hasGameStudioDir ? "✔ Activo (.pi/game-studio/)" : "- No creado aún"}`,
-		`• Memoria Engram:      ${s.engramEnabled === true ? "✔ Conectado" : "- Almacenamiento local Markdown"}`,
-		`• project.yaml:        ${s.hasProjectYaml ? "✔ Presente" : "- No creado (se creará con /start o setup)"}`,
+		`• Config de modelos:   ${s.hasModelsConfig ? "Presente (.pi/gentle-ai/models.json)" : "No encontrada"}`,
+		`• Directorio estudio:  ${s.hasGameStudioDir ? "Activo (.pi/game-studio/)" : "No creado aún"}`,
+		`• Memoria Engram:      ${s.engramEnabled === true ? "Conectado" : "Almacenamiento local Markdown"}`,
+		`• project.yaml:        ${s.hasProjectYaml ? "Presente" : "No creado (se creará con /start o setup)"}`,
 	].join("\n");
 }
 
 export function formatGettingStartedGuide(): string {
 	return [
-		"🎮 GUÍA RÁPIDA DE PI GAME STUDIO",
+		"GUIA RAPIDA DE PI GAME STUDIO",
 		"1. /studio:setup   Instalación automática o manual de agentes y modelos",
 		"2. /studio:models  Revisa o personaliza los modelos asignados",
 		"3. /start          Comienza el loop de onboarding de tu juego",
-		"4. /studio         Accede al catálogo de 77 comandos del estudio",
+		"4. /studio         Accede al catálogo de comandos del estudio",
 	].join("\n");
 }
 

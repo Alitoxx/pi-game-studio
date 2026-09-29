@@ -59,13 +59,13 @@ export function recordFlowCompletion(cwd: string, receipt: FlowCompletionReceipt
 		} catch {}
 	} else {
 		const initialRoadmap = [
-			`# 🗺️ Roadmap de Producción — ${gameTitle}`,
+			`# Roadmap de Producción — ${gameTitle}`,
 			"",
 			newBlock,
 			"",
-			"## 🎯 Hitos del Proyecto",
+			"## Hitos del Proyecto",
 			"",
-			`### 🟡 ${milestone}`,
+			`### ${milestone}`,
 			`- [x] ${receipt.task}`,
 			`- [/] ${next}`,
 			"",
@@ -208,17 +208,17 @@ export async function handleStudioStart(
 
 	// Quick action flags
 	if (query === "new" || query === "brainstorm") {
-		notifyOrLog(ctx, "💡 Siguiente paso: escribe /brainstorm open para comenzar la ideación de tu juego.");
+		notifyOrLog(ctx, "Siguiente paso: escribe /brainstorm open para comenzar la ideación de tu juego.");
 		return;
 	}
 
 	if (query === "gdd") {
-		notifyOrLog(ctx, "📋 Siguiente paso: escribe /game-design-document para crear tu primer documento de diseño.");
+		notifyOrLog(ctx, "Siguiente paso: escribe /game-design-document para crear tu primer documento de diseño.");
 		return;
 	}
 
 	if (query === "engine") {
-		notifyOrLog(ctx, "⚙️ Siguiente paso: escribe /studio:settings o /setup-engine para configurar tu motor.");
+		notifyOrLog(ctx, "Siguiente paso: escribe /studio:settings o /setup-engine para configurar tu motor.");
 		return;
 	}
 
@@ -230,10 +230,10 @@ export async function handleStudioStart(
 
 		if (!audit.isConfigured) {
 			const setupChoice = await (ctx.ui as any).select(
-				"🎮 Producer: ¡Bienvenido al estudio! Tu entorno aún no está configurado. ¿Cómo prefieres inicializarlo?",
+				"PRODUCER: ¡Bienvenido al estudio! Tu entorno aún no está configurado. ¿Cómo prefieres inicializarlo?",
 				[
-					`⚡ 1. Instalación Automática (Recomendada: Agentes optimizados para ${audit.engineName || "Godot 4"} en modo 'inherit')`,
-					"🛠️ 2. Instalación Manual / Guiada (Tú eliges el motor de juego, tu idioma preferido y personalizas los modelos de IA por rol)",
+					`1. Instalación Automática (Recomendada: Agentes optimizados para ${audit.engineName || "Godot 4"} en modo 'inherit')`,
+					"2. Instalación Manual / Guiada (Tú eliges el motor de juego, tu idioma preferido y personalizas los modelos de IA por rol)",
 				],
 			);
 
@@ -258,47 +258,47 @@ export async function handleStudioStart(
 			// Early stage: No concept, no code
 			phaseLabel = "Fase 1: Concepción & Prototipo";
 			options = [
-				"💡 1. Definir la idea y fantasía de mi juego (/brainstorm)",
-				"⚡ 2. Crear un prototipo rápido con código listo para jugar (/studio:new)",
-				"💬 3. Hablar directamente con el equipo (Escribe libremente en el chat)",
+				"1. Definir la idea y fantasía de mi juego (/brainstorm)",
+				"2. Crear un prototipo rápido con código listo para jugar (/studio:new)",
+				"3. Hablar directamente con el equipo (Escribe libremente en el chat)",
 			];
 			actions = [
-				() => notifyOrLog(ctx, "💡 Escribe /brainstorm open para explorar temas, género y mecánicas."),
-				() => notifyOrLog(ctx, "⚡ Escribe /studio:new para crear una plantilla jugable (Bevy, Raylib o Godot)."),
-				() => notifyOrLog(ctx, "💬 Escribe en el chat lo que tienes en mente y el equipo te responderá."),
+				() => notifyOrLog(ctx, "Escribe /brainstorm open para explorar temas, género y mecánicas."),
+				() => notifyOrLog(ctx, "Escribe /studio:new para crear una plantilla jugable (Bevy, Raylib o Godot)."),
+				() => notifyOrLog(ctx, "Escribe en el chat lo que tienes en mente y el equipo te responderá."),
 			];
 		} else if (audit.hasConcept && audit.srcFileCount === 0) {
 			// Mid stage: Has concept, needs GDD & first systems
 			phaseLabel = "Fase 2: Diseño de Sistemas & Motor";
 			options = [
-				"📋 1. Redactar el documento de diseño y mecánicas (/game-design-document)",
-				"⚙️ 2. Auditar herramientas y requisitos del motor (/studio:doctor)",
-				"🎨 3. Definir la identidad visual y arte (/art-bible)",
+				"1. Redactar el documento de diseño y mecánicas (/game-design-document)",
+				"2. Auditar herramientas y requisitos del motor (/studio:doctor)",
+				"3. Definir la identidad visual y arte (/art-bible)",
 			];
 			actions = [
-				() => notifyOrLog(ctx, "📋 Escribe /game-design-document para estructurar core loop y mecánicas."),
-				() => notifyOrLog(ctx, "⚙️ Escribe /studio:doctor para verificar tus compiladores y motor."),
-				() => notifyOrLog(ctx, "🎨 Escribe /art-bible para definir paleta de colores y estética."),
+				() => notifyOrLog(ctx, "Escribe /game-design-document para estructurar core loop y mecánicas."),
+				() => notifyOrLog(ctx, "Escribe /studio:doctor para verificar tus compiladores y motor."),
+				() => notifyOrLog(ctx, "Escribe /art-bible para definir paleta de colores y estética."),
 			];
 		} else {
 			// Production stage: Has code and systems
 			phaseLabel = "Fase 3: Desarrollo & Validación";
 			options = [
-				"💻 1. Implementar una nueva mecánica de juego (/dev-story)",
-				"🧪 2. Probar y revisar la calidad del código (/code-review)",
-				"📊 3. Ver diagnóstico y métricas de avance del estudio (/studio:status)",
+				"1. Implementar una nueva mecánica de juego (/dev-story)",
+				"2. Probar y revisar la calidad del código (/code-review)",
+				"3. Ver diagnóstico y métricas de avance del estudio (/studio:status)",
 			];
 			actions = [
-				() => notifyOrLog(ctx, "💻 Escribe /dev-story para implementar la siguiente mecánica."),
-				() => notifyOrLog(ctx, "🧪 Escribe /code-review para auditar tu código actual."),
+				() => notifyOrLog(ctx, "Escribe /dev-story para implementar la siguiente mecánica."),
+				() => notifyOrLog(ctx, "Escribe /code-review para auditar tu código actual."),
 				() => displayProjectAudit(ctx, audit),
 			];
 		}
 
-		let promptHeadline = `🎮 Producer: ${phaseLabel} — ¿Cuál es el siguiente paso?`;
+		let promptHeadline = `PRODUCER: ${phaseLabel} — ¿Cuál es el siguiente paso?`;
 		if (audit.producerState?.gameTitle) {
 			const st = audit.producerState;
-			promptHeadline = `🎮 Producer: [${st.gameTitle} · ${st.milestone || phaseLabel}] — Siguiente paso activo: ${st.nextStep || "Continuar desarrollo"}`;
+			promptHeadline = `PRODUCER: [${st.gameTitle} · ${st.milestone || phaseLabel}] — Siguiente paso activo: ${st.nextStep || "Continuar desarrollo"}`;
 		}
 
 		const selected = await (ctx.ui as any).select(
@@ -321,27 +321,27 @@ export async function handleStudioStart(
 
 function displayProjectAudit(ctx: ExtensionContext, a: ProjectAudit): void {
 	const envStatus = a.isConfigured
-		? "✔ Entorno OK (55 agentes)"
-		: "⚠ Incompleto (/studio:setup)";
+		? "OK (55 agentes)"
+		: "Incompleto (/studio:setup)";
 	const roadmapStatus = a.hasRoadmap
-		? (a.producerState?.milestone ? `✔ ${a.producerState.milestone}` : "✔ Roadmap activo")
+		? (a.producerState?.milestone ? `${a.producerState.milestone}` : "Roadmap activo")
 		: "Pendiente (production/roadmap.md)";
 
 	const lines = [
-		"┌── 🎮 PI GAME STUDIO — ESTADO Y DIAGNÓSTICO DEL PROYECTO ───┐",
+		"┌── STUDIO AUDIT: ESTADO Y DIAGNOSTICO DEL PROYECTO ─────────┐",
 		`│ • Estado Ambiente:      ${envStatus.padEnd(36)} │`,
 		`│ • Línea / Hito Actual:  ${roadmapStatus.padEnd(36)} │`,
-		`│ • Motor de juego:       ${(a.hasEngine ? `✔ ${a.engineName}` : "⚠ No configurado (/studio:settings)").padEnd(36)} │`,
-		`│ • Concepto de juego:    ${(a.hasConcept ? "✔ game-concept.md" : "Pendiente (/brainstorm)").padEnd(36)} │`,
+		`│ • Motor de juego:       ${(a.hasEngine ? `${a.engineName}` : "No configurado (/studio:settings)").padEnd(36)} │`,
+		`│ • Concepto de juego:    ${(a.hasConcept ? "game-concept.md" : "Pendiente (/brainstorm)").padEnd(36)} │`,
 		`│ • Documentos de diseño: ${(a.gddCount + " archivos en design/gdd/").padEnd(36)} │`,
 		`│ • Archivos de código:   ${(a.srcFileCount + " archivos en src/").padEnd(36)} │`,
-		`│ • Prototipos:           ${(a.hasPrototypes ? "✔ prototypes/ detectada" : "Sin prototipos aún").padEnd(36)} │`,
+		`│ • Prototipos:           ${(a.hasPrototypes ? "prototypes/ detectada" : "Sin prototipos aún").padEnd(36)} │`,
 		"├─────────────────────────────────────────────────────────────┤",
-		"│ Siguientes acciones recomendadas (Radar de Inicio):         │",
-		"│ [1] Si empiezas de cero       ➔ /brainstorm open            │",
-		"│ [2] Si tienes concepto claro  ➔ /game-design-document       │",
-		"│ [3] Si ya tienes código       ➔ /project-stage-detect       │",
-		"│ [4] Entrevista interactiva    ➔ /start                      │",
+		"│ NEXT STEPS (Radar de Inicio):                               │",
+		"│ [1] Si empiezas de cero       -> /brainstorm open           │",
+		"│ [2] Si tienes concepto claro  -> /game-design-document      │",
+		"│ [3] Si ya tienes código       -> /project-stage-detect      │",
+		"│ [4] Entrevista interactiva    -> /start                     │",
 		"└─────────────────────────────────────────────────────────────┘",
 	];
 

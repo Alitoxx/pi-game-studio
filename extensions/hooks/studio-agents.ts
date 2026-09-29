@@ -31,13 +31,13 @@ export const AGENT_GROUPS: Array<{
 	agents: string[];
 }> = [
 	{
-		name: "Tier 1 — Directores",
-		emoji: "👑",
+		name: "TIER 1 — DIRECTORES",
+		emoji: "•",
 		agents: ["creative-director", "technical-director", "producer"],
 	},
 	{
-		name: "Tier 2 — Leads de Departamento",
-		emoji: "🎯",
+		name: "TIER 2 — LEADS DE DEPARTAMENTO",
+		emoji: "•",
 		agents: [
 			"game-designer",
 			"lead-programmer",
@@ -50,8 +50,8 @@ export const AGENT_GROUPS: Array<{
 		],
 	},
 	{
-		name: "Tier 3 — Programación & Motores",
-		emoji: "💻",
+		name: "TIER 3 — PROGRAMACION & MOTORES",
+		emoji: "•",
 		agents: [
 			"gameplay-programmer",
 			"engine-programmer",
@@ -62,8 +62,8 @@ export const AGENT_GROUPS: Array<{
 		],
 	},
 	{
-		name: "Tier 3 — Especialistas de Motor Específicos",
-		emoji: "⚡",
+		name: "TIER 3 — ESPECIALISTAS DE MOTOR DEDICADOS",
+		emoji: "•",
 		agents: [
 			"godot-specialist",
 			"godot-gdscript-specialist",
@@ -89,8 +89,8 @@ export const AGENT_GROUPS: Array<{
 		],
 	},
 	{
-		name: "Tier 3 — Diseño & Sistemas",
-		emoji: "📐",
+		name: "TIER 3 — DISENO & SISTEMAS",
+		emoji: "•",
 		agents: [
 			"systems-designer",
 			"level-designer",
@@ -100,18 +100,18 @@ export const AGENT_GROUPS: Array<{
 		],
 	},
 	{
-		name: "Tier 3 — Arte, Audio & Narrativa",
-		emoji: "🎨",
+		name: "TIER 3 — ARTE, AUDIO & NARRATIVA",
+		emoji: "•",
 		agents: ["technical-artist", "writer", "world-builder", "sound-designer"],
 	},
 	{
-		name: "Tier 3 — QA, Rendimiento & Seguridad",
-		emoji: "🧪",
+		name: "TIER 3 — QA, RENDIMIENTO & SEGURIDAD",
+		emoji: "•",
 		agents: ["qa-tester", "performance-analyst", "security-engineer", "analytics-engineer"],
 	},
 	{
-		name: "Tier 3 — Operaciones & Comunidad",
-		emoji: "🚀",
+		name: "TIER 3 — OPERACIONES & COMUNIDAD",
+		emoji: "•",
 		agents: ["devops-engineer", "accessibility-specialist", "live-ops-designer", "community-manager"],
 	},
 ];
@@ -137,17 +137,17 @@ export async function handleStudioAgents(
 
 	if (ctx.hasUI && typeof (ctx.ui as any)?.select === "function" && query !== "all") {
 		const objectiveOptions = [
-			"🎯 1. Quiero diseñar mecánicas, combate o balance → game-designer",
-			"💻 2. Quiero programar, resolver arquitectura o motor → technical-director / leads",
-			"🎨 3. Quiero definir arte, audio o historia → art-director / audio / narrativa",
-			"🧪 4. Quiero probar, optimizar o reportar bugs → qa-lead / qa-tester",
-			"👑 5. Quiero visión global o planificar entregas → producer / creative-director",
-			"📂 6. Explorar agentes por área técnica (Directores, Leads, Motores...)",
-			"📖 7. Ver el catálogo completo de los 55 agentes",
+			"1. Diseñar mecánicas, combate o balance -> game-designer",
+			"2. Programar, resolver arquitectura o motor -> technical-director / leads",
+			"3. Definir arte, audio o historia -> art-director / audio / narrativa",
+			"4. Probar, optimizar o reportar bugs -> qa-lead / qa-tester",
+			"5. Visión global o planificar entregas -> producer / creative-director",
+			"6. Explorar agentes por área técnica (Directores, Leads, Motores...)",
+			"7. Ver el catálogo completo de los 55 agentes",
 		];
 
 		const selected = await (ctx.ui as any).select(
-			"🎮 Pi Game Studio — ¿Con qué parte de tu juego quieres avanzar?",
+			"PI GAME STUDIO — Selección de Especialistas",
 			objectiveOptions,
 		);
 
@@ -179,7 +179,7 @@ export async function handleStudioAgents(
 				break;
 			case 5: {
 				// Submenú por grupos
-				const groupOpts = AGENT_GROUPS.map((g) => `${g.emoji} ${g.name} (${g.agents.length} agentes)`);
+				const groupOpts = AGENT_GROUPS.map((g) => `${g.name} (${g.agents.length} agentes)`);
 				const groupPick = await (ctx.ui as any).select("Selecciona un área del estudio:", groupOpts);
 				if (groupPick !== undefined && groupPick !== null) {
 					const gIdx = typeof groupPick === "number" ? groupPick : groupOpts.indexOf(groupPick);
@@ -205,7 +205,7 @@ function printGroup(
 ): void {
 	const pkgRoot = resolvePackageRoot();
 	const lines = [
-		`🎮 ${group.emoji} ${group.name}`,
+		`${group.name}`,
 		"─".repeat(50),
 	];
 
@@ -218,7 +218,7 @@ function printGroup(
 		ctx.ui.notify(lines.join("\n"), "info");
 	} else {
 		console.log("");
-		console.log(`\x1b[1m\x1b[38;2;167;139;250m${group.emoji} ${group.name}\x1b[0m`);
+		console.log(`\x1b[1m\x1b[38;2;167;139;250m${group.name}\x1b[0m`);
 		console.log("\x1b[38;2;107;114;128m" + "─".repeat(60) + "\x1b[0m");
 
 		for (const agentName of group.agents) {
@@ -234,16 +234,16 @@ function printGroup(
 function printAllAgents(ctx: ExtensionContext): void {
 	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 		const lines = [
-			"🎮 PI GAME STUDIO — CATÁLOGO DE 55 AGENTES",
+			"PI GAME STUDIO — CATÁLOGO DE 55 AGENTES",
 			"─".repeat(50),
-			...AGENT_GROUPS.map((g) => `${g.emoji} ${g.name}: ${g.agents.length} agentes`),
+			...AGENT_GROUPS.map((g) => `${g.name}: ${g.agents.length} agentes`),
 			"",
 			"Usa /studio:agents <grupo> para ver los especialistas de un área.",
 		];
 		ctx.ui.notify(lines.join("\n"), "info");
 	} else {
 		console.log("");
-		console.log("\x1b[1m\x1b[38;2;167;139;250m🎮 PI GAME STUDIO — CATÁLOGO DE 55 AGENTES\x1b[0m");
+		console.log("\x1b[1m\x1b[38;2;167;139;250mPI GAME STUDIO — CATÁLOGO DE 55 AGENTES\x1b[0m");
 		console.log("\x1b[38;2;107;114;128m" + "─".repeat(60) + "\x1b[0m");
 
 		for (const group of AGENT_GROUPS) {

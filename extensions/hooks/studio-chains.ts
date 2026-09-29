@@ -105,14 +105,14 @@ function parseChainFile(content: string, filename: string): StudioChain | null {
 	}
 
 	const titles: Record<string, string> = {
-		"gdd-review": "📋 Revisión Integral de GDD (Visión, Mecánicas, Arquitectura, Producción)",
-		"feature-implement": "⚡ Implementación de Mecánica (Diseño, Arquitectura, Código, QA)",
-		"release-gate": "🛡️ Auditoría de Milestone / Release (QA, Rendimiento, Seguridad, Release)",
+		"gdd-review": "Revisión Integral de GDD (Visión, Mecánicas, Arquitectura, Producción)",
+		"feature-implement": "Implementación de Mecánica (Diseño, Arquitectura, Código, QA)",
+		"release-gate": "Auditoría de Milestone / Release (QA, Rendimiento, Seguridad, Release)",
 	};
 
 	return {
 		name,
-		title: titles[name] || `🔗 Cadena: ${name}`,
+		title: titles[name] || `Cadena: ${name}`,
 		description,
 		steps,
 	};
@@ -150,13 +150,13 @@ export async function handleStudioChains(
 	if (ctx.hasUI && typeof (ctx.ui as any)?.select === "function") {
 		const options = [
 			...chains.map(
-				(c) => `${c.title}\n   (${c.steps.length} etapas: ${c.steps.map((s) => s.agent).join(" ➔ ")})`,
+				(c) => `${c.title}\n   (${c.steps.length} etapas: ${c.steps.map((s) => s.agent).join(" -> ")})`,
 			),
-			"📋 Ver descripción de todas las cadenas",
+			"Ver descripción de todas las cadenas",
 		];
 
 		const selected = await (ctx.ui as any).select(
-			"🎮 Pi Game Studio — Cadenas de Ejecución Multi-Agente (Chains)",
+			"PI GAME STUDIO — Cadenas de Ejecución Multi-Agente (Chains)",
 			options,
 		);
 
@@ -179,20 +179,20 @@ export async function handleStudioChains(
 
 function displayChainDetails(ctx: ExtensionContext, chain: StudioChain): void {
 	const lines = [
-		`🎮 CADENA DE ESTUDIO: ${chain.name.toUpperCase()}`,
+		`CADENA DE ESTUDIO: ${chain.name.toUpperCase()}`,
 		`• Descripción: ${chain.description}`,
 		`• Flujo secuencial (${chain.steps.length} etapas):`,
 	];
 
 	chain.steps.forEach((s, i) => {
 		lines.push(`  ${i + 1}. [${s.agent}]`);
-		if (s.reads) lines.push(`     📖 Lee:     ${s.reads}`);
-		if (s.output) lines.push(`     📝 Genera:  ${s.output}`);
-		if (s.instructions) lines.push(`     💡 Misión:  ${s.instructions.slice(0, 100)}...`);
+		if (s.reads) lines.push(`     Lee:     ${s.reads}`);
+		if (s.output) lines.push(`     Genera:  ${s.output}`);
+		if (s.instructions) lines.push(`     Misión:  ${s.instructions.slice(0, 100)}...`);
 	});
 
 	lines.push("");
-	lines.push(`💡 Para ejecutar esta cadena, escribe en el chat de Pi:`);
+	lines.push(`Para ejecutar esta cadena, escribe en el chat de Pi:`);
 	lines.push(`   "Ejecuta la cadena ${chain.name} para mi documento/feature"`);
 
 	const output = lines.join("\n");
@@ -206,13 +206,13 @@ function displayChainDetails(ctx: ExtensionContext, chain: StudioChain): void {
 
 function displayAllChains(ctx: ExtensionContext, chains: StudioChain[]): void {
 	const lines = [
-		"🎮 PI GAME STUDIO — CATÁLOGO DE CADENAS (CHAINS)",
+		"PI GAME STUDIO — CATÁLOGO DE CADENAS (CHAINS)",
 		"Pipelines multi-agente guiados para desarrollo estructurado de videojuegos:",
 		"",
 	];
 
 	for (const c of chains) {
-		lines.push(`🔗 ${c.name}`);
+		lines.push(`• ${c.name}`);
 		lines.push(`   ${c.description}`);
 		lines.push(`   Etapas: ${c.steps.map((s) => s.agent).join(" ➔ ")}`);
 		lines.push("");

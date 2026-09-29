@@ -1,7 +1,7 @@
 ---
 name: jam
 agent: producer
-description: "🎮 [Studio] Game Jam Mode — compressed 48-72h development workflow. Suspends heavy bureaucracy and enforces rapid iteration."
+description: "[Studio] Game Jam Mode — compressed 48-72h development workflow. Suspends heavy bureaucracy and enforces rapid iteration."
 model: inherit
 inheritProjectContext: true
 tools: read, glob, grep, write, edit, ask_user_question, bash

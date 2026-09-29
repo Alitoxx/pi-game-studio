@@ -1,7 +1,7 @@
 ---
 name: start
 agent: game-designer
-description: "🎮 [Studio] First-time onboarding — asks where you are, then guides you to the right workflow. No assumptions."
+description: "[Studio] First-time onboarding — asks where you are, then guides you to the right workflow. No assumptions."
 model: inherit
 inheritProjectContext: true
 tools: read, glob, grep, write, ask_user_question, bash
@@ -44,7 +44,7 @@ Store these findings internally to validate the user's self-assessment and tailo
 This is the first thing the user sees. Use `ask_user_question` with these options matching the detected language:
 
 **If Spanish (`es`):**
-- **Prompt**: "¡Bienvenido a Pi Game Studio! 🎮 Antes de sugerirte un flujo de trabajo, me gustaría entender desde qué punto partes. ¿En qué estado se encuentra tu idea de juego en este momento?"
+- **Prompt**: "¡Bienvenido a Pi Game Studio!  Antes de sugerirte un flujo de trabajo, me gustaría entender desde qué punto partes. ¿En qué estado se encuentra tu idea de juego en este momento?"
 - **Options**:
   - `A) No tengo idea aún` — No tengo un concepto todavía. Quiero explorar temas y descubrir qué crear.
   - `B) Idea vaga / aproximada` — Tengo un tema general, vibra o género en mente (ej. 'algo espacial' o 'granja acogedora') pero nada concreto.

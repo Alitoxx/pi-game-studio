@@ -1,7 +1,7 @@
 ---
 name: market-research
 agent: game-designer
-description: "🎮 [Studio] Market Research & Competitive Analysis — analyze Steam genres, competitor comps, player sentiment, tags, and audience viability."
+description: "[Studio] Market Research & Competitive Analysis — analyze Steam genres, competitor comps, player sentiment, tags, and audience viability."
 model: inherit
 inheritProjectContext: true
 tools: read, glob, grep, write, edit, web_search, ask_user_question

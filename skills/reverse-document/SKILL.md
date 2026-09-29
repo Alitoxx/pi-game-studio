@@ -1,7 +1,7 @@
 ---
 name: reverse-document
 agent: technical-director
-description: "🎮 [Studio] Reverse Document Existing Codebase — scan an entire game repo or specific systems (Godot, Unity, Unreal, Bevy, Raylib) to reconstruct GDD, architecture, and preferences."
+description: "[Studio] Reverse Document Existing Codebase — scan an entire game repo or specific systems (Godot, Unity, Unreal, Bevy, Raylib) to reconstruct GDD, architecture, and preferences."
 model: inherit
 inheritProjectContext: true
 tools: read, glob, grep, write, edit, ask_user_question, bash

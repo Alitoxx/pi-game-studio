@@ -1,7 +1,7 @@
 ---
 name: connect-engine-mcp
 agent: technical-director
-description: "🎮 [Studio] Engine MCP Connection Hub — configure and verify live Model Context Protocol connections for Godot, Unity, Unreal, and Bevy."
+description: "[Studio] Engine MCP Connection Hub — configure and verify live Model Context Protocol connections for Godot, Unity, Unreal, and Bevy."
 model: inherit
 inheritProjectContext: true
 tools: read, glob, grep, write, edit, ask_user_question, bash

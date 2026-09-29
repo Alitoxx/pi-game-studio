@@ -1,6 +1,6 @@
 ---
 name: connect-engram
-description: "🎮 [Studio] Diagnostic & sync assistant for Engram persistent memory. Checks connection, enables/disables memory cache, or syncs project decisions to Engram."
+description: "[Studio] Diagnostic & sync assistant for Engram persistent memory. Checks connection, enables/disables memory cache, or syncs project decisions to Engram."
 model: inherit
 inheritProjectContext: true
 tools: read, glob, write, bash, ask_user_question

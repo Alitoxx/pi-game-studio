@@ -229,5 +229,16 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 		expect(source).toContain("CONFIG");
 		expect(source).toContain("ALERTA DRIFT");
 	});
+
+	test("return-contract exposes validator and detects conversational bleed", () => {
+		const source = fs.readFileSync(
+			path.join(__dirname, "..", "extensions", "hooks", "return-contract.ts"),
+			"utf8",
+		);
+		expect(source).toContain("export function validateSpecialistReturn");
+		expect(source).toContain("status:");
+		expect(source).toContain("summary:");
+		expect(source).toContain("FORBIDDEN_CONVERSATIONAL_PHRASES");
+	});
 });
 

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.12] - 2026-09-29
+
+### Added
+- **Punto 5: Strict Return Contract & Subagent Watchdogs**:
+  - Implementación del validador y watchdog de retornos en `extensions/hooks/return-contract.ts`.
+  - Verificación formal de campos mínimos en el esquema YAML de retorno de especialistas (`status`, `summary`, `files_changed`, `validation`, `gameplay_impact`, `risks`, `next_recommended_specialist`).
+  - Detección de *Conversational Bleed*: Alertas ante frases de relleno conversacional o cortesía innecesaria en respuestas internas de subagentes.
+  - Refuerzo en las directrices de runtime de `extensions/hooks/index.ts` obligando a subagentes delegados a emitir únicamente bloques YAML compactos.
+
+---
+
 ## [0.8.11] - 2026-09-29
 
 ### Added

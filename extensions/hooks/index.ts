@@ -275,6 +275,8 @@ export default function (pi: ExtensionAPI) {
 						"- In chat, provide ONLY an executive synthesis (max 10-15 lines) highlighting core pillars, critical bottlenecks, and the file created. " +
 						"- Decisions MUST use a closed, clean Choice Envelope ([1], [2], [3]) with trade-offs, never messy open-ended essays. " +
 						"- Delivery Receipts: Conclude every completed milestone with an asset delivery receipt and next steps radar. " +
+						"- Specialist Return Contract (Strict Token Economy): Subagents and specialists delegated for implementation or review MUST NOT emit conversational prose, filler, or greetings. " +
+						"They MUST return exclusively a compact YAML block (status: completed|partial|blocked|interaction_required, summary, files_changed, validation, gameplay_impact, risks, next_recommended_specialist). " +
 						"Flow Completion Protocol: When any specialist finishes a task (design doc, mechanic, art asset, code review), the Producer immediately closes the loop: " +
 						"1. Acknowledges the completed item and updates the production roadmap line. " +
 						"2. Declares the next concrete step in the sprint and hands off to the next specialist directly without asking what to do next. " +

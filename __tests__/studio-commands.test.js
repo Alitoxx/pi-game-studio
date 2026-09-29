@@ -35,6 +35,7 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 			"studio:chains",
 			"studio:settings",
 			"studio:doctor",
+			"studio:commands",
 			"studio:help",
 		];
 

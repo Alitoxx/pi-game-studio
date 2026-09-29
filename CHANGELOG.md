@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.16] - 2026-09-29
+
+### Added
+- **Punto 9: Sober Curated Command Palette (`/studio:commands`)**:
+  - Registro oficial del comando `/studio:commands` en `extensions/hooks/index.ts`.
+  - Navegación rápida y búsqueda interactiva por palabras clave o categorías de ingeniería y diseño de videojuegos.
+  - Paleta curada y sobria sin emojis, con alias directo `/studio` y `/studio:help`.
+
+---
+
 ## [0.8.15] - 2026-09-29
 
 ### Added

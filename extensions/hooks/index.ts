@@ -132,6 +132,14 @@ export default function (pi: ExtensionAPI) {
 		},
 	});
 
+	// /studio:commands — Paleta curada de comandos del estudio
+	(pi as any).registerCommand?.("studio:commands", {
+		description: "[Studio] Paleta curada y búsqueda rápida de comandos y herramientas del estudio",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioCommand(args, ctx);
+		},
+	});
+
 	// /studio:help — Alias de ayuda
 	(pi as any).registerCommand?.("studio:help", {
 		description: "[Studio] Ayuda rápida y catálogo de comandos de Pi Game Studio",

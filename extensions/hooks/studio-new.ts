@@ -190,6 +190,17 @@ export async function handleStudioNew(
 	// Auto-detect engine to verify installation
 	const detection = detectProjectEngine(targetDir);
 
+	// Update Producer Roadmap with the starter creation
+	try {
+		const { recordFlowCompletion } = require("./studio-start.ts");
+		recordFlowCompletion(targetDir, {
+			task: `Starter técnico desplegado: ${selectedStarter.name}`,
+			agent: "lead-programmer",
+			filesChanged: ["Cargo.toml", "src/main.rs", "project.yaml"],
+			nextStep: "Validar game feel y controles en pantalla (cargo run) o definir concepto (/brainstorm)",
+		});
+	} catch {}
+
 	console.log("\x1b[38;2;107;114;128m" + "─".repeat(70) + "\x1b[0m");
 	console.log(`  \x1b[38;2;52;211;153m✔ Archivos base instalados en:\x1b[0m ${targetDir}`);
 	console.log(`  \x1b[38;2;52;211;153m✔ Motor detectado automáticamente:\x1b[0m ${formatEngineBadge(detection)}`);

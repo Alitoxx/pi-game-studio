@@ -16,7 +16,7 @@ import { handleStudioStatus } from "./studio-status.ts";
 import { handleStudioAgents } from "./studio-agents.ts";
 import { handleStudioSettings, getLanguage } from "./studio-settings.ts";
 import { handleStudioChains } from "./studio-chains.ts";
-import { handleStudioStart, readProducerState, recordFlowCompletion } from "./studio-start.ts";
+import { handleStudioStart, readProducerState, recordFlowCompletion, auditProject } from "./studio-start.ts";
 import { handleStudioDoctor } from "./studio-doctor.ts";
 import { handleStudioNew } from "./studio-new.ts";
 import { handleStudioChanges } from "./studio-changes.ts";
@@ -266,9 +266,12 @@ export default function (pi: ExtensionAPI) {
 				// Environment Status & Producer Line Guidance
 				if (setup.isConfigured) {
 					const { hasRoadmap, state: prodState } = readProducerState(studioRoot);
+					const projAudit = auditProject(studioRoot);
 					let roadmapDirective = "";
 					if (hasRoadmap && prodState?.gameTitle) {
 						roadmapDirective = ` Active Project Line: Game="${prodState.gameTitle}", Engine="${prodState.engine || setup.currentEngine}", Milestone="${prodState.milestone || 'In progress'}", Sprint="${prodState.sprint || 'Active'}", InProgress="${prodState.inProgress || 'Development'}", NextStep="${prodState.nextStep || 'Continue development'}".`;
+					} else if (projAudit.srcFileCount > 0 && !projAudit.hasConcept) {
+						roadmapDirective = ` Active Project Line: Code-First Prototype Phase. The project already has functional starter code in src/ (${projAudit.srcFileCount} source files, engine "${setup.currentEngine}"). Acknowledge that the starter code already exists and is working. Do NOT offer to create a new starter (/studio:new). The immediate next options are: 1. Definir el concepto a partir de este prototipo (/brainstorm), 2. Agregar mecánicas de combate/gameplay (hitbox, enemigos, daño) a este prototipo, o 3. Mejorar los controles y el game feel (coyote time, aceleración, dash).`;
 					} else {
 						roadmapDirective = " Active Project Line: Concept & Inception phase (no concept doc or prototype yet). In this phase, do NOT suggest downstream tasks like mapping systems or defining an art bible, as those strictly require a concept first. The only valid starting actions are: 1. Brainstorm concept (/brainstorm), 2. Write concept from user premise, or 3. Code-first prototype starter (/studio:new).";
 					}

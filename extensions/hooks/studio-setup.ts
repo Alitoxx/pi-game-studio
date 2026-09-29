@@ -252,14 +252,14 @@ export async function runGuidedSetup(
 	// ── Paso 3: Configuración de Modelos ──
 	const modelStrategyOptions = [
 		"⚡ Perfil Recomendado (Directores: gpt-5.4-mini, Especialistas: 120b, Ligeros: 20b)",
-		"🔄 Modo 'inherit' (Todos los 50 agentes usan el modelo activo en tu sesión Pi)",
+		"🔄 Modo 'inherit' (Todos los 55 agentes usan el modelo activo en tu sesión Pi)",
 		"🎯 Personalizar modelos por Nivel / Tier (Directores, Workhorses, Ligeros)",
 		"👤 Personalizar agentes individuales (asignar modelo a roles específicos)",
 	];
 
 	const modelStrategyChoice = await promptSelectSafe(
 		ctx,
-		"Paso 3/3 — ¿Cómo deseas configurar los modelos de los 50 agentes?",
+		"Paso 3/3 — ¿Cómo deseas configurar los modelos de los 55 agentes?",
 		modelStrategyOptions,
 	);
 	if (!modelStrategyChoice) return;

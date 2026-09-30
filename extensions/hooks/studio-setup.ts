@@ -170,7 +170,7 @@ export function inspectSetup(cwd: string): SetupStatus {
 		} catch {}
 	}
 
-	let currentEngine = "Godot";
+	let currentEngine = "Sin configurar";
 	const projectYaml = join(cwd, "project.yaml");
 	const hasProjectYaml = existsSync(projectYaml);
 	if (hasProjectYaml) {

@@ -50,10 +50,11 @@ export function extractContextUsage(ctx: ExtensionContext): ContextUsageInfo | u
 			if (usage && typeof usage === "object") {
 				const tokens = Number(usage.tokens ?? usage.inputTokens ?? 0);
 				const contextWindow = Number(usage.contextWindow ?? (ctx as any).model?.contextWindow ?? 0);
-				const percent = Number(
+				const rawPercent = Number(
 					usage.percent ??
-					(contextWindow > 0 ? Math.round((tokens / contextWindow) * 100) : 0),
+					(contextWindow > 0 ? (tokens / contextWindow) * 100 : 0),
 				);
+				const percent = Math.round(rawPercent);
 				return { tokens, contextWindow, percent };
 			}
 		}
@@ -84,7 +85,8 @@ export function renderStudioStatusCard(
 		: undefined;
 
 	const gameTitle = prodState?.gameTitle || "Sin título";
-	const engine = prodState?.engine || setup.currentEngine || "Auto";
+	const rawEngine = prodState?.engine || setup.currentEngine || "Sin configurar";
+	const engine = rawEngine === "Sin configurar" ? "Sin motor (/start)" : rawEngine;
 	const milestone = prodState?.milestone || "M1 — Prototipo";
 	const sprint = prodState?.sprint || "Sprint Activo";
 	const modelStr = formatModelDisplayName(model, thinking);
@@ -155,8 +157,8 @@ export function renderStudioFooterBar(
 		? (pi as any).getThinkingLevel()
 		: undefined;
 
-	const branch = typeof footerData?.getGitBranch === "function" ? footerData.getGitBranch() : undefined;
-	const engine = prodState?.engine || setup.currentEngine || "Studio";
+	const rawEngine = prodState?.engine || setup.currentEngine || "Sin configurar";
+	const engineDisplay = rawEngine === "Sin configurar" ? "Sin motor (/start)" : rawEngine;
 	const modelId = formatModelDisplayName(model, thinking);
 
 	const parts: string[] = [];
@@ -169,7 +171,7 @@ export function renderStudioFooterBar(
 	}
 
 	// Engine & Sprint
-	parts.push(`${CYAN}🎮 ${engine}${RESET}`);
+	parts.push(`${CYAN}🎮 ${engineDisplay}${RESET}`);
 	if (prodState?.sprint) {
 		parts.push(`${WHITE}${prodState.sprint}${RESET}`);
 	}
@@ -223,11 +225,12 @@ export function updateStudioHUD(ctx: ExtensionContext, pi?: ExtensionAPI): void 
 			? (pi as any).getThinkingLevel()
 			: undefined;
 
-		const engine = prodState?.engine || setup.currentEngine || "Studio";
+		const rawEngine = prodState?.engine || setup.currentEngine || "Sin configurar";
+		const engineDisplay = rawEngine === "Sin configurar" ? "Sin motor (/start)" : rawEngine;
 		const modelId = formatModelDisplayName(model, thinking);
 
 		const parts: string[] = [];
-		parts.push(`🎮 ${engine}`);
+		parts.push(`🎮 ${engineDisplay}`);
 		if (prodState?.sprint) parts.push(prodState.sprint);
 		parts.push(modelId);
 		if (usage) {

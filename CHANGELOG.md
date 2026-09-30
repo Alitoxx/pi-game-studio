@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.22] - 2026-09-30
+
+### Added
+- **Nuevo Tema `GameStudio-Gentle` y Rediseño de Tarjetas estilo Gentle Shell**:
+  - Incorporado el tema oficial `GameStudio-Gentle.json` con la paleta de colores nórdica mate y relajante (`#06080f`, bordes `#313342`, acento azul `#7FB4CA`, salvia `#B7CC85`, ámbar `#DEBA87`, lavanda `#B5B2D0`).
+  - Rediseño de la tarjeta de estado `renderStudioStatusCard` (`studio-hud.ts`) con tipografía jerárquica limpia (`Project`, `Engine`, `Integrations / Engram`, `Progress ODD`), glifos sobrios `✿ Status` y bordes sutiles.
+  - Rediseño del widget de tareas `renderTasksWidgetCard` (`studio-tasks-widget.ts`) imitando la tarjeta de tareas de Gentle Shell con cabecera `❀ Tasks · X of Y`, estados `✓` (completado), `◐` (en progreso) y `○` (pendiente).
+
+---
+
 ## [0.8.21] - 2026-09-30
 
 ### Added

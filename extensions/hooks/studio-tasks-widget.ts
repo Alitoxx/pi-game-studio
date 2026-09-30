@@ -7,11 +7,14 @@ import { inspectStudioTasks, type StudioTask } from "./studio-tasks.ts";
 const RESET = "\x1b[0m";
 const BOLD = "\x1b[1m";
 const DIM = "\x1b[2m";
-const GREEN = "\x1b[38;2;52;211;153m";
-const YELLOW = "\x1b[38;2;251;191;36m";
-const GRAY = "\x1b[38;2;156;163;175m";
-const VIOLET = "\x1b[38;2;167;139;250m";
-const WHITE = "\x1b[38;2;243;244;246m";
+// Gentle Palette (Nordic / Sober)
+const GREEN = "\x1b[38;2;183;204;133m";    // #B7CC85 (Sage green)
+const YELLOW = "\x1b[38;2;222;186;135m";   // #DEBA87 (Warm amber)
+const GRAY = "\x1b[38;2;92;97;112m";       // #5C6170 (Muted gray)
+const BLUE = "\x1b[38;2;127;180;202m";     // #7FB4CA (Gentle powder blue)
+const LAVENDER = "\x1b[38;2;181;178;208m"; // #B5B2D0 (Muted lavender)
+const WHITE = "\x1b[38;2;243;246;249m";    // #F3F6F9 (Clean chalk text)
+const BORDER = "\x1b[38;2;49;51;66m";      // #313342 (Subtle card border)
 
 export const TASKS_WIDGET_KEY = "studio-tasks";
 
@@ -38,8 +41,8 @@ export function setTasksWidgetEnabled(studioRoot: string, enabled: boolean): voi
 export function renderTasksWidgetCard(tasks: StudioTask[], width: number = 74): string[] {
 	if (!tasks || tasks.length === 0) return [];
 
-	const cardWidth = Math.min(Math.max(width - 4, 60), 74);
-	const innerWidth = cardWidth - 2;
+	const cardWidth = Math.min(Math.max(width - 4, 46), 56);
+	const innerWidth = cardWidth - 4;
 
 	const pad = (str: string, len: number) => {
 		const visibleLen = str.replace(/\x1b\[[0-9;]*m/g, "").length;
@@ -52,20 +55,25 @@ export function renderTasksWidgetCard(tasks: StudioTask[], width: number = 74): 
 		return str.slice(0, maxLen - 1) + "…";
 	};
 
-	const lines: string[] = [];
-	const ruleLen = Math.max(0, cardWidth - 32);
-	lines.push(`  ${DIM}╭─${RESET} ${GREEN}${BOLD}TAREAS ACTIVAS (ODD / Roadmap)${RESET} ${DIM}${"─".repeat(ruleLen)}╮${RESET}`);
+	const completedCount = tasks.filter((t) => t.status === "completed").length;
+	const countSummary = `${completedCount} of ${tasks.length}`;
 
-	// Prioritize: in_progress first, then pending (up to 3 items), then completed (up to 2 items)
+	const lines: string[] = [];
+	const titleText = `❀ Tasks · ${countSummary}`;
+	const titleStyled = `${BLUE}${titleText}${RESET}`;
+	const ruleLen = Math.max(0, cardWidth - titleText.length - 7);
+	lines.push(`  ${BORDER}╭─${RESET} ${titleStyled} ${BORDER}${"─".repeat(ruleLen)}╮${RESET}`);
+
+	// Prioritize: in_progress first, then pending (up to 4 items), then completed (up to 3 items)
 	const inProg = tasks.filter((t) => t.status === "in_progress");
 	const pending = tasks.filter((t) => t.status === "pending");
 	const completed = tasks.filter((t) => t.status === "completed");
 
 	const displayTasks: StudioTask[] = [
 		...inProg,
-		...pending.slice(0, 3),
-		...completed.slice(-2),
-	].slice(0, 6);
+		...pending.slice(0, 4),
+		...completed.slice(-3),
+	].slice(0, 7);
 
 	for (const task of displayTasks) {
 		let icon = `${GRAY}○${RESET}`;
@@ -73,7 +81,7 @@ export function renderTasksWidgetCard(tasks: StudioTask[], width: number = 74): 
 
 		if (task.status === "completed") {
 			icon = `${GREEN}✓${RESET}`;
-			titleColor = DIM;
+			titleColor = `${DIM}${GRAY}`;
 		} else if (task.status === "in_progress") {
 			icon = `${YELLOW}◐${RESET}`;
 			titleColor = `${BOLD}${WHITE}`;
@@ -85,16 +93,16 @@ export function renderTasksWidgetCard(tasks: StudioTask[], width: number = 74): 
 		}
 
 		const truncatedRow = truncate(rowText, innerWidth);
-		lines.push(`  ${DIM}│${RESET} ${pad(truncatedRow, innerWidth)} ${DIM}│${RESET}`);
+		lines.push(`  ${BORDER}│${RESET} ${pad(truncatedRow, innerWidth)} ${BORDER}│${RESET}`);
 	}
 
 	const remaining = tasks.length - displayTasks.length;
 	if (remaining > 0) {
 		const more = `${DIM}... y ${remaining} tarea(s) más (/studio:tasks)${RESET}`;
-		lines.push(`  ${DIM}│${RESET} ${pad(more, innerWidth)} ${DIM}│${RESET}`);
+		lines.push(`  ${BORDER}│${RESET} ${pad(more, innerWidth)} ${BORDER}│${RESET}`);
 	}
 
-	lines.push(`  ${DIM}╰${"─".repeat(cardWidth)}╯${RESET}`);
+	lines.push(`  ${BORDER}╰${"─".repeat(cardWidth - 2)}╯${RESET}`);
 	return lines;
 }
 

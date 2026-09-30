@@ -8,13 +8,15 @@ import { inspectSetup } from "./studio-setup.ts";
 const RESET = "\x1b[0m";
 const BOLD = "\x1b[1m";
 const DIM = "\x1b[2m";
-const GREEN = "\x1b[38;2;52;211;153m";
-const YELLOW = "\x1b[38;2;251;191;36m";
-const RED = "\x1b[38;2;239;68;68m";
-const CYAN = "\x1b[38;2;56;189;248m";
-const VIOLET = "\x1b[38;2;167;139;250m";
-const WHITE = "\x1b[38;2;243;244;246m";
-const GRAY = "\x1b[38;2;156;163;175m";
+// Gentle Palette (Nordic / Sober)
+const GREEN = "\x1b[38;2;183;204;133m";    // #B7CC85 (Sage green)
+const YELLOW = "\x1b[38;2;222;186;135m";   // #DEBA87 (Warm amber/straw)
+const RED = "\x1b[38;2;203;124;148m";      // #CB7C94 (Soft muted red)
+const BLUE = "\x1b[38;2;127;180;202m";     // #7FB4CA (Gentle powder blue)
+const LAVENDER = "\x1b[38;2;181;178;208m"; // #B5B2D0 (Muted lavender)
+const WHITE = "\x1b[38;2;243;246;249m";    // #F3F6F9 (Clean chalk text)
+const GRAY = "\x1b[38;2;92;97;112m";       // #5C6170 (Muted gray)
+const BORDER = "\x1b[38;2;49;51;66m";      // #313342 (Subtle card border)
 
 export interface ContextUsageInfo {
 	tokens: number;
@@ -99,10 +101,10 @@ export function renderStudioStatusCard(
 		: `${DIM}No telemetría${RESET}`;
 
 	const engramStr = setup.engramEnabled === true
-		? `${GREEN}Engram conectado${RESET}`
-		: `${GRAY}Almacenamiento Git local${RESET}`;
+		? `${GREEN}✓ conectado${RESET}`
+		: `${GRAY}local Git${RESET}`;
 
-	const cardWidth = Math.min(Math.max(width - 4, 60), 74);
+	const cardWidth = Math.min(Math.max(width - 4, 46), 56);
 	const innerWidth = cardWidth - 4;
 	const pad = (str: string, len: number) => {
 		const visibleLen = str.replace(/\x1b\[[0-9;]*m/g, "").length;
@@ -110,38 +112,36 @@ export function renderStudioStatusCard(
 	};
 
 	const lines: string[] = [];
-	const ruleLen = Math.max(0, cardWidth - 38);
-	lines.push(`  ${DIM}╭─${RESET} ${VIOLET}${BOLD}PI GAME STUDIO — STATUS${RESET} ${DIM}${"─".repeat(ruleLen)}╮${RESET}`);
+	const titleText = `✿ Status`;
+	const titleStyled = `${BLUE}${titleText}${RESET}`;
+	const ruleLen = Math.max(0, cardWidth - 12);
+	lines.push(`  ${BORDER}╭─${RESET} ${titleStyled} ${BORDER}${"─".repeat(ruleLen)}╮${RESET}`);
 
-	const colW = Math.floor((innerWidth - 3) / 2);
-	const row1Left = `${VIOLET}Juego  :${RESET} ${WHITE}${gameTitle}${RESET}`;
-	const row1Right = `${VIOLET}Motor  :${RESET} ${CYAN}${engine}${RESET}`;
-	lines.push(`  ${DIM}│${RESET} ${pad(row1Left, colW)} ${DIM}│${RESET} ${pad(row1Right, colW)} ${DIM}│${RESET}`);
+	// Section: Project
+	lines.push(`  ${BORDER}│${RESET} ${pad(`${LAVENDER}${BOLD}Project${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	const shortRoot = studioRoot.replace(process.env.HOME || "", "~");
+	lines.push(`  ${BORDER}│${RESET} ${pad(`  ${WHITE}${gameTitle}${RESET} ${GRAY}(${shortRoot})${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`  ${BORDER}│${RESET} ${pad(`  ${GRAY}Engine${RESET} ${BLUE}${engine}${RESET} ${GRAY}·${RESET} ${GRAY}Hito${RESET} ${WHITE}${milestone}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 
-	const row2Left = `${VIOLET}Hito   :${RESET} ${WHITE}${milestone}${RESET}`;
-	const row2Right = `${VIOLET}Sprint :${RESET} ${WHITE}${sprint}${RESET}`;
-	lines.push(`  ${DIM}│${RESET} ${pad(row2Left, colW)} ${DIM}│${RESET} ${pad(row2Right, colW)} ${DIM}│${RESET}`);
-
-	const row3Left = `${VIOLET}Modelo :${RESET} ${CYAN}${modelStr}${RESET}`;
-	const row3Right = `${VIOLET}Memoria:${RESET} ${engramStr}`;
-	lines.push(`  ${DIM}│${RESET} ${pad(row3Left, colW)} ${DIM}│${RESET} ${pad(row3Right, colW)} ${DIM}│${RESET}`);
-
-	const row4 = `${VIOLET}Contexto:${RESET} ${gaugeStr}`;
-	lines.push(`  ${DIM}│${RESET} ${pad(row4, innerWidth + 3)} ${DIM}│${RESET}`);
+	// Section: Integrations
+	lines.push(`  ${BORDER}│${RESET} ${pad("", innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`  ${BORDER}│${RESET} ${pad(`${LAVENDER}${BOLD}Integrations${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`  ${BORDER}│${RESET} ${pad(`  🧠 Memory · ${engramStr}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`  ${BORDER}│${RESET} ${pad(`  🤖 Model  · ${BLUE}${modelStr}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`  ${BORDER}│${RESET} ${pad(`  📊 Context· ${gaugeStr}`, innerWidth)} ${BORDER}│${RESET}`);
 
 	if (prodState?.inProgress || prodState?.nextStep) {
-		lines.push(`  ${DIM}├${"─".repeat(cardWidth)}┤${RESET}`);
+		lines.push(`  ${BORDER}│${RESET} ${pad("", innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`  ${BORDER}│${RESET} ${pad(`${LAVENDER}${BOLD}Progress (ODD)${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 		if (prodState.inProgress) {
-			const prog = `${YELLOW}En Progreso:${RESET} ${WHITE}${prodState.inProgress}${RESET}`;
-			lines.push(`  ${DIM}│${RESET} ${pad(prog, innerWidth + 3)} ${DIM}│${RESET}`);
+			lines.push(`  ${BORDER}│${RESET} ${pad(`  ${YELLOW}◐${RESET} ${WHITE}${prodState.inProgress}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 		}
 		if (prodState.nextStep) {
-			const next = `${GREEN}Siguiente  :${RESET} ${WHITE}${prodState.nextStep}${RESET}`;
-			lines.push(`  ${DIM}│${RESET} ${pad(next, innerWidth + 3)} ${DIM}│${RESET}`);
+			lines.push(`  ${BORDER}│${RESET} ${pad(`  ${GREEN}→${RESET} ${GRAY}${prodState.nextStep}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 		}
 	}
 
-	lines.push(`  ${DIM}╰${"─".repeat(cardWidth)}╯${RESET}`);
+	lines.push(`  ${BORDER}╰${"─".repeat(cardWidth - 2)}╯${RESET}`);
 	return lines;
 }
 

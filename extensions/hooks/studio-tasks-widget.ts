@@ -132,7 +132,7 @@ export function updateTasksWidget(ctx: ExtensionContext): void {
 
 	(ctx.ui as any).setWidget(TASKS_WIDGET_KEY, (tui: any, _theme: any) => ({
 		render(width: number) {
-			// If fullscreen left rail sidebar is active, suppress bottom dock
+			// If fullscreen right rail sidebar is active, suppress bottom dock
 			if (tui && isStudioSidebarActive(tui)) {
 				return [];
 			}

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.28] - 2026-09-30
+
+### Changed
+- **Sidebar Rail Positioned on the Right Side (Gentle Shell Parity)**:
+  - Se alineó el orden de las entradas en `hstackHost` con la arquitectura oficial de Gentle Shell: el transcript/chat se mantiene en el área principal de la izquierda (`entries[0]`, grow: 1) y el panel lateral de `Status` y `Tasks` se ubica en el carril derecho (`entries[1]`, basis: 50).
+  - Actualizados comentarios y sincronización del widget para reflejar la orientación en el carril derecho.
+
+---
+
 ## [0.8.27] - 2026-09-30
 
 ### Added

@@ -64,8 +64,8 @@ export function isStudioSidebarActive(tui?: TUI): boolean {
 }
 
 /**
- * Installs the fullscreen left rail in Pi's TUI.
- * Displays Status + Tasks on the left rail when terminal width >= 140 and in fullscreen mode.
+ * Installs the fullscreen right rail in Pi's TUI (matching Gentle Shell).
+ * Displays Status + Tasks on the right rail when terminal width >= 140 and in fullscreen mode.
  * Safe fallback to bottom widget if terminal is narrower or not in fullscreen.
  */
 export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => void {
@@ -226,14 +226,14 @@ export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => voi
 				};
 			};
 
-			// The right component: transcript wrapped with footer reclamation
-			const right = {
+			// The left component: transcript wrapped with footer reclamation
+			const left = {
 				render: () => [],
 				invalidate() {},
 				[NODE]: () => reclaimFooterRow(original.call(root)),
 			};
 
-			// hstack with rail on the left, transcript on the right
+			// hstack with transcript on the left, rail on the right (matching Gentle Shell)
 			const hstackHost: Component & { [NODE](): LayoutNode } = {
 				render: () => [],
 				invalidate() {},
@@ -242,6 +242,7 @@ export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => voi
 					gap: GAP,
 					align: "stretch",
 					entries: [
+						{ component: left, basis: 0, grow: 1, shrink: 1, minSize: 1 },
 						{
 							component: scroll,
 							basis: RAIL_WIDTH,
@@ -249,7 +250,6 @@ export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => voi
 							shrink: 0,
 							minSize: RAIL_WIDTH,
 						},
-						{ component: right, basis: 0, grow: 1, shrink: 1, minSize: 1 },
 					],
 				}),
 			};

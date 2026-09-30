@@ -175,7 +175,7 @@ export function renderStudioFooterBar(
 	}
 
 	// Engine & Sprint
-	parts.push(`${CYAN}${engineDisplay}${RESET}`);
+	parts.push(`${BLUE}${engineDisplay}${RESET}`);
 	if (prodState?.sprint) {
 		parts.push(`${WHITE}${prodState.sprint}${RESET}`);
 	}

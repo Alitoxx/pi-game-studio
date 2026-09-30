@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.23] - 2026-09-30
+
+### Fixed
+- **Hotfix ReferenceError: CYAN is not defined en `renderStudioFooterBar`**:
+  - Reemplazada la referencia residual a la constante `CYAN` por `BLUE` en la barra inferior de estado (`studio-hud.ts`).
+  - Añadida prueba de regresión unitaria en `__tests__/studio-hud-and-widgets.test.js` para asegurar que no queden referencias a variables de color heredadas no definidas.
+
+---
+
 ## [0.8.22] - 2026-09-30
 
 ### Added

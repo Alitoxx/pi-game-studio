@@ -24,6 +24,13 @@ describe("Studio HUD and Live Tasks Widget", () => {
 		expect(widgetSource).toContain("export function setTasksWidgetEnabled");
 	});
 
+	test("studio-hud renders footer bar without reference errors", () => {
+		const hudSource = fs.readFileSync(hudModulePath, "utf8");
+		// Verify no undefined legacy color references exist
+		expect(hudSource).not.toContain("${CYAN}");
+		expect(hudSource).not.toContain("${VIOLET}");
+	});
+
 	test("gauge logic renders filled and empty segments correctly", () => {
 		// Mock implementation of gauge test
 		function renderGauge(percent, width = 8) {

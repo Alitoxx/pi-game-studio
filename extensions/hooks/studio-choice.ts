@@ -12,19 +12,32 @@ export interface ChoiceParams {
 	allowCustomResponse?: boolean;
 }
 
-export interface ChoiceResult {
-	value?: string;
-	label?: string;
-	index?: number;
-	customResponse?: string;
+export interface QuestionOption {
+	label: string;
+	description?: string;
+	preview?: string;
+}
+
+export interface QuestionItem {
+	question: string;
+	header?: string;
+	options: QuestionOption[];
+	multiSelect?: boolean;
+}
+
+export interface QuestionParams {
+	questions: QuestionItem[];
 }
 
 export function registerAskUserChoice(pi: ExtensionAPI): void {
+	// ──────────────────────────────────────────────
+	// 1. Tool: ask_user_choice (Single Question Menu)
+	// ──────────────────────────────────────────────
 	(pi as any).registerTool?.({
 		name: "ask_user_choice",
 		label: "Ask User Choice",
 		description:
-			"Presents an interactive menu to the user in the TUI allowing them to navigate with arrow keys (↑/↓) and select an option with Enter. Use this whenever asking the user for decisions, options, or selections instead of printing text numbers in the chat.",
+			"Presents an interactive menu to the user in the TUI allowing them to navigate with arrow keys (↑/↓) and select an option with Enter. Use this whenever asking the user for a single decision or choice.",
 		parameters: {
 			type: "object",
 			additionalProperties: false,
@@ -70,7 +83,6 @@ export function registerAskUserChoice(pi: ExtensionAPI): void {
 				};
 			}
 
-			// Format options for TUI display
 			const optionLabels = params.options.map((opt, i) => {
 				const desc = opt.description ? ` — ${opt.description}` : "";
 				return `${i + 1}. ${opt.label}${desc}`;
@@ -81,7 +93,6 @@ export function registerAskUserChoice(pi: ExtensionAPI): void {
 				optionLabels.push(OTHER_LABEL);
 			}
 
-			// Interactive selection using Pi's native UI dialog
 			if (ctx.hasUI && typeof (ctx.ui as any)?.select === "function") {
 				const picked = await (ctx.ui as any).select(params.question, optionLabels);
 
@@ -123,7 +134,6 @@ export function registerAskUserChoice(pi: ExtensionAPI): void {
 				};
 			}
 
-			// Fallback if no interactive UI
 			return {
 				content: [
 					{
@@ -132,6 +142,135 @@ export function registerAskUserChoice(pi: ExtensionAPI): void {
 					},
 				],
 				details: { fallback: true },
+			};
+		},
+	});
+
+	// ──────────────────────────────────────────────
+	// 2. Tool: ask_user_question (Batch Questionnaire)
+	// Como lo hace Gentle Shell: pregunta 1 a 4 preguntas seguidas en lote
+	// ──────────────────────────────────────────────
+	(pi as any).registerTool?.({
+		name: "ask_user_question",
+		label: "Ask User Question",
+		description:
+			"Ask 1 to 4 structured questions in a single batch, each with 2 to 4 options. The user answers them sequentially using interactive TUI menus with arrow keys (↑/↓) and Enter, and all answers are returned in a single result.",
+		parameters: {
+			type: "object",
+			additionalProperties: false,
+			required: ["questions"],
+			properties: {
+				questions: {
+					type: "array",
+					minItems: 1,
+					maxItems: 4,
+					description: "List of 1 to 4 questions to present in batch.",
+					items: {
+						type: "object",
+						additionalProperties: false,
+						required: ["question", "options"],
+						properties: {
+							question: { type: "string", description: "The full question text" },
+							header: { type: "string", description: "Short header or step label (e.g. 'Paso 1: Motor')" },
+							options: {
+								type: "array",
+								minItems: 2,
+								maxItems: 6,
+								description: "Options to select from",
+								items: {
+									type: "object",
+									additionalProperties: false,
+									required: ["label"],
+									properties: {
+										label: { type: "string", description: "Option label" },
+										description: { type: "string", description: "Option description" },
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		} as never,
+		async execute(
+			_id: string,
+			params: QuestionParams,
+			_signal: AbortSignal | undefined,
+			_onUpdate: any,
+			ctx: ExtensionContext,
+		) {
+			if (!params.questions || !Array.isArray(params.questions) || params.questions.length === 0) {
+				return {
+					content: [{ type: "text", text: "Error: No questions provided to ask_user_question." }],
+					details: { error: "empty_questions" },
+				};
+			}
+
+			if (!ctx.hasUI || typeof (ctx.ui as any)?.select !== "function") {
+				return {
+					content: [{ type: "text", text: "Error: Interactive UI unavailable for questionnaires." }],
+					details: { fallback: true },
+				};
+			}
+
+			const committedAnswers: Array<{
+				questionIndex: number;
+				question: string;
+				header?: string;
+				answer: string;
+			}> = [];
+
+			// Presentar cada pregunta secuencialmente con el selector de flechas
+			for (let i = 0; i < params.questions.length; i++) {
+				const q = params.questions[i];
+				const header = q.header ? `[${q.header}] ` : `[${i + 1}/${params.questions.length}] `;
+				const title = `${header}${q.question}`;
+
+				const labels = q.options.map((opt, optIdx) => {
+					const desc = opt.description ? ` — ${opt.description}` : "";
+					return `${optIdx + 1}. ${opt.label}${desc}`;
+				});
+
+				const picked = await (ctx.ui as any).select(title, labels);
+
+				if (picked === undefined || picked === null) {
+					return {
+						content: [
+							{
+								type: "text",
+								text: `User cancelled the questionnaire at step ${i + 1}.`,
+							},
+						],
+						details: { cancelled: true, completedCount: i },
+					};
+				}
+
+				const idx = typeof picked === "number" ? picked : labels.indexOf(picked);
+				const chosenOpt = q.options[idx] || q.options[0];
+
+				committedAnswers.push({
+					questionIndex: i + 1,
+					question: q.question,
+					header: q.header,
+					answer: chosenOpt.label,
+				});
+			}
+
+			// Formatear resumen final de respuestas para el LLM
+			const summaryLines = committedAnswers.map(
+				(a) => `${a.questionIndex}. ${a.question} -> ${a.answer}`,
+			);
+
+			return {
+				content: [
+					{
+						type: "text",
+						text: `The user answered the questionnaire:\n${summaryLines.join("\n")}`,
+					},
+				],
+				details: {
+					answers: committedAnswers,
+				},
 			};
 		},
 	});

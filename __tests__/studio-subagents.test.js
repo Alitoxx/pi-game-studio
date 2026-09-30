@@ -35,6 +35,7 @@ describe("Studio Subagents & Isolated Execution Engine", () => {
 		const choiceSource = fs.readFileSync(choicePath, "utf8");
 		expect(choiceSource).toContain("export function registerAskUserChoice");
 		expect(choiceSource).toContain('name: "ask_user_choice"');
+		expect(choiceSource).toContain('name: "ask_user_question"');
 
 		const indexSource = fs.readFileSync(indexPath, "utf8");
 		expect(indexSource).toContain("registerStudioSubagentTools(pi)");

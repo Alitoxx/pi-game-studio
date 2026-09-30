@@ -50,7 +50,7 @@ The result: you still make every decision, but now you have a team that asks the
 | ------------- | ----- | ------------------------------------------------------------------------------------------------------------------------ |
 | **Agents**    | 55    | Specialized agents across design, programming, art, audio, narrative, QA, and production                                 |
 | **Subagents** | Native| Isolated child process execution via `subagent_run`, `subagent_list`, `subagent_status` & `subagent_result`              |
-| **Interactive**| Native| Interactive terminal menus via `ask_user_choice` (arrow-key navigation and Enter selection)                              |
+| **Interactive**| Native| Interactive terminal menus & batch questionnaires via `ask_user_choice` and `ask_user_question` (arrow keys & Enter)      |
 | **Skills**    | 80    | Slash commands for every workflow phase (`/start`, `/settings`, `/prototype`, `/vertical-slice`, `/dev-story`, etc.)     |
 | **Templates** | 44    | Document templates for GDDs, UX specs, ADRs, sprint plans, vertical slice reports, game briefs, and more                  |
 | **Hooks**     | 4     | Automated validation on commits, pushes, skill changes, and session audit/gap detection                                  |

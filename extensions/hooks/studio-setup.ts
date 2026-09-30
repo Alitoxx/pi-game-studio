@@ -580,7 +580,7 @@ export function installStudioFiles(
 	mkdirSync(join(ctx.cwd, "design", "art"), { recursive: true });
 	mkdirSync(join(ctx.cwd, "production"), { recursive: true });
 
-	// 5b. Configure local project theme to GameStudio-Gentle by default
+	// 5b. Configure local project theme and tuiMode (fullscreen) by default
 	const settingsJsonPath = join(ctx.cwd, ".pi", "settings.json");
 	try {
 		let currentSettings: any = {};
@@ -589,8 +589,16 @@ export function installStudioFiles(
 				currentSettings = JSON.parse(readFileSync(settingsJsonPath, "utf8"));
 			} catch {}
 		}
+		let changed = false;
 		if (!currentSettings.theme) {
 			currentSettings.theme = "GameStudio-Gentle";
+			changed = true;
+		}
+		if (!currentSettings.tuiMode) {
+			currentSettings.tuiMode = "fullscreen";
+			changed = true;
+		}
+		if (changed) {
 			writeFileSync(settingsJsonPath, JSON.stringify(currentSettings, null, 2), "utf8");
 		}
 	} catch {}

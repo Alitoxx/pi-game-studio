@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.27] - 2026-09-30
+
+### Added
+- **Default Fullscreen TUI Mode (`tuiMode: "fullscreen"`)**:
+  - Al instalar el estudio (`installStudioFiles` / `/studio:setup`) o al iniciar sesión (`session_start`), Pi Game Studio configura automáticamente `"tuiMode": "fullscreen"` en el archivo local `.pi/settings.json` del proyecto.
+  - Esto garantiza que el carril lateral izquierdo (*sidebar rail* con `Status` y `Tasks`) aparezca activo de inmediato desde el primer momento en terminales de $\ge$ 140 columnas, sin necesidad de banderas de línea de comando ni configuración manual.
+
+---
+
 ## [0.8.26] - 2026-09-30
 
 ### Added

@@ -403,13 +403,21 @@ export default function (pi: ExtensionAPI) {
 			// Mount Live Tasks Widget (only if active tasks exist)
 			updateTasksWidget(ctx);
 
-			// Ensure local project theme is initialized to GameStudio-Gentle if unconfigured
+			// Ensure local project theme and tuiMode (fullscreen) are initialized if unconfigured
 			const localSettingsPath = join(studioRoot, ".pi", "settings.json");
 			if (existsSync(localSettingsPath)) {
 				try {
 					const parsed = JSON.parse(readFileSync(localSettingsPath, "utf8"));
+					let changed = false;
 					if (!parsed.theme) {
 						parsed.theme = "GameStudio-Gentle";
+						changed = true;
+					}
+					if (!parsed.tuiMode) {
+						parsed.tuiMode = "fullscreen";
+						changed = true;
+					}
+					if (changed) {
 						writeFileSync(localSettingsPath, JSON.stringify(parsed, null, 2), "utf8");
 					}
 				} catch {}

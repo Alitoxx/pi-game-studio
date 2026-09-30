@@ -15,7 +15,7 @@ import { renderTasksWidgetCard, isTasksWidgetEnabled } from "./studio-tasks-widg
 export const SIDEBAR_BREAKPOINT = 140;
 const RAIL_WIDTH = 50;
 const RAIL_PADDING = 1;
-const GAP = 2;
+const GAP = 3;
 
 const NODE = Symbol.for("@earendil-works/pi-tui/layout-node");
 type LayoutNode = {

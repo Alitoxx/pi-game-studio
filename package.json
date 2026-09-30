@@ -22,6 +22,7 @@
     "scripts/",
     "docs/",
     "starters/",
+    "themes/",
     "project.yaml",
     "models.default.json",
     "AGENTS.md",
@@ -40,6 +41,7 @@
   "pi": {
     "skills": ["./skills"],
     "prompts": ["./prompts"],
-    "extensions": ["./extensions"]
+    "extensions": ["./extensions"],
+    "themes": ["./themes"]
   }
 }

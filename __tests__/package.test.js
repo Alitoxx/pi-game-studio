@@ -15,10 +15,11 @@ describe("Pi Game Studio Package", () => {
 		expect(pkg.pi.skills).toEqual(["./skills"]);
 		expect(pkg.pi.prompts).toEqual(["./prompts"]);
 		expect(pkg.pi.extensions).toEqual(["./extensions"]);
+		expect(pkg.pi.themes).toEqual(["./themes"]);
 	});
 
 	test("should have required files", () => {
-		const requiredFiles = ["agents/", "skills/", "prompts/", "extensions/"];
+		const requiredFiles = ["agents/", "skills/", "prompts/", "extensions/", "themes/"];
 		requiredFiles.forEach((file) => {
 			expect(pkg.files).toContain(file);
 		});

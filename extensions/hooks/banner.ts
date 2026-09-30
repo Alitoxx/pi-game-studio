@@ -1,44 +1,44 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { execSync } from "node:child_process";
 import { findStudioRoot } from "./studio-root.ts";
 import { detectProjectEngine, formatEngineBadge } from "./engine-detector.ts";
 import { inspectSetup } from "./studio-setup.ts";
+import { readProducerState } from "./studio-start.ts";
 
 const RESET = "\x1b[0m";
 const BOLD = "\x1b[1m";
+const DIM = "\x1b[38;2;107;114;128m";
 const VIOLET = "\x1b[38;2;167;139;250m";
 const CYAN = "\x1b[38;2;56;189;248m";
 const GREEN = "\x1b[38;2;52;211;153m";
-const GOLD = "\x1b[38;2;251;191;36m";
-const DIM = "\x1b[38;2;107;114;128m";
 const WHITE = "\x1b[38;2;243;244;246m";
+const GOLD = "\x1b[38;2;251;191;36m";
 
-function visibleLength(str: string): number {
-	const clean = str.replace(/\x1b\[[0-9;]*m/g, "");
-	let len = 0;
-	for (const ch of clean) {
-		const cp = ch.codePointAt(0) ?? 0;
-		if (cp >= 0x1f000 && cp <= 0x1f9ff) {
-			len += 2;
-		} else {
-			len += 1;
-		}
-	}
-	return len;
+function getGitBranch(cwd: string): string {
+	try {
+		const out = execSync("git rev-parse --abbrev-ref HEAD 2>/dev/null", {
+			cwd,
+			encoding: "utf8",
+			timeout: 500,
+		}).trim();
+		if (out) return out;
+	} catch {}
+	return "main";
 }
 
-function formatRow(styledContent: string, targetWidth = 73): string {
-	const vis = visibleLength(styledContent);
-	const pad = Math.max(0, targetWidth - vis);
-	return `  ${DIM}│${RESET} ${styledContent}${" ".repeat(pad)} ${DIM}│${RESET}`;
+function fit(val: unknown, len: number): string {
+	const str = String(val ?? "").replace(/\s+/g, " ").trim();
+	if (str.length > len) return str.slice(0, len - 1) + "…";
+	return str.padEnd(len);
 }
 
 export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 	const lines: string[] = [];
 	const root = findStudioRoot(cwd) || cwd;
 
-	// Package version detection
-	let version = "0.8.17";
+	// Version
+	let version = "0.8.18";
 	try {
 		const pkgUrl = new URL("../../package.json", import.meta.url);
 		if (existsSync(pkgUrl)) {
@@ -47,7 +47,7 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 		}
 	} catch {}
 
-	// Storage / Engram detection
+	// Storage / Engram
 	let engramStatus = "Local storage";
 	try {
 		const engramFlag = join(root, ".pi", "game-studio", "engram-enabled");
@@ -56,44 +56,59 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 		}
 	} catch {}
 
-	// Engine detection & auto-sniffing
+	// Engine
 	const engineResult = detectProjectEngine(root);
 	let engineInfo = formatEngineBadge(engineResult);
-
 	if (!engineResult.detected) {
 		engineInfo = "Godot · Unity · Unreal · Bevy · Raylib";
-		try {
-			const prefsPath = join(root, ".pi", "game-studio", "technical-preferences.md");
-			if (existsSync(prefsPath)) {
-				const prefs = readFileSync(prefsPath, "utf8");
-				const engineMatch = prefs.match(/Engine:\s*([^\n]+)/i);
-				if (engineMatch && !engineMatch[1].includes("[TO BE CONFIGURED]")) {
-					engineInfo = engineMatch[1].trim();
-				}
-			}
-		} catch {}
 	}
 
 	const setup = inspectSetup(root);
-	const cardWidth = Math.min(Math.max(width - 4, 60), 74);
-	const ruleLen = Math.max(0, cardWidth - 30);
-
-	const envBadge = setup.isConfigured
-		? `${GREEN}✔ Configurado (${setup.agentsInstalled} agentes activos)${RESET}`
-		: `${GOLD}⚠ Pendiente (/start o /studio:setup)${RESET}`;
+	const { state: prodState } = readProducerState(root);
+	const stage = prodState?.milestone || (setup.isConfigured ? "Entorno OK" : "Pendiente setup (/start)");
+	const gitBranch = getGitBranch(root);
+	const shortPath = root.replace(process.env.HOME || "", "~");
 
 	lines.push("");
-	lines.push(`  ${DIM}╭─${RESET} ${VIOLET}${BOLD}🎮 PI GAME STUDIO${RESET} ${DIM}·${RESET} ${CYAN}v${version}${RESET} ${DIM}${"─".repeat(ruleLen)}╮${RESET}`);
-	lines.push(formatRow(`${VIOLET}${BOLD}DIRECTORS  ${RESET}${DIM}:${RESET} ${WHITE}3 activos${RESET} ${DIM}(Creative · Technical · Producer)${RESET}`, cardWidth));
-	lines.push(formatRow(`${VIOLET}${BOLD}WORKHORSES ${RESET}${DIM}:${RESET} ${WHITE}52 especialistas & leads${RESET} ${DIM}(Diseño, Código, Arte, Audio, QA)${RESET}`, cardWidth));
-	lines.push(formatRow(`${VIOLET}${BOLD}ENGINES    ${RESET}${DIM}:${RESET} ${CYAN}${engineInfo}${RESET}`, cardWidth));
-	lines.push(formatRow(`${VIOLET}${BOLD}SKILLS     ${RESET}${DIM}:${RESET} ${GREEN}80 comandos slash${RESET}  ${DIM}│${RESET}  ${VIOLET}${BOLD}TEMPLATES :${RESET} ${GREEN}44 docs${RESET}`, cardWidth));
-	lines.push(formatRow(`${VIOLET}${BOLD}ENTORNO    ${RESET}${DIM}:${RESET} ${envBadge}`, cardWidth));
-	lines.push(formatRow(`${VIOLET}${BOLD}CONFIG     ${RESET}${DIM}:${RESET} ${WHITE}project.yaml${RESET}       ${DIM}│${RESET}  ${VIOLET}${BOLD}STORAGE   :${RESET} ${GREEN}${engramStatus}${RESET}`, cardWidth));
-	lines.push(`  ${DIM}├${"─".repeat(cardWidth + 2)}┤${RESET}`);
-	lines.push(formatRow(`${GOLD}${BOLD}💡 COMANDOS${RESET}${DIM}:${RESET} ${WHITE}/studio${RESET} ${DIM}(Menú)${RESET} · ${WHITE}/studio:setup${RESET} ${DIM}(Setup)${RESET} · ${WHITE}/start${RESET} ${DIM}(Inicio)${RESET}`, cardWidth));
-	lines.push(`  ${DIM}╰${"─".repeat(cardWidth + 2)}╯${RESET}`);
+	// Header Brand — clean single line like Gentle Shell
+	lines.push(`  ${VIOLET}${BOLD}🎮 PI GAME STUDIO${RESET} ${DIM}·${RESET} ${CYAN}v${version}${RESET} ${DIM}· 55 agents / 80 skills${RESET}`);
 	lines.push("");
 
+	const isWide = width >= 105;
+
+	if (isWide) {
+		const lW = 10;
+		const v1W = Math.min(38, Math.floor((width - 40) / 2));
+		const v2W = Math.min(42, Math.floor((width - 40) / 2));
+
+		const addWide = (l1: string, v1: string, l2: string, v2: string) => {
+			const col1 = `${VIOLET}${fit(l1, lW)}${RESET} ${WHITE}${fit(v1, v1W)}${RESET}`;
+			const col2 = `${VIOLET}${fit(l2, lW)}${RESET} ${WHITE}${fit(v2, v2W)}${RESET}`;
+			lines.push(`  ${col1}   ${col2}`);
+		};
+
+		addWide("GIT:", gitBranch, "PATH:", shortPath);
+		addWide("ENGINE:", engineInfo, "STORAGE:", engramStatus);
+		addWide("AGENTS:", `${setup.agentsInstalled} activos (52 especialistas & leads)`, "SKILLS:", "80 loaded · 44 templates");
+		addWide("STAGE:", stage, "CONFIG:", setup.hasProjectYaml ? "project.yaml" : "default");
+		lines.push(`  ${GOLD}${fit("TIPS:", lW)}${RESET} ${DIM}/studio (Catálogo) · /studio:setup (Setup) · /start (Inicio)${RESET}`);
+	} else {
+		const lW = 10;
+		const vW = Math.max(20, width - lW - 6);
+
+		const addNarrow = (label: string, value: string) => {
+			lines.push(`  ${VIOLET}${fit(label, lW)}${RESET} ${WHITE}${fit(value, vW)}${RESET}`);
+		};
+
+		addNarrow("GIT:", gitBranch);
+		addNarrow("PATH:", shortPath);
+		addNarrow("ENGINE:", engineInfo);
+		addNarrow("AGENTS:", `${setup.agentsInstalled} activos`);
+		addNarrow("STAGE:", stage);
+		addNarrow("STORAGE:", engramStatus);
+		lines.push(`  ${GOLD}${fit("TIPS:", lW)}${RESET} ${DIM}/studio · /start${RESET}`);
+	}
+
+	lines.push("");
 	return lines;
 }

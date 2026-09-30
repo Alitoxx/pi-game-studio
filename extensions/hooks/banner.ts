@@ -78,7 +78,7 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 
 	const isWide = width >= 90;
 	lines.push("");
-	lines.push(`  ${VIOLET}${BOLD}🎮 PI GAME STUDIO${RESET} ${DIM}·${RESET} ${CYAN}v${version}${RESET} ${DIM}· 55 agents / 80 skills${RESET}`);
+	lines.push(`  ${VIOLET}${BOLD}PI GAME STUDIO${RESET} ${DIM}·${RESET} ${CYAN}v${version}${RESET} ${DIM}· 55 agents / 80 skills${RESET}`);
 	lines.push("");
 
 	const lW = 10;

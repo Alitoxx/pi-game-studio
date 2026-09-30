@@ -38,7 +38,9 @@ export function setTasksWidgetEnabled(studioRoot: string, enabled: boolean): voi
 export function renderTasksWidgetCard(tasks: StudioTask[], width: number = 74): string[] {
 	if (!tasks || tasks.length === 0) return [];
 
-	const innerWidth = width - 4;
+	const cardWidth = Math.min(Math.max(width - 4, 60), 74);
+	const innerWidth = cardWidth - 2;
+
 	const pad = (str: string, len: number) => {
 		const visibleLen = str.replace(/\x1b\[[0-9;]*m/g, "").length;
 		return visibleLen < len ? str + " ".repeat(len - visibleLen) : str;
@@ -51,9 +53,10 @@ export function renderTasksWidgetCard(tasks: StudioTask[], width: number = 74): 
 	};
 
 	const lines: string[] = [];
-	lines.push(`${DIM}┌──${RESET} ${VIOLET}${BOLD}TAREAS ACTIVAS (ODD / Roadmap)${RESET} ${DIM}${"─".repeat(Math.max(0, width - 36))}┐${RESET}`);
+	const ruleLen = Math.max(0, cardWidth - 34);
+	lines.push(`  ${DIM}╭─${RESET} ${VIOLET}${BOLD}❀ TAREAS ACTIVAS (ODD / Roadmap)${RESET} ${DIM}${"─".repeat(ruleLen)}╮${RESET}`);
 
-	// Prioritize: in_progress first, then pending (up to 4 items), then completed (up to 2 items)
+	// Prioritize: in_progress first, then pending (up to 3 items), then completed (up to 2 items)
 	const inProg = tasks.filter((t) => t.status === "in_progress");
 	const pending = tasks.filter((t) => t.status === "pending");
 	const completed = tasks.filter((t) => t.status === "completed");
@@ -65,14 +68,14 @@ export function renderTasksWidgetCard(tasks: StudioTask[], width: number = 74): 
 	].slice(0, 6);
 
 	for (const task of displayTasks) {
-		let icon = `${GRAY}[ ]${RESET}`;
+		let icon = `${GRAY}○${RESET}`;
 		let titleColor = WHITE;
 
 		if (task.status === "completed") {
-			icon = `${GREEN}[x]${RESET}`;
+			icon = `${GREEN}✓${RESET}`;
 			titleColor = DIM;
 		} else if (task.status === "in_progress") {
-			icon = `${YELLOW}[/]${RESET}`;
+			icon = `${YELLOW}◐${RESET}`;
 			titleColor = `${BOLD}${WHITE}`;
 		}
 
@@ -82,16 +85,16 @@ export function renderTasksWidgetCard(tasks: StudioTask[], width: number = 74): 
 		}
 
 		const truncatedRow = truncate(rowText, innerWidth);
-		lines.push(`${DIM}│${RESET} ${pad(truncatedRow, innerWidth)} ${DIM}│${RESET}`);
+		lines.push(`  ${DIM}│${RESET} ${pad(truncatedRow, innerWidth)} ${DIM}│${RESET}`);
 	}
 
 	const remaining = tasks.length - displayTasks.length;
 	if (remaining > 0) {
 		const more = `${DIM}... y ${remaining} tarea(s) más (/studio:tasks)${RESET}`;
-		lines.push(`${DIM}│${RESET} ${pad(more, innerWidth)} ${DIM}│${RESET}`);
+		lines.push(`  ${DIM}│${RESET} ${pad(more, innerWidth)} ${DIM}│${RESET}`);
 	}
 
-	lines.push(`${DIM}└${"─".repeat(innerWidth + 2)}┘${RESET}`);
+	lines.push(`  ${DIM}╰${"─".repeat(cardWidth)}╯${RESET}`);
 	return lines;
 }
 
@@ -107,30 +110,15 @@ export function updateTasksWidget(ctx: ExtensionContext): void {
 	}
 
 	const summary = inspectStudioTasks(studioRoot);
-	let displayTasks = summary.tasks;
-
+	// If no real tasks in project, keep screen clean and quiet (Zero noise)
 	if (summary.totalCount === 0 || summary.tasks.length === 0) {
-		displayTasks = [
-			{
-				id: "init-1",
-				title: "Definir concepto y pilares del juego (/brainstorm)",
-				sourceFile: "design/gdd/game-concept.md",
-				status: "in_progress",
-				isStale: false,
-			},
-			{
-				id: "init-2",
-				title: "O desplegar starter técnico funcional (/studio:new)",
-				sourceFile: "starters",
-				status: "pending",
-				isStale: false,
-			},
-		];
+		(ctx.ui as any).setWidget(TASKS_WIDGET_KEY, undefined);
+		return;
 	}
 
 	(ctx.ui as any).setWidget(TASKS_WIDGET_KEY, (_tui: any, _theme: any) => ({
 		render(width: number) {
-			return renderTasksWidgetCard(displayTasks, width || 74);
+			return renderTasksWidgetCard(summary.tasks, width || 74);
 		},
 		invalidate() {},
 	}));

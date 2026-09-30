@@ -18,7 +18,6 @@ function visibleLength(str: string): number {
 	let len = 0;
 	for (const ch of clean) {
 		const cp = ch.codePointAt(0) ?? 0;
-		// Emoji & wide unicode range
 		if (cp >= 0x1f000 && cp <= 0x1f9ff) {
 			len += 2;
 		} else {
@@ -28,17 +27,10 @@ function visibleLength(str: string): number {
 	return len;
 }
 
-function center(line: string, totalWidth: number): string {
-	const vis = visibleLength(line);
-	if (vis === 0) return "";
-	const pad = Math.max(0, Math.floor((totalWidth - vis) / 2));
-	return " ".repeat(pad) + line;
-}
-
-function formatRow(styledContent: string, targetWidth = 75): string {
+function formatRow(styledContent: string, targetWidth = 73): string {
 	const vis = visibleLength(styledContent);
 	const pad = Math.max(0, targetWidth - vis);
-	return `${DIM}│ ${RESET}${styledContent}${" ".repeat(pad)}${DIM} │${RESET}`;
+	return `  ${DIM}│${RESET} ${styledContent}${" ".repeat(pad)} ${DIM}│${RESET}`;
 }
 
 export function renderBanner(width = 80, cwd = process.cwd()): string[] {
@@ -46,7 +38,7 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 	const root = findStudioRoot(cwd) || cwd;
 
 	// Package version detection
-	let version = "0.6.3";
+	let version = "0.8.17";
 	try {
 		const pkgUrl = new URL("../../package.json", import.meta.url);
 		if (existsSync(pkgUrl)) {
@@ -82,105 +74,26 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 		} catch {}
 	}
 
-	if (width >= 80) {
-		const boxWidth = 75; // inner width between │ and │
-		lines.push("");
+	const setup = inspectSetup(root);
+	const cardWidth = Math.min(Math.max(width - 4, 60), 74);
+	const ruleLen = Math.max(0, cardWidth - 30);
 
-		const logoLines = [
-			"██████╗ ██╗     ██████╗  █████╗ ███╗   ███╗███████╗",
-			"██╔══██╗██║    ██╔════╝ ██╔══██╗████╗ ████║██╔════╝",
-			"██████╔╝██║    ██║  ███╗███████║██╔████╔██║█████╗  ",
-			"██╔═══╝ ██║    ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝  ",
-			"██║     ██║    ╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗",
-			"╚═╝     ╚═╝     ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝",
-		];
-		for (const logo of logoLines) {
-			lines.push(center(`${VIOLET}${BOLD}${logo}${RESET}`, width));
-		}
-		lines.push(center(`${CYAN}S  T  U  D  I  O   ·   v ${version.split("").join(" ")}${RESET}`, width));
-		lines.push("");
+	const envBadge = setup.isConfigured
+		? `${GREEN}✔ Configurado (${setup.agentsInstalled} agentes activos)${RESET}`
+		: `${GOLD}⚠ Pendiente (/start o /studio:setup)${RESET}`;
 
-		lines.push(center(`${DIM}┌${"─".repeat(boxWidth + 2)}┐${RESET}`, width));
-
-		lines.push(
-			center(
-				formatRow(
-					`${VIOLET}${BOLD}DIRECTORS  ${RESET}${DIM}:${RESET} ${WHITE}3 activos${RESET} ${DIM}(Creative · Technical · Producer)${RESET}`,
-					boxWidth,
-				),
-				width,
-			),
-		);
-		lines.push(
-			center(
-				formatRow(
-					`${VIOLET}${BOLD}WORKHORSES ${RESET}${DIM}:${RESET} ${WHITE}52 especialistas & leads${RESET} ${DIM}(Diseño, Código, Arte, Audio, QA)${RESET}`,
-					boxWidth,
-				),
-				width,
-			),
-		);
-		lines.push(
-			center(
-				formatRow(
-					`${VIOLET}${BOLD}ENGINES    ${RESET}${DIM}:${RESET} ${CYAN}${engineInfo}${RESET}`,
-					boxWidth,
-				),
-				width,
-			),
-		);
-		lines.push(
-			center(
-				formatRow(
-					`${VIOLET}${BOLD}SKILLS     ${RESET}${DIM}:${RESET} ${GREEN}80 comandos slash${RESET}  ${DIM}│${RESET}  ${VIOLET}${BOLD}TEMPLATES :${RESET} ${GREEN}44 docs${RESET}`,
-					boxWidth,
-				),
-				width,
-			),
-		);
-		const setup = inspectSetup(root);
-		const envBadge = setup.isConfigured
-			? `${GREEN}✔ Configurado (${setup.agentsInstalled} agentes activos)${RESET}`
-			: `${GOLD}⚠ Pendiente (/start o /studio:setup)${RESET}`;
-
-		lines.push(
-			center(
-				formatRow(
-					`${VIOLET}${BOLD}ENTORNO    ${RESET}${DIM}:${RESET} ${envBadge}`,
-					boxWidth,
-				),
-				width,
-			),
-		);
-		lines.push(
-			center(
-				formatRow(
-					`${VIOLET}${BOLD}CONFIG     ${RESET}${DIM}:${RESET} ${WHITE}project.yaml${RESET}       ${DIM}│${RESET}  ${VIOLET}${BOLD}STORAGE   :${RESET} ${GREEN}${engramStatus}${RESET}`,
-					boxWidth,
-				),
-				width,
-			),
-		);
-		lines.push(center(`${DIM}├${"─".repeat(boxWidth + 2)}┤${RESET}`, width));
-		lines.push(
-			center(
-				formatRow(
-					`${GOLD}${BOLD}💡 TIPS     ${RESET}${DIM}:${RESET} ${WHITE}/studio${RESET} ${DIM}(Menú)${RESET} · ${WHITE}/studio:setup${RESET} ${DIM}(Setup)${RESET} · ${WHITE}/start${RESET} ${DIM}(Inicio)${RESET}`,
-					boxWidth,
-				),
-				width,
-			),
-		);
-		lines.push(center(`${DIM}└${"─".repeat(boxWidth + 2)}┘${RESET}`, width));
-		lines.push("");
-	} else {
-		const setup = inspectSetup(root);
-		const statusText = setup.isConfigured ? "Entorno OK (55 agentes)" : "Pendiente de configurar (/start)";
-		lines.push(center(`${VIOLET}${BOLD}PI GAME STUDIO v${version}${RESET}`, width));
-		lines.push(center(`${CYAN}55 Agentes · 80 Skills · 44 Templates · ${statusText}${RESET}`, width));
-		lines.push(center(`${WHITE}Motores: ${engineInfo}${RESET}`, width));
-		lines.push(center(`${GOLD}Usa /studio o /studio:setup para comenzar con tu videojuego${RESET}`, width));
-	}
+	lines.push("");
+	lines.push(`  ${DIM}╭─${RESET} ${VIOLET}${BOLD}🎮 PI GAME STUDIO${RESET} ${DIM}·${RESET} ${CYAN}v${version}${RESET} ${DIM}${"─".repeat(ruleLen)}╮${RESET}`);
+	lines.push(formatRow(`${VIOLET}${BOLD}DIRECTORS  ${RESET}${DIM}:${RESET} ${WHITE}3 activos${RESET} ${DIM}(Creative · Technical · Producer)${RESET}`, cardWidth));
+	lines.push(formatRow(`${VIOLET}${BOLD}WORKHORSES ${RESET}${DIM}:${RESET} ${WHITE}52 especialistas & leads${RESET} ${DIM}(Diseño, Código, Arte, Audio, QA)${RESET}`, cardWidth));
+	lines.push(formatRow(`${VIOLET}${BOLD}ENGINES    ${RESET}${DIM}:${RESET} ${CYAN}${engineInfo}${RESET}`, cardWidth));
+	lines.push(formatRow(`${VIOLET}${BOLD}SKILLS     ${RESET}${DIM}:${RESET} ${GREEN}80 comandos slash${RESET}  ${DIM}│${RESET}  ${VIOLET}${BOLD}TEMPLATES :${RESET} ${GREEN}44 docs${RESET}`, cardWidth));
+	lines.push(formatRow(`${VIOLET}${BOLD}ENTORNO    ${RESET}${DIM}:${RESET} ${envBadge}`, cardWidth));
+	lines.push(formatRow(`${VIOLET}${BOLD}CONFIG     ${RESET}${DIM}:${RESET} ${WHITE}project.yaml${RESET}       ${DIM}│${RESET}  ${VIOLET}${BOLD}STORAGE   :${RESET} ${GREEN}${engramStatus}${RESET}`, cardWidth));
+	lines.push(`  ${DIM}├${"─".repeat(cardWidth + 2)}┤${RESET}`);
+	lines.push(formatRow(`${GOLD}${BOLD}💡 COMANDOS${RESET}${DIM}:${RESET} ${WHITE}/studio${RESET} ${DIM}(Menú)${RESET} · ${WHITE}/studio:setup${RESET} ${DIM}(Setup)${RESET} · ${WHITE}/start${RESET} ${DIM}(Inicio)${RESET}`, cardWidth));
+	lines.push(`  ${DIM}╰${"─".repeat(cardWidth + 2)}╯${RESET}`);
+	lines.push("");
 
 	return lines;
 }

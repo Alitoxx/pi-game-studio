@@ -22,7 +22,7 @@ import { handleStudioNew } from "./studio-new.ts";
 import { handleStudioChanges } from "./studio-changes.ts";
 import { handleStudioTasks } from "./studio-tasks.ts";
 import { detectProjectEngine, formatEngineBadge } from "./engine-detector.ts";
-import { updateStudioHUD, renderStudioStatusCard } from "./studio-hud.ts";
+import { updateStudioHUD } from "./studio-hud.ts";
 import { updateTasksWidget } from "./studio-tasks-widget.ts";
 
 export default function (pi: ExtensionAPI) {
@@ -347,56 +347,20 @@ export default function (pi: ExtensionAPI) {
 		// Only run in the game-studio project context
 		if (!studioRoot) return;
 
-		// Clear terminal screen and scrollback buffer for a clean studio experience in non-UI mode
-		const shouldClear = !existsSync(join(studioRoot, ".pi", "game-studio", "no-clear-screen"));
-		if (shouldClear && process.stdout.isTTY && !(ctx as any).hasUI) {
-			try {
-				process.stdout.write("\x1b[2J\x1b[3J\x1b[H");
-			} catch {}
-		}
-
-		// Display startup banner / dashboard and live status card
+		// Mount header banner cleanly via TUI
 		try {
 			if ((ctx as any).hasUI && (ctx as any).ui?.setHeader) {
 				(ctx as any).ui.setHeader((_tui: any, _theme: any) => ({
 					render(width: number) {
-						const bannerLines = renderBanner(width, studioRoot);
-						const cardLines = renderStudioStatusCard(ctx, studioRoot, Math.min(width, 76));
-						return [...bannerLines, "", ...cardLines];
+						return renderBanner(width, studioRoot);
 					},
 					invalidate() {},
 				}));
-			} else {
-				const termWidth = process.stdout.columns || 80;
-				const bannerLines = renderBanner(termWidth, studioRoot);
-				for (const line of bannerLines) {
-					console.log(line);
-				}
-				console.log("");
-				const cardLines = renderStudioStatusCard(ctx, studioRoot, Math.min(termWidth, 76));
-				for (const line of cardLines) {
-					console.log(line);
-				}
 			}
 
-			if ((ctx as any).hasUI && typeof (ctx as any).ui?.notify === "function") {
-				const detected = detectProjectEngine(studioRoot);
-				const engineBadge = formatEngineBadge(detected);
-				const setup = inspectSetup(studioRoot);
-				const statusBadge = setup.isConfigured
-					? `✔ Entorno OK (${setup.agentsInstalled} agentes)`
-					: "⚠ Configuración pendiente (/start)";
-				const notifyBanner = [
-					"Pi Game Studio",
-					`Estado: ${statusBadge} · Motor: ${engineBadge}`,
-					`${setup.agentsInstalled > 0 ? setup.agentsInstalled : setup.expectedAgents} Agentes · 80 Skills · 44 Templates`,
-					"Escribe /studio para ver comandos o /start para iniciar.",
-				].join("\n");
-				(ctx as any).ui.notify(notifyBanner, setup.isConfigured ? "info" : "warning");
-			}
-
-			// Initialize Studio HUD & Live Tasks Widget
+			// Install Studio Footer Bar (Model, Context Gauge, Engine, Sprint)
 			updateStudioHUD(ctx, pi);
+			// Mount Live Tasks Widget (only if active tasks exist)
 			updateTasksWidget(ctx);
 		} catch {}
 

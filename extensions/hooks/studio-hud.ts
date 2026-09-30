@@ -97,52 +97,55 @@ export function renderStudioStatusCard(
 		? `${GREEN}Engram conectado${RESET}`
 		: `${GRAY}Almacenamiento Git local${RESET}`;
 
-	const innerWidth = width - 4;
+	const cardWidth = Math.min(Math.max(width - 4, 60), 74);
+	const innerWidth = cardWidth - 4;
 	const pad = (str: string, len: number) => {
 		const visibleLen = str.replace(/\x1b\[[0-9;]*m/g, "").length;
 		return visibleLen < len ? str + " ".repeat(len - visibleLen) : str;
 	};
 
 	const lines: string[] = [];
-	lines.push(`${DIM}┌──${RESET} ${VIOLET}${BOLD}PI GAME STUDIO — STATUS DEL PROYECTO${RESET} ${DIM}${"─".repeat(Math.max(0, width - 42))}┐${RESET}`);
+	const ruleLen = Math.max(0, cardWidth - 38);
+	lines.push(`  ${DIM}╭─${RESET} ${VIOLET}${BOLD}PI GAME STUDIO — STATUS${RESET} ${DIM}${"─".repeat(ruleLen)}╮${RESET}`);
 
 	const colW = Math.floor((innerWidth - 3) / 2);
 	const row1Left = `${VIOLET}Juego  :${RESET} ${WHITE}${gameTitle}${RESET}`;
 	const row1Right = `${VIOLET}Motor  :${RESET} ${CYAN}${engine}${RESET}`;
-	lines.push(`${DIM}│${RESET} ${pad(row1Left, colW)} ${DIM}│${RESET} ${pad(row1Right, colW)} ${DIM}│${RESET}`);
+	lines.push(`  ${DIM}│${RESET} ${pad(row1Left, colW)} ${DIM}│${RESET} ${pad(row1Right, colW)} ${DIM}│${RESET}`);
 
 	const row2Left = `${VIOLET}Hito   :${RESET} ${WHITE}${milestone}${RESET}`;
 	const row2Right = `${VIOLET}Sprint :${RESET} ${WHITE}${sprint}${RESET}`;
-	lines.push(`${DIM}│${RESET} ${pad(row2Left, colW)} ${DIM}│${RESET} ${pad(row2Right, colW)} ${DIM}│${RESET}`);
+	lines.push(`  ${DIM}│${RESET} ${pad(row2Left, colW)} ${DIM}│${RESET} ${pad(row2Right, colW)} ${DIM}│${RESET}`);
 
 	const row3Left = `${VIOLET}Modelo :${RESET} ${CYAN}${modelStr}${RESET}`;
 	const row3Right = `${VIOLET}Memoria:${RESET} ${engramStr}`;
-	lines.push(`${DIM}│${RESET} ${pad(row3Left, colW)} ${DIM}│${RESET} ${pad(row3Right, colW)} ${DIM}│${RESET}`);
+	lines.push(`  ${DIM}│${RESET} ${pad(row3Left, colW)} ${DIM}│${RESET} ${pad(row3Right, colW)} ${DIM}│${RESET}`);
 
 	const row4 = `${VIOLET}Contexto:${RESET} ${gaugeStr}`;
-	lines.push(`${DIM}│${RESET} ${pad(row4, innerWidth)} ${DIM}│${RESET}`);
+	lines.push(`  ${DIM}│${RESET} ${pad(row4, innerWidth + 3)} ${DIM}│${RESET}`);
 
 	if (prodState?.inProgress || prodState?.nextStep) {
-		lines.push(`${DIM}├${"─".repeat(innerWidth + 2)}┤${RESET}`);
+		lines.push(`  ${DIM}├${"─".repeat(cardWidth)}┤${RESET}`);
 		if (prodState.inProgress) {
 			const prog = `${YELLOW}En Progreso:${RESET} ${WHITE}${prodState.inProgress}${RESET}`;
-			lines.push(`${DIM}│${RESET} ${pad(prog, innerWidth)} ${DIM}│${RESET}`);
+			lines.push(`  ${DIM}│${RESET} ${pad(prog, innerWidth + 3)} ${DIM}│${RESET}`);
 		}
 		if (prodState.nextStep) {
 			const next = `${GREEN}Siguiente  :${RESET} ${WHITE}${prodState.nextStep}${RESET}`;
-			lines.push(`${DIM}│${RESET} ${pad(next, innerWidth)} ${DIM}│${RESET}`);
+			lines.push(`  ${DIM}│${RESET} ${pad(next, innerWidth + 3)} ${DIM}│${RESET}`);
 		}
 	}
 
-	lines.push(`${DIM}└${"─".repeat(innerWidth + 2)}┘${RESET}`);
+	lines.push(`  ${DIM}╰${"─".repeat(cardWidth)}╯${RESET}`);
 	return lines;
 }
 
-export function updateStudioHUD(ctx: ExtensionContext, pi?: ExtensionAPI): void {
-	if (!(ctx as any).hasUI || typeof (ctx.ui as any)?.setStatus !== "function") {
-		return;
-	}
-
+export function renderStudioFooterBar(
+	pi: any,
+	ctx: ExtensionContext,
+	_width: number,
+	footerData?: any,
+): string {
 	const studioRoot = findStudioRoot(ctx.cwd) || ctx.cwd;
 	const setup = inspectSetup(studioRoot);
 	const { state: prodState } = readProducerState(studioRoot);
@@ -152,23 +155,85 @@ export function updateStudioHUD(ctx: ExtensionContext, pi?: ExtensionAPI): void 
 		? (pi as any).getThinkingLevel()
 		: undefined;
 
+	const branch = typeof footerData?.getGitBranch === "function" ? footerData.getGitBranch() : undefined;
 	const engine = prodState?.engine || setup.currentEngine || "Studio";
 	const modelId = formatModelDisplayName(model, thinking);
 
 	const parts: string[] = [];
-	parts.push(`🎮 ${engine}`);
 
-	if (prodState?.sprint) {
-		parts.push(prodState.sprint);
+	// Location
+	const shortCwd = ctx.cwd.replace(process.env.HOME || "", "~");
+	parts.push(`${DIM}${shortCwd}${RESET}`);
+	if (branch) {
+		parts.push(`${DIM}${branch}${RESET}`);
 	}
 
-	parts.push(modelId);
+	// Engine & Sprint
+	parts.push(`${CYAN}🎮 ${engine}${RESET}`);
+	if (prodState?.sprint) {
+		parts.push(`${WHITE}${prodState.sprint}${RESET}`);
+	}
 
+	// Model
+	parts.push(`${WHITE}${modelId}${RESET}`);
+
+	// Context Gauge
 	if (usage) {
 		const gauge = renderContextGauge(usage.percent, 6);
-		parts.push(`${gauge} ${usage.percent}% (${formatTokens(usage.tokens)})`);
+		const col = getGaugeColor(usage.percent);
+		parts.push(`${DIM}ctx${RESET} ${gauge} ${col}${usage.percent}%${RESET} ${DIM}(${formatTokens(usage.tokens)})${RESET}`);
 	}
 
-	const statusText = parts.join(" · ");
-	(ctx.ui as any).setStatus("studio", statusText);
+	return parts.join(` ${DIM}·${RESET} `);
+}
+
+export function installStudioFooter(pi: ExtensionAPI, ctx: ExtensionContext): void {
+	if (!(ctx as any).hasUI || typeof (ctx.ui as any)?.setFooter !== "function") {
+		return;
+	}
+
+	try {
+		(ctx.ui as any).setFooter((_tui: any, _theme: any, footerData: any) => ({
+			render(width: number) {
+				const line = renderStudioFooterBar(pi, ctx, width, footerData);
+				return [line];
+			},
+			invalidate() {},
+			dispose() {},
+		}));
+	} catch {}
+}
+
+export function updateStudioHUD(ctx: ExtensionContext, pi?: ExtensionAPI): void {
+	if (!(ctx as any).hasUI) return;
+
+	// Update bottom statusline
+	if (pi) {
+		installStudioFooter(pi, ctx);
+	}
+
+	// Also update setStatus for secondary hosts
+	if (typeof (ctx.ui as any)?.setStatus === "function") {
+		const studioRoot = findStudioRoot(ctx.cwd) || ctx.cwd;
+		const setup = inspectSetup(studioRoot);
+		const { state: prodState } = readProducerState(studioRoot);
+		const usage = extractContextUsage(ctx);
+		const model = (ctx as any).model;
+		const thinking = pi && typeof (pi as any).getThinkingLevel === "function"
+			? (pi as any).getThinkingLevel()
+			: undefined;
+
+		const engine = prodState?.engine || setup.currentEngine || "Studio";
+		const modelId = formatModelDisplayName(model, thinking);
+
+		const parts: string[] = [];
+		parts.push(`🎮 ${engine}`);
+		if (prodState?.sprint) parts.push(prodState.sprint);
+		parts.push(modelId);
+		if (usage) {
+			const gauge = renderContextGauge(usage.percent, 6);
+			parts.push(`${gauge} ${usage.percent}%`);
+		}
+		(ctx.ui as any).setStatus("studio", parts.join(" · "));
+	}
 }

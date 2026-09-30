@@ -7,7 +7,7 @@ import { opendir, readFile, writeFile, mkdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
-import { renderBanner } from "./banner.ts";
+import { renderBanner, isArtEnabled, setArtEnabled } from "./banner.ts";
 import { findStudioRoot } from "./studio-root.ts";
 import { handleStudioCommand } from "./studio-command.ts";
 import { handleStudioSetup, inspectSetup } from "./studio-setup.ts";
@@ -139,6 +139,32 @@ export default function (pi: ExtensionAPI) {
 		description: "[Studio] Paleta curada y búsqueda rápida de comandos y herramientas del estudio",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioCommand(args, ctx);
+		},
+	});
+
+	// /studio:toggle-art — Alternar ilustración Braille en el banner de bienvenida
+	(pi as any).registerCommand?.("studio:toggle-art", {
+		description: "[Studio] Alternar ilustración Braille de bienvenida (on/off)",
+		handler: async (_args: string, ctx: ExtensionContext) => {
+			const root = findStudioRoot(ctx.cwd) || ctx.cwd;
+			const current = isArtEnabled(root);
+			setArtEnabled(root, !current);
+			const newState = !current ? "activada" : "desactivada";
+			ctx.ui?.setHeader?.(renderBanner(ctx.cwd));
+			ctx.ui?.notify?.(`Ilustración de Gamepad ${newState}.`, "info");
+		},
+	});
+
+	// /studio:art — Alias de toggle-art
+	(pi as any).registerCommand?.("studio:art", {
+		description: "[Studio] Alternar ilustración Braille de bienvenida (on/off)",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			const root = findStudioRoot(ctx.cwd) || ctx.cwd;
+			const current = isArtEnabled(root);
+			setArtEnabled(root, !current);
+			const newState = !current ? "activada" : "desactivada";
+			ctx.ui?.setHeader?.(renderBanner(ctx.cwd));
+			ctx.ui?.notify?.(`Ilustración de Gamepad ${newState}.`, "info");
 		},
 	});
 

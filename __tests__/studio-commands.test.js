@@ -36,6 +36,8 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 			"studio:settings",
 			"studio:doctor",
 			"studio:commands",
+			"studio:toggle-art",
+			"studio:art",
 			"studio:help",
 		];
 

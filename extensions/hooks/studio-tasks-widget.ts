@@ -3,6 +3,7 @@ import { existsSync, writeFileSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
 import { inspectStudioTasks, type StudioTask } from "./studio-tasks.ts";
+import { renderStudioStatusCard } from "./studio-hud.ts";
 
 const RESET = "\x1b[0m";
 const BOLD = "\x1b[1m";
@@ -126,7 +127,9 @@ export function updateTasksWidget(ctx: ExtensionContext): void {
 
 	(ctx.ui as any).setWidget(TASKS_WIDGET_KEY, (_tui: any, _theme: any) => ({
 		render(width: number) {
-			return renderTasksWidgetCard(summary.tasks, width || 74);
+			const statusLines = renderStudioStatusCard(ctx, studioRoot, width || 74);
+			const taskLines = renderTasksWidgetCard(summary.tasks, width || 74);
+			return [...statusLines, "", ...taskLines];
 		},
 		invalidate() {},
 	}));

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.25] - 2026-09-30
+
+### Added
+- **Visualización Conjunta de Status + Tareas en Widget TUI**:
+  - Incorporada la tarjeta `✿ Status` al widget interactivo acoplado encima del prompt, mostrándose en bloque armónico junto a `❀ Tasks` (Proyecto, Motor, Modelo, Contexto e Integraciones).
+  - Estructuración idéntica a la disposición de tarjetas de Gentle Shell.
+
+---
+
 ## [0.8.24] - 2026-09-30
 
 ### Added

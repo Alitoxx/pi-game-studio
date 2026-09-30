@@ -24,8 +24,14 @@ import { handleStudioTasks } from "./studio-tasks.ts";
 import { detectProjectEngine, formatEngineBadge } from "./engine-detector.ts";
 import { updateStudioHUD } from "./studio-hud.ts";
 import { updateTasksWidget } from "./studio-tasks-widget.ts";
+import { registerStudioSubagentTools } from "./studio-subagents.ts";
 
 export default function (pi: ExtensionAPI) {
+	// ──────────────────────────────────────────────
+	// Native Studio Subagent Tools (Gentle Architecture)
+	// ──────────────────────────────────────────────
+	registerStudioSubagentTools(pi);
+
 	// ──────────────────────────────────────────────
 	// Studio Suite Commands (Namespace: studio:*)
 	// ──────────────────────────────────────────────
@@ -327,6 +333,10 @@ export default function (pi: ExtensionAPI) {
 						"- Choice Envelopes: Present choices using a clear numbered list with bold titles and clean trade-offs, making it effortless to pick [1], [2] or [3]. " +
 						"- Specialist Return Contract (Strict Token Economy): Subagents and specialists delegated for implementation or review MUST NOT emit conversational prose, filler, or greetings. " +
 						"They MUST return exclusively a compact YAML block (status: completed|partial|blocked|interaction_required, summary, files_changed, validation, gameplay_impact, risks, next_recommended_specialist). " +
+						"- Subagent Delegation Protocol (Mandatory Isolated Execution): You have access to the native tool `subagent_run`. " +
+						"When asked to implement code, design mechanics, write GDDs, review architecture, or run tests, DO NOT do the low-level implementation inline in this parent session. " +
+						"Delegate the atomic work to the specialized agent using `subagent_run({ agent: '<agent_name>', task: '<concrete_task>', mode: 'task' })`. " +
+						"Keep this parent session clean for high-level coordination and executive decisions. " +
 						"Flow Completion Protocol: When any specialist finishes a task (design doc, mechanic, art asset, code review), the Producer immediately closes the loop: " +
 						"1. Acknowledges the completed item and updates the production roadmap line. " +
 						"2. Declares the next concrete step in the sprint and hands off to the next specialist directly without asking what to do next. " +

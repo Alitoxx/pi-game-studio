@@ -18,14 +18,16 @@ const GOLD = "\x1b[38;2;251;191;36m";
 const RED = "\x1b[38;2;239;68;68m";
 
 export const GAMEPAD_ART_RAW = [
-	"  ╭──────────────────────────────────────────╮",
-	"  │  Nintendo                      [NES-004] │",
-	"  │ ╭───────╮  ╭──────────────╮              │",
-	"  │ │   ▲   │  │ SELECT START │    ( B ) ( A )│",
-	"  │ │ ◄ ┼ ► │  │  ══    ══    │    ╭───╮ ╭───╮│",
-	"  │ │   ▼   │  ╰──────────────╯    │ █ │ │ █ ││",
-	"  │ ╰───────╯  ════════════════    ╰───╯ ╰───╯│",
-	"  ╰──────────────────────────────────────────╯",
+	" ⢀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⡀ ",
+	" ⢸⡇                                     ⢸⡇ ",
+	" ⢸⡇            ⢀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀            ⢸⡇ ",
+	" ⢸⡇   ⢠⣤     ⢸ Nintendo        [NES]  ⡇            ⢸⡇ ",
+	" ⢸⡇ ⠠⠾⣿⡷⠄   ⢸                        ⡇   ⢀⣤⣄   ⢀⣤⣄  ⢸⡇ ",
+	" ⢸⡇   ⠘⠛     ⢸ SELECT      START       ⡇  ⢰⣿⣿⣿⡆ ⢰⣿⣿⣿⡆ ⢸⡇ ",
+	" ⢸⡇            ⢸  ⠴⠶        ⠴⠶     ⡇  ⠘⢿⣿⡿⠃ ⠘⢿⣿⡿⠃ ⢸⡇ ",
+	" ⢸⡇            ⠈⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉     [ B ]    [ A ]  ⢸⡇ ",
+	" ⢸⡇                                     ⢸⡇ ",
+	" ⠈⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠁ ",
 ];
 
 export function isArtEnabled(root: string): boolean {
@@ -121,15 +123,15 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 		const colorNesLine = (raw: string): string => {
 			return `${VIOLET}${raw}${RESET}`
 				.replace(/(Nintendo)/g, `${WHITE}$1${VIOLET}`)
-				.replace(/(\[NES-004\])/g, `${DIM}$1${VIOLET}`)
+				.replace(/(\[NES\])/g, `${RED}$1${VIOLET}`)
 				.replace(/(SELECT|START)/g, `${DIM}$1${VIOLET}`)
-				.replace(/(══)/g, `${WHITE}$1${VIOLET}`)
-				.replace(/([▲▼◄►┼])/g, `${CYAN}$1${VIOLET}`)
-				.replace(/([BA])/g, `${RED}$1${VIOLET}`)
-				.replace(/(█)/g, `${RED}$1${VIOLET}`);
+				.replace(/(⠴⠶)/g, `${WHITE}$1${VIOLET}`)
+				.replace(/(⢠⣤|⠠⠾⣿⡷⠄|⠘⠛)/g, `${CYAN}$1${VIOLET}`)
+				.replace(/(\[ B \]|\[ A \])/g, `${RED}$1${VIOLET}`)
+				.replace(/(⢀⣤⣄|⢰⣿⣿⣿⡆|⠘⢿⣿⡿⠃)/g, `${RED}$1${VIOLET}`);
 		};
 
-		const artWidth = 46;
+		const artWidth = 60;
 		for (let i = 0; i < GAMEPAD_ART_RAW.length; i++) {
 			const rawArt = GAMEPAD_ART_RAW[i];
 			const padArt = rawArt + " ".repeat(Math.max(0, artWidth - rawArt.length));
@@ -142,12 +144,12 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 		const colorNesLine = (raw: string): string => {
 			return `${VIOLET}${raw}${RESET}`
 				.replace(/(Nintendo)/g, `${WHITE}$1${VIOLET}`)
-				.replace(/(\[NES-004\])/g, `${DIM}$1${VIOLET}`)
+				.replace(/(\[NES\])/g, `${RED}$1${VIOLET}`)
 				.replace(/(SELECT|START)/g, `${DIM}$1${VIOLET}`)
-				.replace(/(══)/g, `${WHITE}$1${VIOLET}`)
-				.replace(/([▲▼◄►┼])/g, `${CYAN}$1${VIOLET}`)
-				.replace(/([BA])/g, `${RED}$1${VIOLET}`)
-				.replace(/(█)/g, `${RED}$1${VIOLET}`);
+				.replace(/(⠴⠶)/g, `${WHITE}$1${VIOLET}`)
+				.replace(/(⢠⣤|⠠⠾⣿⡷⠄|⠘⠛)/g, `${CYAN}$1${VIOLET}`)
+				.replace(/(\[ B \]|\[ A \])/g, `${RED}$1${VIOLET}`)
+				.replace(/(⢀⣤⣄|⢰⣿⣿⣿⡆|⠘⢿⣿⡿⠃)/g, `${RED}$1${VIOLET}`);
 		};
 
 		for (let i = 0; i < GAMEPAD_ART_RAW.length; i++) {

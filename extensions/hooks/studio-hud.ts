@@ -163,6 +163,7 @@ export function renderStudioFooterBar(
 	const rawEngine = prodState?.engine || setup.currentEngine || "Sin configurar";
 	const engineDisplay = rawEngine === "Sin configurar" ? "Sin motor (/start)" : rawEngine;
 	const modelId = formatModelDisplayName(model, thinking);
+	const branch = typeof footerData?.getGitBranch === "function" ? footerData.getGitBranch() : undefined;
 
 	const parts: string[] = [];
 

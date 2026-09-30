@@ -14,6 +14,7 @@ describe("Studio HUD and Live Tasks Widget", () => {
 		expect(hudSource).toContain("export function formatTokens");
 		expect(hudSource).toContain("export function formatModelDisplayName");
 		expect(hudSource).toContain("export function renderStudioStatusCard");
+		expect(hudSource).toContain("export function renderStudioFooterBar");
 		expect(hudSource).toContain("export function updateStudioHUD");
 
 		const widgetSource = fs.readFileSync(widgetModulePath, "utf8");

@@ -105,4 +105,15 @@ describe("Studio HUD and Live Tasks Widget", () => {
 		expect(indexSource).toContain("updateTasksWidget(ctx)");
 		expect(indexSource).toContain("updateStudioHUD(ctx, pi)");
 	});
+
+	test("studio-sidebar.ts exists and provides left rail sidebar API", () => {
+		const sidebarPath = path.join(__dirname, "..", "extensions", "hooks", "studio-sidebar.ts");
+		expect(fs.existsSync(sidebarPath)).toBe(true);
+
+		const sidebarSource = fs.readFileSync(sidebarPath, "utf8");
+		expect(sidebarSource).toContain("export const SIDEBAR_BREAKPOINT = 140");
+		expect(sidebarSource).toContain("export function installStudioSidebar");
+		expect(sidebarSource).toContain("export function isStudioSidebarActive");
+		expect(sidebarSource).toContain("export function invalidateStudioSidebar");
+	});
 });

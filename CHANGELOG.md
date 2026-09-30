@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.26] - 2026-09-30
+
+### Added
+- **Fullscreen Left Sidebar Rail (`studio-sidebar.ts`)**:
+  - Implementado carril lateral izquierdo nativo inspirado en Gentle Shell (`SIDEBAR_BREAKPOINT = 140` columnas) en modo fullscreen de Pi TUI.
+  - Presenta las tarjetas `✿ Status` y `❀ Tasks` en una columna dedicada de 50 columnas con scroll suave (`ScrollView`), manteniendo el transcript/chat en el área principal de la derecha.
+  - Supresión automática del widget inferior cuando el sidebar lateral está activo, evitando duplicación en pantalla.
+  - Degradación elegante y segura: si la terminal mide menos de 140 columnas o no está en pantalla completa, las tarjetas se muestran apiladas en el dock inferior sobre el prompt.
+
+---
+
 ## [0.8.25] - 2026-09-30
 
 ### Added

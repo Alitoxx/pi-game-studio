@@ -193,22 +193,40 @@ export function renderStudioFooterBar(
 	return parts.join(` ${DIM}·${RESET} `);
 }
 
+import { installStudioSidebar } from "./studio-sidebar.ts";
+
 export function installStudioFooter(pi: ExtensionAPI, ctx: ExtensionContext): void {
 	if (!(ctx as any).hasUI || typeof (ctx.ui as any)?.setFooter !== "function") {
 		return;
 	}
 
 	try {
-		(ctx.ui as any).setFooter((_tui: any, _theme: any, footerData: any) => ({
-			render(width: number) {
-				const line = renderStudioFooterBar(pi, ctx, width, footerData);
-				return [line];
-			},
-			invalidate() {},
-			dispose() {},
-		}));
+		(ctx.ui as any).setFooter((tui: any, _theme: any, footerData: any) => {
+			let uninstallSidebar: (() => void) | undefined;
+			if (tui && tui.terminal) {
+				try {
+					uninstallSidebar = installStudioSidebar(tui, ctx);
+				} catch {}
+			}
+
+			return {
+				render(width: number) {
+					const line = renderStudioFooterBar(pi, ctx, width, footerData);
+					return [line];
+				},
+				invalidate() {},
+				dispose() {
+					if (uninstallSidebar) {
+						try {
+							uninstallSidebar();
+						} catch {}
+					}
+				},
+			};
+		});
 	} catch {}
 }
+
 
 export function updateStudioHUD(ctx: ExtensionContext, pi?: ExtensionAPI): void {
 	if (!(ctx as any).hasUI) return;

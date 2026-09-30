@@ -107,6 +107,11 @@ export function renderTasksWidgetCard(tasks: StudioTask[], width: number = 74): 
 	return lines;
 }
 
+import {
+	isStudioSidebarActive,
+	invalidateStudioSidebar,
+} from "./studio-sidebar.ts";
+
 export function updateTasksWidget(ctx: ExtensionContext): void {
 	if (!(ctx as any).hasUI || typeof (ctx.ui as any)?.setWidget !== "function") {
 		return;
@@ -125,12 +130,19 @@ export function updateTasksWidget(ctx: ExtensionContext): void {
 		return;
 	}
 
-	(ctx.ui as any).setWidget(TASKS_WIDGET_KEY, (_tui: any, _theme: any) => ({
+	(ctx.ui as any).setWidget(TASKS_WIDGET_KEY, (tui: any, _theme: any) => ({
 		render(width: number) {
+			// If fullscreen left rail sidebar is active, suppress bottom dock
+			if (tui && isStudioSidebarActive(tui)) {
+				return [];
+			}
 			const statusLines = renderStudioStatusCard(ctx, studioRoot, width || 74);
 			const taskLines = renderTasksWidgetCard(summary.tasks, width || 74);
 			return [...statusLines, "", ...taskLines];
 		},
-		invalidate() {},
+		invalidate() {
+			invalidateStudioSidebar(tui);
+		},
 	}));
 }
+

@@ -25,12 +25,14 @@ import { detectProjectEngine, formatEngineBadge } from "./engine-detector.ts";
 import { updateStudioHUD } from "./studio-hud.ts";
 import { updateTasksWidget } from "./studio-tasks-widget.ts";
 import { registerStudioSubagentTools } from "./studio-subagents.ts";
+import { registerAskUserChoice } from "./studio-choice.ts";
 
 export default function (pi: ExtensionAPI) {
 	// ──────────────────────────────────────────────
 	// Native Studio Subagent Tools (Gentle Architecture)
 	// ──────────────────────────────────────────────
 	registerStudioSubagentTools(pi);
+	registerAskUserChoice(pi);
 
 	// ──────────────────────────────────────────────
 	// Studio Suite Commands (Namespace: studio:*)
@@ -330,9 +332,10 @@ export default function (pi: ExtensionAPI) {
 						"- Elegant Markdown Formatting: Structure your response cleanly using natural, polished GitHub-flavored Markdown. Use clean headings, concise bullet points, and high-contrast bold highlights. Speak fluidly as a lead dev and producer. " +
 						"- Exhaustive details, formulas, and full system tables belong strictly inside target Markdown files on disk (e.g. `design/gdd/systems-index.md`). " +
 						"- In chat, provide ONLY an executive synthesis (max 10-15 lines) highlighting core pillars, critical bottlenecks, and files created. " +
-						"- Choice Envelopes: Present choices using a clear numbered list with bold titles and clean trade-offs, making it effortless to pick [1], [2] or [3]. " +
-						"- Specialist Return Contract (Strict Token Economy): Subagents and specialists delegated for implementation or review MUST NOT emit conversational prose, filler, or greetings. " +
-						"They MUST return exclusively a compact YAML block (status: completed|partial|blocked|interaction_required, summary, files_changed, validation, gameplay_impact, risks, next_recommended_specialist). " +
+						"- Interactive Choice Protocol (Mandatory Native Menus): You have access to the tool `ask_user_choice`. " +
+						"When you need a decision, selection, or confirmation from the user (such as choosing an engine, game concept, mechanic, or architecture path), " +
+						"DO NOT print text numbers in chat asking the user to type '1,1,1,1' or '1, 2, 3'. " +
+						"Call `ask_user_choice({ question: '...', options: [{ label: '...', description: '...', value: '...' }] })` so the user can interactively select with arrow keys (↑/↓) and Enter. " +
 						"- Subagent Delegation Protocol (Mandatory Isolated Execution): You have access to the native tool `subagent_run`. " +
 						"When asked to implement code, design mechanics, write GDDs, review architecture, or run tests, DO NOT do the low-level implementation inline in this parent session. " +
 						"Delegate the atomic work to the specialized agent using `subagent_run({ agent: '<agent_name>', task: '<concrete_task>', mode: 'task' })`. " +

@@ -5,12 +5,14 @@ describe("Studio Subagents & Isolated Execution Engine", () => {
 	const loaderPath = path.join(__dirname, "..", "extensions", "hooks", "studio-agent-loader.ts");
 	const runnerPath = path.join(__dirname, "..", "extensions", "hooks", "studio-agents-runner.ts");
 	const subagentsPath = path.join(__dirname, "..", "extensions", "hooks", "studio-subagents.ts");
+	const choicePath = path.join(__dirname, "..", "extensions", "hooks", "studio-choice.ts");
 	const indexPath = path.join(__dirname, "..", "extensions", "hooks", "index.ts");
 
 	test("subagent implementation files exist and export required contracts", () => {
 		expect(fs.existsSync(loaderPath)).toBe(true);
 		expect(fs.existsSync(runnerPath)).toBe(true);
 		expect(fs.existsSync(subagentsPath)).toBe(true);
+		expect(fs.existsSync(choicePath)).toBe(true);
 		expect(fs.existsSync(indexPath)).toBe(true);
 
 		const loaderSource = fs.readFileSync(loaderPath, "utf8");
@@ -30,9 +32,14 @@ describe("Studio Subagents & Isolated Execution Engine", () => {
 		expect(subagentsSource).toContain('name: "subagent_status"');
 		expect(subagentsSource).toContain('name: "subagent_result"');
 
+		const choiceSource = fs.readFileSync(choicePath, "utf8");
+		expect(choiceSource).toContain("export function registerAskUserChoice");
+		expect(choiceSource).toContain('name: "ask_user_choice"');
+
 		const indexSource = fs.readFileSync(indexPath, "utf8");
 		expect(indexSource).toContain("registerStudioSubagentTools(pi)");
-		expect(indexSource).toContain("Subagent Delegation Protocol (Mandatory Isolated Execution)");
+		expect(indexSource).toContain("registerAskUserChoice(pi)");
+		expect(indexSource).toContain("Interactive Choice Protocol (Mandatory Native Menus)");
 	});
 
 	test("frontmatter parser extracts YAML block from agent markdown files", () => {

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.29] - 2026-09-30
+
+### Changed
+- **Sober TUI Cleanups (Zero Decorative Emojis in Status Card)**:
+  - Eliminados los emojis decorativos (`🧠`, `🤖`, `📊`) de la sección de Integraciones en la tarjeta `Status`.
+  - Reemplazados por etiquetas de texto limpias y sobrias (`Memory`, `Model`, `Context`) conforme a las reglas de estilo y sobriedad de Gentle Shell / Pi Game Studio.
+
+---
+
 ## [0.8.28] - 2026-09-30
 
 ### Changed

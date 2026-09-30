@@ -126,9 +126,9 @@ export function renderStudioStatusCard(
 	// Section: Integrations
 	lines.push(`  ${BORDER}│${RESET} ${pad("", innerWidth)} ${BORDER}│${RESET}`);
 	lines.push(`  ${BORDER}│${RESET} ${pad(`${LAVENDER}${BOLD}Integrations${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`  ${BORDER}│${RESET} ${pad(`  🧠 Memory · ${engramStr}`, innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`  ${BORDER}│${RESET} ${pad(`  🤖 Model  · ${BLUE}${modelStr}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`  ${BORDER}│${RESET} ${pad(`  📊 Context· ${gaugeStr}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`  ${BORDER}│${RESET} ${pad(`  ${GRAY}Memory${RESET}  · ${engramStr}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`  ${BORDER}│${RESET} ${pad(`  ${GRAY}Model${RESET}   · ${BLUE}${modelStr}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`  ${BORDER}│${RESET} ${pad(`  ${GRAY}Context${RESET} · ${gaugeStr}`, innerWidth)} ${BORDER}│${RESET}`);
 
 	if (prodState?.inProgress || prodState?.nextStep) {
 		lines.push(`  ${BORDER}│${RESET} ${pad("", innerWidth)} ${BORDER}│${RESET}`);

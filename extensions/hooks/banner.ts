@@ -15,18 +15,17 @@ const GREEN = "\x1b[38;2;52;211;153m";
 const WHITE = "\x1b[38;2;243;244;246m";
 const GOLD = "\x1b[38;2;251;191;36m";
 
+const RED = "\x1b[38;2;239;68;68m";
+
 export const GAMEPAD_ART_RAW = [
-	"  ⢀⣤⣶⣶⣤⣀        ⣀⣤⣶⣶⣤⡀",
-	" ⣠⣿⣿⣿⣿⣿⣿⣷⣤⣤⣤⣤⣾⣿⣿⣿⣿⣿⣿⣄",
-	"⣰⣿⣿⡿⠿⠛⠉⠉⠉        ⠉⠉⠉⠛⠿⢿⣿⣿⣆",
-	"⢠⣿⡿⠋    ⢀⣀        ⢀⣀     ⠙⢿⣿⡄",
-	"⣾⣿⠁       ⡀          ⢠⡄    ⠈⣿⣷",
-	"⢰⣿⡇      ⢠⣤⡛⣠⣤    ⢀⡀    ⠠⠶  ⠶⠄   ⢸⣿⡆",
-	"⢸⣿⡇       ⠈⠉      ⢺⣿⡗    ⠠⣤    ⢸⣿⡇",
-	"⠈⣿⣧   ⢠⣾⣿⣿⣷⡄    ⠉    ⢠⣾⣿⣿⣷⡄  ⣼⣿⠁",
-	" ⠹⣿⣧  ⠘⢿⣿⣿⡿⠃        ⠘⢿⣿⣿⡿⠃ ⣼⣿⠏",
-	"  ⠙⢿⣷⣤⣀⣈⣉⣁ ⣀⣀⣀⣀⣀⣀ ⣈⣉⣁⣀⣴⡿⠋",
-	"    ⠉⠛⠿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠛⠉",
+	"  ╭──────────────────────────────────────────╮",
+	"  │  Nintendo                      [NES-004] │",
+	"  │ ╭───────╮  ╭──────────────╮              │",
+	"  │ │   ▲   │  │ SELECT START │    ( B ) ( A )│",
+	"  │ │ ◄ ┼ ► │  │  ══    ══    │    ╭───╮ ╭───╮│",
+	"  │ │   ▼   │  ╰──────────────╯    │ █ │ │ █ ││",
+	"  │ ╰───────╯  ════════════════    ╰───╯ ╰───╯│",
+	"  ╰──────────────────────────────────────────╯",
 ];
 
 export function isArtEnabled(root: string): boolean {
@@ -117,26 +116,42 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 			`${VIOLET}${fit("STAGE:", 8)}${RESET} ${WHITE}${fit(stage, v1W)}${RESET}  ${VIOLET}${fit("CONFIG:", 8)}${RESET} ${WHITE}${fit(setup.hasProjectYaml ? "project.yaml" : "default", v2W)}${RESET}`,
 			"",
 			`${GOLD}${fit("TIPS:", 8)}${RESET} ${DIM}/studio (Catálogo) · /studio:setup (Setup) · /start (Inicio)${RESET}`,
-			"",
-			"",
-			"",
 		];
+
+		const colorNesLine = (raw: string): string => {
+			return `${VIOLET}${raw}${RESET}`
+				.replace(/(Nintendo)/g, `${WHITE}$1${VIOLET}`)
+				.replace(/(\[NES-004\])/g, `${DIM}$1${VIOLET}`)
+				.replace(/(SELECT|START)/g, `${DIM}$1${VIOLET}`)
+				.replace(/(══)/g, `${WHITE}$1${VIOLET}`)
+				.replace(/([▲▼◄►┼])/g, `${CYAN}$1${VIOLET}`)
+				.replace(/([BA])/g, `${RED}$1${VIOLET}`)
+				.replace(/(█)/g, `${RED}$1${VIOLET}`);
+		};
 
 		const artWidth = 46;
 		for (let i = 0; i < GAMEPAD_ART_RAW.length; i++) {
 			const rawArt = GAMEPAD_ART_RAW[i];
 			const padArt = rawArt + " ".repeat(Math.max(0, artWidth - rawArt.length));
+			const coloredArt = colorNesLine(padArt);
 			const info = infoLines[i] || "";
-			// Gradient color effect on the gamepad art
-			const color = i < 4 ? CYAN : i < 8 ? VIOLET : DIM;
-			lines.push(`  ${color}${padArt}${RESET}  ${info}`);
+			lines.push(`  ${coloredArt}  ${info}`);
 		}
 	} else if (showArt && width >= 80) {
 		// Medium width: Gamepad on top, Clean grid below
+		const colorNesLine = (raw: string): string => {
+			return `${VIOLET}${raw}${RESET}`
+				.replace(/(Nintendo)/g, `${WHITE}$1${VIOLET}`)
+				.replace(/(\[NES-004\])/g, `${DIM}$1${VIOLET}`)
+				.replace(/(SELECT|START)/g, `${DIM}$1${VIOLET}`)
+				.replace(/(══)/g, `${WHITE}$1${VIOLET}`)
+				.replace(/([▲▼◄►┼])/g, `${CYAN}$1${VIOLET}`)
+				.replace(/([BA])/g, `${RED}$1${VIOLET}`)
+				.replace(/(█)/g, `${RED}$1${VIOLET}`);
+		};
+
 		for (let i = 0; i < GAMEPAD_ART_RAW.length; i++) {
-			const rawArt = GAMEPAD_ART_RAW[i];
-			const color = i < 4 ? CYAN : i < 8 ? VIOLET : DIM;
-			lines.push(`  ${color}${rawArt}${RESET}`);
+			lines.push(`  ${colorNesLine(GAMEPAD_ART_RAW[i])}`);
 		}
 		lines.push("");
 		lines.push(`  ${VIOLET}${BOLD}🎮 PI GAME STUDIO${RESET} ${DIM}·${RESET} ${CYAN}v${version}${RESET} ${DIM}· 55 agents / 80 skills${RESET}`);

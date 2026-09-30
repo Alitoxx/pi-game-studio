@@ -35,12 +35,15 @@ export function getGaugeColor(percent: number): string {
 	return GREEN;
 }
 
+const GAUGE_FILLED = "▰";
+const GAUGE_EMPTY = "▱";
+
 export function renderContextGauge(percent: number, width: number = 8): string {
 	const clamped = Math.max(0, Math.min(100, percent || 0));
 	const filled = Math.min(width, Math.max(0, Math.round((clamped / 100) * width)));
 	const empty = width - filled;
 	const color = getGaugeColor(clamped);
-	return `${color}[${"█".repeat(filled)}${"░".repeat(empty)}]${RESET}`;
+	return `${color}${GAUGE_FILLED.repeat(filled)}${GRAY}${GAUGE_EMPTY.repeat(empty)}${RESET}`;
 }
 
 export function extractContextUsage(ctx: ExtensionContext): ContextUsageInfo | undefined {
@@ -171,7 +174,7 @@ export function renderStudioFooterBar(
 	}
 
 	// Engine & Sprint
-	parts.push(`${CYAN}🎮 ${engineDisplay}${RESET}`);
+	parts.push(`${CYAN}${engineDisplay}${RESET}`);
 	if (prodState?.sprint) {
 		parts.push(`${WHITE}${prodState.sprint}${RESET}`);
 	}
@@ -230,7 +233,7 @@ export function updateStudioHUD(ctx: ExtensionContext, pi?: ExtensionAPI): void 
 		const modelId = formatModelDisplayName(model, thinking);
 
 		const parts: string[] = [];
-		parts.push(`🎮 ${engineDisplay}`);
+		parts.push(engineDisplay);
 		if (prodState?.sprint) parts.push(prodState.sprint);
 		parts.push(modelId);
 		if (usage) {

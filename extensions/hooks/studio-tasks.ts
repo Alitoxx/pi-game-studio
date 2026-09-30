@@ -142,16 +142,46 @@ export function formatTasksOutput(summary: TasksSummary): string[] {
 }
 
 export async function handleStudioTasks(
-	_args: string,
+	args: string,
 	ctx: ExtensionContext,
 ): Promise<void> {
 	const rootDir = findStudioRoot(ctx.cwd) || ctx.cwd;
+	const trimmed = (args || "").trim().toLowerCase();
+
+	if (trimmed.startsWith("widget")) {
+		const { setTasksWidgetEnabled, isTasksWidgetEnabled, updateTasksWidget } = await import("./studio-tasks-widget.ts");
+		const action = trimmed.replace("widget", "").trim();
+		if (action === "off" || action === "disable") {
+			setTasksWidgetEnabled(rootDir, false);
+			updateTasksWidget(ctx);
+			console.log("\x1b[38;2;251;191;36mWidget de tareas en pantalla desactivado.\x1b[0m");
+			return;
+		}
+		if (action === "on" || action === "enable") {
+			setTasksWidgetEnabled(rootDir, true);
+			updateTasksWidget(ctx);
+			console.log("\x1b[38;2;52;211;153mWidget de tareas en pantalla activado.\x1b[0m");
+			return;
+		}
+		const current = isTasksWidgetEnabled(rootDir);
+		setTasksWidgetEnabled(rootDir, !current);
+		updateTasksWidget(ctx);
+		console.log(`\x1b[38;2;167;139;250mWidget de tareas en pantalla ${!current ? "activado" : "desactivado"}.\x1b[0m`);
+		return;
+	}
+
 	const summary = inspectStudioTasks(rootDir);
 	const lines = formatTasksOutput(summary);
 
 	for (const line of lines) {
 		console.log(line);
 	}
+
+	// Refresh live widget if UI is available
+	try {
+		const { updateTasksWidget } = await import("./studio-tasks-widget.ts");
+		updateTasksWidget(ctx);
+	} catch {}
 
 	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 		ctx.ui.notify(

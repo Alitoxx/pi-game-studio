@@ -3,6 +3,7 @@ import { renderBanner } from "./banner.ts";
 import { inspectSetup } from "./studio-setup.ts";
 import { auditEnginePrerequisites, formatAuditReport } from "./studio-doctor.ts";
 import { findStudioRoot } from "./studio-root.ts";
+import { renderStudioStatusCard, updateStudioHUD } from "./studio-hud.ts";
 
 export async function handleStudioStatus(
 	args: string,
@@ -21,10 +22,21 @@ export async function handleStudioStatus(
 		console.log(line);
 	}
 
+	// Render Live Studio Status Card (Model, Context Gauge, Sprint, Game)
+	console.log("");
+	const cardLines = renderStudioStatusCard(ctx, rootDir, Math.min(termWidth, 76));
+	for (const line of cardLines) {
+		console.log(line);
+	}
+	console.log("");
+
 	const status = inspectSetup(rootDir);
 	const audit = auditEnginePrerequisites(status.currentEngine);
 	const auditLines = formatAuditReport(audit);
 	for (const l of auditLines) console.log(l);
+
+	// Also update HUD bar
+	updateStudioHUD(ctx);
 
 	const summary = [
 		`PI GAME STUDIO — ESTADO DEL SISTEMA`,

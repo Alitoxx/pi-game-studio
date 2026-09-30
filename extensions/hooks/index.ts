@@ -22,6 +22,8 @@ import { handleStudioNew } from "./studio-new.ts";
 import { handleStudioChanges } from "./studio-changes.ts";
 import { handleStudioTasks } from "./studio-tasks.ts";
 import { detectProjectEngine, formatEngineBadge } from "./engine-detector.ts";
+import { updateStudioHUD } from "./studio-hud.ts";
+import { updateTasksWidget } from "./studio-tasks-widget.ts";
 
 export default function (pi: ExtensionAPI) {
 	// ──────────────────────────────────────────────
@@ -228,6 +230,10 @@ export default function (pi: ExtensionAPI) {
 						nextStep: "Implementar prototipo / mecánicas del sistema",
 					});
 				}
+				try {
+					updateTasksWidget(ctx);
+					updateStudioHUD(ctx, pi);
+				} catch {}
 			}
 		}
 	});
@@ -310,10 +316,26 @@ export default function (pi: ExtensionAPI) {
 				}
 			}
 		}
+
+		try {
+			updateStudioHUD(ctx, pi);
+			updateTasksWidget(ctx);
+		} catch {}
 	};
 
 	pi.on("turn_start", handleAgentTurnStart);
 	(pi as any).on?.("before_agent_start", handleAgentTurnStart);
+	(pi as any).on?.("turn_end", async (_event: any, ctx: any) => {
+		try {
+			updateStudioHUD(ctx, pi);
+			updateTasksWidget(ctx);
+		} catch {}
+	});
+	(pi as any).on?.("model_change", async (_event: any, ctx: any) => {
+		try {
+			updateStudioHUD(ctx, pi);
+		} catch {}
+	});
 
 	// ──────────────────────────────────────────────
 	// Hook: Session start (banner + gap detection)
@@ -365,6 +387,10 @@ export default function (pi: ExtensionAPI) {
 				].join("\n");
 				(ctx as any).ui.notify(notifyBanner, setup.isConfigured ? "info" : "warning");
 			}
+
+			// Initialize Studio HUD & Live Tasks Widget
+			updateStudioHUD(ctx, pi);
+			updateTasksWidget(ctx);
 		} catch {}
 
 		const gaps: string[] = [];

@@ -4,7 +4,7 @@ import type {
 } from "@earendil-works/pi-coding-agent";
 import { isToolCallEventType } from "@earendil-works/pi-coding-agent";
 import { opendir, readFile, writeFile, mkdir } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
 import { renderBanner, isArtEnabled, setArtEnabled } from "./banner.ts";
@@ -402,6 +402,18 @@ export default function (pi: ExtensionAPI) {
 			updateStudioHUD(ctx, pi);
 			// Mount Live Tasks Widget (only if active tasks exist)
 			updateTasksWidget(ctx);
+
+			// Ensure local project theme is initialized to GameStudio-Gentle if unconfigured
+			const localSettingsPath = join(studioRoot, ".pi", "settings.json");
+			if (existsSync(localSettingsPath)) {
+				try {
+					const parsed = JSON.parse(readFileSync(localSettingsPath, "utf8"));
+					if (!parsed.theme) {
+						parsed.theme = "GameStudio-Gentle";
+						writeFileSync(localSettingsPath, JSON.stringify(parsed, null, 2), "utf8");
+					}
+				} catch {}
+			}
 		} catch {}
 
 		const gaps: string[] = [];

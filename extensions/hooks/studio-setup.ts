@@ -580,6 +580,21 @@ export function installStudioFiles(
 	mkdirSync(join(ctx.cwd, "design", "art"), { recursive: true });
 	mkdirSync(join(ctx.cwd, "production"), { recursive: true });
 
+	// 5b. Configure local project theme to GameStudio-Gentle by default
+	const settingsJsonPath = join(ctx.cwd, ".pi", "settings.json");
+	try {
+		let currentSettings: any = {};
+		if (existsSync(settingsJsonPath)) {
+			try {
+				currentSettings = JSON.parse(readFileSync(settingsJsonPath, "utf8"));
+			} catch {}
+		}
+		if (!currentSettings.theme) {
+			currentSettings.theme = "GameStudio-Gentle";
+			writeFileSync(settingsJsonPath, JSON.stringify(currentSettings, null, 2), "utf8");
+		}
+	} catch {}
+
 	// 6. Configure language preference
 	if (options.language) {
 		writeFileSync(join(studioDir, "language"), options.language, "utf8");

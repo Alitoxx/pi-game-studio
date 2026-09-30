@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.24] - 2026-09-30
+
+### Added
+- **Default Local Project Theme (`GameStudio-Gentle`)**:
+  - Al inicializar o instalar Pi Game Studio (`installStudioFiles` / `studio-setup.ts`), se configura automáticamente `"theme": "GameStudio-Gentle"` en el archivo local `.pi/settings.json` del proyecto sin alterar la configuración global del usuario.
+  - Al iniciar sesión (`session_start`), si el proyecto local carece de tema definido en `.pi/settings.json`, se adopta `GameStudio-Gentle` por defecto.
+
+---
+
 ## [0.8.23] - 2026-09-30
 
 ### Fixed

@@ -87,4 +87,14 @@ describe("Studio HUD and Live Tasks Widget", () => {
 		expect(rendered.some((l) => l.includes("[x] Task 1"))).toBe(true);
 		expect(rendered.some((l) => l.includes("[ ] Task 3"))).toBe(true);
 	});
+
+	test("index.ts renders status card and mounts tasks widget on session_start", () => {
+		const indexSource = fs.readFileSync(
+			path.join(__dirname, "..", "extensions", "hooks", "index.ts"),
+			"utf8",
+		);
+		expect(indexSource).toContain("renderStudioStatusCard(ctx, studioRoot");
+		expect(indexSource).toContain("updateTasksWidget(ctx)");
+		expect(indexSource).toContain("updateStudioHUD(ctx, pi)");
+	});
 });

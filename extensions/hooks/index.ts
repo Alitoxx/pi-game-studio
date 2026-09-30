@@ -22,7 +22,7 @@ import { handleStudioNew } from "./studio-new.ts";
 import { handleStudioChanges } from "./studio-changes.ts";
 import { handleStudioTasks } from "./studio-tasks.ts";
 import { detectProjectEngine, formatEngineBadge } from "./engine-detector.ts";
-import { updateStudioHUD } from "./studio-hud.ts";
+import { updateStudioHUD, renderStudioStatusCard } from "./studio-hud.ts";
 import { updateTasksWidget } from "./studio-tasks-widget.ts";
 
 export default function (pi: ExtensionAPI) {
@@ -355,12 +355,14 @@ export default function (pi: ExtensionAPI) {
 			} catch {}
 		}
 
-		// Display startup banner / dashboard
+		// Display startup banner / dashboard and live status card
 		try {
 			if ((ctx as any).hasUI && (ctx as any).ui?.setHeader) {
 				(ctx as any).ui.setHeader((_tui: any, _theme: any) => ({
 					render(width: number) {
-						return renderBanner(width, studioRoot);
+						const bannerLines = renderBanner(width, studioRoot);
+						const cardLines = renderStudioStatusCard(ctx, studioRoot, Math.min(width, 76));
+						return [...bannerLines, "", ...cardLines];
 					},
 					invalidate() {},
 				}));
@@ -368,6 +370,11 @@ export default function (pi: ExtensionAPI) {
 				const termWidth = process.stdout.columns || 80;
 				const bannerLines = renderBanner(termWidth, studioRoot);
 				for (const line of bannerLines) {
+					console.log(line);
+				}
+				console.log("");
+				const cardLines = renderStudioStatusCard(ctx, studioRoot, Math.min(termWidth, 76));
+				for (const line of cardLines) {
 					console.log(line);
 				}
 			}

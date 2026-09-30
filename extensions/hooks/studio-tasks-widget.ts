@@ -107,14 +107,30 @@ export function updateTasksWidget(ctx: ExtensionContext): void {
 	}
 
 	const summary = inspectStudioTasks(studioRoot);
+	let displayTasks = summary.tasks;
+
 	if (summary.totalCount === 0 || summary.tasks.length === 0) {
-		(ctx.ui as any).setWidget(TASKS_WIDGET_KEY, undefined);
-		return;
+		displayTasks = [
+			{
+				id: "init-1",
+				title: "Definir concepto y pilares del juego (/brainstorm)",
+				sourceFile: "design/gdd/game-concept.md",
+				status: "in_progress",
+				isStale: false,
+			},
+			{
+				id: "init-2",
+				title: "O desplegar starter técnico funcional (/studio:new)",
+				sourceFile: "starters",
+				status: "pending",
+				isStale: false,
+			},
+		];
 	}
 
 	(ctx.ui as any).setWidget(TASKS_WIDGET_KEY, (_tui: any, _theme: any) => ({
 		render(width: number) {
-			return renderTasksWidgetCard(summary.tasks, width || 74);
+			return renderTasksWidgetCard(displayTasks, width || 74);
 		},
 		invalidate() {},
 	}));

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.21] - 2026-09-30
+
+### Added
+- **Custom Free-Text Response en Cuestionarios en Lote (`ask_user_question`)**:
+  - Habilitada la opción interactiva `"Otro (escribir respuesta personalizada)..."` de manera automática por defecto en cada pregunta del lote (`allowCustomResponse`).
+  - Al seleccionar `"Otro..."` con las teclas de dirección (`↑`/`↓`) y presionar `Enter`, se abre de inmediato el prompt de entrada de texto (`ctx.ui.input`) para redactar una respuesta libre en el TUI.
+  - La respuesta libre queda registrada de forma estructurada con bandera `{ custom: true }` y se consolida con el resto de respuestas del lote.
+
+---
+
 ## [0.8.16] - 2026-09-29
 
 ### Added

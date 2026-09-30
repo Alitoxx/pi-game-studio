@@ -257,5 +257,17 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 		expect(source).toContain("design/gdd");
 		expect(source).toContain("production/roadmap.md");
 	});
+
+	test("studio-choice registers ask_user_choice and ask_user_question with custom response", () => {
+		const source = fs.readFileSync(
+			path.join(__dirname, "..", "extensions", "hooks", "studio-choice.ts"),
+			"utf8",
+		);
+		expect(source).toContain("registerAskUserChoice");
+		expect(source).toContain("ask_user_choice");
+		expect(source).toContain("ask_user_question");
+		expect(source).toContain("Otro (escribir respuesta personalizada)...");
+		expect(source).toContain("allowCustomResponse");
+	});
 });
 

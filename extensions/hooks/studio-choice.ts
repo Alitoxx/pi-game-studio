@@ -23,6 +23,7 @@ export interface QuestionItem {
 	header?: string;
 	options: QuestionOption[];
 	multiSelect?: boolean;
+	allowCustomResponse?: boolean;
 }
 
 export interface QuestionParams {
@@ -172,6 +173,10 @@ export function registerAskUserChoice(pi: ExtensionAPI): void {
 						properties: {
 							question: { type: "string", description: "The full question text" },
 							header: { type: "string", description: "Short header or step label (e.g. 'Paso 1: Motor')" },
+							allowCustomResponse: {
+								type: "boolean",
+								description: "If true, appends an option to type a custom response",
+							},
 							options: {
 								type: "array",
 								minItems: 2,
@@ -218,7 +223,10 @@ export function registerAskUserChoice(pi: ExtensionAPI): void {
 				question: string;
 				header?: string;
 				answer: string;
+				custom?: boolean;
 			}> = [];
+
+			const OTHER_LABEL = "Otro (escribir respuesta personalizada)...";
 
 			// Presentar cada pregunta secuencialmente con el selector de flechas
 			for (let i = 0; i < params.questions.length; i++) {
@@ -230,6 +238,12 @@ export function registerAskUserChoice(pi: ExtensionAPI): void {
 					const desc = opt.description ? ` — ${opt.description}` : "";
 					return `${optIdx + 1}. ${opt.label}${desc}`;
 				});
+
+				// Permitir respuesta personalizada si está habilitado en la pregunta (por defecto true si allowCustomResponse !== false)
+				const allowCustom = q.allowCustomResponse !== false;
+				if (allowCustom) {
+					labels.push(OTHER_LABEL);
+				}
 
 				const picked = await (ctx.ui as any).select(title, labels);
 
@@ -245,15 +259,29 @@ export function registerAskUserChoice(pi: ExtensionAPI): void {
 					};
 				}
 
-				const idx = typeof picked === "number" ? picked : labels.indexOf(picked);
-				const chosenOpt = q.options[idx] || q.options[0];
+				if (allowCustom && picked === OTHER_LABEL) {
+					let customText = "";
+					if (typeof (ctx.ui as any)?.input === "function") {
+						customText = await (ctx.ui as any).input(title, "");
+					}
+					committedAnswers.push({
+						questionIndex: i + 1,
+						question: q.question,
+						header: q.header,
+						answer: customText || "Otro",
+						custom: true,
+					});
+				} else {
+					const idx = typeof picked === "number" ? picked : labels.indexOf(picked);
+					const chosenOpt = q.options[idx] || q.options[0];
 
-				committedAnswers.push({
-					questionIndex: i + 1,
-					question: q.question,
-					header: q.header,
-					answer: chosenOpt.label,
-				});
+					committedAnswers.push({
+						questionIndex: i + 1,
+						question: q.question,
+						header: q.header,
+						answer: chosenOpt.label,
+					});
+				}
 			}
 
 			// Formatear resumen final de respuestas para el LLM

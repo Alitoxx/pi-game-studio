@@ -54,7 +54,7 @@ export function renderTasksWidgetCard(tasks: StudioTask[], width: number = 74): 
 
 	const lines: string[] = [];
 	const ruleLen = Math.max(0, cardWidth - 32);
-	lines.push(`  ${DIM}╭─${RESET} ${VIOLET}${BOLD}TAREAS ACTIVAS (ODD / Roadmap)${RESET} ${DIM}${"─".repeat(ruleLen)}╮${RESET}`);
+	lines.push(`  ${DIM}╭─${RESET} ${GREEN}${BOLD}TAREAS ACTIVAS (ODD / Roadmap)${RESET} ${DIM}${"─".repeat(ruleLen)}╮${RESET}`);
 
 	// Prioritize: in_progress first, then pending (up to 3 items), then completed (up to 2 items)
 	const inProg = tasks.filter((t) => t.status === "in_progress");

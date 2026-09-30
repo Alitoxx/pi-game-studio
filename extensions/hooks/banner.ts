@@ -8,13 +8,13 @@ import { readProducerState } from "./studio-start.ts";
 
 const RESET = "\x1b[0m";
 const BOLD = "\x1b[1m";
-// Gentle Shell authentic color palette
-const GENTLE_ACCENT = "\x1b[38;2;255;118;195m"; // Rose / Brand Accent
-const GENTLE_LABEL = "\x1b[38;2;200;100;160m";  // Muted Rose Label
-const GENTLE_VALUE = "\x1b[38;2;246;239;243m";  // Pearl White Text
-const GENTLE_HIGHLIGHT = "\x1b[38;2;255;177;221m"; // Version Highlight
-const GENTLE_DIM = "\x1b[38;2;118;97;107m";     // Subdued Rose Dim
-const GENTLE_GOLD = "\x1b[38;2;224;194;122m";    // Tips Champagne Gold
+// Emerald Engine color palette (Gamedev console & debug terminal)
+const STUDIO_ACCENT = "\x1b[38;2;52;211;153m";    // Emerald Green (#34d399)
+const STUDIO_LABEL = "\x1b[38;2;16;185;129m";     // Technical Mint (#10b981)
+const STUDIO_VALUE = "\x1b[38;2;243;244;246m";    // Pearl White (#f3f4f6)
+const STUDIO_HIGHLIGHT = "\x1b[38;2;110;231;183m";// Luminous Mint (#6ee7b7)
+const STUDIO_DIM = "\x1b[38;2;100;116;139m";      // Slate Gray (#64748b)
+const STUDIO_GOLD = "\x1b[38;2;251;191;36m";      // Amber Gold (#fbbf24)
 
 export function isArtEnabled(_root: string): boolean {
 	return false;
@@ -82,7 +82,7 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 	// Title centered
 	const titleRaw = `PI GAME STUDIO · v${version} · 55 agents / 80 skills`;
 	const titlePad = Math.max(0, Math.floor((width - titleRaw.length) / 2));
-	const titleLine = " ".repeat(titlePad) + `${GENTLE_ACCENT}${BOLD}PI GAME STUDIO${RESET} ${GENTLE_DIM}·${RESET} ${GENTLE_HIGHLIGHT}v${version}${RESET} ${GENTLE_DIM}· 55 agents / 80 skills${RESET}`;
+	const titleLine = " ".repeat(titlePad) + `${STUDIO_ACCENT}${BOLD}PI GAME STUDIO${RESET} ${STUDIO_DIM}·${RESET} ${STUDIO_HIGHLIGHT}v${version}${RESET} ${STUDIO_DIM}· 55 agents / 80 skills${RESET}`;
 	lines.push(titleLine);
 	lines.push("");
 
@@ -94,21 +94,21 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 		const padStr = " ".repeat(gridPad);
 
 		const addWide = (l1: string, v1: string, l2: string, v2: string) => {
-			const col1 = `${GENTLE_LABEL}${fit(l1, lW)}${RESET} ${GENTLE_VALUE}${fit(v1, vW)}${RESET}`;
-			const col2 = `${GENTLE_LABEL}${fit(l2, lW)}${RESET} ${GENTLE_VALUE}${fit(v2, vW)}${RESET}`;
+			const col1 = `${STUDIO_LABEL}${fit(l1, lW)}${RESET} ${STUDIO_VALUE}${fit(v1, vW)}${RESET}`;
+			const col2 = `${STUDIO_LABEL}${fit(l2, lW)}${RESET} ${STUDIO_VALUE}${fit(v2, vW)}${RESET}`;
 			lines.push(`${padStr}${col1}   ${col2}`);
 		};
 		addWide("GIT:", gitBranch, "PATH:", shortPath);
 		addWide("ENGINE:", engineInfo, "STORAGE:", engramStatus);
 		addWide("AGENTS:", `${setup.agentsInstalled} activos (52 especialistas & leads)`, "SKILLS:", "80 loaded · 44 templates");
 		addWide("STAGE:", stage, "CONFIG:", setup.hasProjectYaml ? "project.yaml" : "default");
-		lines.push(`${padStr}${GENTLE_GOLD}${fit("TIPS:", lW)}${RESET} ${GENTLE_DIM}/studio (Catálogo) · /studio:setup (Setup) · /start (Inicio)${RESET}`);
+		lines.push(`${padStr}${STUDIO_GOLD}${fit("TIPS:", lW)}${RESET} ${STUDIO_DIM}/studio (Catálogo) · /studio:setup (Setup) · /start (Inicio)${RESET}`);
 	} else {
 		const vW = Math.max(20, width - lW - 6);
 		const narrowPad = Math.max(0, Math.floor((width - (lW + vW + 1)) / 2));
 		const padStr = " ".repeat(narrowPad);
 		const addNarrow = (label: string, value: string) => {
-			lines.push(`${padStr}${GENTLE_LABEL}${fit(label, lW)}${RESET} ${GENTLE_VALUE}${fit(value, vW)}${RESET}`);
+			lines.push(`${padStr}${STUDIO_LABEL}${fit(label, lW)}${RESET} ${STUDIO_VALUE}${fit(value, vW)}${RESET}`);
 		};
 		addNarrow("GIT:", gitBranch);
 		addNarrow("PATH:", shortPath);
@@ -116,7 +116,7 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 		addNarrow("AGENTS:", `${setup.agentsInstalled} activos (52 especialistas & leads)`);
 		addNarrow("STAGE:", stage);
 		addNarrow("STORAGE:", engramStatus);
-		lines.push(`${padStr}${GENTLE_GOLD}${fit("TIPS:", lW)}${RESET} ${GENTLE_DIM}/studio · /start${RESET}`);
+		lines.push(`${padStr}${STUDIO_GOLD}${fit("TIPS:", lW)}${RESET} ${STUDIO_DIM}/studio · /start${RESET}`);
 	}
 
 	lines.push("");

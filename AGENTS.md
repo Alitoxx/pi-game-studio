@@ -70,6 +70,8 @@ Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar 
 9. **Radar de Próximos Pasos & Recibos de Entrega**: Acciones siguientes claras con sus comandos ejecutables.
 10. **Return Contract de Especialistas**: En delegaciones `subagent`, los especialistas devuelven exclusivamente un bloque YAML compacto (`status`, `summary`, `files_changed`, `validation`, `gameplay_impact`) eliminando prosa conversacional redundante.
 11. **Flow Completion & Producer Auto-Handoff Protocol**: Cierre automático de tareas con actualización instantánea de `production/roadmap.md` (`<!-- PRODUCER_STATE -->`) y relevo directo al siguiente especialista sin preguntas especulativas.
+12. **Native Isolated Subagents (`subagent_run`)**: Ejecución de especialistas mediante procesos hijos de Pi en modo no interactivo (`pi --print`). La sesión padre mantiene el rol de orquestador/productor sin contaminación de contexto ni ejecución de código inline.
+13. **Menús Nativos Interactivos (`ask_user_choice`)**: Las decisiones y selecciones del usuario se presentan mediante modales interactivos en la terminal (`ctx.ui.select`), permitiendo navegación con flechas (`↑`/`↓`) y selección con `Enter` en lugar de texto plano con números en el chat.
 
 ---
 

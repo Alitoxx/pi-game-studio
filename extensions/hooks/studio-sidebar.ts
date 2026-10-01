@@ -11,6 +11,8 @@ import { findStudioRoot } from "./studio-root.ts";
 import { inspectStudioTasks } from "./studio-tasks.ts";
 import { renderStudioStatusCard } from "./studio-hud.ts";
 import { renderTasksWidgetCard, isTasksWidgetEnabled } from "./studio-tasks-widget.ts";
+import { studioAgentsRunner } from "./studio-agents-runner.ts";
+import { renderSubagentsWidgetCard } from "./studio-subagents-widget.ts";
 
 export const SIDEBAR_BREAKPOINT = 140;
 const RAIL_WIDTH = 50;
@@ -150,8 +152,6 @@ export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => voi
 			// Render Subagents Card (if active subagent tasks exist)
 			let subagentLines: string[] = [];
 			try {
-				const { studioAgentsRunner } = await import("./studio-agents-runner.ts");
-				const { renderSubagentsWidgetCard } = await import("./studio-subagents-widget.ts");
 				const subTasks = studioAgentsRunner.listTasks();
 				subagentLines = renderSubagentsWidgetCard(subTasks, cardInnerWidth);
 			} catch {}

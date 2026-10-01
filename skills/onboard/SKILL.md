@@ -10,7 +10,7 @@ tools: read, glob, grep, write
 
 Read CLAUDE.md for project overview and standards.
 
-Read the relevant agent definition from `.pi/game-studio/agents/` if a specific role is specified.
+Read the relevant agent definition from `.pi/agents/` if a specific role is specified.
 
 ---
 

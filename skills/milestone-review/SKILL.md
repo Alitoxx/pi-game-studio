@@ -13,7 +13,7 @@ Extract the milestone name (`current` or a specific name) and resolve the review
 2. Else read `production/review-mode.txt` → use that value
 3. Else → default to `lean`
 
-See `.pi/game-studio/director-gates.md` for the full check pattern.
+Director Gate validation is enforced through the agent hierarchy (Tier 1 Directors via `subagent_run`) and the ODD workflow protocol..
 
 ---
 
@@ -113,7 +113,7 @@ Read all sprint reports for sprints within this milestone from `production/sprin
 - `lean` → skip (not a PHASE-GATE). Note: "PR-MILESTONE skipped — Lean mode." Present the Go/No-Go section without a producer verdict.
 - `full` → spawn as normal.
 
-Before generating the Go/No-Go recommendation, spawn `producer` via subagent using gate **PR-MILESTONE** (`.pi/game-studio/director-gates.md`).
+Before generating the Go/No-Go recommendation, spawn `producer` via subagent using gate **PR-MILESTONE** (Director Gate validation is enforced through the agent hierarchy and the ODD workflow protocol).
 
 Pass: milestone name and target date, current completion percentage, blocked story count, velocity data from sprint reports (if available), list of cut candidates.
 

@@ -21,7 +21,7 @@ Resolve the review mode (once, store for all gate spawns this run):
 2. Else read `production/review-mode.txt` → use that value
 3. Else → default to `lean`
 
-See `.pi/game-studio/director-gates.md` for the full check pattern.
+Director Gate validation is enforced through the agent hierarchy (Tier 1 Directors via `subagent_run`) and the ODD workflow protocol..
 
 **Argument modes:**
 - **No argument / `full`**: Full guided walkthrough — all sections, start to finish
@@ -337,14 +337,14 @@ After writing the master architecture document, perform an explicit sign-off bef
 
 **Step 1 — Technical Director self-review** (this skill runs as technical-director):
 
-Apply gate **TD-ARCHITECTURE** (`.pi/game-studio/director-gates.md`) as a self-review. Check all four criteria from that gate definition against the completed document.
+Apply gate **TD-ARCHITECTURE** (Director Gate validation is enforced through the agent hierarchy and the ODD workflow protocol) as a self-review. Check all four criteria from that gate definition against the completed document.
 
 **Review mode check** — apply before spawning LP-FEASIBILITY:
 - `solo` → skip. Note: "LP-FEASIBILITY skipped — Solo mode." Proceed to Phase 8 handoff.
 - `lean` → skip (not a PHASE-GATE). Note: "LP-FEASIBILITY skipped — Lean mode." Proceed to Phase 8 handoff.
 - `full` → spawn as normal.
 
-**Step 2 — Spawn `lead-programmer` via subagent using gate LP-FEASIBILITY (`.pi/game-studio/director-gates.md`):**
+**Step 2 — Spawn `lead-programmer` via subagent using gate LP-FEASIBILITY (Director Gate validation is enforced through the agent hierarchy and the ODD workflow protocol):**
 
 Pass: architecture document path, technical requirements baseline summary, ADR list.
 

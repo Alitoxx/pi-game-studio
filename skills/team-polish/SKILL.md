@@ -3,7 +3,7 @@ name: team-polish
 description: "[Studio] Orchestrate the polish team: coordinates performance-analyst, technical-artist, sound-designer, and qa-tester to optimize, polish, and harden a feature or area for release quality."
 model: inherit
 inheritProjectContext: true
-tools: read, glob, grep, write, edit, bash, subagent, ask_user_question, todo_write
+tools: read, glob, grep, write, edit, bash, subagent, ask_user_question
 ---
 If no argument is provided, output usage guidance and exit without spawning any agents:
 > Usage: `/team-polish [feature or area]` — specify the feature or area to polish (e.g., `combat`, `main menu`, `inventory system`, `level-1`). Do not use `ask_user_question` here; output the guidance directly.

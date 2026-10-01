@@ -13,7 +13,7 @@ Resolve the review mode (once, store for all gate spawns this run):
 2. Else read `production/review-mode.txt` → use that value
 3. Else → default to `lean`
 
-See `.pi/game-studio/director-gates.md` for the full check pattern.
+Director Gate validation is enforced through the agent hierarchy (Tier 1 Directors via `subagent_run`) and the ODD workflow protocol..
 
 Read `design/gdd/game-concept.md`. If it does not exist, fail with:
 > "No game concept found. Run `/brainstorm` first — the art bible is authored after the game concept is approved."
@@ -191,11 +191,11 @@ Write the approved section to file.
 - `lean` → skip (not a PHASE-GATE). Note: "AD-ART-BIBLE skipped — Lean mode." Proceed to Phase 6.
 - `full` → spawn as normal.
 
-After all sections are complete (or the scoped set from Phase 1 is complete), spawn `creative-director` via subagent using gate **AD-ART-BIBLE** (`.pi/game-studio/director-gates.md`).
+After all sections are complete (or the scoped set from Phase 1 is complete), spawn `creative-director` via subagent using gate **AD-ART-BIBLE** (Director Gate validation is enforced through the agent hierarchy and the ODD workflow protocol).
 
 Pass: art bible file path, game pillars, visual identity anchor.
 
-Handle verdict per standard rules in `director-gates.md`. Record the verdict in the art bible's status header:
+Handle verdict per standard rules. Record the verdict in the art bible's status header:
 `> **Art Director Sign-Off (AD-ART-BIBLE)**: APPROVED [date] / CONCERNS (accepted) [date] / REVISED [date]`
 
 ---

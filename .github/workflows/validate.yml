@@ -2,9 +2,9 @@ name: Validate
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
   pull_request:
-    branches: [main]
+    branches: [main, master]
 
 jobs:
   validate:
@@ -16,6 +16,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      - name: Run tests
+        run: |
+          npm ci
+          npm test
 
       - name: Validate package.json
         run: |
@@ -48,6 +53,7 @@ jobs:
       - name: Validate skill SKILL.md files
         run: |
           for d in skills/*/; do
+            [[ "$d" == *"test-results"* || "$d" == *"test-rubrics"* ]] && continue
             skill=$(basename "$d")
             if [ ! -f "${d}SKILL.md" ]; then
               echo "❌ $skill missing SKILL.md"
@@ -59,7 +65,7 @@ jobs:
             fi
             echo "✅ $skill"
           done
-          echo "All $(( ls -d skills/*/ | wc -l )) skills valid"
+          echo "All $( ls -d skills/*/ | wc -l ) skills valid"
 
       - name: Validate assign-models.js
         run: |
@@ -67,7 +73,7 @@ jobs:
             "director": "anthropic/claude-sonnet-4",
             "workhorse": "openai/gpt-4o",
             "lightweight": "ollama/llama3.2"
-          }' 2>&1 | grep -q "49 agent(s)"
+          }' 2>&1 | grep -q "58 agent(s)"
           echo "✅ assign-models.js runs clean"
 
       - name: Validate models.default.json
@@ -81,15 +87,13 @@ jobs:
 
       - name: Validate hooks extension compiles
         run: |
-          cd extensions/hooks
-          npm install 2>/dev/null || true
-          npx tsc --noEmit 2>&1 || echo "⚠️ TypeScript check skipped (types may not resolve outside Pi)"
+          (cd extensions/hooks && npm install 2>/dev/null || true && npx tsc --noEmit 2>&1 || echo "⚠️ TypeScript check skipped (types may not resolve outside Pi)")
           echo "✅ hooks extension structure valid"
 
       - name: Check file count consistency
         run: |
-          AGENTS=$(ls agents/*.md | wc -l)
-          SKILLS=$(ls -d skills/*/ | wc -l)
-          PROMPTS=$(find prompts -name '*.md' | wc -l)
+          AGENTS=$(ls -1 agents/*.md | wc -l | tr -d ' ')
+          SKILLS=$(ls -d skills/*/ | wc -l | tr -d ' ')
+          PROMPTS=$(find prompts -name '*.md' | wc -l | tr -d ' ')
           echo "📊 Agents: $AGENTS | Skills: $SKILLS | Templates: $PROMPTS"
-          [ "$AGENTS" = "49" ] || { echo "❌ Expected 49 agents, got $AGENTS"; exit 1; }
+          [ "$AGENTS" = "55" ] || { echo "❌ Expected 55 agents, got $AGENTS"; exit 1; }

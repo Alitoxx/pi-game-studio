@@ -13,7 +13,7 @@ Resolve the review mode (once, store for all gate spawns this run):
 2. Else read `production/review-mode.txt` → use that value
 3. Else → default to `lean`
 
-See `.pi/game-studio/director-gates.md` for the full check pattern.
+Director Gate validation is enforced through the agent hierarchy (Tier 1 Directors via `subagent_run`) and the ODD workflow protocol..
 
 Determine the mode:
 
@@ -121,7 +121,7 @@ Present the categorized list, then route:
 - `lean` → skip (not a PHASE-GATE). Note: "CD-PLAYTEST skipped — Lean mode." Proceed to Phase 4 (save the report).
 - `full` → spawn as normal.
 
-After categorising findings, spawn `creative-director` via subagent using gate **CD-PLAYTEST** (`.pi/game-studio/director-gates.md`).
+After categorising findings, spawn `creative-director` via subagent using gate **CD-PLAYTEST** (Director Gate validation is enforced through the agent hierarchy and the ODD workflow protocol).
 
 Pass: the structured report content, game pillars and core fantasy (from `design/gdd/game-concept.md`), the specific hypothesis being tested.
 

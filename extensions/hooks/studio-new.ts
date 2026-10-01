@@ -62,6 +62,24 @@ export function getAvailableStarters(): StarterTemplate[] {
 			runCommand: "godot project.godot (o abrir en Godot Editor)",
 			sourceDir: join(pkgRoot, "starters", "godot-2d-character"),
 		},
+		{
+			id: "unity-2d-platformer",
+			name: "Unity 2D Platformer",
+			engine: "Unity",
+			language: "C#",
+			description: "Starter 2D platformer con Input System, CharacterController y cámara (Unity 2022.3+)",
+			runCommand: "Abrir en Unity Hub y presionar Play",
+			sourceDir: join(pkgRoot, "starters", "unity-2d-platformer"),
+		},
+		{
+			id: "ue5-third-person",
+			name: "UE5 Third Person Character",
+			engine: "Unreal",
+			language: "C++",
+			description: "Starter tercera persona con Enhanced Input, cámara spring arm y movimiento (UE 5.4+)",
+			runCommand: "Abrir Game.uproject en Unreal Editor",
+			sourceDir: join(pkgRoot, "starters", "ue5-third-person"),
+		},
 	];
 }
 

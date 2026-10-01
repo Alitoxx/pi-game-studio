@@ -37,7 +37,7 @@ whether the core idea is worth designing, run `/prototype` (concept prototype) i
 ## Phase 1: Resolve Review Mode and Load Context
 
 
-See `.pi/game-studio/director-gates.md` for the full check pattern. Individual gate definitions live in `.pi/game-studio/director-gates/[gate-id].md` — the spawned agent reads its own gate file; do not read it in the parent session.
+Director Gate validation is enforced through the agent hierarchy (Tier 1 Directors via `subagent_run`) and the ODD workflow protocol.
 
 
 Every `AskUserQuestion` call follows `prompts/automation-modes.md`

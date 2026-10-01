@@ -26,7 +26,7 @@ export class StudioAgentsRunner {
 	private tasks = new Map<string, TaskRecord>();
 	private liveProcesses = new Map<string, ChildProcess>();
 	private counter = 0;
-	private timeoutMs = 180000; // 3 min default stall/run limit
+	private timeoutMs = 300000; // 5 min default stall/run limit for complex chain tasks
 
 	constructor(options: RunnerOptions = {}) {
 		if (options.timeoutMs) {
@@ -143,6 +143,9 @@ export class StudioAgentsRunner {
 			// Añadir modelo si no es inherit
 			if (manifest.model && manifest.model !== "inherit") {
 				args.unshift("--model", manifest.model);
+			} else {
+				// Proveedor y modelo por defecto configurados en el entorno del usuario
+				args.unshift("--provider", "opencode-go", "--model", "space-bunny-free");
 			}
 
 			let child: ChildProcess;

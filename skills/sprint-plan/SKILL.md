@@ -15,7 +15,7 @@ Extract the mode argument (`new`, `update`, or `status`) and resolve the review 
 2. Else read `production/review-mode.txt` → use that value
 3. Else → default to `lean`
 
-See `.pi/game-studio/director-gates.md` for the full check pattern.
+Director Gate validation is enforced through the agent hierarchy (Tier 1 Directors via `subagent_run`) and the ODD workflow protocol..
 
 ---
 
@@ -172,7 +172,7 @@ stories that haven't changed, add new stories, remove dropped ones.
 - `lean` → skip (not a PHASE-GATE). Note: "PR-SPRINT skipped — Lean mode." Proceed to Phase 5 (QA plan gate).
 - `full` → spawn as normal.
 
-Before finalising the sprint plan, spawn `producer` via subagent using gate **PR-SPRINT** (`.pi/game-studio/director-gates.md`).
+Before finalising the sprint plan, spawn `producer` via subagent using gate **PR-SPRINT** (Director Gate validation is enforced through the agent hierarchy and the ODD workflow protocol).
 
 Pass: proposed story list (titles, estimates, dependencies), total team capacity in hours/days, any carryover from the previous sprint, milestone constraints and deadline.
 

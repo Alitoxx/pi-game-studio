@@ -67,7 +67,7 @@
 # + quoted strings. PyYAML is NOT required.
 #
 # Usage:
-#   source .claude/hooks/yaml-helper.sh
+#   source scripts/yaml-helper.sh
 #   review_mode=$(get_yaml_key "$_YH_ROOT/project.yaml" modes.review_mode)
 #   if [ -z "$review_mode" ]; then
 #     # fall back to legacy .txt
@@ -386,12 +386,12 @@ PYEOF
 # rule 4 leaves an unconfigured directory reading its own legacy files, which is
 # exactly what a project without project.yaml should do.
 #
-# CLAUDE_PROJECT_DIR is populated in both the hook environment and the
+# PI_PROJECT_DIR is populated in both the hook environment and the
 # skill-bootstrap environment, so rule 3 covers every way this framework
 # actually invokes the helper.
 #
 # 1 and 2 come FIRST deliberately. A project nested inside another one must read
-# ITSELF, and an ambient CLAUDE_PROJECT_DIR would otherwise point it at the
+# ITSELF, and an ambient PI_PROJECT_DIR would otherwise point it at the
 # outer tree. Rule 2 covers the case that is easiest to lose: a directory with a
 # project.local.yaml and deliberately NO base must still raise the hard error
 # for a missing base. Without it, an upward walk finds an ancestor's
@@ -404,8 +404,8 @@ _yaml_helper_set_root() {
   _YH_ROOT="."
   [ -f "$_YH_ROOT/project.yaml" ] && return 0
   [ -f "$_YH_ROOT/project.local.yaml" ] && return 0
-  if [ -n "${CLAUDE_PROJECT_DIR:-}" ] && [ -f "$CLAUDE_PROJECT_DIR/project.yaml" ]; then
-    _YH_ROOT="$CLAUDE_PROJECT_DIR"; return 0
+  if [ -n "${PI_PROJECT_DIR:-}" ] && [ -f "$PI_PROJECT_DIR/project.yaml" ]; then
+    _YH_ROOT="$PI_PROJECT_DIR"; return 0
   fi
   return 0
 }
@@ -469,7 +469,7 @@ team.size::individual|small|studio
 performance.enforce::warn|block|off
 platform.cert_tier::none|itch|steam|console
 accessibility.target::none|standard|aaa
-engine.name::Godot|Unity|Unreal
+engine.name::Godot|Unity|Unreal|Bevy|Raylib
 project.stage::Concept|Systems Design|Technical Setup|Pre-Production|Production|Polish|Release
 testing.strict.logic::true|false
 testing.strict.integration::true|false
@@ -670,7 +670,7 @@ EOF
 #   DEFAULT IS `on`. A default of `off` would contradict practice: every project
 #   runs with the pipeline active --
 #   and `production/session-state/active.md` is the documented recovery
-#   checkpoint that `.claude/docs/context-management.md` tells users to rely on.
+#   checkpoint that docs tell users to rely on.
 #   Shipping `off` as the default would have silently removed crash recovery,
 #   the session archive and the subagent spawn tally from every existing
 #   project. Users who want the ~2-5k tokens per session opt out explicitly.
@@ -1181,7 +1181,7 @@ resolve_setting() {
 #   source: engine.name | <legacy path> | detected | unset
 #   exit:   always 0
 #
-# WHY THIS EXISTS. `.claude/docs/directory-structure.md` is explicit that the
+# WHY THIS EXISTS. `docs/directory-structure.md` is explicit that the
 # code root is not a style preference but a hard toolchain constraint: Unity
 # compiles only `Assets/` and `Packages/`, and UnrealBuildTool discovers modules
 # under `Source/`. `src/` is that table's GODOT row, not a universal path.
@@ -1189,7 +1189,7 @@ resolve_setting() {
 # Every hook that filtered staged or on-disk files with a literal `^src/`
 # therefore matched NOTHING on a Unity or Unreal project — and matching nothing
 # is indistinguishable from scanning cleanly. That is the exact row
-# `.claude/rules/skill-authoring.md` records for `/security-audit`
+# `rules/skill-authoring.md` records for `/security-audit`
 # ("Godot-only greps returned zero hits on Unity/Unreal, and zero hits read as
 # clean"), reproduced in four more places.
 #
@@ -1221,7 +1221,7 @@ resolve_code_root() {
   #    project.yaml existed, and workflow-catalog's `engine-setup` step still
   #    accepts it as an `any_of` alternative — so a v1.0 project that never
   #    migrated resolves rather than falling through to "unset".
-  legacy="$_YH_ROOT/.claude/docs/technical-preferences.md"
+  legacy="$_YH_ROOT/docs/technical-preferences.md"
   if [ -z "$ename" ] && [ -f "$legacy" ]; then
     ename=$(grep -iE '^[[:space:]]*[-*]?[[:space:]]*\*{0,2}Engine\*{0,2}[[:space:]]*:' "$legacy" 2>/dev/null \
             | head -1 | sed 's/.*://' | tr -d '\r' \
@@ -1229,7 +1229,7 @@ resolve_code_root() {
     case "$ename" in
       *"[TO BE CONFIGURED]"*|"["*) ename="" ;;
     esac
-    [ -n "$ename" ] && src=".claude/docs/technical-preferences.md"
+    [ -n "$ename" ] && src="docs/technical-preferences.md"
   fi
 
   case "$(printf '%s' "$ename" | tr '[:upper:]' '[:lower:]')" in
@@ -1432,7 +1432,7 @@ resolve_config() {
     if [ -n "$ename" ]; then
       echo "engine: $ename${eversion:+ $eversion} (project.yaml)"
     else
-      echo "engine: unset (fall back to .claude/docs/technical-preferences.md)"
+      echo "engine: unset (fall back to docs/technical-preferences.md)"
     fi
   fi
 
@@ -1548,27 +1548,18 @@ EOF
 
 # --- Direct execution: the skill-bootstrap entry point -----------------------
 #
-#   bash "${CLAUDE_SKILL_DIR}/../../hooks/yaml-helper.sh" resolve_config --keys a,b
+#   bash "${PI_SKILL_DIR}/../../hooks/yaml-helper.sh" resolve_config --keys a,b
 #
-# Skills cannot `source` this file in their `` !`cmd` `` bootstrap line. Claude
-# Code permission-checks every injected command before the skill renders, and
-# outside auto mode anything short of "allow" ABORTS the whole invocation --
-# measured on 2.1.281, see .claude/docs/config-resolution.md. A `${VAR:-x}` or
-# `$( )` in the command fails that check as "Contains expansion" and no grant can
-# approve it; a `source … && resolve_config` compound needs every part approved.
-# `${CLAUDE_SKILL_DIR}` is substituted as text before the check, so one plain
-# `bash <path> resolve_config …` call is approvable by the matching grant in the
-# skill's own `allowed-tools`. That is also what lets a Bash-less agent preload
-# the skill (GitHub issue #128).
+# Skills cannot `source` this file in their `` !`cmd` `` bootstrap line.
 #
 # Only resolve_config is dispatchable: the bootstrap is the one caller, and
 # every name added here widens what a skill grant can reach.
 #
 # ROOT. Run from a subdirectory, the skill shell's cwd has no project.yaml and
-# $CLAUDE_PROJECT_DIR is the launch directory, not the repo root (measured), so
+# $PI_PROJECT_DIR is the launch directory, not the repo root (measured), so
 # rules 1-3 of _yaml_helper_set_root all miss. This file's own location is the
 # one anchor that cannot drift: hooks/ sits two levels below the root. It only
-# fills CLAUDE_PROJECT_DIR when that has no project.yaml, so rules 1-2 (cwd
+# fills PI_PROJECT_DIR when that has no project.yaml, so rules 1-2 (cwd
 # first, for nested projects) keep their precedence.
 #
 # ALWAYS exits 0: a non-zero exit from an injected command aborts the skill.
@@ -1576,9 +1567,9 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   case "${1:-}" in
     resolve_config)
       shift
-      if [ -z "${CLAUDE_PROJECT_DIR:-}" ] || [ ! -f "$CLAUDE_PROJECT_DIR/project.yaml" ]; then
+      if [ -z "${PI_PROJECT_DIR:-}" ] || [ ! -f "$PI_PROJECT_DIR/project.yaml" ]; then
         _yh_self_root=$(cd "$(dirname "$0")/../.." 2>/dev/null && pwd)
-        [ -n "$_yh_self_root" ] && CLAUDE_PROJECT_DIR="$_yh_self_root"
+        [ -n "$_yh_self_root" ] && PI_PROJECT_DIR="$_yh_self_root"
       fi
       resolve_config "$@"
       ;;

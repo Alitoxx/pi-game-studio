@@ -16,7 +16,7 @@ Resolve the review mode (once, store for all gate spawns this run):
 2. Else read `production/review-mode.txt` → use that value
 3. Else → default to `lean`
 
-See `.pi/game-studio/director-gates.md` for the full check pattern.
+Director Gate validation is enforced through the agent hierarchy (Tier 1 Directors via `subagent_run`) and the ODD workflow protocol..
 
 A system name or retrofit path is **required**. If missing:
 
@@ -225,7 +225,7 @@ Use `ask_user_question`:
 Once the user confirms, **immediately** create the GDD file with empty section
 headers. This ensures incremental writes have a target.
 
-Use the template structure from `.pi/game-studio/templates/game-design-document.md`:
+Use the template structure from `prompts/game-design-document.md`:
 
 ```markdown
 # [System Name]
@@ -697,11 +697,11 @@ the source of truth). Verify:
 - `lean` → skip (not a PHASE-GATE). Note: "CD-GDD-ALIGN skipped — Lean mode." Proceed to Step 5b.
 - `full` → spawn as normal.
 
-Before finalizing the GDD, spawn `creative-director` via subagent using gate **CD-GDD-ALIGN** (`.pi/game-studio/director-gates.md`).
+Before finalizing the GDD, spawn `creative-director` via subagent using gate **CD-GDD-ALIGN** (Director Gate validation is enforced through the agent hierarchy and the ODD workflow protocol).
 
 Pass: completed GDD file path, game pillars (from `design/gdd/game-concept.md` or `design/gdd/game-pillars.md`), MDA aesthetics target.
 
-Handle verdict per the standard rules in `director-gates.md`. After resolution, record the verdict in the GDD Status header:
+Handle verdict per standard rules. After resolution, record the verdict in the GDD Status header:
 `> **Creative Director Review (CD-GDD-ALIGN)**: APPROVED [date] / CONCERNS (accepted) [date] / REVISED [date]`
 
 ---

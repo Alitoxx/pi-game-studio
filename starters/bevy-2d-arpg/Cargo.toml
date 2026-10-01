@@ -9,3 +9,11 @@ bevy = { version = "0.15", features = ["dynamic_linking"] }
 # Compile dependencies with high optimization in dev mode for faster builds
 [profile.dev.package."*"]
 opt-level = 3
+
+# Perfil de distribucion: optimiza el loop de juego sin inflar el tiempo de compilacion de CI.
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+strip = true

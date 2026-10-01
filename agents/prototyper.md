@@ -11,8 +11,7 @@ tools:
   - edit
   - bash
   - subagent
-maxTurns: 25
-isolation: worktree
+
 inheritProjectContext: true
 ---
 

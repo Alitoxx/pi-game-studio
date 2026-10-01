@@ -160,3 +160,9 @@ export function listAvailableAgents(cwd: string): string[] {
 
 	return Array.from(agents).sort();
 }
+
+export function loadAllAgents(cwd: string): AgentManifest[] {
+	return listAvailableAgents(cwd)
+		.map((name) => loadAgentManifest(name, cwd))
+		.filter((manifest): manifest is AgentManifest => manifest !== null);
+}

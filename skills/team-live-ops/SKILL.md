@@ -3,7 +3,7 @@ name: team-live-ops
 description: "[Studio] Orchestrate the live-ops team for post-launch content planning: coordinates live-ops-designer, economy-designer, analytics-engineer, community-manager, writer, and narrative-director to design and plan a season, event, or live content update."
 model: inherit
 inheritProjectContext: true
-tools: read, glob, grep, write, edit, bash, subagent, ask_user_question, todo_write
+tools: read, glob, grep, write, edit, bash, subagent, ask_user_question
 ---
 **Argument check:** If no season name or event description is provided, output:
 > "Usage: `/team-live-ops [season name or event description]` — Provide the name or description of the season or live event to plan."

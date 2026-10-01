@@ -66,7 +66,7 @@ motivates this. (The key is not named here on purpose; see the note below.)
 The banner exists only in
 `prompts/effects-map.md`, which someone
 configuring their project will never open. A setting that does nothing must never look
-exactly like one that works — `.claude/rules/skill-authoring.md` obligation 3.
+exactly like one that works — `docs/skill-authoring.md` obligation 3.
 
 Derive the set; do not hardcode it (obligation 5):
 

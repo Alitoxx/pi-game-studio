@@ -5,7 +5,7 @@ model: inherit
 inheritProjectContext: true
 tools: read, glob, grep
 context: |
-  !echo "=== Live Project State ===" && echo "Stage: $(cat production/stage.txt 2>/dev/null | tr -d '[:space:]' || echo 'not set')" && echo "Latest sprint: $(ls -t production/sprints/*.md 2>/dev/null | head -1 || echo 'none')" && echo "Session state: $(head -5 production/session-state/active.md 2>/dev/null || echo 'none')"
+  !echo "=== Live Project State ===" && echo "Stage: $(cat production/roadmap.md 2>/dev/null | tr -d '[:space:]' || echo 'not set')" && echo "Latest sprint: $(ls -t production/sprints/*.md 2>/dev/null | head -1 || echo 'none')" && echo "Session state: $(head -5 production/roadmap.md 2>/dev/null || echo 'none')"
 ---
 
 # Studio Help — What Do I Do Next?
@@ -20,7 +20,7 @@ gap analysis, use `/project-stage-detect`.
 
 ## Step 1: Read the Catalog
 
-Read `.pi/game-studio/workflow-catalog.yaml`. This is the authoritative list of all
+Read `docs/skills-reference.md`. This is the authoritative list of all
 phases, their steps (in order), whether each step is required or optional, and
 the artifact globs that indicate completion.
 
@@ -28,7 +28,7 @@ the artifact globs that indicate completion.
 
 ## Step 1b: Find Skills Not in the Catalog
 
-After reading the catalog, Glob `.pi/game-studio/skills/*/SKILL.md` to get the full list
+After reading the catalog, Glob `skills/*/SKILL.md` to get the full list
 of installed skills. For each file, extract the `name:` field from its frontmatter.
 
 Compare against the `command:` values in the catalog. Any skill whose name does
@@ -53,7 +53,7 @@ skills in production/polish, etc.).
 
 Check in this order:
 
-1. **Read `production/stage.txt`** — if it exists and has content, this is the
+1. **Read `production/roadmap.md`** — if it exists and has content, this is the
    authoritative phase name. Map it to a catalog phase key:
    - "Concept" → `concept`
    - "Systems Design" → `systems-design`
@@ -75,7 +75,7 @@ Check in this order:
 
 ## Step 3: Read Session Context
 
-Read `production/session-state/active.md` if it exists. Extract:
+Read `production/roadmap.md` if it exists. Extract:
 - What was most recently worked on
 - Any in-progress tasks or open questions
 - Current epic/feature/task from STATUS block (if present)

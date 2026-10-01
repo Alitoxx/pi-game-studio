@@ -3,7 +3,7 @@ name: map-systems
 description: "[Studio] Decompose a game concept into individual systems, map dependencies, prioritize design order, and create the systems index."
 model: inherit
 inheritProjectContext: true
-tools: read, glob, grep, write, edit, ask_user_question, todo_write, subagent
+tools: read, glob, grep, write, edit, ask_user_question, subagent
 ---
 
 When this skill is invoked:
@@ -22,7 +22,7 @@ Also resolve the review mode (once, store for all gate spawns this run):
 2. Else read `production/review-mode.txt` → use that value
 3. Else → default to `lean`
 
-See `.pi/game-studio/director-gates.md` for the full check pattern.
+Director Gate validation is enforced through the agent hierarchy (Tier 1 Directors via `subagent_run`) and the ODD workflow protocol..
 
 ---
 
@@ -149,7 +149,7 @@ dependencies I'm missing or that should be removed?"
 - `lean` → skip (not a PHASE-GATE). Note: "TD-SYSTEM-BOUNDARY skipped — Lean mode." Proceed to priority assignment.
 - `full` → spawn as normal.
 
-**After dependency mapping is approved, spawn `technical-director` via subagent using gate TD-SYSTEM-BOUNDARY (`.pi/game-studio/director-gates.md`) before proceeding to priority assignment.**
+**After dependency mapping is approved, spawn `technical-director` via subagent using gate TD-SYSTEM-BOUNDARY (Director Gate validation is enforced through the agent hierarchy and the ODD workflow protocol) before proceeding to priority assignment.**
 
 Pass: the dependency map summary, layer assignments, bottleneck systems list, any circular dependency resolutions.
 
@@ -193,7 +193,7 @@ Pure technical necessity ("X depends on Y") is insufficient alone when the syste
 - `lean` → skip (not a PHASE-GATE). Note: "PR-SCOPE skipped — Lean mode." Proceed to writing the systems index.
 - `full` → spawn as normal.
 
-**After priorities are approved, spawn `producer` via subagent using gate PR-SCOPE (`.pi/game-studio/director-gates.md`) before writing the index.**
+**After priorities are approved, spawn `producer` via subagent using gate PR-SCOPE (Director Gate validation is enforced through the agent hierarchy and the ODD workflow protocol) before writing the index.**
 
 Pass: total system count per milestone tier, estimated implementation volume per tier (system count × average complexity), team size, stated project timeline.
 
@@ -241,7 +241,7 @@ Wait for approval. Write the file only after "yes."
 - `lean` → skip (not a PHASE-GATE). Note: "CD-SYSTEMS skipped — Lean mode." Proceed to Phase 7 next steps.
 - `full` → spawn as normal.
 
-**After the systems index is written, spawn `creative-director` via subagent using gate CD-SYSTEMS (`.pi/game-studio/director-gates.md`).**
+**After the systems index is written, spawn `creative-director` via subagent using gate CD-SYSTEMS (Director Gate validation is enforced through the agent hierarchy and the ODD workflow protocol).**
 
 Pass: systems index path, game pillars and core fantasy (from `design/gdd/game-concept.md`), MVP priority tier system list.
 

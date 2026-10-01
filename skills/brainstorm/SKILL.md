@@ -4,14 +4,7 @@ description: "[Studio] Guided game concept ideation — from zero idea to a stru
 agent: creative-director
 model: inherit
 inheritProjectContext: true
-tools:
-  - read
-  - glob
-  - grep
-  - write
-  - web_search
-  - subagent
-  - ask_user_question
+tools: read, glob, grep, write, web_search, subagent, ask_user_question
 ---
 
 When this skill is invoked:

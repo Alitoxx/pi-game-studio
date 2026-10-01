@@ -1,0 +1,13 @@
+[
+  {
+    "index": 1,
+    "name": "accessibility-specialist",
+    "tier": "specialist",
+    "status": "completed",
+    "durationSec": 159,
+    "contractValid": true,
+    "summary": "Verifiqué los 8 findings del audit de menú y añadí la sección §7 con escalado a WCAG AAA (7:1), corrigiendo un incumplimiento AA real (text.disabled 4.02:1 sobre bg.hover) mediante una paleta revalidada; el contrato de remapeo de botones (§4, Action/KeyBindings/InputRouter) queda vigente como bloqueo previo a la implementación de UI.",
+    "error": null,
+    "fullOutputSnippet": "Every numeric claim in the new section now recomputes exactly against the WCAG 2.1 formula.\n\n```\nDELIVERY RECEIPT: production/qa/accessibility/menu-motor-contrast-audit-2026-10-01.md\n```\n\n**Veredicto: PASS AA / PASS AAA sobre la paleta propuesta.** Corregí dos defectos reales antes de firmar:\n\n- **L"
+  }
+]

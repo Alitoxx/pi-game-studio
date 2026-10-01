@@ -3,7 +3,7 @@ name: team-audio
 description: "[Studio] Orchestrate audio team: audio-director + sound-designer + technical-artist + gameplay-programmer for full audio pipeline from direction to implementation."
 model: inherit
 inheritProjectContext: true
-tools: read, glob, grep, write, edit, bash, subagent, ask_user_question, todo_write
+tools: read, glob, grep, write, edit, bash, subagent, ask_user_question
 ---
 
 If no argument is provided, output usage guidance and exit without spawning any agents:

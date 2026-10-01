@@ -3,7 +3,7 @@ name: team-release
 description: "[Studio] Orchestrate the release team: coordinates release-manager, qa-lead, devops-engineer, and producer to execute a release from candidate to deployment."
 model: inherit
 inheritProjectContext: true
-tools: read, glob, grep, write, edit, bash, subagent, ask_user_question, todo_write
+tools: read, glob, grep, write, edit, bash, subagent, ask_user_question
 ---
 **Argument check:** If no version number is provided:
 1. Read `production/session-state/active.md` and the most recent file in `production/milestones/` (if they exist) to infer the target version.

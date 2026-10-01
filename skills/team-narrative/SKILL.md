@@ -3,7 +3,7 @@ name: team-narrative
 description: "[Studio] Orchestrate the narrative team: coordinates narrative-director, writer, world-builder, and level-designer to create cohesive story content, world lore, and narrative-driven level design."
 model: inherit
 inheritProjectContext: true
-tools: read, glob, grep, write, edit, subagent, ask_user_question, todo_write
+tools: read, glob, grep, write, edit, subagent, ask_user_question
 ---
 If no argument is provided, output usage guidance and exit without spawning any agents:
 > Usage: `/team-narrative [narrative content description]` — describe the story content, scene, or narrative area to work on (e.g., `boss encounter cutscene`, `faction intro dialogue`, `tutorial narrative`). Do not use `ask_user_question` here; output the guidance directly.

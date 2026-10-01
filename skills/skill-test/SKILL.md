@@ -4,7 +4,7 @@ description: "[Studio] Validate skill files for structural compliance and behavi
 agent: qa-lead
 model: inherit
 inheritProjectContext: true
-tools: [read, glob, grep, write]
+tools: read, glob, grep, write
 ---
 
 # Skill Test

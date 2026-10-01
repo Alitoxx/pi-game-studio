@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.0] - 2026-10-01
+
+### Added
+- 4 new studio execution chains (`audio-production.chain.md`, `level-pipeline.chain.md`, `narrative-flow.chain.md`, `perf-audit.chain.md`).
+- Full 5-engine starter suite (added Unity 2D Platformer & Unreal Engine 5 Third Person).
+- Complete engine reference documentation for Godot, Raylib, Unity, and Unreal.
+- Comprehensive cross-reference and script test suites.
+
+### Changed
+- Native subagent execution of multi-agent chains (`executeChain`).
+
+### Fixed
+- Full CI/CD repairs (`validate.yml`).
+- Script bug fixes (`assign-models.js`, `yaml-helper.sh`).
+
+---
+
 ## [0.8.29] - 2026-09-30
 
 ### Changed

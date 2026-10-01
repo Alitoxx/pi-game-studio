@@ -139,16 +139,14 @@ If an ADR exists for this system:
 document the conflict and escalate to `lead-programmer` and `game-designer`
 jointly. Do not unilaterally change the design or the architecture.
 
-### Token Economy & Return Contract
-When completing an implementation task or when delegated via `subagent`, do not write conversational filler or greetings. Return your findings using the structured **Return Contract** ([`docs/gamedev-interaction-protocol.md`](docs/gamedev-interaction-protocol.md)) with `status`, `summary`, `files_changed`, `validation`, `gameplay_impact`, and `risks`.
-
-
-
 ### Organic Driven Development (ODD) Workflow
 All work follows Organic Driven Development (docs/odd-gamedev-workflow.md).
 - Zero Spec Bureaucracy: Do NOT create multi-step paper bureaucracy or detached specification trees.
 - Live Specs: Substantial features maintain a single living document in `design/gdd/<feature>.md`.
 - Incremental Execution: Break tasks into atomic ~400-line units and validate directly in engine (clean compile, steady FPS, zero memory leaks, tight Game Feel).
+
+### Token Economy & Return Contract
+When completing an implementation task or when delegated via `subagent`, do not write conversational filler or greetings. Return your findings using the structured **Return Contract** ([`docs/gamedev-interaction-protocol.md`](docs/gamedev-interaction-protocol.md)) with `status`, `summary`, `files_changed`, `validation`, `gameplay_impact`, and `risks`.
 
 ### Communication & Decision Protocol (Gentle Shell for Games)
 

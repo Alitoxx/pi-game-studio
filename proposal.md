@@ -7,9 +7,12 @@ This project aims to enhance the Pi Game Studio agent ecosystem through three ma
 ## Project Background
 
 The current Pi Game Studio structure includes:
-- **Tier 1**: 3 Directors (creative, technical, producer)
-- **Tier 2**: 6 Department leads (game-designer, lead-programmer, art-director, audio-director, narrative-director, qa-lead, release-manager, localization-lead)
-- **Tier 3**: 23 Specialists across various disciplines
+- **55 Agents** organized into a 3-tier hierarchy (Directors, Leads, Specialists).
+- **80 Skills** covering the entire game development lifecycle.
+- **49 Templates** for standardized documentation and artifacts.
+- **7 Multi-Agent Chains** for complex workflow pipelines via native isolated subagents (`subagent_run` with `--print`) and real chain execution.
+- **5 Starter Kits** for major engines (Bevy, Godot, Raylib, Unity, Unreal).
+- **ODD (Organic Driven Development) Workflow**: The single authoritative paradigm for game production.
 
 The system needs improvements in workflow efficiency, agent specialization, and collaborative protocols to handle modern game development demands.
 

@@ -123,7 +123,7 @@ Ask: "Does this look complete? Any rules to add or remove before I write the man
 - `lean` → skip. Note: "TD-MANIFEST skipped — Lean mode." Proceed to Phase 5.
 - `full` → spawn as normal.
 
-Spawn `technical-director` via subagent using gate **TD-MANIFEST** (`.pi/game-studio/director-gates.md`).
+Spawn `technical-director` via subagent using gate **TD-MANIFEST** (Director Gate validation is enforced through the agent hierarchy and the ODD workflow protocol).
 
 Pass: the Control Manifest Preview from Phase 4 (rule counts per layer, full extracted rule list), the list of ADRs covered, engine version, and any rules sourced from technical-preferences.md or engine reference docs.
 

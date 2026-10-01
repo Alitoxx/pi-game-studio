@@ -1,6 +1,8 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { studioAgentsRunner } from "./studio-agents-runner.ts";
+import { loadAllAgents } from "./studio-agent-loader.ts";
 
 function resolvePackageRoot(): string {
 	try {
@@ -141,7 +143,7 @@ export async function handleStudioChains(
 			(c) => c.name.toLowerCase() === query || c.name.includes(query),
 		);
 		if (targetChain) {
-			displayChainDetails(ctx, targetChain);
+			await displayChainDetails(ctx, targetChain);
 			return;
 		}
 	}
@@ -166,7 +168,7 @@ export async function handleStudioChains(
 		if (idx === -1) return;
 
 		if (idx < chains.length) {
-			displayChainDetails(ctx, chains[idx]);
+			await displayChainDetails(ctx, chains[idx]);
 		} else {
 			displayAllChains(ctx, chains);
 		}
@@ -177,7 +179,76 @@ export async function handleStudioChains(
 	displayAllChains(ctx, chains);
 }
 
-function displayChainDetails(ctx: ExtensionContext, chain: StudioChain): void {
+async function executeChain(ctx: ExtensionContext, chain: StudioChain, targetFeature: string): Promise<void> {
+	const manifests = loadAllAgents(ctx.cwd);
+	
+	let previousOutput = "";
+	const results = [];
+
+	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
+		ctx.ui.notify(`Iniciando cadena: ${chain.title}\nObjetivo: ${targetFeature}`, "info");
+	} else {
+		console.log(`Iniciando cadena: ${chain.title}\nObjetivo: ${targetFeature}`);
+	}
+
+	for (let i = 0; i < chain.steps.length; i++) {
+		const step = chain.steps[i];
+		const manifest = manifests.find((m) => m.name === step.agent);
+		
+		if (!manifest) {
+			const errorMsg = `Error: No se encontró el agente ${step.agent}`;
+			console.error(errorMsg);
+			if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") ctx.ui.notify(errorMsg, "error");
+			return;
+		}
+
+		let prompt = `Objetivo de la cadena: ${targetFeature}\n\n`;
+		prompt += `Instrucciones para esta etapa:\n${step.instructions}\n\n`;
+		
+		if (step.reads) {
+			prompt += `Archivos de contexto a leer:\n${step.reads}\n\n`;
+		}
+		
+		if (previousOutput) {
+			prompt += `Contexto de la etapa anterior:\n${previousOutput}\n\n`;
+		}
+
+		console.log(`[Chain ${chain.name}] Step ${i + 1}/${chain.steps.length}: ${step.agent} — iniciando...`);
+		
+		const record = await studioAgentsRunner.run(manifest, prompt, ctx.cwd, 'task');
+		
+		console.log(`[Chain ${chain.name}] Step ${i + 1}/${chain.steps.length}: ${step.agent} — ${record.status}`);
+		
+		const summaryText = record.result ? (record.result.length > 50 ? record.result.substring(0, 50) + "..." : record.result) : "No output";
+		results.push({ agent: step.agent, status: record.status, summary: summaryText });
+		
+		if (record.status !== "completed") {
+			console.error(`La etapa ${step.agent} falló: ${record.error}`);
+			if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") ctx.ui.notify(`La cadena falló en la etapa ${step.agent}`, "error");
+			return;
+		}
+		
+		previousOutput = record.result || "";
+	}
+
+	// Resumen consolidado
+	const summaryLines = [
+		`CADENA COMPLETADA: ${chain.name}`,
+		`Resumen de etapas:`
+	];
+	
+	results.forEach((r, i) => {
+		summaryLines.push(`  ${i + 1}. [${r.agent}] - ${r.status} - ${r.summary}`);
+	});
+	
+	const summary = summaryLines.join("\n");
+	console.log(summary);
+	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
+		ctx.ui.notify(summary, "info");
+	}
+}
+
+async function displayChainDetails(ctx: ExtensionContext, chain: StudioChain): Promise<void> {
 	const lines = [
 		`CADENA DE ESTUDIO: ${chain.name.toUpperCase()}`,
 		`• Descripción: ${chain.description}`,
@@ -192,15 +263,38 @@ function displayChainDetails(ctx: ExtensionContext, chain: StudioChain): void {
 	});
 
 	lines.push("");
-	lines.push(`Para ejecutar esta cadena, escribe en el chat de Pi:`);
-	lines.push(`   "Ejecuta la cadena ${chain.name} para mi documento/feature"`);
-
+	
 	const output = lines.join("\n");
 
 	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 		ctx.ui.notify(output, "info");
 	} else {
 		console.log(output);
+	}
+	
+	if (ctx.hasUI && typeof (ctx.ui as any)?.select === "function") {
+		const options = [
+			"Ejecutar esta cadena ahora",
+			"Solo ver detalles (no ejecutar)",
+		];
+		
+		const selected = await (ctx.ui as any).select(
+			`¿Deseas ejecutar la cadena ${chain.name}?`,
+			options
+		);
+
+		const isExec = selected === "Ejecutar esta cadena ahora" || selected === 0;
+		if (isExec) {
+			let targetFeature = "mi documento/feature";
+			if (typeof (ctx.ui as any)?.input === "function") {
+				const inputVal = await (ctx.ui as any).input("¿Cuál es el objetivo o feature para esta cadena?");
+				if (inputVal) targetFeature = inputVal;
+			}
+			await executeChain(ctx, chain, targetFeature);
+		}
+	} else {
+		console.log(`Para ejecutar esta cadena, escribe en el chat de Pi:`);
+		console.log(`   "Ejecuta la cadena ${chain.name} para mi documento/feature"`);
 	}
 }
 

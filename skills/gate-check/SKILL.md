@@ -317,10 +317,10 @@ Before generating the final verdict, spawn all four directors as **parallel suba
 
 **Spawn in parallel:**
 
-1. **`creative-director`** — gate **CD-PHASE-GATE** (`.pi/game-studio/director-gates.md`)
-2. **`technical-director`** — gate **TD-PHASE-GATE** (`.pi/game-studio/director-gates.md`)
-3. **`producer`** — gate **PR-PHASE-GATE** (`.pi/game-studio/director-gates.md`)
-4. **`art-director`** — gate **AD-PHASE-GATE** (`.pi/game-studio/director-gates.md`)
+1. **`creative-director`** — gate **CD-PHASE-GATE** (Director Gate validation is enforced through the agent hierarchy and the ODD workflow protocol)
+2. **`technical-director`** — gate **TD-PHASE-GATE** (Director Gate validation is enforced through the agent hierarchy and the ODD workflow protocol)
+3. **`producer`** — gate **PR-PHASE-GATE** (Director Gate validation is enforced through the agent hierarchy and the ODD workflow protocol)
+4. **`art-director`** — gate **AD-PHASE-GATE** (Director Gate validation is enforced through the agent hierarchy and the ODD workflow protocol)
 
 Pass to each: target phase name, list of artifacts present, and the context fields listed in that gate's definition.
 

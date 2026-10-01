@@ -8,7 +8,6 @@ node_modules/
 .atl/
 .pi-lens/
 openspec/
-false
 
 # IDE
 .vscode/
@@ -18,3 +17,11 @@ false
 sandbox/
 playground/
 
+# Build and coverage
+coverage/
+project.local.yaml
+skills/test-results/
+target/
+build/
+.godot/
+cmake-build-*/

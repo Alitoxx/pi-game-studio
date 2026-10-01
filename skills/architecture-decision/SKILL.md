@@ -16,7 +16,7 @@ Resolve the review mode (once, store for all gate spawns this run):
 2. Else read `production/review-mode.txt` → use that value
 3. Else → default to `lean`
 
-See `.pi/game-studio/director-gates.md` for the full check pattern.
+Director Gate validation is enforced through the agent hierarchy (Tier 1 Directors via `subagent_run`) and the ODD workflow protocol..
 
 **If the argument starts with `retrofit` followed by a file path**
 (e.g., `/architecture-decision retrofit docs/architecture/adr-0001-event-system.md`):
@@ -372,7 +372,7 @@ to implement it.]
 - `lean` → skip (not a PHASE-GATE). Note: "TD-ADR skipped — Lean mode." Proceed to Step 5.7 (GDD sync check).
 - `full` → spawn as normal.
 
-  5.6. **Technical Director Strategic Review** — After the engine specialist validation, spawn `technical-director` via subagent using gate **TD-ADR** (`.pi/game-studio/director-gates.md`):
+  5.6. **Technical Director Strategic Review** — After the engine specialist validation, spawn `technical-director` via subagent using gate **TD-ADR** (Director Gate validation is enforced through the agent hierarchy and the ODD workflow protocol):
   - Pass: the ADR file path (or draft content), engine version, domain, any existing ADRs in the same domain
   - The TD validates architectural coherence (is this decision consistent with the whole system?) — distinct from the engine specialist's API-level check
   - If CONCERNS or REJECT: revise the Decision or Alternatives sections accordingly before proceeding

@@ -4,7 +4,7 @@ description: "[Studio] Improve a skill using a test-fix-retest loop. Runs static
 model: inherit
 inheritProjectContext: true
 agent: qa-lead
-tools: [read, glob, grep, write, bash]
+tools: read, glob, grep, write, bash
 ---
 
 # Skill Improve

@@ -1,24 +1,40 @@
 use bevy::prelude::*;
 
+mod particle_arena;
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "ARPG Adventure — Pi Game Studio (Bevy 2D)".into(),
-                resolution: (1280.0, 720.0).into(),
+                resolution: (1280.0_f32, 720.0_f32).into(),
                 ..default()
             }),
             ..default()
         }))
         .add_systems(Startup, setup)
-        .add_systems(Update, (player_movement, player_attack))
+        .add_systems(
+            Update,
+            (player_movement, apply_velocity, player_attack).chain(),
+        )
         .run();
 }
 
+/// Marcador de entidad controlable. Solo datos: la lógica vive en los sistemas.
 #[derive(Component)]
-struct Player {
-    speed: f32,
-}
+struct Player;
+
+/// Velocidad lineal en unidades/segundo. Componente de datos puro.
+#[derive(Component, Default)]
+struct Velocity(pub Vec2);
+
+/// Velocidad máxima objetivo en unidades/segundo.
+#[derive(Component)]
+struct MovementSpeed(f32);
+
+/// Aceleración y frenado por segundo (curva de respuesta del control).
+const ACCELERATION: f32 = 2400.0;
+const DECELERATION: f32 = 3000.0;
 
 #[derive(Component)]
 struct MainCamera;
@@ -32,7 +48,9 @@ fn setup(mut commands: Commands) {
 
     // Player Entity (represented as a 2D colored quad)
     commands.spawn((
-        Player { speed: 280.0 },
+        Player,
+        Velocity::default(),
+        MovementSpeed(280.0),
         Sprite {
             color: Color::srgb(0.2, 0.7, 0.9),
             custom_size: Some(Vec2::new(32.0, 32.0)),
@@ -44,12 +62,14 @@ fn setup(mut commands: Commands) {
     info!("[Studio] ARPG Adventure starter initialized! Use WASD/Arrows to move, Space to attack.");
 }
 
+/// Lee el input y actualiza SOLO el componente `Velocity` (sin allocs, Query sobre `&mut Velocity`).
 fn player_movement(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
-    mut query: Query<(&Player, &mut Transform)>,
+    mut query: Query<(&MovementSpeed, &mut Velocity), With<Player>>,
 ) {
-    for (player, mut transform) in &mut query {
+    let delta = time.delta_secs();
+    for (speed, mut velocity) in &mut query {
         let mut direction = Vec2::ZERO;
 
         if keyboard_input.pressed(KeyCode::KeyW) || keyboard_input.pressed(KeyCode::ArrowUp) {
@@ -65,11 +85,24 @@ fn player_movement(
             direction.x += 1.0;
         }
 
-        if direction != Vec2::ZERO {
-            direction = direction.normalize();
-            transform.translation.x += direction.x * player.speed * time.delta_secs();
-            transform.translation.y += direction.y * player.speed * time.delta_secs();
-        }
+        // Aceleración hacia el objetivo; frenado exponencial-lineal al soltar.
+        let target = if direction == Vec2::ZERO {
+            Vec2::ZERO
+        } else {
+            direction.normalize() * speed.0
+        };
+
+        let rate = if target == Vec2::ZERO { DECELERATION } else { ACCELERATION };
+        let step = rate * delta;
+        velocity.0 = velocity.0.move_towards(target, step);
+    }
+}
+
+/// Integra `Velocity` sobre el `Transform` (separado para poder testearlo aislado).
+fn apply_velocity(time: Res<Time>, mut query: Query<(&Velocity, &mut Transform), With<Player>>) {
+    let delta = time.delta_secs();
+    for (velocity, mut transform) in &mut query {
+        transform.translation += (velocity.0 * delta).extend(0.0);
     }
 }
 

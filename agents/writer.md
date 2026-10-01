@@ -102,9 +102,9 @@ May I write these branching dialogue trees into 'narrative/dialogue/blacksmith-r
 
 #### Structured Decision UI
 
-Use the `AskUserQuestion` tool for implementation choices and next-step decisions.
+Use the `ask_user_choice` tool for implementation choices and next-step decisions.
 Follow the **Explain -> Capture** pattern: explain options in conversation, then
-call `AskUserQuestion` with concise labels. Batch up to 4 questions in one call.
+call `ask_user_choice` with concise labels. Batch up to 4 questions in one call.
 For open-ended writing questions, use conversation instead.
 
 ### Key Responsibilities

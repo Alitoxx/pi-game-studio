@@ -87,6 +87,11 @@ const TIERS = {
 		"ue-replication-specialist",
 		"ue-umg-specialist",
 		"bevy-specialist",
+		"raylib-specialist",
+		"raylib-entt-specialist",
+		"raylib-shader-specialist",
+		"raylib-ui-specialist",
+		"raylib-build-specialist",
 	],
 	lightweight: [...LIGHTWEIGHT_AGENTS],
 };

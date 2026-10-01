@@ -152,7 +152,7 @@ ADRs referencing this GDD: [M]
 - `lean` → skip. Note: "TD-CHANGE-IMPACT skipped — Lean mode." Proceed to Phase 7.
 - `full` → spawn as normal.
 
-Spawn `technical-director` via subagent using gate **TD-CHANGE-IMPACT** (`.pi/game-studio/director-gates.md`).
+Spawn `technical-director` via subagent using gate **TD-CHANGE-IMPACT** (Director Gate validation is enforced through the agent hierarchy and the ODD workflow protocol).
 
 Pass: the full Design Change Impact Report from Phase 6 (change summary, all affected ADRs with their Still Valid / Needs Review / Likely Superseded classifications, and recommended actions).
 

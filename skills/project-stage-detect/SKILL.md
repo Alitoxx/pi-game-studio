@@ -58,7 +58,7 @@ Analyze project structure and content:
 
 ### 2. Classify Project Stage
 
-Based on scanned artifacts, determine stage. Check `production/stage.txt` first —
+Based on scanned artifacts, determine stage. Check `production/roadmap.md` first —
 if it exists, use its value (explicit override from `/gate-check`). Otherwise,
 auto-detect using these heuristics (check from most-advanced backward):
 
@@ -84,7 +84,7 @@ auto-detect using these heuristics (check from most-advanced backward):
 
 ### 4. Generate Stage Report
 
-Use template: `.pi/game-studio/templates/project-stage-report.md`
+Use template: `prompts/project-stage-report.md`
 
 **Report structure**:
 ```markdown

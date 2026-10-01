@@ -3,7 +3,7 @@ name: team-combat
 description: "[Studio] Orchestrate the combat team: coordinates game-designer, gameplay-programmer, ai-programmer, technical-artist, sound-designer, and qa-tester to design, implement, and validate a combat feature end-to-end."
 model: inherit
 inheritProjectContext: true
-tools: read, glob, grep, write, edit, bash, subagent, ask_user_question, todo_write
+tools: read, glob, grep, write, edit, bash, subagent, ask_user_question
 ---
 **Argument check:** If no combat feature description is provided, output:
 > "Usage: `/team-combat [combat feature description]` — Provide a description of the combat feature to design and implement (e.g., `melee parry system`, `ranged weapon spread`)."

@@ -23,7 +23,7 @@
 
   ROTATION. When the narrative below grows past ~200 lines, move it to
   `production/session-logs/` and start it fresh:
-      bash .claude/scripts/rotate-session-state.sh
+      (Move the old narrative to a dated file in production/session-logs/ and clear the Notes section)
   Nothing is lost — and the commit history already records most of what the
   narrative repeats.
 -->

@@ -7,7 +7,7 @@
  * would use. They run without Pi (pure Node) to validate the core validation
  * logic independently.
  *
- * Run: node extensions/hooks/tests/test-hooks.js
+ * Run: node extensions/hooks/tests/test-hooks.cjs
  */
 
 const assert = require("node:assert");
@@ -126,7 +126,7 @@ test("--dry-run exits cleanly", () => {
 		'node scripts/assign-models.js --dry-run --tier \'{"director":"t/model","workhorse":"t/model","lightweight":"t/model"}\'',
 		{ cwd: join(__dirname, "..", "..", ".."), encoding: "utf-8" },
 	);
-	assert.match(out, /Changes: 49 agent/);
+	assert.match(out, /Changes: 55 agent/);
 });
 
 test("--apply writes models.default.json", () => {

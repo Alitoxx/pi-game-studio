@@ -17,10 +17,10 @@
 > The seven shipped contracts use a simpler shape than this template:
 > `Inputs Consumed` / `Files That Must Exist` / `Preconditions` /
 > `Outputs Produced` / `Output Guarantees` / `Immutability Rules`. Match an
-> existing contract (e.g. `.claude/skills/dev-story/CONTRACT.md`) rather than
+> existing contract (e.g. `skills/dev-story/CONTRACT.md`) rather than
 > this template's schema-heavy form until the two are reconciled.
 
-**Purpose:** Define formal handoff contract for a skill. Create as `.claude/skills/<skill-name>/CONTRACT.md`.
+**Purpose:** Define formal handoff contract for a skill. Create as `skills/<skill-name>/CONTRACT.md`.
 
 **How to Use:**
 1. Copy this template
@@ -36,8 +36,8 @@
 
 **Version:** 1.0
 **Last Updated:** [DATE]
-**Skill File:** `.claude/skills/[SKILL_NAME]/SKILL.md`
-**Test File:** `.claude/skills/[SKILL_NAME]/TESTS.md`
+**Skill File:** `skills/[SKILL_NAME]/SKILL.md`
+**Test File:** `skills/[SKILL_NAME]/TESTS.md`
 
 ---
 
@@ -52,7 +52,7 @@ Story Author — Decomposes game design epics into atomic, testable user stories
 ### Domain Boundaries
 **Can Read:**
 - `design/gdd/` (game design documents)
-- `.claude/docs/` (architectural guidance)
+- `docs/` (architectural guidance)
 - `production/session-state/` (context from previous skills)
 
 **Can Write:**

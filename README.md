@@ -3,14 +3,16 @@
 <p align="center">
   Turn a Pi session into a full game development studio.
   <br />
-  55 agents. 80 skills. 44 templates. One coordinated AI team.
+  55 agents. 80 skills. 49 templates. One coordinated AI team.
 </p>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
   <a href="agents"><img src="https://img.shields.io/badge/agents-55-blueviolet" alt="55 Agents"></a>
   <a href="skills"><img src="https://img.shields.io/badge/skills-80-green" alt="80 Skills"></a>
-  <a href="prompts"><img src="https://img.shields.io/badge/templates-44-orange" alt="44 Templates"></a>
+  <a href="prompts"><img src="https://img.shields.io/badge/templates-49-orange" alt="49 Templates"></a>
+  <a href="chains"><img src="https://img.shields.io/badge/chains-7-yellow" alt="7 Chains"></a>
+  <a href="starters"><img src="https://img.shields.io/badge/starters-5-cyan" alt="5 Starters"></a>
   <a href="extensions"><img src="https://img.shields.io/badge/hooks-4-red" alt="4 Hooks"></a>
   <img src="https://img.shields.io/badge/built%20for-Pi-8B5CF6?logo=pinokio" alt="Built for Pi">
 </p>
@@ -52,7 +54,9 @@ The result: you still make every decision, but now you have a team that asks the
 | **Subagents** | Native| Isolated child process execution via `subagent_run`, `subagent_list`, `subagent_status` & `subagent_result`              |
 | **Interactive**| Native| Interactive terminal menus & batch questionnaires via `ask_user_choice` and `ask_user_question` (arrow keys & Enter)      |
 | **Skills**    | 80    | Slash commands for every workflow phase (`/start`, `/settings`, `/prototype`, `/vertical-slice`, `/dev-story`, etc.)     |
-| **Templates** | 44    | Document templates for GDDs, UX specs, ADRs, sprint plans, vertical slice reports, game briefs, and more                  |
+| **Templates** | 49    | Document templates for GDDs, UX specs, ADRs, sprint plans, vertical slice reports, game briefs, and more                  |
+| **Chains**    | 7     | Multi-agent execution pipelines via native isolated subagents (`subagent_run`)                                           |
+| **Starters**  | 5     | Starter Kits for 5 major engines (Bevy, Godot, Raylib, Unity, Unreal)                                                    |
 | **Hooks**     | 4     | Automated validation on commits, pushes, skill changes, and session audit/gap detection                                  |
 | **Engram**    | 1     | Optional persistent memory — decisions auto-save across sessions when Engram is connected                                |
 | **Setup**     | 2     | `/setup` — install agents and model config; `/assign-models` — customize models per agent                                |
@@ -286,11 +290,21 @@ The system asks where you are — no idea, vague concept, clear design, or exist
 
 Or jump directly to a specific skill or template:
 
-- `/studio:new` — instantiate a ready-to-run starter (Bevy 2D ARPG, Raylib C++ EnTT, or Godot 4)
+- `/studio:new` — instantiate a ready-to-run starter (Bevy 2D ARPG, Godot 4 2D Character, Raylib C++20 EnTT, Unity 2D Platformer, or Unreal Engine 5 Third Person)
 - `/brainstorm` — explore game ideas from scratch
 - `/setup-engine godot 4.3` — configure your engine
 - `/studio:doctor` — audit your local toolchain, compilers, and SDKs
 - `/project-stage-detect` — analyze an existing project
+
+#### Plantillas de Inicio Rápido (Starters)
+
+| Starter ID | Motor | Lenguaje | Mini-Juego Incluido | Comando de Ejecución |
+|---|---|---|---|---|
+| `bevy-2d-arpg` | Bevy 0.15 | Rust | ARPG 2D cenital con cámara ortográfica, aceleración/freno y ataque | `cargo run` |
+| `godot-2d-character` | Godot 4.3 | GDScript | Controlador de personaje 2D con CharacterBody2D y física suave | `godot project.godot` |
+| `raylib-cpp-entt` | Raylib 5.5 | C++20 | Mini-juego a 60 FPS con arquitectura ECS EnTT desacoplada | `cmake -B build && cmake --build build && ./build/game` |
+| `unity-2d-platformer` | Unity 2022.3+ | C# | Plataformas 2D con Rigidbody2D, salto, ground check y New Input System | Abrir en Unity Hub y presionar Play |
+| `ue5-third-person` | Unreal 5.4+ | C++ / Blueprints | Juego en 3ª persona con Spring Arm Camera y Enhanced Input | Abrir `Game.uproject` en Unreal Editor |
 
 ### Customize models (optional)
 
@@ -334,7 +348,7 @@ pi-game-studio/                     # Package root
 ├── models.default.json             # Recommended 3-tier model mapping
 ├── agents/                         # 55 source agents (model: inherit)
 ├── skills/                         # 80 skills (SKILL.md per directory)
-├── prompts/                        # 44 document templates
+├── prompts/                        # 49 document templates
 ├── extensions/                     # Hooks extension
 │   └── hooks/
 │       ├── index.ts                # 4 ported hooks
@@ -367,6 +381,21 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
 - **Token economy & structured return contracts.** Inspirado en Gentle Shell, las skills pesadas cargan manuales bajo demanda y los subagentes retornan contratos YAML cerrados sin prosa redundante para máxima eficiencia de contexto.
 
 ## Changelog
+
+### v0.9.0 — 2026-10-01
+
+- **Suite Completa de 5 Starters y Creación de Juegos (`/studio:new`)**:
+  - Incorporados y testeados los 5 mini-juegos funcionales para los 5 motores oficiales: Bevy (`bevy-2d-arpg`), Godot 4 (`godot-2d-character`), Raylib C++20 (`raylib-cpp-entt`), Unity 2D (`unity-2d-platformer`) y Unreal Engine 5 (`ue5-third-person`).
+  - Suite de validación automatizada continua [`__tests__/game-creation-flows.test.js`](__tests__/game-creation-flows.test.js) que verifica scaffolding, archivos descriptores y detección automática de motor en entornos efímeros aislados.
+- **Nuevas Cadenas Multi-Agente (`chains/`)**:
+  - `audio-production.chain.md`: Cadena de dirección, diseño e implementación sonora.
+  - `level-pipeline.chain.md`: Cadena de diseño de niveles, narrativa y arte de escenarios.
+  - `narrative-flow.chain.md`: Cadena de arcos narrativos, diálogos y lore del mundo.
+  - `perf-audit.chain.md`: Cadena de auditoría de rendimiento, profiling y optimizaciones de game loop.
+- **Documentación de Referencia de Motores (`docs/engine-reference/`)**:
+  - Módulos de referencia completos para Godot, Raylib, Unity y Unreal con breaking changes y APIs deprecadas.
+- **Limpieza de CI/CD y Dependencias**:
+  - Eliminación completa de referencias obsoletas a Claude Code, CI/CD de GitHub Actions (`validate.yml`) reparado y scripts de utilidades (`assign-models.js`, `yaml-helper.sh`) testeados.
 
 ### v0.8.2 — 2026-09-27
 
@@ -414,7 +443,7 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
   - **Toolchain & Engine Prerequisite Doctor (`/studio:doctor`)**:
     - Automatic hardware and environment check for all 5 engines (compilers, build tools, SDKs, and editor binaries).
     - Integrated gate into `/setup-engine`, `/studio:setup`, and `/studio:status` with exact installation commands for macOS, Linux, and Windows.
-  - **Studio Expansion**: Scaled studio toolset to **80 skills** and **44 templates** with full test coverage and automated symmetry validation.
+  - **Studio Expansion**: Scaled studio toolset to **80 skills** and **49 templates** with full test coverage and automated symmetry validation.
 
 ### v0.7.1 — 2026-09-26
 
@@ -571,7 +600,7 @@ This project is a migration of **Claude Code Game Studios** to run natively on P
 
 ### Homologation note
 
-- Imported counts were normalized to the current Pi tree: 55 agents, 80 skills, 44 templates, 4 runtime hooks.
+- Imported counts were normalized to the current Pi tree: 55 agents, 80 skills, 49 templates, 4 runtime hooks.
 - `extensions/hooks/index.ts` remains the single hook entrypoint; hook behavior is split across four handlers.
 
 Este port no existiría sin el trabajo fundacional de Donchitos y striderZA. Gracias.

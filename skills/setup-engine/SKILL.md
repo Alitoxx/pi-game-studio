@@ -740,4 +740,19 @@ Verdict: **COMPLETE** — engine configured and reference docs populated.
 > 📄 **Foco en Economía de Tokens**: La configuración de Raylib (C++17/20 & EnTT), stack CMake, convenciones de código y quinteto de especialistas se cargan **bajo demanda**:
 > Consulta: [`skills/setup-engine/references/raylib.md`](references/raylib.md) (leer únicamente al configurar Raylib).
 
+---
+
+## Appendix D — Unity
+
+> 📄 **Foco en Economía de Tokens**: La configuración de Unity, pasos de inicialización, convenciones de estructura de carpetas, paquetes esenciales y setup de .gitignore se cargan **bajo demanda**:
+> Consulta: [`skills/setup-engine/references/unity.md`](references/unity.md) (leer únicamente al configurar Unity).
+
+---
+
+## Appendix E — Unreal Engine 5
+
+> 📄 **Foco en Economía de Tokens**: La configuración de Unreal Engine 5, pasos de inicialización, setup de módulos, estructura de carpetas y .gitignore se cargan **bajo demanda**:
+> Consulta: [`skills/setup-engine/references/unreal.md`](references/unreal.md) (leer únicamente al configurar Unreal).
+
+
 

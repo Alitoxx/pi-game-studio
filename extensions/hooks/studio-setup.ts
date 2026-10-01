@@ -312,7 +312,8 @@ export async function runGuidedSetup(
 		"Paso 1/3 — Selecciona el Motor de Juego principal:",
 		engineOptions,
 	);
-	const selectedEngine = ["Godot", "Unity", "Unreal", "Bevy", "Raylib"][engineChoice.index];
+	if (!engineChoice) return;
+	const selectedEngine = ["Godot", "Unity", "Unreal", "Bevy", "Raylib"][engineChoice.index] || "Godot";
 
 	// Auditoría de Prerrequisitos del Motor
 	const audit = auditEnginePrerequisites(selectedEngine);

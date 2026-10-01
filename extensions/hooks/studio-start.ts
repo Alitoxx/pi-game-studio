@@ -229,17 +229,18 @@ export async function handleStudioStart(
 		let actions: Array<() => void> = [];
 
 		if (!audit.isConfigured) {
+			const setupOptions = [
+				`1. Instalación Automática (Recomendada: Agentes optimizados para ${audit.engineName || "Godot 4"} en modo 'inherit')`,
+				"2. Instalación Manual / Guiada (Tú eliges el motor de juego, tu idioma preferido y personalizas los modelos de IA por rol)",
+			];
 			const setupChoice = await (ctx.ui as any).select(
 				"PRODUCER: ¡Bienvenido al estudio! Tu entorno aún no está configurado. ¿Cómo prefieres inicializarlo?",
-				[
-					`1. Instalación Automática (Recomendada: Agentes optimizados para ${audit.engineName || "Godot 4"} en modo 'inherit')`,
-					"2. Instalación Manual / Guiada (Tú eliges el motor de juego, tu idioma preferido y personalizas los modelos de IA por rol)",
-				],
+				setupOptions,
 			);
 
 			if (setupChoice === undefined || setupChoice === null) return;
 
-			const choiceIdx = typeof setupChoice === "number" ? setupChoice : [0, 1].indexOf(setupChoice);
+			const choiceIdx = typeof setupChoice === "number" ? setupChoice : setupOptions.indexOf(setupChoice);
 			if (choiceIdx === 0) {
 				installStudioFiles(ctx, { engine: audit.engineName || "Godot" });
 				const updated = inspectSetup(ctx.cwd);

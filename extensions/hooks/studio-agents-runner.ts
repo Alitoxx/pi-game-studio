@@ -6,15 +6,20 @@ import type { AgentManifest } from "./studio-agent-loader.ts";
 export interface TaskRecord {
 	id: string;
 	agent: string;
+	title: string;
 	task: string;
 	mode: "task" | "background";
 	cwd: string;
 	status: "queued" | "running" | "completed" | "failed" | "cancelled";
+	model?: string;
+	latestActivity?: string;
 	result: string | null;
 	error: string | null;
 	startedAt: number | null;
 	endedAt: number | null;
 }
+
+export type TaskListener = (task: TaskRecord) => void;
 
 export interface RunnerOptions {
 	piCommand?: string;
@@ -25,12 +30,26 @@ export interface RunnerOptions {
 export class StudioAgentsRunner {
 	private tasks = new Map<string, TaskRecord>();
 	private liveProcesses = new Map<string, ChildProcess>();
+	private listeners = new Set<TaskListener>();
 	private counter = 0;
 	private timeoutMs = 300000; // 5 min default stall/run limit for complex chain tasks
 
 	constructor(options: RunnerOptions = {}) {
 		if (options.timeoutMs) {
 			this.timeoutMs = options.timeoutMs;
+		}
+	}
+
+	subscribe(listener: TaskListener): () => void {
+		this.listeners.add(listener);
+		return () => this.listeners.delete(listener);
+	}
+
+	private notifyListeners(task: TaskRecord): void {
+		for (const listener of this.listeners) {
+			try {
+				listener(task);
+			} catch {}
 		}
 	}
 
@@ -73,13 +92,20 @@ export class StudioAgentsRunner {
 		const now = Date.now();
 		const taskId = `task-${now.toString(36)}-${this.counter.toString(36)}`;
 
+		const chosenModel = manifest.model && manifest.model !== "inherit"
+			? manifest.model
+			: "space-bunny-free";
+
 		const record: TaskRecord = {
 			id: taskId,
 			agent: manifest.name,
+			title: manifest.title,
 			task: taskPrompt,
 			mode,
 			cwd,
 			status: "queued",
+			model: chosenModel,
+			latestActivity: "En cola para ejecución...",
 			result: null,
 			error: null,
 			startedAt: null,
@@ -87,6 +113,7 @@ export class StudioAgentsRunner {
 		};
 
 		this.tasks.set(taskId, record);
+		this.notifyListeners(record);
 
 		const executionPromise = this.executeSubprocess(record, manifest);
 
@@ -105,6 +132,8 @@ export class StudioAgentsRunner {
 		return new Promise<TaskRecord>((resolve) => {
 			record.status = "running";
 			record.startedAt = Date.now();
+			record.latestActivity = "Iniciando especialista...";
+			this.notifyListeners(record);
 
 			// Preparar instrucción ejecutiva para el especialista
 			const executivePrompt = [
@@ -163,6 +192,8 @@ export class StudioAgentsRunner {
 				record.status = "failed";
 				record.error = `Could not spawn pi process: ${err?.message || String(err)}`;
 				record.endedAt = Date.now();
+				record.latestActivity = "Fallo al iniciar subproceso";
+				this.notifyListeners(record);
 				return resolve(record);
 			}
 
@@ -174,6 +205,13 @@ export class StudioAgentsRunner {
 			child.stdout?.setEncoding("utf8");
 			child.stdout?.on("data", (chunk: string) => {
 				stdout += chunk;
+				// Detectar indicios de herramientas activas en stdout
+				const lastLine = chunk.trim().split("\n").pop() || "";
+				if (lastLine.length > 0) {
+					const clean = lastLine.replace(/\x1b\[[0-9;]*m/g, "").slice(0, 40);
+					record.latestActivity = clean;
+					this.notifyListeners(record);
+				}
 			});
 
 			child.stderr?.setEncoding("utf8");
@@ -195,18 +233,23 @@ export class StudioAgentsRunner {
 				record.endedAt = Date.now();
 
 				if (record.status === "cancelled") {
+					record.latestActivity = "Cancelado por usuario/timeout";
+					this.notifyListeners(record);
 					return resolve(record);
 				}
 
 				if (code === 0) {
 					record.status = "completed";
 					record.result = stdout.trim() || "(the subagent produced no output)";
+					record.latestActivity = "Finalizado exitosamente";
 				} else {
 					record.status = "failed";
 					record.error = stderr.trim() || `Subagent process exited with code ${code}`;
 					record.result = stdout.trim() || null;
+					record.latestActivity = `Error al salir (código ${code})`;
 				}
 
+				this.notifyListeners(record);
 				resolve(record);
 			});
 
@@ -216,6 +259,8 @@ export class StudioAgentsRunner {
 				record.status = "failed";
 				record.error = err.message;
 				record.endedAt = Date.now();
+				record.latestActivity = `Error de proceso: ${err.message}`;
+				this.notifyListeners(record);
 				resolve(record);
 			});
 		});

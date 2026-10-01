@@ -105,6 +105,41 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 
 			// Modo task síncrono
 			if (record.status === "completed") {
+				const raw = record.result || "";
+				// Intentar parsear el YAML final para construir un Delivery Receipt estructurado
+				const yamlMatch = raw.match(/```yaml\s*([\s\S]*?)\s*```/);
+				if (yamlMatch) {
+					const block = yamlMatch[1];
+					const summary = block.match(/summary:\s*["']?([^"'\n]+)/i)?.[1] || "";
+					const validation = block.match(/validation:\s*["']?([^"'\n]+)/i)?.[1] || "";
+					const impact = block.match(/gameplay_impact:\s*["']?([^"'\n]+)/i)?.[1] || "";
+					const filesMatch = block.match(/files_changed:\s*([\s\S]*?)(?:validation:|$)/i)?.[1];
+					const files = filesMatch
+						? filesMatch.split("\n").map(l => l.replace(/^\s*-\s*["']?/, "").replace(/["']?\s*$/, "").trim()).filter(Boolean)
+						: [];
+
+					const receiptText = [
+						`┌── DELIVERY RECEIPT: ${manifest.title.toUpperCase()} ────────────────────────┐`,
+						summary ? `│ Resumen:    ${summary.padEnd(52, " ")}│` : null,
+						files.length > 0 ? `│ Archivos:   ${files.slice(0, 2).join(", ").padEnd(52, " ")}│` : null,
+						validation ? `│ Validación: ${validation.padEnd(52, " ")}│` : null,
+						impact ? `│ Game Feel:  ${impact.padEnd(52, " ")}│` : null,
+						`└────────────────────────────────────────────────────────────┘`,
+						``,
+						raw,
+					].filter(Boolean).join("\n");
+
+					return {
+						content: [
+							{
+								type: "text",
+								text: receiptText,
+							},
+						],
+						details: { taskId: record.id, agent: manifest.name, status: record.status },
+					};
+				}
+
 				return {
 					content: [
 						{

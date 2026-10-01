@@ -21,9 +21,9 @@ import { handleStudioDoctor } from "./studio-doctor.ts";
 import { handleStudioNew } from "./studio-new.ts";
 import { handleStudioChanges } from "./studio-changes.ts";
 import { handleStudioTasks } from "./studio-tasks.ts";
-import { detectProjectEngine, formatEngineBadge } from "./engine-detector.ts";
 import { updateStudioHUD } from "./studio-hud.ts";
 import { updateTasksWidget } from "./studio-tasks-widget.ts";
+import { updateSubagentsWidget, installSubagentsWidget } from "./studio-subagents-widget.ts";
 import { registerStudioSubagentTools } from "./studio-subagents.ts";
 import { registerAskUserChoice } from "./studio-choice.ts";
 
@@ -361,6 +361,8 @@ export default function (pi: ExtensionAPI) {
 		try {
 			updateStudioHUD(ctx, pi);
 			updateTasksWidget(ctx);
+			installSubagentsWidget(ctx);
+			updateSubagentsWidget(ctx);
 		} catch {}
 	};
 
@@ -370,6 +372,7 @@ export default function (pi: ExtensionAPI) {
 		try {
 			updateStudioHUD(ctx, pi);
 			updateTasksWidget(ctx);
+			updateSubagentsWidget(ctx);
 		} catch {}
 	});
 	(pi as any).on?.("model_change", async (_event: any, ctx: any) => {

@@ -147,11 +147,27 @@ export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => voi
 				}
 			}
 
+			// Render Subagents Card (if active subagent tasks exist)
+			let subagentLines: string[] = [];
+			try {
+				const { studioAgentsRunner } = await import("./studio-agents-runner.ts");
+				const { renderSubagentsWidgetCard } = await import("./studio-subagents-widget.ts");
+				const subTasks = studioAgentsRunner.listTasks();
+				subagentLines = renderSubagentsWidgetCard(subTasks, cardInnerWidth);
+			} catch {}
+
 			railLines = [];
 			railLines.push(""); // top margin
 
 			for (const line of statusLines) {
 				railLines.push(" ".repeat(RAIL_PADDING) + line);
+			}
+
+			if (subagentLines.length > 0) {
+				railLines.push(""); // gap between cards
+				for (const line of subagentLines) {
+					railLines.push(" ".repeat(RAIL_PADDING) + line);
+				}
 			}
 
 			if (taskLines.length > 0) {

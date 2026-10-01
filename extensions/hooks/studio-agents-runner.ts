@@ -132,7 +132,7 @@ export class StudioAgentsRunner {
 		return new Promise<TaskRecord>((resolve) => {
 			record.status = "running";
 			record.startedAt = Date.now();
-			record.latestActivity = "Iniciando especialista...";
+			record.latestActivity = "Iniciando especialista en modo RPC...";
 			this.notifyListeners(record);
 
 			// Preparar instrucción ejecutiva para el especialista
@@ -160,21 +160,21 @@ export class StudioAgentsRunner {
 			// Resolver binario de Pi
 			const piExecutable = process.execPath.includes("pi") ? process.execPath : "pi";
 			
-			// Preparar flags de Pi
-			// Pasamos el prompt del sistema del agente como append-system-prompt
+			// Preparar flags de Pi en modo RPC bidireccional (idéntico a Gentle Shell)
 			const args: string[] = [
-				"--print", // Non-interactive mode (proceso aislado que procesa y termina)
+				"--mode", "rpc",
 				"--append-system-prompt",
 				manifest.systemPrompt,
-				executivePrompt,
 			];
 
 			// Añadir modelo si no es inherit
 			if (manifest.model && manifest.model !== "inherit") {
-				args.unshift("--model", manifest.model);
-			} else {
-				// Proveedor y modelo por defecto configurados en el entorno del usuario
-				args.unshift("--provider", "opencode-go", "--model", "space-bunny-free");
+				args.push("--model", manifest.model);
+			}
+
+			// Herramientas permitidas
+			if (manifest.tools && manifest.tools.length > 0) {
+				args.push("--tools", manifest.tools.join(","));
 			}
 
 			let child: ChildProcess;
@@ -186,31 +186,123 @@ export class StudioAgentsRunner {
 						PI_GAME_STUDIO_CHILD: "1",
 						PI_GAME_STUDIO_AGENT: manifest.name,
 					},
-					stdio: ["ignore", "pipe", "pipe"],
+					stdio: ["pipe", "pipe", "pipe"],
 				});
 			} catch (err: any) {
 				record.status = "failed";
-				record.error = `Could not spawn pi process: ${err?.message || String(err)}`;
+				record.error = `Could not spawn pi RPC process: ${err?.message || String(err)}`;
 				record.endedAt = Date.now();
-				record.latestActivity = "Fallo al iniciar subproceso";
+				record.latestActivity = "Fallo al iniciar RPC";
 				this.notifyListeners(record);
 				return resolve(record);
 			}
 
 			this.liveProcesses.set(record.id, child);
 
-			let stdout = "";
+			let resultText = "";
 			let stderr = "";
+			let rpcBuffer = "";
+			let promptSent = false;
 
+			const sendRpc = (payload: Record<string, unknown>) => {
+				try {
+					child.stdin?.write(`${JSON.stringify(payload)}\n`);
+				} catch {}
+			};
+
+			// Enviar prompt inicial al conectarse
+			const initTimer = setTimeout(() => {
+				if (!promptSent) {
+					promptSent = true;
+					sendRpc({ type: "prompt", message: executivePrompt });
+					record.latestActivity = "Prompt enviado al especialista";
+					this.notifyListeners(record);
+				}
+			}, 300);
+
+			// Procesar eventos JSON streaming de la RPC (idéntico a Gentle Shell)
 			child.stdout?.setEncoding("utf8");
 			child.stdout?.on("data", (chunk: string) => {
-				stdout += chunk;
-				// Detectar indicios de herramientas activas en stdout
-				const lastLine = chunk.trim().split("\n").pop() || "";
-				if (lastLine.length > 0) {
-					const clean = lastLine.replace(/\x1b\[[0-9;]*m/g, "").slice(0, 40);
-					record.latestActivity = clean;
-					this.notifyListeners(record);
+				rpcBuffer += chunk;
+				const lines = rpcBuffer.split("\n");
+				rpcBuffer = lines.pop() ?? "";
+
+				for (const rawLine of lines) {
+					const line = rawLine.trim();
+					if (!line) continue;
+					try {
+						const event = JSON.parse(line);
+						
+						// Enviar prompt si recibimos el primer estado
+						if (!promptSent && (event.type === "response" || event.type === "turn_start" || event.type === "ready")) {
+							promptSent = true;
+							clearTimeout(initTimer);
+							sendRpc({ type: "prompt", message: executivePrompt });
+							record.latestActivity = "Especialista conectado";
+							this.notifyListeners(record);
+						}
+
+						// 1. Detección de inicio de herramientas (TOOL_START)
+						if (event.type === "tool_execution_start" || event.type === "tool_start") {
+							const toolName = event.toolName || event.name || "tool";
+							const args = event.args || {};
+							let detail = toolName;
+							if (toolName === "bash" && typeof args.command === "string") {
+								detail = `bash: ${args.command.slice(0, 30)}`;
+							} else if ((toolName === "edit" || toolName === "write" || toolName === "read") && typeof args.path === "string") {
+								const shortPath = args.path.split("/").pop() || args.path;
+								detail = `${toolName}: ${shortPath}`;
+							}
+							record.latestActivity = detail;
+							this.notifyListeners(record);
+						}
+
+						// 2. Acumulación de texto del asistente
+						if (event.type === "message_update") {
+							const inner = event.assistantMessageEvent;
+							if (inner?.type === "text_delta" && typeof inner.delta === "string") {
+								resultText += inner.delta;
+							}
+						}
+
+						// 3. Captura final en agent_end / terminalAssistant
+						if (event.type === "agent_end" && Array.isArray(event.messages)) {
+							for (let i = event.messages.length - 1; i >= 0; i--) {
+								const m = event.messages[i];
+								if (m?.role === "assistant" && Array.isArray(m.content)) {
+									const text = m.content
+										.filter((c: any) => c?.type === "text" && typeof c.text === "string")
+										.map((c: any) => c.text)
+										.join("\n");
+									if (text) {
+										resultText = text;
+										break;
+									}
+								}
+							}
+						}
+
+						// 4. Auto-respuesta si el subagente intenta abrir diálogo (prevenir bloqueos huérfanos)
+						if (event.type === "extension_ui_request" && event.id) {
+							sendRpc({
+								type: "extension_ui_response",
+								id: event.id,
+								cancelled: true,
+							});
+						}
+
+						// 5. Finalización natural en agent_settled
+						if (event.type === "agent_settled") {
+							record.latestActivity = "Sintetizando entrega...";
+							this.notifyListeners(record);
+						}
+					} catch {
+						// Si la línea no es JSON puro, podría ser log estándar
+						if (line.length > 0 && !line.startsWith("{")) {
+							record.latestActivity = line.slice(0, 35);
+							this.notifyListeners(record);
+						}
+					}
 				}
 			});
 
@@ -229,6 +321,7 @@ export class StudioAgentsRunner {
 
 			child.on("close", (code) => {
 				clearTimeout(timer);
+				clearTimeout(initTimer);
 				this.liveProcesses.delete(record.id);
 				record.endedAt = Date.now();
 
@@ -240,12 +333,12 @@ export class StudioAgentsRunner {
 
 				if (code === 0) {
 					record.status = "completed";
-					record.result = stdout.trim() || "(the subagent produced no output)";
-					record.latestActivity = "Finalizado exitosamente";
+					record.result = resultText.trim() || "(el especialista no produjo salida)";
+					record.latestActivity = "Completado exitosamente";
 				} else {
 					record.status = "failed";
 					record.error = stderr.trim() || `Subagent process exited with code ${code}`;
-					record.result = stdout.trim() || null;
+					record.result = resultText.trim() || null;
 					record.latestActivity = `Error al salir (código ${code})`;
 				}
 
@@ -255,6 +348,7 @@ export class StudioAgentsRunner {
 
 			child.on("error", (err) => {
 				clearTimeout(timer);
+				clearTimeout(initTimer);
 				this.liveProcesses.delete(record.id);
 				record.status = "failed";
 				record.error = err.message;

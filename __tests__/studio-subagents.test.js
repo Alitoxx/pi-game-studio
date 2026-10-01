@@ -23,7 +23,7 @@ describe("Studio Subagents & Isolated Execution Engine", () => {
 		const runnerSource = fs.readFileSync(runnerPath, "utf8");
 		expect(runnerSource).toContain("export class StudioAgentsRunner");
 		expect(runnerSource).toContain("export const studioAgentsRunner");
-		expect(runnerSource).toContain("--print"); // Non-interactive isolated execution
+		expect(runnerSource).toContain('"rpc"'); // Non-interactive isolated RPC execution
 
 		const subagentsSource = fs.readFileSync(subagentsPath, "utf8");
 		expect(subagentsSource).toContain("export function registerStudioSubagentTools");

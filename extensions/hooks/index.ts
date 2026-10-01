@@ -340,6 +340,7 @@ export default function (pi: ExtensionAPI) {
 						"- Subagent Delegation Protocol (Mandatory Isolated Execution): You have access to the native tool `subagent_run`. " +
 						"When asked to implement code, design mechanics, write GDDs, review architecture, or run tests, DO NOT do the low-level implementation inline in this parent session. " +
 						"Delegate the atomic work to the specialized agent using `subagent_run({ agent: '<agent_name>', task: '<concrete_task>', mode: 'task' })`. " +
+						"NEVER print the raw tool invocation syntax in conversational chat (e.g. do NOT output 'subagent_run agent=... task=...'). Tool calls must be executed internally via function calling while chat displays only the executive dispatch box and resulting receipt. " +
 						"Keep this parent session clean for high-level coordination and executive decisions. " +
 						"Flow Completion Protocol: When any specialist finishes a task (design doc, mechanic, art asset, code review), the Producer immediately closes the loop: " +
 						"1. Acknowledges the completed item and updates the production roadmap line. " +

@@ -74,10 +74,10 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 				};
 			}
 
-			// Notificar en la UI si está disponible
+			// Notificación sobria en la TUI
 			if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 				(ctx.ui as any).notify(
-					`[Studio] Delegando a ${manifest.title} (${manifest.name}) en modo ${mode}...`,
+					`[STUDIO DISPATCH] ${manifest.title} (${manifest.name}) · Modo: ${mode}`,
 					"info",
 				);
 			}
@@ -89,7 +89,14 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 					content: [
 						{
 							type: "text",
-							text: `[SUBAGENT SPAWNED IN BACKGROUND]\nAgent: ${manifest.name} (${manifest.title})\nTask ID: ${record.id}\nStatus: ${record.status}\n\nUse subagent_status with task_id "${record.id}" to check progress or subagent_result to retrieve the outcome.`,
+							text: [
+								`┌── STUDIO BACKGROUND DISPATCH ─────────────────────────────┐`,
+								`│ Especialista: ${manifest.title.padEnd(44, " ")}│`,
+								`│ Task ID:      ${record.id.padEnd(44, " ")}│`,
+								`│ Estado:       ${record.status.padEnd(44, " ")}│`,
+								`└───────────────────────────────────────────────────────────┘`,
+								`Usa subagent_status ("${record.id}") para progreso o subagent_result para el resultado.`,
+							].join("\n"),
 						},
 					],
 					details: { taskId: record.id, agent: manifest.name, status: record.status },
@@ -102,7 +109,7 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 					content: [
 						{
 							type: "text",
-							text: record.result || "(the subagent produced no output)",
+							text: record.result || "(el especialista no produjo salida)",
 						},
 					],
 					details: { taskId: record.id, agent: manifest.name, status: record.status },
@@ -113,7 +120,7 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 				content: [
 					{
 						type: "text",
-						text: `Subagent ${manifest.name} ${record.status}${record.error ? `: ${record.error}` : ""}${record.result ? `\n\nOutput:\n${record.result}` : ""}`,
+						text: `[STUDIO TASK ${record.status.toUpperCase()}] ${manifest.name}${record.error ? `: ${record.error}` : ""}${record.result ? `\n\n${record.result}` : ""}`,
 					},
 				],
 				details: {

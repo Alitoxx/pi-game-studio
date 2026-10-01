@@ -6,15 +6,17 @@ import { detectProjectEngine, formatEngineBadge } from "./engine-detector.ts";
 import { inspectSetup } from "./studio-setup.ts";
 import { readProducerState } from "./studio-start.ts";
 
-const RESET = "\x1b[0m";
-const BOLD = "\x1b[1m";
-// Emerald Engine color palette (Gamedev console & debug terminal)
-const STUDIO_ACCENT = "\x1b[38;2;52;211;153m";    // Emerald Green (#34d399)
-const STUDIO_LABEL = "\x1b[38;2;16;185;129m";     // Technical Mint (#10b981)
-const STUDIO_VALUE = "\x1b[38;2;243;244;246m";    // Pearl White (#f3f4f6)
-const STUDIO_HIGHLIGHT = "\x1b[38;2;110;231;183m";// Luminous Mint (#6ee7b7)
-const STUDIO_DIM = "\x1b[38;2;100;116;139m";      // Slate Gray (#64748b)
-const STUDIO_GOLD = "\x1b[38;2;251;191;36m";      // Amber Gold (#fbbf24)
+import {
+	RESET,
+	BOLD,
+	DIM,
+	ACCENT as STUDIO_ACCENT,
+	SECONDARY as STUDIO_LABEL,
+	WHITE as STUDIO_VALUE,
+	HEADING as STUDIO_HIGHLIGHT,
+	GRAY as STUDIO_DIM,
+	YELLOW as STUDIO_GOLD,
+} from "./studio-palette.ts";
 
 export function isArtEnabled(_root: string): boolean {
 	return false;

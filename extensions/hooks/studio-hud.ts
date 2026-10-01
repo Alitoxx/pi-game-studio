@@ -5,18 +5,19 @@ import { findStudioRoot } from "./studio-root.ts";
 import { readProducerState } from "./studio-start.ts";
 import { inspectSetup } from "./studio-setup.ts";
 
-const RESET = "\x1b[0m";
-const BOLD = "\x1b[1m";
-const DIM = "\x1b[2m";
-// Gentle Palette (Nordic / Sober)
-const GREEN = "\x1b[38;2;183;204;133m";    // #B7CC85 (Sage green)
-const YELLOW = "\x1b[38;2;222;186;135m";   // #DEBA87 (Warm amber/straw)
-const RED = "\x1b[38;2;203;124;148m";      // #CB7C94 (Soft muted red)
-const BLUE = "\x1b[38;2;127;180;202m";     // #7FB4CA (Gentle powder blue)
-const LAVENDER = "\x1b[38;2;181;178;208m"; // #B5B2D0 (Muted lavender)
-const WHITE = "\x1b[38;2;243;246;249m";    // #F3F6F9 (Clean chalk text)
-const GRAY = "\x1b[38;2;92;97;112m";       // #5C6170 (Muted gray)
-const BORDER = "\x1b[38;2;49;51;66m";      // #313342 (Subtle card border)
+import {
+	RESET,
+	BOLD,
+	DIM,
+	GREEN,
+	YELLOW,
+	RED,
+	ACCENT as BLUE,
+	HEADING as LAVENDER,
+	WHITE,
+	GRAY,
+	BORDER,
+} from "./studio-palette.ts";
 
 export interface ContextUsageInfo {
 	tokens: number;

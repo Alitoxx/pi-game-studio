@@ -358,14 +358,6 @@ export default function (pi: ExtensionAPI) {
 						"2. Declares the next concrete step in the sprint and hands off to the next specialist directly without asking what to do next. " +
 						"If the user greets (e.g. 'hola', 'buenas'), acknowledge the OK environment in 1 polite sentence, state the current project state, and present the immediate next options cleanly."
 					);
-				} else {
-					event.systemPromptOptions.promptGuidelines.push(
-						"Studio Environment Status: PENDING SETUP. The studio agents or configuration have not been deployed yet in this project. " +
-						"If the user greets or asks what to do, inform them that the studio needs initial setup, and present the two clear choices: " +
-						"1. Automática (Recomendada: Agentes optimizados para tu motor en modo 'inherit') o " +
-						"2. Manual / Guiada (/studio:setup para elegir motor, idioma y modelos por nivel)."
-					);
-				}
 			}
 		}
 

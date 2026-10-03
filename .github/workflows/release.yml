@@ -1,0 +1,54 @@
+name: Release Automation
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract Release Notes from CHANGELOG.md
+        id: extract_notes
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "Extracting notes for version $VERSION..."
+          
+          # Extract the section between ## [VERSION] and the next ## [
+          NOTES=$(VERSION="$VERSION" node -e '
+            const fs = require("fs");
+            const changelog = fs.readFileSync("CHANGELOG.md", "utf8");
+            const version = process.env.VERSION;
+            const regex = new RegExp(`## \\[${version}\\][^\n]*\n([\\s\\S]*?)(?=\n## \\[|$)`);
+            const match = changelog.match(regex);
+            if (match && match[1].trim()) {
+              console.log(match[1].trim());
+            } else {
+              console.log("Automated release for version " + version);
+            }
+          ')
+          
+          # Export multiline to GITHUB_OUTPUT
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "notes<<$EOF" >> $GITHUB_OUTPUT
+          echo "$NOTES" >> $GITHUB_OUTPUT
+          echo "$EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "${{ github.ref_name }}"
+          body: ${{ steps.extract_notes.outputs.notes }}
+          draft: false
+          prerelease: false
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

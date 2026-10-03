@@ -39,14 +39,17 @@ export function setArtEnabled(root: string, enabled: boolean): void {
 }
 
 const ART_RAW = [
-	"   ⢀⣀⣤⣴⣶⣶⣶⣶⣶⣶⣦⣤⣀⡀  ",
-	"  ⣰⡿⠉   ⢀⣀⣤⣀⡀   ⠈⢻⣆ ",
-	"  ⣿⠇   ⢰⡿⠉▲⠉⢿⡆   ⢸⣿ ",
-	"  ⣿     ⢸⡇◄ ┼ ►⢸⡇    ⣿ ",
-	"  ⣿     ⠈⢿⣄▼⣠⡿⠁    ⣿ ",
-	"  ⣿        ⠉⠉     ⢸⣿ ",
-	" ⣸⣿⣀             ⣼⣿⣄",
-	" ▀▀▀▀             ⠈⠛⠿⠂",
+	"        ⢀⣀⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⠀  ",
+	"   ⠀⢀⣴⠟⠋⠁⠀⠀⠀⠀⣀⣀⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠀  ",
+	"  ⢠⡿⣡⡶⠾⠟⢿⡇⠀⣼⡏⣉⣍⠙⣷⠀⠀⣿⠛⠛⠛⠛⠛⠛⠀  ",
+	"  ⢼⣿⠏⠀⠀⠀⢸⡇⠀⣿⡟⢻⡟⠃⣿⠀⠀⣿⠀⠀⠀⠀⠀⠀⠀  ",
+	"  ⠀⠀⠀⠀⢰⡾⠿⣿⠿⠿⠃⠈⠁⠀⠿⠾⢿⠿⢷⣆⠀⠀⠀⠀⠀  ",
+	"  ⠀⠀⠀⠀⢸⡇⢾⣿⠶⠆⠀⠀⠀⠀⠰⠶⢾⣷⢸⣿⠀⠀⠀⠀⠀  ",
+	"  ⠀⠀⠀⠀⠸⣧⣤⣭⣤⣤⡄⢀⡀⠀⣤⣤⣬⣥⣼⠟⠀⠀⠀⠀⠀  ",
+	"  ⠀⠀⠀⠀⠀⠀⣼⠇⠀⣾⣧⣼⣧⡄⣿⠀⠀⣿⠀⠀⠀⢠⣶⣶⠀  ",
+	"  ⠀⠀⣠⣤⣴⠾⠋⠀⠀⣿⣇⣙⣋⣠⣿⡀⠀⠻⣦⣤⣴⠟⢱⡟⠀  ",
+	"  ⠀⠀⣽⡇⠀⠀⠀⠀⢰⡟⠉⠉⠉⠉⠙⢷⣄⠀⠀⠀⢀⣴⠟⠁⠀  ",
+	"  ⠀⠀⠙⠛⠛⠛⠛⠛⠛⠁⠀⠀⠀⠀⠀⠀⠙⠛⠛⠛⠛⠁⠀⠀⠀  ",
 ];
 
 function getGradientArtLine(line: string, index: number, total: number): string {
@@ -115,62 +118,37 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 
 	lines.push("");
 
-	// Title centered
-	const titleRaw = `PI GAME STUDIO · v${version} · 55 agents / 80 skills`;
-	const titlePad = Math.max(0, Math.floor((width - titleRaw.length) / 2));
-	const titleLine = " ".repeat(titlePad) + `${STUDIO_ACCENT}${BOLD}PI GAME STUDIO${RESET} ${STUDIO_DIM}·${RESET} ${STUDIO_HIGHLIGHT}v${version}${RESET} ${STUDIO_DIM}· 55 agents / 80 skills${RESET}`;
-	lines.push(titleLine);
-	lines.push("");
-
-	const showArt = isArtEnabled(root) && width >= 95;
+	const showArt = isArtEnabled(root) && width >= 90;
 
 	if (showArt) {
-		const artW = 34;
-		const lW = 8;
-		const vW = Math.max(18, Math.min(28, Math.floor((width - artW - 3 - (lW + 1) * 2 - 2) / 2)));
-		const tableRows: string[] = [];
+		const rightLines: string[] = [
+			`${STUDIO_ACCENT}${BOLD}P I   G A M E   S T U D I O${RESET}   ${STUDIO_HIGHLIGHT}v${version}${RESET}`,
+			`${STUDIO_DIM}Autonomous Game Development Studio for Pi${RESET}`,
+			`${STUDIO_DIM}──────────────────────────────────────────────────────────${RESET}`,
+			`${STUDIO_LABEL}${fit("GIT:", 11)}${RESET}${STUDIO_VALUE}On branch ${gitBranch}${RESET}`,
+			`${STUDIO_LABEL}${fit("PATH:", 11)}${RESET}${STUDIO_VALUE}${shortPath}${RESET}`,
+			`${STUDIO_LABEL}${fit("ENGINE:", 11)}${RESET}${STUDIO_VALUE}${engineInfo}${RESET}`,
+			`${STUDIO_LABEL}${fit("AGENTS:", 11)}${RESET}${STUDIO_VALUE}${setup.agentsInstalled} activos (Directors, Leads, Devs)${RESET}`,
+			`${STUDIO_LABEL}${fit("STAGE:", 11)}${RESET}${STUDIO_VALUE}${stage}${RESET}`,
+			`${STUDIO_LABEL}${fit("SKILLS:", 11)}${RESET}${STUDIO_VALUE}80 loaded (ODD Gamedev Workflow)${RESET}`,
+			`${STUDIO_LABEL}${fit("STORAGE:", 11)}${RESET}${STUDIO_VALUE}${engramStatus} (Persistent Memory)${RESET}`,
+			`${STUDIO_GOLD}${fit("TIPS:", 11)}${RESET}${STUDIO_DIM}/studio · /studio:setup · /start · /market-research${RESET}`,
+		];
 
-		const addRow = (l1: string, v1: string, l2: string, v2: string) => {
-			const col1 = `${STUDIO_LABEL}${fit(l1, lW)}${RESET} ${STUDIO_VALUE}${fit(v1, vW)}${RESET}`;
-			const col2 = `${STUDIO_LABEL}${fit(l2, lW)}${RESET} ${STUDIO_VALUE}${fit(v2, vW)}${RESET}`;
-			tableRows.push(`${col1}  ${col2}`);
-		};
-
-		addRow("GIT:", gitBranch, "PATH:", shortPath);
-		addRow("ENGINE:", engineInfo, "STORAGE:", engramStatus);
-		addRow("AGENTS:", `${setup.agentsInstalled} activos (52 especialistas & leads)`, "SKILLS:", "80 loaded · 49 templates");
-		addRow("STAGE:", stage, "CONFIG:", setup.hasProjectYaml ? "project.yaml" : "default");
-		tableRows.push(`${STUDIO_GOLD}${fit("TIPS:", lW)}${RESET} ${STUDIO_DIM}/studio (Catálogo) · /studio:setup · /start${RESET}`);
-
-		while (tableRows.length < ART_RAW.length) {
-			tableRows.push("");
-		}
-
-		const totalBlockW = artW + 3 + (lW + 1 + vW) * 2 + 2;
+		const totalBlockW = 104;
 		const pad = Math.max(0, Math.floor((width - totalBlockW) / 2));
 		const padStr = " ".repeat(pad);
 
 		for (let i = 0; i < ART_RAW.length; i++) {
-			lines.push(`${padStr}${getGradientArtLine(ART_RAW[i], i, ART_RAW.length)}   ${tableRows[i]}`);
+			lines.push(`${padStr}${getGradientArtLine(ART_RAW[i], i, ART_RAW.length)}    ${rightLines[i] || ""}`);
 		}
-	} else if (width >= 105) {
-		const lW = 10;
-		const vW = 38;
-		const gridSpan = lW + vW + 3 + lW + vW;
-		const gridPad = Math.max(0, Math.floor((width - gridSpan) / 2));
-		const padStr = " ".repeat(gridPad);
-
-		const addWide = (l1: string, v1: string, l2: string, v2: string) => {
-			const col1 = `${STUDIO_LABEL}${fit(l1, lW)}${RESET} ${STUDIO_VALUE}${fit(v1, vW)}${RESET}`;
-			const col2 = `${STUDIO_LABEL}${fit(l2, lW)}${RESET} ${STUDIO_VALUE}${fit(v2, vW)}${RESET}`;
-			lines.push(`${padStr}${col1}   ${col2}`);
-		};
-		addWide("GIT:", gitBranch, "PATH:", shortPath);
-		addWide("ENGINE:", engineInfo, "STORAGE:", engramStatus);
-		addWide("AGENTS:", `${setup.agentsInstalled} activos (52 especialistas & leads)`, "SKILLS:", "80 loaded · 49 templates");
-		addWide("STAGE:", stage, "CONFIG:", setup.hasProjectYaml ? "project.yaml" : "default");
-		lines.push(`${padStr}${STUDIO_GOLD}${fit("TIPS:", lW)}${RESET} ${STUDIO_DIM}/studio (Catálogo) · /studio:setup (Setup) · /start (Inicio)${RESET}`);
 	} else {
+		// Clean centered compact table
+		const titleRaw = `PI GAME STUDIO · v${version} · 55 agents / 80 skills`;
+		const titlePad = Math.max(0, Math.floor((width - titleRaw.length) / 2));
+		lines.push(" ".repeat(titlePad) + `${STUDIO_ACCENT}${BOLD}PI GAME STUDIO${RESET} ${STUDIO_DIM}·${RESET} ${STUDIO_HIGHLIGHT}v${version}${RESET} ${STUDIO_DIM}· 55 agents / 80 skills${RESET}`);
+		lines.push("");
+
 		const lW = 10;
 		const vW = Math.max(20, width - lW - 6);
 		const narrowPad = Math.max(0, Math.floor((width - (lW + vW + 1)) / 2));
@@ -178,13 +156,13 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 		const addNarrow = (label: string, value: string) => {
 			lines.push(`${padStr}${STUDIO_LABEL}${fit(label, lW)}${RESET} ${STUDIO_VALUE}${fit(value, vW)}${RESET}`);
 		};
-		addNarrow("GIT:", gitBranch);
+		addNarrow("GIT:", `On branch ${gitBranch}`);
 		addNarrow("PATH:", shortPath);
 		addNarrow("ENGINE:", engineInfo);
 		addNarrow("AGENTS:", `${setup.agentsInstalled} activos (52 especialistas & leads)`);
 		addNarrow("STAGE:", stage);
 		addNarrow("STORAGE:", engramStatus);
-		lines.push(`${padStr}${STUDIO_GOLD}${fit("TIPS:", lW)}${RESET} ${STUDIO_DIM}/studio · /start${RESET}`);
+		lines.push(`${padStr}${STUDIO_GOLD}${fit("TIPS:", lW)}${RESET} ${STUDIO_DIM}/studio · /start · /market-research${RESET}`);
 	}
 
 	lines.push("");

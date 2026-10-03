@@ -1,6 +1,10 @@
 # Pi Game Studio
 
 <p align="center">
+  <img src="docs/assets/icon.png" alt="Pi Game Studio Icon" width="160" height="160" />
+</p>
+
+<p align="center">
   Turn a Pi session into a full game development studio.
   <br />
   55 agents. 80 skills. 49 templates. One coordinated AI team.

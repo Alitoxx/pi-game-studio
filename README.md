@@ -21,6 +21,20 @@
   <img src="https://img.shields.io/badge/built%20for-Pi-8B5CF6?logo=pinokio" alt="Built for Pi">
 </p>
 
+```text
+       ⢀⣀⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⠀    P I   G A M E   S T U D I O   v0.9.0
+  ⠀⢀⣴⠟⠋⠁⠀⠀⠀⠀⣀⣀⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠀    Autonomous Game Development Studio for Pi
+ ⢠⡿⣡⡶⠾⠟⢿⡇⠀⣼⡏⣉⣍⠙⣷⠀⠀⣿⠛⠛⠛⠛⠛⠛⠀    ──────────────────────────────────────────────────────────
+ ⢼⣿⠏⠀⠀⠀⢸⡇⠀⣿⡟⢻⡟⠃⣿⠀⠀⣿⠀⠀⠀⠀⠀⠀⠀    GIT:       On branch main
+ ⠀⠀⠀⠀⢰⡾⠿⣿⠿⠿⠃⠈⠁⠀⠿⠾⢿⠿⢷⣆⠀⠀⠀⠀⠀    PATH:      ~/Developer/pi-game-studio
+ ⠀⠀⠀⠀⢸⡇⢾⣿⠶⠆⠀⠀⠀⠀⠰⠶⢾⣷⢸⣿⠀⠀⠀⠀⠀    ENGINE:    Godot · Unity · Unreal · Bevy · Raylib
+ ⠀⠀⠀⠀⠸⣧⣤⣭⣤⣤⡄⢀⡀⠀⣤⣤⣬⣥⣼⠟⠀⠀⠀⠀⠀    AGENTS:    55 activos (Directors, Leads, Devs)
+ ⠀⠀⠀⠀⠀⠀⣼⠇⠀⣾⣧⣼⣧⡄⣿⠀⠀⣿⠀⠀⠀⢠⣶⣶⠀    STAGE:     Entorno OK
+ ⠀⠀⣠⣤⣴⠾⠋⠀⠀⣿⣇⣙⣋⣠⣿⡀⠀⠻⣦⣤⣴⠟⢱⡟⠀    SKILLS:    80 loaded (ODD Gamedev Workflow)
+ ⠀⠀⣽⡇⠀⠀⠀⠀⢰⡟⠉⠉⠉⠉⠙⢷⣄⠀⠀⠀⢀⣴⠟⠁⠀    STORAGE:   Engram connected (Persistent Memory)
+ ⠀⠀⠙⠛⠛⠛⠛⠛⠛⠁⠀⠀⠀⠀⠀⠀⠙⠛⠛⠛⠛⠁⠀⠀⠀    TIPS:      /studio · /studio:setup · /start · /market-research
+```
+
 ---
 
 ## Why This Exists

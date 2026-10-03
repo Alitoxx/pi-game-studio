@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.3] - 2026-10-03
+
+### Documentation
+- Integrado el banner oficial de la terminal TUI con tipografía editorial y emblema Braille en el `README.md` principal de GitHub.
+- Sincronizados los assets visuales de GitHub Social Preview (`docs/assets/social-preview.png`).
+
+---
+
+## [0.9.2] - 2026-10-03
+
+### Added
+- Implementado el nuevo emblema Braille de alta resolución del $\pi$ D-Pad en el banner TUI (`extensions/hooks/banner.ts`).
+- Incorporada la tipografía editorial limpia (`P I   G A M E   S T U D I O`) con métricas tabuladas a 11 caracteres y degradado *Glacial Cyan* a *Midnight Amethyst*.
+
+---
+
+## [0.9.1] - 2026-10-03
+
+### Fixed
+- Corregido `ParseError: Unexpected token` en `extensions/hooks/index.ts` eliminando bloque sintáctico residual que impedía la carga de extensiones en Pi.
+- Actualizada la rama predeterminada oficial de `master` a `main` tanto localmente como en GitHub.
+
+---
+
 ## [0.9.0] - 2026-10-01
 
 ### Added

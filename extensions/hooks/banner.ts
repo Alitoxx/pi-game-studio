@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync, unlinkSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
 import { findStudioRoot } from "./studio-root.ts";
@@ -18,11 +18,46 @@ import {
 	YELLOW as STUDIO_GOLD,
 } from "./studio-palette.ts";
 
-export function isArtEnabled(_root: string): boolean {
-	return false;
+export function isArtEnabled(root: string): boolean {
+	try {
+		const flag = join(root, ".pi", "game-studio", "art-enabled");
+		if (existsSync(flag)) {
+			return readFileSync(flag, "utf8").trim() !== "false";
+		}
+	} catch {}
+	return true;
 }
 
-export function setArtEnabled(_root: string, _enabled: boolean): void {}
+export function setArtEnabled(root: string, enabled: boolean): void {
+	try {
+		const dir = join(root, ".pi", "game-studio");
+		if (!existsSync(dir)) {
+			mkdirSync(dir, { recursive: true });
+		}
+		writeFileSync(join(dir, "art-enabled"), enabled ? "true" : "false");
+	} catch {}
+}
+
+const ART_RAW = [
+	"   ⢀⣀⣤⣴⣶⣶⣶⣶⣶⣶⣦⣤⣀⡀  ",
+	"  ⣰⡿⠉   ⢀⣀⣤⣀⡀   ⠈⢻⣆ ",
+	"  ⣿⠇   ⢰⡿⠉▲⠉⢿⡆   ⢸⣿ ",
+	"  ⣿     ⢸⡇◄ ┼ ►⢸⡇    ⣿ ",
+	"  ⣿     ⠈⢿⣄▼⣠⡿⠁    ⣿ ",
+	"  ⣿        ⠉⠉     ⢸⣿ ",
+	" ⣸⣿⣀             ⣼⣿⣄",
+	" ▀▀▀▀             ⠈⠛⠿⠂",
+];
+
+function getGradientArtLine(line: string, index: number, total: number): string {
+	const c1 = [103, 232, 249]; // Glacial Cyan #67E8F9
+	const c2 = [167, 139, 250]; // Midnight Amethyst #A78BFA
+	const t = index / Math.max(1, total - 1);
+	const r = Math.round(c1[0] + (c2[0] - c1[0]) * t);
+	const g = Math.round(c1[1] + (c2[1] - c1[1]) * t);
+	const b = Math.round(c1[2] + (c2[2] - c1[2]) * t);
+	return `\x1b[38;2;${r};${g};${b}m${line}${RESET}`;
+}
 
 function getGitBranch(cwd: string): string {
 	try {
@@ -47,7 +82,7 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 	const root = findStudioRoot(cwd) || cwd;
 
 	// Version
-	let version = "0.8.20";
+	let version = "0.9.0";
 	try {
 		const pkgUrl = new URL("../../package.json", import.meta.url);
 		if (existsSync(pkgUrl)) {
@@ -78,7 +113,6 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 	const gitBranch = getGitBranch(root);
 	const shortPath = root.replace(process.env.HOME || "", "~");
 
-	const isWide = width >= 105;
 	lines.push("");
 
 	// Title centered
@@ -88,10 +122,41 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 	lines.push(titleLine);
 	lines.push("");
 
-	const lW = 10;
-	if (isWide) {
+	const showArt = isArtEnabled(root) && width >= 95;
+
+	if (showArt) {
+		const artW = 34;
+		const lW = 8;
+		const vW = Math.max(18, Math.min(28, Math.floor((width - artW - 3 - (lW + 1) * 2 - 2) / 2)));
+		const tableRows: string[] = [];
+
+		const addRow = (l1: string, v1: string, l2: string, v2: string) => {
+			const col1 = `${STUDIO_LABEL}${fit(l1, lW)}${RESET} ${STUDIO_VALUE}${fit(v1, vW)}${RESET}`;
+			const col2 = `${STUDIO_LABEL}${fit(l2, lW)}${RESET} ${STUDIO_VALUE}${fit(v2, vW)}${RESET}`;
+			tableRows.push(`${col1}  ${col2}`);
+		};
+
+		addRow("GIT:", gitBranch, "PATH:", shortPath);
+		addRow("ENGINE:", engineInfo, "STORAGE:", engramStatus);
+		addRow("AGENTS:", `${setup.agentsInstalled} activos (52 especialistas & leads)`, "SKILLS:", "80 loaded · 49 templates");
+		addRow("STAGE:", stage, "CONFIG:", setup.hasProjectYaml ? "project.yaml" : "default");
+		tableRows.push(`${STUDIO_GOLD}${fit("TIPS:", lW)}${RESET} ${STUDIO_DIM}/studio (Catálogo) · /studio:setup · /start${RESET}`);
+
+		while (tableRows.length < ART_RAW.length) {
+			tableRows.push("");
+		}
+
+		const totalBlockW = artW + 3 + (lW + 1 + vW) * 2 + 2;
+		const pad = Math.max(0, Math.floor((width - totalBlockW) / 2));
+		const padStr = " ".repeat(pad);
+
+		for (let i = 0; i < ART_RAW.length; i++) {
+			lines.push(`${padStr}${getGradientArtLine(ART_RAW[i], i, ART_RAW.length)}   ${tableRows[i]}`);
+		}
+	} else if (width >= 105) {
+		const lW = 10;
 		const vW = 38;
-		const gridSpan = lW + vW + 3 + lW + vW; // 99 columns
+		const gridSpan = lW + vW + 3 + lW + vW;
 		const gridPad = Math.max(0, Math.floor((width - gridSpan) / 2));
 		const padStr = " ".repeat(gridPad);
 
@@ -102,10 +167,11 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 		};
 		addWide("GIT:", gitBranch, "PATH:", shortPath);
 		addWide("ENGINE:", engineInfo, "STORAGE:", engramStatus);
-		addWide("AGENTS:", `${setup.agentsInstalled} activos (52 especialistas & leads)`, "SKILLS:", "80 loaded · 44 templates");
+		addWide("AGENTS:", `${setup.agentsInstalled} activos (52 especialistas & leads)`, "SKILLS:", "80 loaded · 49 templates");
 		addWide("STAGE:", stage, "CONFIG:", setup.hasProjectYaml ? "project.yaml" : "default");
 		lines.push(`${padStr}${STUDIO_GOLD}${fit("TIPS:", lW)}${RESET} ${STUDIO_DIM}/studio (Catálogo) · /studio:setup (Setup) · /start (Inicio)${RESET}`);
 	} else {
+		const lW = 10;
 		const vW = Math.max(20, width - lW - 6);
 		const narrowPad = Math.max(0, Math.floor((width - (lW + vW + 1)) / 2));
 		const padStr = " ".repeat(narrowPad);

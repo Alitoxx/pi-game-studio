@@ -30,10 +30,12 @@ La Live Spec debe contener obligatoriamente:
 - **Requisitos de Render & Shaders**: Identificar explícitamente qué efectos visuales de la mecánica requieren shaders en GPU (e.g. atenuación de luz, niebla volumétrica/ruido, distorsión de agua, post-procesado, disolución) en lugar de intentar emularlos con lógica de CPU.
 - **Juice & Game Feel**: Micro-retroalimentación háptica y visual obligatoria: tiempos de *hitstop/freeze*, curvas de sacudida de pantalla (*screen shake* con decay exponencial), tolerancia de *coyote time* e *input buffering*, y curvas de interpolación (*easing*).
 - **Mapeo de Input & Multi-dispositivo**: Definir acciones semánticas (`Move`, `Interact`, `ActionPrimary`) mapeadas simultáneamente a teclado/ratón y Gamepad (stick analógico + botones estándar). Prohibido atar el diseño a teclas físicas fijas.
+- **Ciclo de Vida & Máquina de Estados de la App (App States)**: Definir el comportamiento ante transiciones globales (`Boot`, `MainMenu`, `InGame`, `Paused`, `GameOver`). El estado `Paused` debe congelar el tiempo del juego y la simulación física mientras mantiene la UI interactiva y atenúa el audio.
+- **Manifiesto de Assets & Placeholders**: Registrar en `assets/manifest.yaml` cada sprite, textura, audio o shader requerido con sus dimensiones/formato y marcar su estado (`placeholder` vs `final`).
 - **Esquema de Estado & Persistencia (Save/Load)**: Estructura exacta de los datos que deben persistir entre sesiones (componentes guardables, inventario, progreso, niebla descubierta).
 - **Herramientas de Diagnóstico & Debug Overlay**: Declarar qué variables de estado e indicadores de depuración (gizmos de colisión, radios de percepción, contadores) deben exponerse en la capa de depuración (`F3`).
 - **Edge Cases**: Manejo de situaciones límite (desconexión, límites de pantalla, estados concurrentes).
-- **Checklist Atómico de Implementación**: Tareas de ~400 líneas cada una con formato `[ ]`, incluyendo explícitamente las tareas de creación de shaders, debug overlay y assets de sonido.
+- **Checklist Atómico de Implementación**: Tareas de ~400 líneas cada una con formato `[ ]`, incluyendo explícitamente las tareas de creación de shaders, debug overlay, estados de pausa y assets de sonido.
 
 ### 3. Resolución de Incertidumbre
 Si existe un dilema de diseño (e.g. tipo de control o fórmula de progresión), se presenta una **TRADE-OFF MATRIX** concisa y se resuelve interactivamente con `ask_user_choice`.

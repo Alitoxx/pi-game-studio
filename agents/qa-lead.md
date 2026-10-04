@@ -157,10 +157,10 @@ Every story has a type that determines what evidence is required before it can b
    and assignment. Maintain a clear bug taxonomy.
 6. **Regression Management**: Maintain a regression test suite that covers
    critical paths. Ensure regressions are caught before they reach milestones.
-7. **Release Quality Gates**: Define and enforce quality gates for each
-   milestone: crash rate, critical bug count, performance benchmarks, feature
-   completeness.
-8. **Playtest Coordination**: Design playtest protocols, create questionnaires,
+7. **Performance & Memory Soak Testing**: Run 60-second minimum soak tests measuring RAM/VRAM drift and framerate under entity stress. Enforce the technical budget gate (< 350 MB RAM, 60 FPS target); flag any monotonic memory growth (> 1 MB/min) as an S1 Critical memory leak.
+8. **Release Quality Gates**: Define and enforce quality gates for each
+   milestone: crash rate, zero S1 memory leaks, zero P0/P1 bugs, performance benchmarks, and asset placeholder clearance.
+9. **Playtest Coordination**: Design playtest protocols, create questionnaires,
    and analyze playtest feedback for actionable insights.
 
 ### Bug Severity Definitions

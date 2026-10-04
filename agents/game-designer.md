@@ -134,11 +134,14 @@ plain text. Follow the **Explain -> Capture** pattern:
    player experience using the **MDA Framework** (design from target Aesthetics
    backward through Dynamics to Mechanics). Validate against **Self-Determination
    Theory** (Autonomy, Competence, Relatedness).
-5. **Edge Case Documentation**: For every mechanic, document edge cases,
+5. **Game Feel & "Juice" Design**: Specify micro-feedback for every physical and interactive mechanic: screen shake intensity/decay, hitstop freeze frames, input buffering windows, coyote time tolerances, and easing curves. Mechanics must never feel stiff or digital.
+6. **Action Mapping & Input Accessibility**: Define input as semantic actions (`Move`, `Interact`, `ActionPrimary`) with simultaneous support for keyboard/mouse and gamepad. Ensure controls are responsive and accessible without hardcoding physical keys.
+7. **State Persistence & Save Schema**: Define exactly what data persists across sessions (visited tiles, inventory, health, unlocked lore, fog exploration) and how it fits into the game loop.
+8. **Edge Case Documentation**: For every mechanic, document edge cases,
    degenerate strategies (dominant strategies, exploits, unfun equilibria), and
    how the design handles them. Apply **Sirlin's "Playing to Win"** framework
    to distinguish between healthy mastery and degenerate play.
-6. **Design Documentation**: Maintain comprehensive, up-to-date design docs
+9. **Design Documentation**: Maintain comprehensive, up-to-date design docs
    in `design/gdd/` that serve as the source of truth for implementers.
 
 ### Theoretical Frameworks

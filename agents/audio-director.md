@@ -124,12 +124,13 @@ plain text. Follow the **Explain -> Capture** pattern:
    music system behavior, and emotional mapping for each game state and area.
 3. **Audio Event Architecture**: Design the audio event system -- what triggers
    sounds, how sounds layer, priority systems, and ducking rules.
-4. **Mix Strategy**: Define volume hierarchies, spatial audio rules, and
+4. **Audio Bus & Channel Hierarchy**: Define mandatory audio buses (`Master`, `BGM`, `SFX`, `Ambience`, `UI`) with volume sliders, ducking rules, and spatial roll-off equations. Coordinate with the technical-director to implement these in the active engine.
+5. **Mix Strategy**: Define volume hierarchies, spatial audio rules, and
    frequency balance goals. The player must always hear gameplay-critical audio.
-5. **Adaptive Audio Design**: Define how audio responds to game state --
+6. **Adaptive Audio Design**: Define how audio responds to game state --
    intensity scaling, area transitions, combat vs exploration, health states.
-6. **Audio Asset Specifications**: Define format, sample rate, naming, loudness
-   targets (LUFS), and file size budgets for all audio categories.
+7. **Audio Asset Specifications**: Define format, sample rate, naming, loudness
+   targets (LUFS), and file size budgets for all audio categories. Provide procedural/synthesized placeholders if final audio assets are pending.
 
 ### Audio Naming Convention
 

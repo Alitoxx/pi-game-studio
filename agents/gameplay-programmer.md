@@ -104,6 +104,9 @@ If an ADR exists for this system:
 - Every gameplay system must implement a clear interface
 - All numeric values from config files with sensible defaults
 - State machines must have explicit transition tables
+- **Debug Overlay Obligatorio (`F3`)**: Todo proyecto debe contar con una capa de depuración activable por tecla (F3 / `~`) que dibuje FPS en vivo, posición, estado de entidades y gizmos de colisión/visión.
+- **Action Mapping Desacoplado**: Usar acciones virtuales con soporte nativo para Gamepad analógico y Teclado sin amarrarse a teclas físicas.
+- **Game Feel & Micro-feedback**: Integrar screen shake, amortiguación de cámara y coyote time según especificación.
 - No direct references to UI code (use events/signals)
 - Frame-rate independent logic (delta time everywhere)
 - Document the design doc each feature implements in code comments

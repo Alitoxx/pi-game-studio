@@ -27,12 +27,12 @@ Para cada decisión no trivial (patrón ECS, librería de audio, integración de
 - Redactar un ADR conciso en `docs/architecture/adr-<numero>-<titulo>.md`.
 - Secciones: Contexto, Alternativas evaluadas, Decisión fundamentada y Consecuencias.
 
-### 3. Integración con el Motor y Pipeline de Shaders
-Soporte simétrico para los 5 motores oficiales con su arquitectura de shaders y materiales:
-- **Godot**: `project.godot`, GDScript, C#, GDExtension, shaders `canvas_item` / `spatial` (`.gdshader`) (`Appendix A — Godot`).
-- **Bevy**: `Cargo.toml`, Rust ECS idiomático, `wgpu`, shaders WGSL (`.wgsl`) integrados con `Material2d` / `MaterialPlugin` (`Appendix B — Bevy`).
-- **Raylib**: `CMakeLists.txt`, Modern C++, EnTT ECS, fragment/vertex shaders en GLSL (`.fs` / `.vs`) con `LoadShader()` y `BeginShaderMode()` (`Appendix C — Raylib`).
-- **Unity**: MonoBehaviour / DOTS, Burst, URP/HDRP, Shader Graph y custom HLSL (`.shader`).
-- **Unreal**: C++, GAS, Enhanced Input, Blueprints, Material Editor y Niagara.
+### 3. Integración con el Motor, Pipeline de Shaders y Subsistemas Base
+Soporte simétrico para los 5 motores oficiales con su arquitectura de shaders, audio, input y persistencia:
+- **Godot**: `project.godot`, GDScript, C#, GDExtension, shaders `canvas_item` / `spatial` (`.gdshader`) (`Appendix A — Godot`). Audio Buses en `default_bus_layout.tres` (Master/BGM/SFX/UI). InputMap nativo desacoplado. Serialización con `ConfigFile` o `ResourceFormatSaver`.
+- **Bevy**: `Cargo.toml`, Rust ECS idiomático, `wgpu`, shaders WGSL (`.wgsl`) integrados con `Material2d` / `MaterialPlugin` (`Appendix B — Bevy`). Audio reactivo con `bevy_kira_audio` o `bevy_audio` con canales aislados. Input con `leafwing-input-manager` o mapeo `ActionState`. Serialización RON / Serde.
+- **Raylib**: `CMakeLists.txt`, Modern C++, EnTT ECS, fragment/vertex shaders en GLSL (`.fs` / `.vs`) con `LoadShader()` y `BeginShaderMode()` (`Appendix C — Raylib`). Audio con miniaudio/raudio por canales. Mapeo de gamepad con `IsGamepadButtonDown()`. Serialización binaria o JSON.
+- **Unity**: MonoBehaviour / DOTS, Burst, URP/HDRP, Shader Graph y custom HLSL (`.shader`). AudioMixer con Snapshots y ducking. Input System (Actions). Serialización JSON/Binary.
+- **Unreal**: C++, GAS, Enhanced Input, Blueprints, Material Editor y Niagara. Sound Cues y MetaSounds con Submixes. SaveGame nativo.
 
-Verificar toolchains locales, extensiones de assets para shaders y servidores MCP según el motor configurado en `project.yaml`.
+Verificar toolchains locales, extensiones de assets para shaders, buses de audio y servidores MCP según el motor configurado en `project.yaml`.

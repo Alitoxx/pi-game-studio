@@ -52,14 +52,18 @@ Si hay un conflicto real de diseño o arquitectura (e.g. *¿Cámara isométrica 
 ### Paso 5: Live Spec (Documento Único Vivo de Feature)
 Se almacena como la única fuente de verdad en `design/gdd/<feature-name>.md`:
 - **Fantasía del Jugador & Objetivo**: Qué experimenta el jugador en 1-2 oraciones.
-- **Fórmulas y Parámetros**: Valores de balance, timers, hitboxes, costos.
+- **Fórmulas y Parámetros**: Valores de balance, timers, hitboxes, costos expuestos en archivos de datos externos (`assets/data/`).
 - **Requisitos de Render & Shaders**: Declaración explícita de qué efectos visuales requieren shaders en GPU (luz dinámica, niebla, agua, distorsiones) para evitar simulaciones costosas en CPU.
-- **Checklist de Tareas**: Tareas atómicas con IDs estables (`[x]` completado, `[/]` en progreso, `[ ]` pendiente).
+- **Game Feel & Micro-feedback**: Tiempos de hitstop, curvas de sacudida de pantalla (*screen shake*), coyote time, input buffer y amortiguaciones (*easing*).
+- **Mapeo de Input & Multi-dispositivo**: Acciones semánticas desacopladas con soporte simultáneo para Teclado/Ratón y Gamepad.
+- **Esquema de Estado & Guardado**: Estructura de serialización de componentes persistentes para guardar/cargar partida.
+- **Checklist de Tareas**: Tareas atómicas con IDs estables (`[x]` completado, `[/]` en progreso, `[ ]` pendiente), incluyendo tareas de shaders y debug overlay.
 - **Evidencia de Validación**: Comandos de build, logs de smoke check, métricas de rendimiento observadas (FPS, 0 allocations por frame).
 
 ### Paso 6: Implement Task by Task (Implementación Atómica)
 - Cada tarea del checklist se implementa mediante el especialista de motor correspondiente (`bevy-specialist`, `raylib-entt-specialist`, `godot-gdscript-specialist`, etc.).
 - Los efectos visuales se implementan directamente como shaders en `assets/shaders/` integrados en el pipeline de materiales del motor.
+- En la primera tarea de scaffold o subsistema (`TASK-01` o `02`), se habilita un **Debug Overlay (`F3`)** con FPS en vivo, datos de telemetría y gizmos de colisión/visión en pantalla.
 - **Tamaño de entrega**: Bloques coherentes de unas 400 líneas cambiadas (código + tests/data).
 - Cero código muerto, cero métodos de más de 40 líneas.
 

@@ -24,6 +24,9 @@ Cuando se invoca `/code <feature>` (o `/code review`):
 ### 2. Implementación en Motor
 - Modificar o crear los archivos de código fuente en `src/`.
 - **Implementación de Shaders y Materiales**: Si la tarea involucra efectos visuales, iluminación, niebla o distorsión, crear los archivos de shader correspondientes en `assets/shaders/` (.wgsl, .gdshader, .fs) con sus bindings/uniforms limpios, en lugar de intentar emularlos con lógica pesada en CPU.
+- **Debug Overlay & Gizmos en Dev (`F3`)**: En la primera tarea de scaffold o subsistema (`TASK-01` o `02`), habilitar una capa de depuración activable con tecla `F3` o `~` que proyecte FPS reales, métricas de gameplay, estados de IA y gizmos de colisión/visión en pantalla.
+- **Mapeo de Acciones Desacoplado**: Usar siempre acciones virtuales (`ActionState` o `InputMap`) que soporten Teclado/Ratón y Gamepad de forma nativa sin `hardcoding` de teclas individuales en los controladores.
+- **Micro-retroalimentación de Game Feel**: Aplicar los valores de sacudida de cámara, hitstop y curvas de easing definidos en la Live Spec en lugar de saltos o movimientos secos.
 - Mantener la edición en paquetes pequeños (~400 líneas) para garantizar legibilidad, bajo consumo de tokens y verificación controlada.
 - Aplicar los estándares idiomáticos del motor activo (Rust/Bevy, GDScript/Godot, C++/Raylib, C#/Unity, C++/Unreal).
 

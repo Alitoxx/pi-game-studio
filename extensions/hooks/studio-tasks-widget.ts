@@ -16,6 +16,8 @@ import {
 	HEADING as LAVENDER,
 	WHITE,
 	BORDER,
+	truncateAnsi,
+	padAnsi,
 } from "./studio-palette.ts";
 
 export const TASKS_WIDGET_KEY = "studio-tasks";
@@ -45,17 +47,6 @@ export function renderTasksWidgetCard(tasks: StudioTask[], width: number = 74): 
 
 	const cardWidth = Math.min(Math.max(width - 4, 46), 56);
 	const innerWidth = cardWidth - 4;
-
-	const pad = (str: string, len: number) => {
-		const visibleLen = str.replace(/\x1b\[[0-9;]*m/g, "").length;
-		return visibleLen < len ? str + " ".repeat(len - visibleLen) : str;
-	};
-
-	const truncate = (str: string, maxLen: number) => {
-		const visibleLen = str.replace(/\x1b\[[0-9;]*m/g, "").length;
-		if (visibleLen <= maxLen) return str;
-		return str.slice(0, maxLen - 1) + "…";
-	};
 
 	const completedCount = tasks.filter((t) => t.status === "completed").length;
 	const countSummary = `${completedCount} of ${tasks.length}`;
@@ -94,14 +85,14 @@ export function renderTasksWidgetCard(tasks: StudioTask[], width: number = 74): 
 			rowText += ` ${YELLOW}${DIM}(stale)${RESET}`;
 		}
 
-		const truncatedRow = truncate(rowText, innerWidth);
-		lines.push(`  ${BORDER}│${RESET} ${pad(truncatedRow, innerWidth)} ${BORDER}│${RESET}`);
+		const truncatedRow = truncateAnsi(rowText, innerWidth);
+		lines.push(`  ${BORDER}│${RESET} ${padAnsi(truncatedRow, innerWidth)} ${BORDER}│${RESET}`);
 	}
 
 	const remaining = tasks.length - displayTasks.length;
 	if (remaining > 0) {
 		const more = `${DIM}... y ${remaining} tarea(s) más (/studio:tasks)${RESET}`;
-		lines.push(`  ${BORDER}│${RESET} ${pad(more, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`  ${BORDER}│${RESET} ${padAnsi(more, innerWidth)} ${BORDER}│${RESET}`);
 	}
 
 	lines.push(`  ${BORDER}╰${"─".repeat(cardWidth - 2)}╯${RESET}`);

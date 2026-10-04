@@ -17,6 +17,8 @@ import {
 	WHITE,
 	GRAY,
 	BORDER,
+	truncateAnsi,
+	padAnsi,
 } from "./studio-palette.ts";
 
 export interface ContextUsageInfo {
@@ -107,10 +109,6 @@ export function renderStudioStatusCard(
 
 	const cardWidth = Math.min(Math.max(width - 4, 46), 56);
 	const innerWidth = cardWidth - 4;
-	const pad = (str: string, len: number) => {
-		const visibleLen = str.replace(/\x1b\[[0-9;]*m/g, "").length;
-		return visibleLen < len ? str + " ".repeat(len - visibleLen) : str;
-	};
 
 	const lines: string[] = [];
 	const titleText = `✿ Status`;
@@ -119,26 +117,30 @@ export function renderStudioStatusCard(
 	lines.push(`  ${BORDER}╭─${RESET} ${titleStyled} ${BORDER}${"─".repeat(ruleLen)}╮${RESET}`);
 
 	// Section: Project
-	lines.push(`  ${BORDER}│${RESET} ${pad(`${LAVENDER}${BOLD}Project${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`  ${BORDER}│${RESET} ${padAnsi(`${LAVENDER}${BOLD}Project${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 	const shortRoot = studioRoot.replace(process.env.HOME || "", "~");
-	lines.push(`  ${BORDER}│${RESET} ${pad(`  ${WHITE}${gameTitle}${RESET} ${GRAY}(${shortRoot})${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`  ${BORDER}│${RESET} ${pad(`  ${GRAY}Engine${RESET} ${BLUE}${engine}${RESET} ${GRAY}·${RESET} ${GRAY}Hito${RESET} ${WHITE}${milestone}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	const projectLine = truncateAnsi(`  ${WHITE}${gameTitle}${RESET} ${GRAY}(${shortRoot})${RESET}`, innerWidth);
+	lines.push(`  ${BORDER}│${RESET} ${padAnsi(projectLine, innerWidth)} ${BORDER}│${RESET}`);
+	const engineLine = truncateAnsi(`  ${GRAY}Engine${RESET} ${BLUE}${engine}${RESET} ${GRAY}·${RESET} ${GRAY}Hito${RESET} ${WHITE}${milestone}${RESET}`, innerWidth);
+	lines.push(`  ${BORDER}│${RESET} ${padAnsi(engineLine, innerWidth)} ${BORDER}│${RESET}`);
 
 	// Section: Integrations
-	lines.push(`  ${BORDER}│${RESET} ${pad("", innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`  ${BORDER}│${RESET} ${pad(`${LAVENDER}${BOLD}Integrations${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`  ${BORDER}│${RESET} ${pad(`  ${GRAY}Memory${RESET}  · ${engramStr}`, innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`  ${BORDER}│${RESET} ${pad(`  ${GRAY}Model${RESET}   · ${BLUE}${modelStr}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`  ${BORDER}│${RESET} ${pad(`  ${GRAY}Context${RESET} · ${gaugeStr}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`  ${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`  ${BORDER}│${RESET} ${padAnsi(`${LAVENDER}${BOLD}Integrations${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`  ${BORDER}│${RESET} ${padAnsi(`  ${GRAY}Memory${RESET}  · ${engramStr}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`  ${BORDER}│${RESET} ${padAnsi(`  ${GRAY}Model${RESET}   · ${BLUE}${modelStr}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`  ${BORDER}│${RESET} ${padAnsi(`  ${GRAY}Context${RESET} · ${gaugeStr}`, innerWidth)} ${BORDER}│${RESET}`);
 
 	if (prodState?.inProgress || prodState?.nextStep) {
-		lines.push(`  ${BORDER}│${RESET} ${pad("", innerWidth)} ${BORDER}│${RESET}`);
-		lines.push(`  ${BORDER}│${RESET} ${pad(`${LAVENDER}${BOLD}Progress (ODD)${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`  ${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`  ${BORDER}│${RESET} ${padAnsi(`${LAVENDER}${BOLD}Progress (ODD)${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 		if (prodState.inProgress) {
-			lines.push(`  ${BORDER}│${RESET} ${pad(`  ${YELLOW}◐${RESET} ${WHITE}${prodState.inProgress}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+			const progLine = truncateAnsi(`  ${YELLOW}◐${RESET} ${WHITE}${prodState.inProgress}${RESET}`, innerWidth);
+			lines.push(`  ${BORDER}│${RESET} ${padAnsi(progLine, innerWidth)} ${BORDER}│${RESET}`);
 		}
 		if (prodState.nextStep) {
-			lines.push(`  ${BORDER}│${RESET} ${pad(`  ${GREEN}→${RESET} ${GRAY}${prodState.nextStep}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+			const nextLine = truncateAnsi(`  ${GREEN}→${RESET} ${GRAY}${prodState.nextStep}${RESET}`, innerWidth);
+			lines.push(`  ${BORDER}│${RESET} ${padAnsi(nextLine, innerWidth)} ${BORDER}│${RESET}`);
 		}
 	}
 

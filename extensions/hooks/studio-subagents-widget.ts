@@ -14,6 +14,8 @@ import {
 	WHITE,
 	BORDER,
 	RED,
+	truncateAnsi,
+	padAnsi,
 } from "./studio-palette.ts";
 
 export const AGENTS_WIDGET_KEY = "studio-subagents";
@@ -37,17 +39,6 @@ export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 7
 
 	const cardWidth = Math.min(Math.max(width - 4, 46), 56);
 	const innerWidth = cardWidth - 4;
-
-	const pad = (str: string, len: number) => {
-		const visibleLen = str.replace(/\x1b\[[0-9;]*m/g, "").length;
-		return visibleLen < len ? str + " ".repeat(len - visibleLen) : str;
-	};
-
-	const truncate = (str: string, maxLen: number) => {
-		const visibleLen = str.replace(/\x1b\[[0-9;]*m/g, "").length;
-		if (visibleLen <= maxLen) return str;
-		return str.slice(0, maxLen - 1) + "…";
-	};
 
 	const runningCount = activeTasks.filter((t) => t.status === "running").length;
 	const lines: string[] = [];
@@ -80,12 +71,12 @@ export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 7
 		// Fila 1: Glifo, Nombre del Agente, Modelo, Tiempo transcurrido
 		const modelTag = task.model ? ` ${DIM}${task.model.split("/").pop()}${RESET}` : "";
 		const headerRow = `${icon} ${stateColor}${task.agent}${RESET}${modelTag} ${DIM}${elapsedStr}${RESET}`;
-		lines.push(`  ${BORDER}│${RESET} ${pad(truncate(headerRow, innerWidth), innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`  ${BORDER}│${RESET} ${padAnsi(truncateAnsi(headerRow, innerWidth), innerWidth)} ${BORDER}│${RESET}`);
 
 		// Fila 2: Actividad en curso o tarea
 		const activity = task.latestActivity || task.task.slice(0, 35);
 		const detailRow = `  ${DIM}└─ ${activity}${RESET}`;
-		lines.push(`  ${BORDER}│${RESET} ${pad(truncate(detailRow, innerWidth), innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`  ${BORDER}│${RESET} ${padAnsi(truncateAnsi(detailRow, innerWidth), innerWidth)} ${BORDER}│${RESET}`);
 	}
 
 	const hint = `${DIM}ver: /studio:subagents${RESET}`;

@@ -128,7 +128,8 @@ plain text. Follow the **Explain -> Capture** pattern:
 5. **Color and Lighting Direction**: Define the color language of the game --
    what colors mean, how lighting supports mood, and how palette shifts
    communicate game state.
-6. **Visual Hierarchy**: Ensure the player's eye is guided correctly in every
+6. **Shader & GPU Material Direction**: Specify the visual behavior and mathematical appearance of shaders (lighting falloff, volumetric fog noise, water refraction, vignette, post-processing filters, disolve effects). Coordinate directly with engine specialists to turn artistic intent into shader code rather than relying on heavy CPU emulations.
+7. **Visual Hierarchy**: Ensure the player's eye is guided correctly in every
    screen and scene. Important information must be visually prominent.
 
 ### Asset Naming Convention

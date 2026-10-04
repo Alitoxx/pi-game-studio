@@ -1,8 +1,8 @@
-# Arquitectura Oficial del Estudio: 8+1 Agentes y 16 Skills Compactas
+# Arquitectura Oficial del Estudio: 8+1 Agentes y 6 Skills ODD
 
 **Pi Game Studio v1.0.0** adopta formalmente la arquitectura compacta de alta velocidad y bajo consumo de tokens inspirada en **Gentle Shell**, eliminando el catálogo disperso y reduciendo la dotación a:
 - **8 roles esenciales de desarrollo Core + 1 especialista dedicado del motor activo** (9 agentes activos).
-- **16 skills esenciales agrupadas en 4 categorías claras** (reemplazando las 80 micro-skills).
+- **6 skills esenciales de ciclo de vida ODD** (Organic Driven Development).
 
 ---
 
@@ -35,28 +35,47 @@ Dependiendo del motor configurado en `project.yaml`, se activa **un único espec
 
 ---
 
-## 3. Las 16 Skills Compactas del Estudio
+## 3. Las 6 Skills Oficiales de Ciclo de Vida ODD
 
-### Categoría 1: Concepto, Diseño y Arte
-1. **`/brainstorm`**: Ideación, visión, definición de los 3-5 pilares, anti-pilares y benchmarking de mercado.
-2. **`/gdd-write`**: Redacción y actualización de Game Design Documents (GDD) vivos en `design/gdd/`.
-3. **`/gdd-review`**: Auditoría de coherencia, solapamientos, economía y reglas de diseño.
-4. **`/art-bible`**: Dirección de arte, paletas de color, especificación y auditoría de assets visuales y sonoros.
+Siguiendo el estándar de **Organic Driven Development (ODD)**, el estudio opera con 6 fases continuas:
 
-### Categoría 2: Arquitectura y Motor
-5. **`/architecture`**: Documento maestro de arquitectura, manifiesto de control y reglas técnicas estrictas.
-6. **`/adr`**: Registro de decisiones de arquitectura técnica (Architecture Decision Records) con trade-offs.
-7. **`/perf-audit`**: Auditoría de rendimiento, memory leaks, target FPS y vectores de seguridad.
-8. **`/engine-hub`**: Configuración de motor, diagnósticos de toolchain local y conexión con servidores MCP / memoria Engram.
+```text
+┌── ODD GAMEDEV PIPELINE (6 SKILLS) ────────────────────────────────────┐
+│ 1. /concept  ──► Visión, 3-5 Pilares, Anti-Pilares y Ancla Visual      │
+│ 2. /spec     ──► Live Specs vivas en design/gdd/<feature>.md          │
+│ 3. /arch     ──► ADRs, Manifiesto de Control y Configuración de Motor  │
+│ 4. /code     ──► Implementación Atómica en Motor (~400 líneas / test) │
+│ 5. /test     ──► Smoke Checks, Playtest, Regresiones y Triaje de Bugs │
+│ 6. /ship     ──► Builds de Lanzamiento, Parches y Certificación        │
+└───────────────────────────────────────────────────────────────────────┘
+```
 
-### Categoría 3: Producción y Desarrollo ODD
-9. **`/roadmap`**: Planificación de hitos, sprint planning, tracking y burndown en `production/roadmap.md`.
-10. **`/dev-story`**: Implementación ODD de tareas atómicas (~400 líneas) guiadas por tests directamente en código.
-11. **`/code-review`**: Revisión de código, memory safety, convenciones y cierre formal de tareas.
-12. **`/tech-debt`**: Registro, priorización y triaje de deuda técnica y refactorizaciones.
+### 1. `/concept` (Fase de Ideación y Fundamentos)
+- **Comando:** `/concept` (o `/concept pitch`, `/concept jam`)
+- **Responsables:** `creative-director` & `art-director`
+- **Propósito:** De la idea inicial a la visión ejecutable. Define la fantasía del jugador, los 3-5 pilares inquebrantables, los anti-pilares y el ancla de identidad visual sin generar burocracia documental.
 
-### Categoría 4: QA, Playtesting y Lanzamiento
-13. **`/qa-verify`**: Suite integral de control de calidad, smoke checks, regresiones y triaje de bugs.
-14. **`/playtest`**: Registro y síntesis de playtesting con jugadores y balance de curvas numéricas.
-15. **`/release`**: Checklist de certificación en tiendas (Steam, itch, consoles) y empaquetado de builds.
-16. **`/patch`**: Parches de emergencia (hotfix), parche día uno, changelog y notas de comunidad.
+### 2. `/spec` (Fase de Live Specs y Diseño de Mecánicas)
+- **Comando:** `/spec <sistema>` (o `/spec review`)
+- **Responsable:** `game-designer`
+- **Propósito:** Creación y mantenimiento de Live Specs en `design/gdd/<feature>.md`. Define reglas de gameplay, fórmulas matemáticas, variables de balance (tuning knobs) y criterios de aceptación claros.
+
+### 3. `/arch` (Fase de Arquitectura Técnica y Motor)
+- **Comando:** `/arch` (o `/arch adr`, `/arch budget`, `/arch mcp`)
+- **Responsable:** `technical-director`
+- **Propósito:** Establece los Architecture Decision Records (ADRs), presupuestos de VRAM/RAM, target de FPS, manifiesto de reglas técnicas estrictas y conexión con herramientas locales o servidores MCP del motor.
+
+### 4. `/code` (Fase de Implementación ODD)
+- **Comando:** `/code <feature>` (o `/code review`)
+- **Responsables:** `gameplay-programmer` + Especialista de Motor activo
+- **Propósito:** Implementación pura y directa en código (`src/`) en paquetes atómicos de ~400 líneas guiados por tests. Cero código no testeado, compilación limpia en motor y actualización instantánea de tareas.
+
+### 5. `/test` (Fase de Calidad, Estabilidad y Balance)
+- **Comando:** `/test smoke` (o `/test regression`, `/test balance`, `/test bugs`)
+- **Responsable:** `qa-lead`
+- **Propósito:** Verificación de calidad continua: smoke checks de arranque, pruebas de regresión, detección de memory leaks (soak tests) y triaje estructurado de bugs con pasos de reproducción.
+
+### 6. `/ship` (Fase de Lanzamiento y Mantenimiento)
+- **Comando:** `/ship build` (o `/ship patch`, `/ship release`)
+- **Responsable:** `producer`
+- **Propósito:** Empaquetado final de builds para distribución (Steam, itch, consolas), verificación de checklists de certificación, extracción de traducciones (i18n), parches de emergencia (hotfix) y changelogs.

@@ -68,19 +68,20 @@ describe("Exhaustive Agent Validation (All 55 Agents)", () => {
 	);
 });
 
-describe("Exhaustive Skill Validation (All 80 Skills)", () => {
+describe("Exhaustive Skill Validation (Official 6 ODD Skills)", () => {
 	const skillsDir = path.join(__dirname, "..", "skills");
 	const skillFolders = fs
 		.readdirSync(skillsDir, { withFileTypes: true })
 		.filter(
 			(d) =>
 				d.isDirectory() &&
-				!["test-results", "test-rubrics"].includes(d.name),
+				!["test-results", "test-rubrics", "_shared"].includes(d.name),
 		)
 		.map((d) => d.name);
 
-	test("exactly 80 skill directories exist in skills/", () => {
-		expect(skillFolders.length).toBe(80);
+	test("exactly 6 ODD skill directories exist in skills/", () => {
+		expect(skillFolders.length).toBe(6);
+		expect(skillFolders.sort()).toEqual(["arch", "code", "concept", "ship", "spec", "test"].sort());
 	});
 
 	test.each(skillFolders)(

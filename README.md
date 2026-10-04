@@ -13,7 +13,7 @@
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
   <a href="agents"><img src="https://img.shields.io/badge/architecture-8%2B1%20Compact-blueviolet" alt="8+1 Compact Studio"></a>
-  <a href="skills"><img src="https://img.shields.io/badge/skills-80-green" alt="80 Skills"></a>
+  <a href="skills"><img src="https://img.shields.io/badge/skills-6%20ODD-green" alt="6 ODD Skills"></a>
   <a href="prompts"><img src="https://img.shields.io/badge/templates-49-orange" alt="49 Templates"></a>
   <a href="chains"><img src="https://img.shields.io/badge/chains-7-yellow" alt="7 Chains"></a>
   <a href="starters"><img src="https://img.shields.io/badge/starters-5-cyan" alt="5 Starters"></a>
@@ -30,9 +30,9 @@
  ⠀⠀⠀⠀⢸⡇⢾⣿⠶⠆⠀⠀⠀⠀⠰⠶⢾⣷⢸⣿⠀⠀⠀⠀⠀    ENGINE:    Godot · Unity · Unreal · Bevy · Raylib
  ⠀⠀⠀⠀⠸⣧⣤⣭⣤⣤⡄⢀⡀⠀⣤⣤⣬⣥⣼⠟⠀⠀⠀⠀⠀    AGENTS:    9 activos (8 Core + 1 Motor)
  ⠀⠀⠀⠀⠀⠀⣼⠇⠀⣾⣧⣼⣧⡄⣿⠀⠀⣿⠀⠀⠀⢠⣶⣶⠀    STAGE:     Entorno OK
- ⠀⠀⣠⣤⣴⠾⠋⠀⠀⣿⣇⣙⣋⣠⣿⡀⠀⠻⣦⣤⣴⠟⢱⡟⠀    SKILLS:    80 loaded (ODD Gamedev Workflow)
+ ⠀⠀⣠⣤⣴⠾⠋⠀⠀⣿⣇⣙⣋⣠⣿⡀⠀⠻⣦⣤⣴⠟⢱⡟⠀    SKILLS:    6 ODD pipeline (/concept, /spec, /arch, /code, /test, /ship)
  ⠀⠀⣽⡇⠀⠀⠀⠀⢰⡟⠉⠉⠉⠉⠙⢷⣄⠀⠀⠀⢀⣴⠟⠁⠀    STORAGE:   Engram connected (Persistent Memory)
- ⠀⠀⠙⠛⠛⠛⠛⠛⠛⠁⠀⠀⠀⠀⠀⠀⠙⠛⠛⠛⠛⠁⠀⠀⠀    TIPS:      /studio · /studio:setup · /start · /market-research
+ ⠀⠀⠙⠛⠛⠛⠛⠛⠛⠁⠀⠀⠀⠀⠀⠀⠙⠛⠛⠛⠛⠁⠀⠀⠀    TIPS:      /concept · /spec · /code · /studio · /studio:setup
 ```
 
 ---
@@ -71,7 +71,7 @@ The result: you still make every decision, but now you have a fast, coordinated 
 | **Agents**    | 8+1   | Compact active studio: 8 Core roles + 1 dedicated Engine Specialist per project                                           |
 | **Subagents** | Native| Isolated child process execution via `subagent_run`, `subagent_list`, `subagent_status` & `subagent_result`              |
 | **Interactive**| Native| Interactive terminal menus & batch questionnaires via `ask_user_choice` and `ask_user_question` (arrow keys & Enter)      |
-| **Skills**    | 80    | Slash commands for every workflow phase (`/start`, `/settings`, `/prototype`, `/vertical-slice`, `/dev-story`, etc.)     |
+| **Skills**    | 6 ODD | Full lifecycle pipeline: `/concept`, `/spec`, `/arch`, `/code`, `/test`, `/ship`                                          |
 | **Templates** | 49    | Document templates for GDDs, UX specs, ADRs, sprint plans, vertical slice reports, game briefs, and more                  |
 | **Chains**    | 7     | Multi-agent execution pipelines via native isolated subagents (`subagent_run`)                                           |
 | **Starters**  | 5     | Starter Kits for 5 major engines (Bevy, Godot, Raylib, Unity, Unreal)                                                    |
@@ -607,7 +607,7 @@ This project is a migration of **Claude Code Game Studios** to run natively on P
 
 ### Homologation note
 
-- Imported counts were normalized to the current Pi tree: 55 agents, 80 skills, 49 templates, 4 runtime hooks.
+- Imported counts were normalized to the current Pi tree: 55 agents, 6 skills, 49 templates, 4 runtime hooks.
 - `extensions/hooks/index.ts` remains the single hook entrypoint; hook behavior is split across four handlers.
 
 Este port no existiría sin el trabajo fundacional de Donchitos y striderZA. Gracias.

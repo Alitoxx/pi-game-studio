@@ -130,9 +130,9 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 			`${STUDIO_LABEL}${fit("ENGINE:", 11)}${RESET}${STUDIO_VALUE}${engineInfo}${RESET}`,
 			`${STUDIO_LABEL}${fit("AGENTS:", 11)}${RESET}${STUDIO_VALUE}${setup.agentsInstalled} activos (Directors, Leads, Devs)${RESET}`,
 			`${STUDIO_LABEL}${fit("STAGE:", 11)}${RESET}${STUDIO_VALUE}${stage}${RESET}`,
-			`${STUDIO_LABEL}${fit("SKILLS:", 11)}${RESET}${STUDIO_VALUE}80 loaded (ODD Gamedev Workflow)${RESET}`,
+			`${STUDIO_LABEL}${fit("SKILLS:", 11)}${RESET}${STUDIO_VALUE}6 ODD pipeline (/concept, /spec, /arch, /code, /test, /ship)${RESET}`,
 			`${STUDIO_LABEL}${fit("STORAGE:", 11)}${RESET}${STUDIO_VALUE}${engramStatus} (Persistent Memory)${RESET}`,
-			`${STUDIO_GOLD}${fit("TIPS:", 11)}${RESET}${STUDIO_DIM}/studio · /studio:setup · /start · /market-research${RESET}`,
+			`${STUDIO_GOLD}${fit("TIPS:", 11)}${RESET}${STUDIO_DIM}/concept · /spec · /code · /studio · /studio:setup${RESET}`,
 		];
 
 		const totalBlockW = 104;
@@ -144,9 +144,9 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 		}
 	} else {
 		// Clean centered compact table
-		const titleRaw = `PI GAME STUDIO · v${version} · 55 agents / 80 skills`;
+		const titleRaw = `PI GAME STUDIO · v${version} · 8+1 agents / 6 ODD skills`;
 		const titlePad = Math.max(0, Math.floor((width - titleRaw.length) / 2));
-		lines.push(" ".repeat(titlePad) + `${STUDIO_ACCENT}${BOLD}PI GAME STUDIO${RESET} ${STUDIO_DIM}·${RESET} ${STUDIO_HIGHLIGHT}v${version}${RESET} ${STUDIO_DIM}· 55 agents / 80 skills${RESET}`);
+		lines.push(" ".repeat(titlePad) + `${STUDIO_ACCENT}${BOLD}PI GAME STUDIO${RESET} ${STUDIO_DIM}·${RESET} ${STUDIO_HIGHLIGHT}v${version}${RESET} ${STUDIO_DIM}· 8+1 agents / 6 ODD skills${RESET}`);
 		lines.push("");
 
 		const lW = 10;
@@ -159,10 +159,10 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 		addNarrow("GIT:", `On branch ${gitBranch}`);
 		addNarrow("PATH:", shortPath);
 		addNarrow("ENGINE:", engineInfo);
-		addNarrow("AGENTS:", `${setup.agentsInstalled} activos (52 especialistas & leads)`);
+		addNarrow("AGENTS:", `${setup.agentsInstalled} activos (8 Core + 1 Motor)`);
 		addNarrow("STAGE:", stage);
 		addNarrow("STORAGE:", engramStatus);
-		lines.push(`${padStr}${STUDIO_GOLD}${fit("TIPS:", lW)}${RESET} ${STUDIO_DIM}/studio · /start · /market-research${RESET}`);
+		lines.push(`${padStr}${STUDIO_GOLD}${fit("TIPS:", lW)}${RESET} ${STUDIO_DIM}/concept · /spec · /code · /studio · /studio:setup${RESET}`);
 	}
 
 	lines.push("");

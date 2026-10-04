@@ -1,7 +1,7 @@
 {
   "name": "pi-game-studio",
   "version": "1.0.0",
-  "description": "Compact AI Game Studio for Pi — 8 Core roles + 1 Engine Specialist (8+1), 80 skills, ODD workflow",
+  "description": "Compact AI Game Studio for Pi — 8 Core roles + 1 Engine Specialist (8+1), 6 ODD skills pipeline",
   "license": "MIT",
   "author": "Alexis <alexis@bytetech.com.ar>",
   "repository": {

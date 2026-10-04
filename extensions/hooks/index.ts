@@ -240,28 +240,28 @@ export default function (pi: ExtensionAPI) {
 						task: `Concepto aprobado: ${fileName}`,
 						agent: "creative-director",
 						filesChanged: [filePath],
-						nextStep: "Mapear sistemas y arquitectura de dependencias (/map-systems)",
+						nextStep: "Detallar Live Specs de sistemas (/spec)",
 					});
 				} else if (fileName.includes("art-bible") || filePath.includes("design/art/")) {
 					recordFlowCompletion(studioRoot, {
 						task: "Identidad visual y biblia de arte completada",
 						agent: "art-director",
 						filesChanged: [filePath],
-						nextStep: "Diseñar assets y paleta de audio",
+						nextStep: "Límites técnicos y ADRs de arquitectura (/arch)",
 					});
 				} else if (fileName.includes("systems") || fileName.includes("architecture")) {
 					recordFlowCompletion(studioRoot, {
 						task: `Arquitectura de sistemas definida: ${fileName}`,
-						agent: "systems-designer",
+						agent: "technical-director",
 						filesChanged: [filePath],
-						nextStep: "Diseño detallado de mecánicas y GDDs",
+						nextStep: "Implementación atómica en motor (/code)",
 					});
 				} else {
 					recordFlowCompletion(studioRoot, {
 						task: `Diseño completado: ${fileName}`,
 						agent: "game-designer",
 						filesChanged: [filePath],
-						nextStep: "Implementar prototipo / mecánicas del sistema",
+						nextStep: "Implementar en código en paquetes de ~400 líneas (/code)",
 					});
 				}
 				try {
@@ -311,9 +311,9 @@ export default function (pi: ExtensionAPI) {
 						if (hasRoadmap && prodState?.gameTitle) {
 							roadmapDirective = ` Active Project Line: Game="${prodState.gameTitle}", Engine="${prodState.engine || setup.currentEngine}", Milestone="${prodState.milestone || 'In progress'}", Sprint="${prodState.sprint || 'Active'}", InProgress="${prodState.inProgress || 'Development'}", NextStep="${prodState.nextStep || 'Continue development'}".`;
 						} else if (projAudit.srcFileCount > 0 && !projAudit.hasConcept) {
-							roadmapDirective = ` Active Project Line: Code-First Prototype Phase. The project already has functional starter code in src/ (${projAudit.srcFileCount} source files, engine "${setup.currentEngine}"). Acknowledge that the starter code already exists and is working. Do NOT offer to create a new starter (/studio:new). The immediate next options are: 1. Definir el concepto a partir de este prototipo (/brainstorm), 2. Agregar mecánicas de combate/gameplay (hitbox, enemigos, daño) a este prototipo, o 3. Mejorar los controles y el game feel (coyote time, aceleración, dash).`;
+							roadmapDirective = ` Active Project Line: Code-First Prototype Phase. The project already has functional starter code in src/ (${projAudit.srcFileCount} source files, engine "${setup.currentEngine}"). Acknowledge that the starter code already exists and is working. Do NOT offer to create a new starter (/studio:new). The immediate next options are: 1. Definir el concepto a partir de este prototipo (/concept), 2. Detallar Live Specs de mecánicas (/spec), o 3. Implementar mecánicas directamente en código (/code).`;
 						} else {
-							roadmapDirective = " Active Project Line: Concept & Inception phase (no concept doc or prototype yet). In this phase, do NOT suggest downstream tasks like mapping systems or defining an art bible, as those strictly require a concept first. The only valid starting actions are: 1. Brainstorm concept (/brainstorm), 2. Write concept from user premise, or 3. Code-first prototype starter (/studio:new).";
+							roadmapDirective = " Active Project Line: Concept & Inception phase (no concept doc or prototype yet). In this phase, do NOT suggest downstream tasks like mapping systems or defining an art bible, as those strictly require a concept first. The only valid starting actions are: 1. Brainstorm concept (/concept), 2. Write concept from user premise, or 3. Code-first prototype starter (/studio:new).";
 						}
 
 						event.systemPromptOptions.promptGuidelines.push(

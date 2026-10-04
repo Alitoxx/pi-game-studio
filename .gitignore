@@ -25,3 +25,4 @@ target/
 build/
 .godot/
 cmake-build-*/
+skills.legacy/

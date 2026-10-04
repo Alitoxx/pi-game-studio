@@ -196,14 +196,14 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 		expect(godot).toContain("config/name=\"Godot 2D Character Starter\"");
 	});
 
-	test("banner.ts includes Raylib in the 5 supported engines and 52 specialists/leads", () => {
+	test("banner.ts includes Raylib in the 5 supported engines and 8 Core + 1 Motor", () => {
 		const bannerSource = fs.readFileSync(
 			path.join(__dirname, "..", "extensions", "hooks", "banner.ts"),
 			"utf8",
 		);
 		expect(bannerSource).toContain("Raylib");
 		expect(bannerSource).toContain("Godot · Unity · Unreal · Bevy · Raylib");
-		expect(bannerSource).toContain("52 especialistas & leads");
+		expect(bannerSource).toContain("8 Core + 1 Motor");
 	});
 
 	test("engine reference docs exist for all 5 engines (bevy, godot, raylib, unity, unreal)", () => {

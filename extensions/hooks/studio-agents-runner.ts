@@ -295,6 +295,10 @@ export class StudioAgentsRunner {
 						if (event.type === "agent_settled") {
 							record.latestActivity = "Sintetizando entrega...";
 							this.notifyListeners(record);
+							// Cerrar stdin de forma limpia para que el proceso hijo finalice normalmente de inmediato (evita colgarse hasta el timeout)
+							try {
+								child.stdin?.end();
+							} catch {}
 						}
 					} catch {
 						// Si la línea no es JSON puro, podría ser log estándar

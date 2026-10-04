@@ -47,77 +47,23 @@ export interface StudioInstallOptions {
 }
 
 export const CORE_STUDIO_AGENTS: string[] = [
-	// Tier 1 — Directores
-	"creative-director",
-	"technical-director",
-	"producer",
-	// Tier 2 — Leads
-	"game-designer",
-	"lead-programmer",
-	"art-director",
-	"audio-director",
-	"narrative-director",
-	"qa-lead",
-	"release-manager",
-	"localization-lead",
-	// Tier 3 — Especialistas Fundamentales
-	"gameplay-programmer",
-	"engine-programmer",
-	"ai-programmer",
-	"network-programmer",
-	"tools-programmer",
-	"ui-programmer",
-	"systems-designer",
-	"level-designer",
-	"economy-designer",
-	"ux-designer",
-	"prototyper",
-	"technical-artist",
-	"sound-designer",
-	"writer",
-	"world-builder",
-	"qa-tester",
-	"performance-analyst",
-	"devops-engineer",
-	"accessibility-specialist",
-	"live-ops-designer",
-	"community-manager",
-	"security-engineer",
-	"analytics-engineer",
+	// Los 8 Agentes Esenciales del Estudio Compacto
+	"producer",              // 1. Orquestador de producción y gobernanza
+	"creative-director",     // 2. Visión, tono y pilares
+	"technical-director",    // 3. Arquitectura técnica y viabilidad
+	"game-designer",         // 4. Mecánicas, core loop y sistemas
+	"gameplay-programmer",   // 5. Implementación de código y gameplay
+	"art-director",          // 6. Dirección visual, estilo y shaders
+	"audio-director",        // 7. Sonido, música y mezcla acústica
+	"qa-lead",               // 8. Testing continuo, quality gates y bugs
 ];
 
 export const ENGINE_AGENTS_MAP: Record<string, string[]> = {
-	Godot: [
-		"godot-specialist",
-		"godot-gdscript-specialist",
-		"godot-shader-specialist",
-		"godot-gdextension-specialist",
-		"godot-csharp-specialist",
-	],
-	Unity: [
-		"unity-specialist",
-		"unity-dots-specialist",
-		"unity-shader-specialist",
-		"unity-addressables-specialist",
-		"unity-ui-specialist",
-	],
-	Unreal: [
-		"unreal-specialist",
-		"ue-gas-specialist",
-		"ue-blueprint-specialist",
-		"ue-replication-specialist",
-		"ue-umg-specialist",
-	],
-	Bevy: [
-		"bevy-specialist",
-	],
-	Raylib: [
-		"raylib-specialist",
-		"raylib-entt-specialist",
-		"raylib-shader-specialist",
-		"raylib-ui-specialist",
-		"raylib-build-specialist",
-	],
+	Godot: ["godot-specialist"],
+	Unity: ["unity-specialist"],
+	Unreal: ["unreal-specialist"],
+	Bevy: ["bevy-specialist"],
+	Raylib: ["raylib-specialist"],
 };
 
 export function getEngineAgents(engineName: string): string[] {
@@ -186,10 +132,10 @@ export function inspectSetup(cwd: string): SetupStatus {
 	}
 
 	const expectedEngineAgents = filterAgentsForEngine(currentEngine);
-	const expectedAgents = expectedEngineAgents.length > 0 ? expectedEngineAgents.length : 35;
+	const expectedAgents = expectedEngineAgents.length > 0 ? expectedEngineAgents.length : 9;
 
-	// Configured if the engine's required agents are installed (or all 55) and project.yaml/studio dir exists
-	const isConfigured = agentsInstalled >= (expectedAgents - 2) && (hasProjectYaml || hasGameStudioDir);
+	// Configured if the engine's required agents are installed (or all) and project.yaml/studio dir exists
+	const isConfigured = agentsInstalled >= (expectedAgents - 1) && (hasProjectYaml || hasGameStudioDir);
 
 	return {
 		agentsInstalled,
@@ -396,8 +342,8 @@ export async function runGuidedSetup(
 	// ── Confirmación Final ──
 	const confirmSummary = [
 		"RESUMEN DE INSTALACION PERSONALIZADA:",
-		`• Motor de juego:   ${selectedEngine}`,
-		`• Agentes a desplegar: ${targetCount} agentes (34 Core + ${targetCount - 34} especialistas de ${selectedEngine})`,
+		`• Motor de juego:      ${selectedEngine}`,
+		`• Agentes a desplegar: ${targetCount} agentes (8 Core + ${targetCount - 8} especialista de ${selectedEngine})`,
 		`• Idioma preferido:  ${selectedLang === "es" ? "Español (es)" : "English (en)"}`,
 		`• Modelos Directores: ${customModels.director || "gpt-5.4-mini"}`,
 		`• Modelos Workhorse:  ${customModels.workhorse || "gpt-oss-120b:free"}`,

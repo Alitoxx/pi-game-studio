@@ -348,11 +348,11 @@ export default function (pi: ExtensionAPI) {
 						"DO NOT ask them one by one across multiple back-and-forth turns, and DO NOT print text blocks asking the user to type '1,1,1,1'. " +
 						"Always call `ask_user_question({ questions: [...] })` with all questions at once. " +
 						"Pi will present each question interactively in sequence with arrow keys (↑/↓) and Enter, returning all answers to you in a single result. " +
-						"- Subagent Delegation Protocol (Mandatory Isolated Execution): You have access to the native tool `subagent_run`. " +
-						"When asked to implement code, design mechanics, write GDDs, review architecture, or run tests, DO NOT do the low-level implementation inline in this parent session. " +
-						"Delegate the atomic work to the specialized agent using `subagent_run({ agent: '<agent_name>', task: '<concrete_task>', mode: 'task' })`. " +
-						"NEVER print the raw tool invocation syntax in conversational chat (e.g. do NOT output 'subagent_run agent=... task=...'). Tool calls must be executed internally via function calling while chat displays only the executive dispatch box and resulting receipt. " +
-						"Keep this parent session clean for high-level coordination and executive decisions. " +
+						"- Subagent Delegation Protocol (Gentle Shell Execution): You have access to the native tool `subagent_run`. " +
+						"Ideation, brainstorming, user dialogue, and question formulation MUST happen INLINE in this parent session — do NOT spawn subagents for mere chat or high-level concept discussions. " +
+						"Delegate ONLY concrete, heavy implementation tasks (writing code, generating complex assets, auditing code, running tests) to specialized agents using `subagent_run({ agent: '<agent_name>', task: '<concrete_task>', mode: 'task' })`. " +
+						"CRITICAL RULE: NEVER print raw tool invocation syntax in conversational chat (e.g. NEVER output 'ask_user_question questions=[...]' or 'subagent_run agent=...'). " +
+						"Tool calls MUST be executed strictly as real tool calls. Conversational chat must contain only clean, executive prose and markdown. " +
 						"Flow Completion Protocol: When any specialist finishes a task (design doc, mechanic, art asset, code review), the Producer immediately closes the loop: " +
 						"1. Acknowledges the completed item and updates the production roadmap line. " +
 						"2. Declares the next concrete step in the sprint and hands off to the next specialist directly without asking what to do next. " +

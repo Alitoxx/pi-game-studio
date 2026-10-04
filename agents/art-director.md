@@ -9,7 +9,6 @@ tools:
   - grep
   - write
   - edit
-  - web_search
 inheritProjectContext: true
 ---
 

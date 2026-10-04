@@ -242,26 +242,25 @@ If the user selects B, C, or D, make the revision, then use `ask_user_question` 
 
 Repeat until the user selects [A] Lock these in.
 
-**Review mode check** — apply before spawning CD-PILLARS and AD-CONCEPT-VISUAL:
+**Review mode check** — apply before validating CD-PILLARS and AD-CONCEPT-VISUAL:
 
-- `solo` → skip both. Note: "CD-PILLARS skipped — Solo mode. AD-CONCEPT-VISUAL skipped — Solo mode." Proceed to Phase 5.
-- `lean` → run inline validation instead of subagent spawn. Check the pillar set (3-5 pillars, each with design test, anti-pillars defined). If validation fails, use `ask_user_question`: "Phase 4 validation: some checks failed. Continue?" Options: `Yes — continue` / `No — fix first`. Do NOT spawn subagents in lean mode.
-- `full` → spawn as normal.
+- `solo` → skip both gates. Note: "CD-PILLARS and AD-CONCEPT-VISUAL skipped (Solo mode)." Proceed to Phase 5.
+- `lean` (default) → run inline validation immediately without subagent processes:
+  1. Evaluate the pillar set (3-5 pillars, actionable design tests, anti-pillars).
+  2. Propose 2-3 visual anchor directions based on concept and genre.
+  3. Present verdicts and visual anchors directly to the user.
+- `full` → only spawn external subagent processes when running in an asynchronous headless environment where background evaluation is explicitly requested.
 
-**After pillars and anti-pillars are agreed, spawn BOTH `creative-director` AND `art-director` via subagent in parallel before moving to Phase 5. Use the shared director-gate pattern for the gates below.**
+**Gate Validation (Inline by default for fast, zero-delay responses)**:
 
-- **`creative-director`** — gate **CD-PILLARS** (shared director-gate pattern)
-  Pass: full pillar set with design tests, anti-pillars, core fantasy, unique hook.
+- **CD-PILLARS**: Verify full pillar set with design tests, anti-pillars, core fantasy, and unique hook.
+- **AD-CONCEPT-VISUAL**: Provide 2-3 concrete visual directions (visual rules, palette philosophy, viability).
 
-- **`art-director`** — gate **AD-CONCEPT-VISUAL** (shared director-gate pattern)
-  Pass: game concept elevator pitch, full pillar set with design tests, target platform (if known), any reference games or visual touchstones the user mentioned.
+Present them together to the user using the choice prompt:
+- **Pillars feedback**: `Lock in as-is` / `Revise [specific pillar]` / `Discuss further`
+- **Visual anchor directions**: [Option A] / [Option B] / [Option C] / `Custom direction`
 
-Collect both verdicts, then present them together using a two-tab `ask_user_question`:
-
-- Tab **"Pillars"**: present creative-director feedback. Options mirror the standard CD-PILLARS handling — `Lock in as-is` / `Revise [specific pillar]` / `Discuss further`.
-- Tab **"Visual anchor"**: present the art-director's 2-3 named visual direction options. Options: each named direction (one per option) + `Combine elements across directions` + `Describe my own direction`.
-
-The user's selected visual anchor (the named direction or their custom description) is stored as the **Visual Identity Anchor** — it will be written into the game-concept document and becomes the foundation of the art bible.
+The user's selected visual anchor is stored as the **Visual Identity Anchor** for the concept document.
 
 If the creative-director returns CONCERNS or REJECT on pillars, resolve pillar issues before asking for the visual anchor selection — visual direction should flow from confirmed pillars.
 

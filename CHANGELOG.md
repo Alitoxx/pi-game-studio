@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.0] - 2026-10-03
+
+### Changed
+- **Arquitectura Compacta 8+1**: Se consolida la dotación activa a **8 roles Core esenciales + 1 Especialista de motor** (`9 agentes activos` por proyecto), dejando atrás el catálogo de 55 agentes dispersos para una experiencia de desarrollo enfocada y ágil.
+- **Optimización de Ejecución de Agentes**: Subprocesos de inferencia rápidos con presupuesto de razonamiento calibrado (`medium`/`low`), eliminación de herramientas pesadas innecesarias (`web_search`) en directores creativos y de arte.
+- **Validación Inline en Skills**: La fase 4 de `/brainstorm` (evaluación de pilares y ancla visual) ahora evalúa en línea durante la conversación, evitando retardos de 30-45s y llamadas asíncronas pesadas en el chat.
+
+### Fixed
+- **RPC Hang en `studio-agents-runner.ts`**: Cierre inmediato de `stdin` al recibir `agent_settled`, permitiendo que el subproceso hijo de Pi finalice limpiamente en milisegundos sin depender del watchdog de timeout.
+- **Cero Bleed en UI**: Eliminada la impresión accidental de sintaxis de llamadas de herramientas o modales de fallback ("modo lean") en el chat de usuario.
+
+---
+
 ## [0.9.3] - 2026-10-03
 
 ### Documentation

@@ -1,7 +1,7 @@
 {
   "name": "pi-game-studio",
-  "version": "0.9.3",
-  "description": "55 agents, 80 skills, 49 templates, one coordinated AI team — now in Pi",
+  "version": "1.0.0",
+  "description": "Compact AI Game Studio for Pi — 8 Core roles + 1 Engine Specialist (8+1), 80 skills, ODD workflow",
   "license": "MIT",
   "author": "Alexis <alexis@bytetech.com.ar>",
   "repository": {

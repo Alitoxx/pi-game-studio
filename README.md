@@ -7,12 +7,12 @@
 <p align="center">
   Turn a Pi session into a full game development studio.
   <br />
-  55 agents. 80 skills. 49 templates. One coordinated AI team.
+  Compact AI Studio — 8 Core roles + 1 Engine Specialist (8+1). 80 skills. ODD workflow.
 </p>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
-  <a href="agents"><img src="https://img.shields.io/badge/agents-55-blueviolet" alt="55 Agents"></a>
+  <a href="agents"><img src="https://img.shields.io/badge/architecture-8%2B1%20Compact-blueviolet" alt="8+1 Compact Studio"></a>
   <a href="skills"><img src="https://img.shields.io/badge/skills-80-green" alt="80 Skills"></a>
   <a href="prompts"><img src="https://img.shields.io/badge/templates-49-orange" alt="49 Templates"></a>
   <a href="chains"><img src="https://img.shields.io/badge/chains-7-yellow" alt="7 Chains"></a>
@@ -22,13 +22,13 @@
 </p>
 
 ```text
-       ⢀⣀⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⠀    P I   G A M E   S T U D I O   v0.9.3
-  ⠀⢀⣴⠟⠋⠁⠀⠀⠀⠀⣀⣀⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠀    Autonomous Game Development Studio for Pi
+       ⢀⣀⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⠀    P I   G A M E   S T U D I O   v1.0.0
+  ⠀⢀⣴⠟⠋⠁⠀⠀⠀⠀⣀⣀⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠀    Compact AI Game Studio for Pi (8+1 Architecture)
  ⢠⡿⣡⡶⠾⠟⢿⡇⠀⣼⡏⣉⣍⠙⣷⠀⠀⣿⠛⠛⠛⠛⠛⠛⠀    ──────────────────────────────────────────────────────────
  ⢼⣿⠏⠀⠀⠀⢸⡇⠀⣿⡟⢻⡟⠃⣿⠀⠀⣿⠀⠀⠀⠀⠀⠀⠀    GIT:       On branch main
  ⠀⠀⠀⠀⢰⡾⠿⣿⠿⠿⠃⠈⠁⠀⠿⠾⢿⠿⢷⣆⠀⠀⠀⠀⠀    PATH:      ~/Developer/pi-game-studio
  ⠀⠀⠀⠀⢸⡇⢾⣿⠶⠆⠀⠀⠀⠀⠰⠶⢾⣷⢸⣿⠀⠀⠀⠀⠀    ENGINE:    Godot · Unity · Unreal · Bevy · Raylib
- ⠀⠀⠀⠀⠸⣧⣤⣭⣤⣤⡄⢀⡀⠀⣤⣤⣬⣥⣼⠟⠀⠀⠀⠀⠀    AGENTS:    55 activos (Directors, Leads, Devs)
+ ⠀⠀⠀⠀⠸⣧⣤⣭⣤⣤⡄⢀⡀⠀⣤⣤⣬⣥⣼⠟⠀⠀⠀⠀⠀    AGENTS:    9 activos (8 Core + 1 Motor)
  ⠀⠀⠀⠀⠀⠀⣼⠇⠀⣾⣧⣼⣧⡄⣿⠀⠀⣿⠀⠀⠀⢠⣶⣶⠀    STAGE:     Entorno OK
  ⠀⠀⣠⣤⣴⠾⠋⠀⠀⣿⣇⣙⣋⣠⣿⡀⠀⠻⣦⣤⣴⠟⢱⡟⠀    SKILLS:    80 loaded (ODD Gamedev Workflow)
  ⠀⠀⣽⡇⠀⠀⠀⠀⢰⡟⠉⠉⠉⠉⠙⢷⣄⠀⠀⠀⢀⣴⠟⠁⠀    STORAGE:   Engram connected (Persistent Memory)

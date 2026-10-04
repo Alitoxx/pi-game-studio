@@ -85,7 +85,7 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 	const root = findStudioRoot(cwd) || cwd;
 
 	// Version
-	let version = "1.0.0";
+	let version = "1.2.0";
 	try {
 		const pkgUrl = new URL("../../package.json", import.meta.url);
 		if (existsSync(pkgUrl)) {

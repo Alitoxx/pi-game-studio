@@ -1,6 +1,6 @@
 {
   "name": "pi-game-studio",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Compact AI Game Studio for Pi — 8 Core roles + 1 Engine Specialist (8+1), 6 ODD skills pipeline",
   "license": "MIT",
   "author": "Alexis <alexis@bytetech.com.ar>",
@@ -12,7 +12,12 @@
   "bugs": {
     "url": "https://github.com/Alitoxx/pi-game-studio/issues"
   },
-  "keywords": ["pi-package", "game-development", "game-studio", "gamedev"],
+  "keywords": [
+    "pi-package",
+    "game-development",
+    "game-studio",
+    "gamedev"
+  ],
   "files": [
     "agents/",
     "skills/",
@@ -40,9 +45,17 @@
   },
   "pi": {
     "image": "docs/assets/icon.png",
-    "skills": ["./skills"],
-    "prompts": ["./prompts"],
-    "extensions": ["./extensions"],
-    "themes": ["./themes"]
+    "skills": [
+      "./skills"
+    ],
+    "prompts": [
+      "./prompts"
+    ],
+    "extensions": [
+      "./extensions"
+    ],
+    "themes": [
+      "./themes"
+    ]
   }
 }

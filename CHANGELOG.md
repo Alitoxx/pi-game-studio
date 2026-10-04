@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.0] - 2026-10-04
+
+### Added
+- **Visor en Vivo de Subagentes (`/studio:subagents` y `/studio:logs`)**: Nuevo inspector interactivo a pantalla completa para visualizar en tiempo real la ejecución, herramientas invocadas (`bash`, `write`, `edit`), progreso y entrega final de cualquier especialista aislado.
+- **Acceso Rápido en Widget de Actividad**: Inclusión del acceso directo interactivo `[ver: /studio:subagents]` en el pie del widget flotante de subagentes en la terminal TUI.
+- **Buffer de Streaming de Logs**: Captura activa y buffer circular de logs por especialista en `studio-agents-runner.ts`.
+
+---
+
 ## [1.0.0] - 2026-10-03
 
 ### Changed

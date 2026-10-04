@@ -17,6 +17,7 @@ export interface TaskRecord {
 	error: string | null;
 	startedAt: number | null;
 	endedAt: number | null;
+	logs: string[];
 }
 
 export type TaskListener = (task: TaskRecord) => void;
@@ -110,6 +111,7 @@ export class StudioAgentsRunner {
 			error: null,
 			startedAt: null,
 			endedAt: null,
+			logs: [],
 		};
 
 		this.tasks.set(taskId, record);
@@ -239,6 +241,7 @@ export class StudioAgentsRunner {
 							clearTimeout(initTimer);
 							sendRpc({ type: "prompt", message: executivePrompt });
 							record.latestActivity = "Especialista conectado";
+							record.logs.push(`[${new Date().toLocaleTimeString()}] Conexión RPC establecida`);
 							this.notifyListeners(record);
 						}
 
@@ -254,6 +257,7 @@ export class StudioAgentsRunner {
 								detail = `${toolName}: ${shortPath}`;
 							}
 							record.latestActivity = detail;
+							record.logs.push(`[${new Date().toLocaleTimeString()}] Herramienta: ${detail}`);
 							this.notifyListeners(record);
 						}
 
@@ -304,6 +308,7 @@ export class StudioAgentsRunner {
 						// Si la línea no es JSON puro, podría ser log estándar
 						if (line.length > 0 && !line.startsWith("{")) {
 							record.latestActivity = line.slice(0, 35);
+							record.logs.push(`[${new Date().toLocaleTimeString()}] ${line.slice(0, 100)}`);
 							this.notifyListeners(record);
 						}
 					}
@@ -313,6 +318,10 @@ export class StudioAgentsRunner {
 			child.stderr?.setEncoding("utf8");
 			child.stderr?.on("data", (chunk: string) => {
 				stderr += chunk;
+				const clean = chunk.trim();
+				if (clean) {
+					record.logs.push(`[stderr] ${clean.slice(0, 120)}`);
+				}
 			});
 
 			// Watchdog timeout

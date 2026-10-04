@@ -88,7 +88,11 @@ export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 7
 		lines.push(`  ${BORDER}│${RESET} ${pad(truncate(detailRow, innerWidth), innerWidth)} ${BORDER}│${RESET}`);
 	}
 
-	lines.push(`  ${BORDER}╰${"─".repeat(cardWidth - 2)}╯${RESET}`);
+	const hint = `${DIM}ver: /studio:subagents${RESET}`;
+	const hintVisibleLen = 22; // "ver: /studio:subagents" length
+	const leftDashes = Math.max(1, Math.floor((cardWidth - 2 - hintVisibleLen - 2) / 2));
+	const rightDashes = Math.max(1, cardWidth - 2 - hintVisibleLen - 2 - leftDashes);
+	lines.push(`  ${BORDER}╰${"─".repeat(leftDashes)}┤${RESET} ${hint} ${BORDER}├${"─".repeat(rightDashes)}╯${RESET}`);
 	return lines;
 }
 

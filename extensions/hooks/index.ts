@@ -24,6 +24,7 @@ import { handleStudioTasks } from "./studio-tasks.ts";
 import { updateStudioHUD } from "./studio-hud.ts";
 import { updateTasksWidget } from "./studio-tasks-widget.ts";
 import { updateSubagentsWidget, installSubagentsWidget } from "./studio-subagents-widget.ts";
+import { handleStudioSubagentsViewer } from "./studio-subagents-viewer.ts";
 import { registerStudioSubagentTools } from "./studio-subagents.ts";
 import { registerAskUserChoice } from "./studio-choice.ts";
 
@@ -173,6 +174,22 @@ export default function (pi: ExtensionAPI) {
 			const newState = !current ? "activada" : "desactivada";
 			ctx.ui?.setHeader?.(renderBanner(ctx.cwd));
 			ctx.ui?.notify?.(`Ilustración de Gamepad ${newState}.`, "info");
+		},
+	});
+
+	// /studio:subagents — Visor e inspector en vivo de logs y actividades de subagentes
+	(pi as any).registerCommand?.("studio:subagents", {
+		description: "[Studio] Visor e inspector en vivo de logs y actividades de subagentes",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioSubagentsViewer(args, ctx);
+		},
+	});
+
+	// /studio:logs — Alias de inspección en vivo de subagentes
+	(pi as any).registerCommand?.("studio:logs", {
+		description: "[Studio] Alias de inspección en vivo de logs de subagentes",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioSubagentsViewer(args, ctx);
 		},
 	});
 

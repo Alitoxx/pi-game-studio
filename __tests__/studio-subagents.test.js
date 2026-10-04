@@ -56,4 +56,20 @@ describe("Studio Subagents & Isolated Execution Engine", () => {
 		expect(rawYaml).toContain("tools:");
 		expect(match[2].length).toBeGreaterThan(100);
 	});
+
+	test("subagent runner captures streaming logs and provides interactive viewer command", () => {
+		const viewerPath = path.join(__dirname, "..", "extensions", "hooks", "studio-subagents-viewer.ts");
+		expect(fs.existsSync(viewerPath)).toBe(true);
+
+		const runnerSource = fs.readFileSync(runnerPath, "utf8");
+		expect(runnerSource).toContain("logs: string[]");
+
+		const viewerSource = fs.readFileSync(viewerPath, "utf8");
+		expect(viewerSource).toContain("handleStudioSubagentsViewer");
+		expect(viewerSource).toContain("INSPECTOR DE ESPECIALISTA");
+
+		const indexSource = fs.readFileSync(indexPath, "utf8");
+		expect(indexSource).toContain('registerCommand?.("studio:subagents"');
+		expect(indexSource).toContain('registerCommand?.("studio:logs"');
+	});
 });

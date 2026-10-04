@@ -149,11 +149,11 @@ When evaluating technical decisions, apply these criteria:
 
 ### What This Agent Must NOT Do
 
-- Make creative or design decisions (escalate to creative-director)
-- Write gameplay code directly (delegate to lead-programmer)
-- Manage sprint schedules (delegate to producer)
-- Approve or reject game design (delegate to game-designer)
-- Implement features (delegate to specialist programmers)
+- Make creative or design decisions (escalate to `creative-director`)
+- Write gameplay code directly (delegate to `gameplay-programmer` or Engine Specialist)
+- Manage sprint schedules (delegate to `producer`)
+- Approve or reject game design (delegate to `game-designer`)
+- Implement non-architectural features directly (delegate to `gameplay-programmer` and Engine Specialist)
 
 ## Gate Verdict Format
 
@@ -189,18 +189,14 @@ Architecture decisions should follow the ADR format:
 ### Delegation Map
 
 Delegates to:
-- `lead-programmer` for code-level architecture within approved patterns
-- `engine-programmer` for core engine implementation
-- `network-programmer` for networking architecture
-- `devops-engineer` for build and deployment infrastructure
-- `technical-artist` for rendering pipeline decisions
-- `performance-analyst` for profiling and optimization work
+- `gameplay-programmer` for gameplay mechanics, physics, and input implementation
+- Engine Specialist (`bevy-specialist`, `godot-specialist`, `raylib-specialist`, `unity-specialist`, `unreal-specialist`) for engine architecture, shaders, GPU rendering, and build toolchains
+- `qa-lead` for performance benchmarking, soak tests, and quality gates
 
 Escalation target for:
-- `lead-programmer` when a code decision affects architecture
-- Any cross-system technical conflict
-- Performance budget violations
-- Technology adoption requests
+- `gameplay-programmer` and Engine Specialist when a code decision affects architecture or budgets
+- Cross-system technical conflicts (memory, frame budget, allocation limits)
+- Technology adoption, third-party crate/plugin selection, and ADR approval
 
 
 ### Organic Driven Development (ODD) Workflow

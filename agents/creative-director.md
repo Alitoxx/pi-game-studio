@@ -238,7 +238,7 @@ serves the pillar?" Often 20% of the scope delivers 80% of the pillar value.
 - Write code or make technical implementation decisions
 - Approve or reject individual assets (delegate to art-director)
 - Make sprint-level scheduling decisions (delegate to producer)
-- Write final dialogue or narrative text (delegate to narrative-director)
+- Write final dialogue, narrative beats or mechanical rules (delegate to game-designer)
 - Make engine or architecture choices (delegate to technical-director)
 
 ## Gate Verdict Format
@@ -275,18 +275,18 @@ All creative direction documents should follow this structure:
 
 ### Delegation Map
 
-Delegates to:
-- `game-designer` for mechanical design within creative constraints
-- `art-director` for visual execution of creative direction
-- `audio-director` for sonic execution of creative direction
-- `narrative-director` for story execution of creative direction
+Within the compact 8+1 studio architecture:
+- Directly owns game vision, pillars, emotional arc, and tone.
+- Delegates to:
+  - `game-designer` for mechanical design and narrative design within creative constraints
+  - `art-director` for visual execution of creative direction
+  - `audio-director` for sonic execution of creative direction
 
 Escalation target for:
-- `game-designer` vs `narrative-director` conflicts (ludonarrative alignment)
-- `art-director` vs `audio-director` tonal disagreements (aesthetic coherence)
-- Any "this changes the identity of the game" decisions
-- Pillar conflicts that can't be resolved by department leads
-- Scope questions where creative intent and production capacity collide
+  - Department conflicts across design, art, and audio (aesthetic coherence, ludonarrative alignment)
+  - Any "this changes the identity of the game" decisions
+  - Pillar conflicts that can't be resolved by department leads
+  - Scope questions where creative intent and production capacity collide
 
 
 ### Organic Driven Development (ODD) Workflow

@@ -131,3 +131,70 @@ describe("Engine Support Symmetry (Godot, Unity, Unreal, Bevy, Raylib)", () => {
 	});
 });
 
+describe("8+1 Core Agents Reference Purity", () => {
+	const coreAgents = [
+		"producer.md",
+		"creative-director.md",
+		"technical-director.md",
+		"game-designer.md",
+		"gameplay-programmer.md",
+		"art-director.md",
+		"audio-director.md",
+		"qa-lead.md",
+	];
+
+	const retiredRoles = [
+		"lead-programmer",
+		"systems-designer",
+		"narrative-director",
+		"technical-artist",
+		"engine-programmer",
+		"network-programmer",
+		"ai-programmer",
+		"ui-programmer",
+	];
+
+	const legacyCommands = [
+		"/smoke-check",
+		"/qa-plan",
+		"/team-qa",
+		"/story-readiness",
+		"/code-review",
+		"/architecture-decision",
+	];
+
+	test("core 8 agents do not reference retired roles", () => {
+		for (const agentFile of coreAgents) {
+			const content = fs.readFileSync(
+				path.join(__dirname, "..", "agents", agentFile),
+				"utf8",
+			);
+			for (const role of retiredRoles) {
+				expect(content).not.toContain(role);
+			}
+		}
+	});
+
+	test("core 8 agents do not reference legacy slash commands", () => {
+		for (const agentFile of coreAgents) {
+			const content = fs.readFileSync(
+				path.join(__dirname, "..", "agents", agentFile),
+				"utf8",
+			);
+			for (const cmd of legacyCommands) {
+				expect(content).not.toContain(cmd);
+			}
+		}
+	});
+
+	test("core 8 agents do not reference orphaned session-state/active.md", () => {
+		for (const agentFile of coreAgents) {
+			const content = fs.readFileSync(
+				path.join(__dirname, "..", "agents", agentFile),
+				"utf8",
+			);
+			expect(content).not.toContain("session-state/active.md");
+		}
+	});
+});
+

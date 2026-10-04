@@ -41,9 +41,9 @@
 
 Building a game solo with AI is powerful — but a single chat session has no structure. No one stops you from hardcoding magic numbers, skipping design docs, or writing spaghetti code. There's no QA pass, no design review, no one asking "does this actually fit the game's vision?"
 
-**Pi Game Studio** solves this by giving your AI session the structure of a real studio. Instead of one general-purpose assistant, you get 55 specialized agents organized into a studio hierarchy — directors who guard the vision, department leads who own their domains, and specialists who do the hands-on work. Each agent has defined responsibilities, escalation paths, and quality gates.
+**Pi Game Studio** solves this by giving your AI session the structure of a real studio with the high-speed, lean execution of **Gentle Shell**. Instead of a slow monolithic assistant or an overwhelming roster of 50+ background processes, you get a compact, focused team of **8 Core roles + 1 Engine Specialist (8+1)**: directors who guard the vision, department leads who own their domains, and dedicated engine specialists who do the hands-on work.
 
-The result: you still make every decision, but now you have a team that asks the right questions, catches mistakes early, and keeps your project organized from first brainstorm to launch.
+The result: you still make every decision, but now you have a fast, coordinated team that asks the right questions, catches mistakes early, and keeps your project organized from first brainstorm to launch without wasting tokens or stalling in background loops.
 
 ---
 
@@ -51,7 +51,7 @@ The result: you still make every decision, but now you have a team that asks the
 
 - [What's Included](#whats-included)
 - [Key Mappings (CCGS → Pi)](#key-mappings-ccgs--pi)
-- [Studio Hierarchy](#studio-hierarchy)
+- [Studio Hierarchy (8+1)](#studio-hierarchy-81)
 - [Model Mapping](#model-mapping)
 - [Customizing Models](#customizing-models)
 - [Slash Commands](#slash-commands)
@@ -68,7 +68,7 @@ The result: you still make every decision, but now you have a team that asks the
 
 | Category      | Count | Description                                                                                                              |
 | ------------- | ----- | ------------------------------------------------------------------------------------------------------------------------ |
-| **Agents**    | 55    | Specialized agents across design, programming, art, audio, narrative, QA, and production                                 |
+| **Agents**    | 8+1   | Compact active studio: 8 Core roles + 1 dedicated Engine Specialist per project                                           |
 | **Subagents** | Native| Isolated child process execution via `subagent_run`, `subagent_list`, `subagent_status` & `subagent_result`              |
 | **Interactive**| Native| Interactive terminal menus & batch questionnaires via `ask_user_choice` and `ask_user_question` (arrow keys & Enter)      |
 | **Skills**    | 80    | Slash commands for every workflow phase (`/start`, `/settings`, `/prototype`, `/vertical-slice`, `/dev-story`, etc.)     |
@@ -91,50 +91,39 @@ The result: you still make every decision, but now you have a team that asks the
 | `CLAUDE.md`                   | `package.json` (pi manifest)                          |
 | `.claude/settings.json`       | `models.default.json`                                 |
 
-## Studio Hierarchy
+## Studio Hierarchy (8+1)
 
-Agents are organized into three tiers, matching how real studios operate:
+Agents are organized into a lean hierarchy designed for maximum speed and token efficiency:
 
-```
-Tier 1 — Directors
-  creative-director    technical-director    producer
+```text
+Tier 1 — Directors (Strategy & Governance)
+  producer (Lead Orchestrator)
+  creative-director (Game Vision & Pillars)
+  technical-director (Architecture & Budgets)
 
-Tier 2 — Department Leads
-  game-designer        lead-programmer       art-director
-  audio-director       narrative-director    qa-lead
-  release-manager      localization-lead
+Tier 2 — Department Leads & Core Devs
+  game-designer (Mechanics & Systems)
+  gameplay-programmer (Mechanics & Physics Implementation)
+  art-director (Visual Direction & Art Bible)
+  audio-director (Soundscapes & Music)
+  qa-lead (Testing & Quality Gates)
 
-Tier 3 — Specialists
-  gameplay-programmer  engine-programmer     ai-programmer
-  network-programmer   tools-programmer      ui-programmer
-  systems-designer     level-designer        economy-designer
-  technical-artist     sound-designer        writer
-  world-builder        ux-designer           prototyper
-  performance-analyst  devops-engineer       analytics-engineer
-  security-engineer    qa-tester             accessibility-specialist
-  live-ops-designer    community-manager     bevy-specialist
-  raylib-specialist    raylib-entt-specialist  raylib-shader-specialist
-  raylib-ui-specialist raylib-build-specialist
-  godot-specialist     godot-gdscript-specialist  godot-csharp-specialist
-  godot-gdextension-specialist  godot-shader-specialist
-  unity-specialist     unity-dots-specialist  unity-addressables-specialist
-  unity-shader-specialist  unity-ui-specialist
-  unreal-specialist    ue-gas-specialist     ue-blueprint-specialist
-  ue-replication-specialist   ue-umg-specialist
+Tier 3 — Engine Specialist (+1 per project)
+  bevy-specialist | godot-specialist | raylib-specialist | unity-specialist | unreal-specialist
 ```
 
-### Engine Specialists
+### Engine Specialists (+1 por Proyecto)
 
-| Engine              | Lead Agent          | Sub-Specialists                                 |
-| ------------------- | ------------------- | ----------------------------------------------- |
-| **Godot 4**         | `godot-specialist`  | GDScript, C#, Shaders, GDExtension              |
-| **Unity**           | `unity-specialist`  | DOTS/ECS, Shaders/VFX, Addressables, UI Toolkit |
-| **Unreal Engine 5** | `unreal-specialist` | GAS, Blueprints, Replication, UMG/CommonUI      |
-| **Bevy (Rust)**     | `bevy-specialist`   | ECS, 2D/3D (wgpu), bevy_ui, Assets, Cargo/WASM  |
-| **Raylib (C++)**    | `raylib-specialist` | EnTT ECS, GLSL Shaders, UI & Debug, CMake/WASM  |
+| Engine              | Dedicated Specialist | Focus & Core Tools |
+| ------------------- | -------------------- | ------------------ |
+| **Bevy (Rust)**     | `bevy-specialist`    | Idiomatic ECS, wgpu, WASM, cargo |
+| **Godot 4**         | `godot-specialist`   | Node trees, GDScript/C#, shaders, GDExtension |
+| **Raylib (C++)**    | `raylib-specialist`  | EnTT ECS, GLSL shaders, ImGui, CMake |
+| **Unity**           | `unity-specialist`   | MonoBehaviour/DOTS, Shader Graph, UI Toolkit |
+| **Unreal Engine 5** | `unreal-specialist`  | C++, GAS, Blueprints, Replication, UMG |
 
 > 📖 **Manuales y Herramientas del Estudio**:
-> - [`AGENTS.md`](AGENTS.md): Directorio completo y responsabilidades de los **55 agentes**.
+> - [`AGENTS.md`](AGENTS.md): Directorio completo y responsabilidades del equipo oficial **8+1**.
 > - [`docs/gamedev-interaction-protocol.md`](docs/gamedev-interaction-protocol.md): **Protocolo de Respuestas y Decisiones (Gentle Shell for Games)** — Bloque 0: *Executive Delivery & Zero Bleed*, Pillars Header, Trade-offs Matrix, Choice Envelopes, Radar, Return Contracts y **Flow Completion Protocol**.
 > - [`docs/skills-reference.md`](docs/skills-reference.md): Catálogo de las **80 skills** y comandos `studio:*` organizados por fases.
 > - **Única Fuente de Verdad (Single Source of Truth)**: `design/gdd/` y `design/art/` exclusivos para diseño y arte; `production/` exclusivo para roadmaps y sprints.

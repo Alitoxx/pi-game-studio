@@ -1,60 +1,50 @@
 # Pi Game Studio Agents — Manual y Referencia Oficial
 
-Guía de referencia completa para los **55 agentes especializados** de Pi Game Studio.
+Guía de referencia completa para la dotación compacta oficial **8+1** de Pi Game Studio.
 
-## Jerarquía del Estudio
+## Jerarquía del Estudio (Arquitectura Compacta 8+1)
+
+Pi Game Studio opera con **8 roles Core esenciales + 1 especialista dedicado del motor activo**, garantizando máxima velocidad, cero dispersión y bajo consumo de tokens:
 
 ```text
-Tier 1 — Directors (Estrategia y Gobernanza)
-  creative-director    technical-director    producer
+Tier 1 — Directors (Estrategia, Visión y Gobernanza)
+  producer (Lead Orchestrator)
+  creative-director (Game Vision & Pillars)
+  technical-director (Architecture & Budgets)
 
-Tier 2 — Department Leads (Gestión de Área y Quality Gates)
-  game-designer        lead-programmer       art-director
-  audio-director       narrative-director    qa-lead
-  release-manager      localization-lead
+Tier 2 — Department Leads & Core Devs
+  game-designer (Mechanics & Systems)
+  gameplay-programmer (Mechanics & Physics Implementation)
+  art-director (Visual Direction & Art Bible)
+  audio-director (Soundscapes & Music)
+  qa-lead (Testing & Quality Gates)
 
-Tier 3 — Specialists (Implementación, Motores y Operaciones)
-  gameplay-programmer  engine-programmer     ai-programmer
-  network-programmer   tools-programmer      ui-programmer
-  systems-designer     level-designer        economy-designer
-  technical-artist     sound-designer        writer
-  world-builder        ux-designer           prototyper
-  performance-analyst  devops-engineer       analytics-engineer
-  security-engineer    qa-tester             accessibility-specialist
-  live-ops-designer    community-manager     bevy-specialist
-  raylib-specialist    raylib-entt-specialist  raylib-shader-specialist
-  raylib-ui-specialist raylib-build-specialist
-  godot-specialist     godot-gdscript-specialist  godot-csharp-specialist
-  godot-gdextension-specialist  godot-shader-specialist
-  unity-specialist     unity-dots-specialist  unity-addressables-specialist
-  unity-shader-specialist  unity-ui-specialist
-  unreal-specialist    ue-gas-specialist     ue-blueprint-specialist
-  ue-replication-specialist   ue-umg-specialist
+Tier 3 — Engine Specialist (+1 dedicado según motor del proyecto)
+  bevy-specialist | godot-specialist | raylib-specialist | unity-specialist | unreal-specialist
 ```
 
 ## Model Mapping y Reasoning Budget
 
 | Tier | Default model | Thinking Budget | Rol Principal |
 |---|---|---|---|
-| **Director** (Tier 1) | `openai-codex/gpt-5.4-mini` | `high` | Visión de juego, arquitectura base, triaje de alcance |
-| **Workhorse** (Tier 2-3) | `openrouter/openai/gpt-oss-120b:free` | `medium` | Diseño de mecánicas, programación, arte, testing |
-| **Lightweight** (Tier 3) | `openrouter/openai/gpt-oss-20b:free` | `low` | Comunidad, logs, tareas operativas ligeras |
+| **Directors & Leads** (Core) | `openai-codex/gpt-5.4-mini` | `medium` | Visión de juego, arquitectura base, diseño y coordinación |
+| **Specialist** (Motor) | `openrouter/openai/gpt-oss-120b:free` | `medium` | Implementación idiomática en motor, build y shaders |
 
 ## Language Policy
 
 - Todos los agentes se adaptan dinámicamente a la preferencia de idioma configurada en `.pi/game-studio/language` o `project.yaml`.
 - Cuando el idioma activo es español (`es`), todos los agentes responden, estructuran opciones, explican trade-offs y conducen el diálogo en **español**. Los símbolos técnicos, APIs de motor y palabras clave de código se mantienen en su nomenclatura estándar.
 
-## Política de Instalación por Motor (Enfoque A — Selective Installation)
+## Política de Instalación Oficial (8 Core + 1 Motor = 9 Agentes Activos)
 
-Para evitar saturar `.pi/agents/` con especialistas de motores no utilizados, el instalador (`/setup` o `/studio:setup`) despliega únicamente:
-- **34 Agentes Base (Core Studio)**: Directores, leads departamentales y especialistas generales (gameplay, AI, red, shaders/arte técnico, audio, QA, DevOps, live-ops, economía).
-- **Especialistas dedicados del motor activo** definido en `project.yaml`:
-  - **Bevy (Rust)**: 34 + 1 = **35 agentes** (`bevy-specialist`).
-  - **Godot 4**: 34 + 5 = **39 agentes** (General, GDScript, C#, GDExtension, Shaders).
-  - **Raylib (C++ / EnTT)**: 34 + 5 = **39 agentes** (General, EnTT ECS, Shaders, UI/Dear ImGui, CMake/Build).
-  - **Unity**: 34 + 5 = **39 agentes** (General, DOTS/ECS, Shaders, Addressables, UI).
-  - **Unreal Engine 5**: 34 + 5 = **39 agentes** (General, GAS, Blueprints, Replication, UMG).
+El instalador (`/setup` o `/studio:setup`) despliega exactamente **9 agentes** en `.pi/agents/`:
+- **8 Agentes Core**: `producer`, `creative-director`, `technical-director`, `game-designer`, `gameplay-programmer`, `art-director`, `audio-director`, `qa-lead`.
+- **1 Especialista del motor activo** definido en `project.yaml`:
+  - **Bevy (Rust)**: 8 + 1 = **9 agentes** (`bevy-specialist`).
+  - **Godot 4**: 8 + 1 = **9 agentes** (`godot-specialist`).
+  - **Raylib (C++ / EnTT)**: 8 + 1 = **9 agentes** (`raylib-specialist`).
+  - **Unity**: 8 + 1 = **9 agentes** (`unity-specialist`).
+  - **Unreal Engine 5**: 8 + 1 = **9 agentes** (`unreal-specialist`).
 
 ## Protocolo de Interacción y Decisiones (Gamedev Decision Protocol)
 

@@ -178,7 +178,7 @@ Además de las skills ejecutadas por el modelo, Pi Game Studio incluye comandos 
 | **`/studio:doctor`** | Comando Extensión | Diagnóstico de requisitos locales de compilación y herramientas del motor. |
 | **`/studio:tasks`** | Comando Extensión | Inspector interactivo de tareas activas del roadmap y detección de tareas stale. |
 | **`/studio:changes`** | Comando Extensión | Inspector de cambios en el proyecto (clasificación de código, diseño, assets y alertas de drift). |
-| **`/studio:agents`** | Comando Extensión | Navegador interactivo del catálogo de los 55 agentes del estudio. |
+| **`/studio:agents`** | Comando Extensión | Navegador interactivo de los agentes activos del estudio (8 Core + 1 Motor). |
 | **`/studio:status`** | Comando Extensión | Tablero de salud y diagnóstico en vivo del estudio y archivos de proyecto. |
 | **`/studio:commands`** | Comando Extensión | Lista completa e interactiva de todos los comandos de la suite. |
 | **`/studio:art`** | Comando Extensión | Visualizador de ASCII art temático del motor activo. |

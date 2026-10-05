@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.1] - 2026-10-05
+
+### Added
+- **Starters Zero-Day Compliant con los 10 Estándares**: Los 5 starters de motor (Godot 4, Bevy 2D, Raylib C++, Unity 2D, Unreal Engine 5) ahora incluyen de fábrica la máquina de estados con menú de pausa, overlay de telemetría `F3` / `~`, action mapping dual simultáneo (Gamepad + Teclado), jerarquía de buses de audio y manifiestos de assets.
+- **Auditoría Integral de Proyecto ODD en `/studio:doctor`**: Expansión del comando de diagnóstico para verificar no solo compiladores locales y toolchains en `$PATH`, sino la integridad del árbol de carpetas ODD (`design/gdd/`, `production/roadmap.md`, `production/qa/bugs.md`) y el recuento de placeholders vs assets finales en `assets/manifest.yaml`. Formato TUI sobrio sin emojis.
+- **Runner Headless de Soak Testing (`scripts/soak-test.sh` y `npm run test:soak`)**: Monitoreo de memoria RSS en tiempo real cada 2s para detectar fugas de memoria y validar estabilidad en pruebas de 60 segundos.
+- **Generador Procedural de Placeholders (`scripts/generate-placeholders.js` y `npm run assets:placeholders`)**: Generación procedural en Node.js puro de audio WAV (16-bit PCM mono 44.1kHz para saltos, golpes, monedas, láser y explosiones) y texturas BMP (checkered/UV de 32x32 y 64x64), con auto-registro en `assets/manifest.yaml`.
+- **Plantilla Oficial de QA Bug Triage (`templates/production/qa/bugs.md`)**: Inicialización automática en `/studio:setup` y resolución definitiva de advertencias de referencias cruzadas en el pipeline de testing.
+
+---
+
 ## [1.2.0] - 2026-10-04
 
 ### Added

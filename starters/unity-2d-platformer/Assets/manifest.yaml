@@ -1,0 +1,6 @@
+version: 1
+assets:
+  - path: "Assets/Sprites/placeholder.png"
+    type: "texture"
+    status: "placeholder"
+    description: "Default Unity 2D prototype sprite"

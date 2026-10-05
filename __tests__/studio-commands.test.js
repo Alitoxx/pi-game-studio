@@ -382,5 +382,23 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 		expect(resBatch.details.answers[1].answer).toBe("modelo-custom-gpt-5");
 		expect(resBatch.details.answers[1].custom).toBe(true);
 	});
+
+	test("studio-doctor.ts exports handleStudioDoctor, auditProjectStructure and adheres to sober TUI", () => {
+		const doctorSource = fs.readFileSync(
+			path.join(__dirname, "..", "extensions", "hooks", "studio-doctor.ts"),
+			"utf8",
+		);
+
+		expect(doctorSource).toContain("export async function handleStudioDoctor");
+		expect(doctorSource).toContain("export function auditEnginePrerequisites");
+		expect(doctorSource).toContain("export function auditProjectStructure");
+		expect(doctorSource).toContain("export function formatAuditReport");
+
+		// Sober TUI check: no emojis in formatting
+		expect(doctorSource).not.toMatch(/[🔍❌ℹ👉📦⚠️💡]/);
+		expect(doctorSource).toContain("[STUDIO DOCTOR]");
+		expect(doctorSource).toContain("[STRUCTURE]");
+	});
 });
+
 

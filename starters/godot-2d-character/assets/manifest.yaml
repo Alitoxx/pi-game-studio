@@ -1,0 +1,10 @@
+version: 1
+assets:
+  - path: "icon.svg"
+    type: "texture"
+    status: "final"
+    description: "Godot project icon"
+  - path: "shaders/hit_flash.gdshader"
+    type: "shader"
+    status: "final"
+    description: "2D Canvas hit flash effect"

@@ -1,0 +1,6 @@
+version: 1
+assets:
+  - path: "assets/textures/placeholder.png"
+    type: "texture"
+    status: "placeholder"
+    description: "Default Bevy prototype sprite"

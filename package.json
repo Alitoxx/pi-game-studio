@@ -37,7 +37,9 @@
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "test:soak": "bash scripts/soak-test.sh",
+    "assets:placeholders": "node scripts/generate-placeholders.js"
   },
   "devDependencies": {
     "jest": "^29.0.0",

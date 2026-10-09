@@ -193,6 +193,16 @@ export function renderStudioFooterBar(
 		parts.push(`${DIM}ctx${RESET} ${gauge} ${col}${usage.percent}%${RESET} ${DIM}(${formatTokens(usage.tokens)})${RESET}`);
 	}
 
+	// Live Performance & Budget Tracker
+	try {
+		const { getActivePerfMetrics } = require("./studio-profile.ts");
+		const perf = getActivePerfMetrics?.();
+		if (perf) {
+			const perfCol = perf.status === "OK" ? GREEN : YELLOW;
+			parts.push(`${perfCol}⚡ ${perf.fps}fps (${perf.memoryMb}MB)${RESET}`);
+		}
+	} catch {}
+
 	return parts.join(` ${DIM}·${RESET} `);
 }
 

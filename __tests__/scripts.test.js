@@ -171,5 +171,36 @@ describe("Utility Scripts", () => {
 			expect(content).toMatch(/deploy-pages/);
 		});
 	});
+
+	describe("synth-studio.js", () => {
+		const synthPath = path.join(__dirname, "..", "scripts", "synth-studio.js");
+
+		test("synth-studio.js exists and exports synthesizer and shader generators", () => {
+			expect(fs.existsSync(synthPath)).toBe(true);
+			const { synthesizeSfx, generateShader, PALETTES } = require(synthPath);
+			expect(typeof synthesizeSfx).toBe("function");
+			expect(typeof generateShader).toBe("function");
+			expect(PALETTES.cyberpunk).toBeDefined();
+			expect(PALETTES.pico8).toBeDefined();
+		});
+
+		test("synthesizeSfx produces valid WAV buffer with custom waveforms", () => {
+			const { synthesizeSfx } = require(synthPath);
+			const wav = synthesizeSfx({ wave: "saw", freq: 440, duration: 0.1 });
+			expect(wav.toString("ascii", 0, 4)).toBe("RIFF");
+			expect(wav.toString("ascii", 8, 12)).toBe("WAVE");
+		});
+
+		test("generateShader produces valid Godot and Raylib shader code", () => {
+			const { generateShader } = require(synthPath);
+			const godotShader = generateShader("pico8", "godot");
+			expect(godotShader).toContain("shader_type canvas_item;");
+			expect(godotShader).toContain("PALETTE[16]");
+
+			const raylibShader = generateShader("cyberpunk", "raylib");
+			expect(raylibShader).toContain("#version 330 core");
+			expect(raylibShader).toContain("PALETTE[6]");
+		});
+	});
 });
 

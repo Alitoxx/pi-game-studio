@@ -244,7 +244,7 @@ Type `/` in Pi to browse all 80 skills:
 
 ### Studio Suite & Admin (`studio:*`)
 
-`/studio` `/studio:start` `/studio:new` `/studio:setup` `/studio:doctor` `/studio:models` `/studio:status` `/studio:agents` `/studio:chains` `/studio:settings` `/setup` `/assign-models` `/connect-engram`
+`/studio` `/studio:start` `/studio:new` `/studio:setup` `/studio:doctor` `/studio:web` `/studio:subagents` `/studio:models` `/studio:status` `/studio:agents` `/studio:chains` `/studio:settings` `/setup` `/assign-models` `/connect-engram`
 
 ## Getting Started
 

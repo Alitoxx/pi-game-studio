@@ -52,6 +52,7 @@ The result: you still make every decision, but now you have a fast, coordinated 
 - [What's Included](#whats-included)
 - [Key Mappings (CCGS → Pi)](#key-mappings-ccgs--pi)
 - [Studio Hierarchy (8+1)](#studio-hierarchy-81)
+- [Architecture & Flowcharts](#architecture--flowcharts)
 - [Model Mapping](#model-mapping)
 - [Customizing Models](#customizing-models)
 - [Slash Commands](#slash-commands)
@@ -124,6 +125,7 @@ Tier 3 — Engine Specialist (+1 per project)
 
 > 📖 **Manuales y Herramientas del Estudio**:
 > - [`AGENTS.md`](AGENTS.md): Directorio completo y responsabilidades del equipo oficial **8+1**.
+> - [`docs/architecture-flowcharts.md`](docs/architecture-flowcharts.md): **Diagramas de Flujo y Arquitectura Completa** — Visualización paso a paso del pipeline ODD de 6 fases, la jerarquía 8+1, subagentes en vivo, compilación Web/WASM, profiler y sintetizador procedural.
 > - [`docs/gamedev-interaction-protocol.md`](docs/gamedev-interaction-protocol.md): **Protocolo de Respuestas y Decisiones (Gentle Shell for Games)** — Bloque 0: *Executive Delivery & Zero Bleed*, Pillars Header, Trade-offs Matrix, Choice Envelopes, Radar, Return Contracts y **Flow Completion Protocol**.
 > - [`docs/skills-reference.md`](docs/skills-reference.md): Catálogo de las **80 skills** y comandos `studio:*` organizados por fases.
 > - **Única Fuente de Verdad (Single Source of Truth)**: `design/gdd/` y `design/art/` exclusivos para diseño y arte; `production/` exclusivo para roadmaps y sprints.
@@ -131,6 +133,22 @@ Tier 3 — Engine Specialist (+1 per project)
 > - **Brújula de Producción del Producer**: Lectura y actualización automática de `production/roadmap.md` (`<!-- PRODUCER_STATE -->`) para saber en qué línea va el proyecto en todo momento.
 > - **Diagnóstico Multiplataforma y Salud ODD (`/studio:doctor`)**: Auditoría automática de compiladores, toolchains y SDKs locales para los 5 motores, integridad del árbol ODD y recuento de placeholders en `assets/manifest.yaml`.
 > - **Calidad Automatizada y Generadores Locales**: Runner de pruebas de estabilidad y fugas de memoria (`npm run test:soak`) y generador procedural de SFX (WAV) y texturas (BMP) sin dependencias (`npm run assets:placeholders`).
+
+## Architecture & Flowcharts
+
+Para una comprensión visual exhaustiva de cómo interactúan los agentes, motores, herramientas de telemetría y pipelines, consulta:
+👉 **[Guía Completa de Diagramas de Flujo (Mermaid)](docs/architecture-flowcharts.md)**
+
+Incluye diagramas detallados de:
+1. **Pipeline ODD Gamedev (6 Fases Oficiales)**
+2. **Jerarquía y Roles del Estudio (8+1)**
+3. **Subagentes Aislados & Visor en Vivo (`/studio:subagents`)**
+4. **WebAssembly / Web One-Click Build & Runner (`/studio:web`)**
+5. **Live Performance Profiler & Budget Tracker HUD (`/studio:profile`)**
+6. **Sintetizador Procedural de Audio y Paletas de Shaders (`/studio:sfx` & `/studio:palettes`)**
+7. **Pipeline de CI/CD Automatizado con GitHub Actions**
+
+---
 
 ## Model Mapping
 

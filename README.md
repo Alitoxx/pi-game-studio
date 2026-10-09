@@ -129,7 +129,8 @@ Tier 3 — Engine Specialist (+1 per project)
 > - **Única Fuente de Verdad (Single Source of Truth)**: `design/gdd/` y `design/art/` exclusivos para diseño y arte; `production/` exclusivo para roadmaps y sprints.
 > - **Diagnóstico y Salud de Entorno**: Detección automática al iniciar o decir *"hola"` (`Estado: ✔ Entorno OK`), con setup Automático o Manual sin preguntas redundantes.
 > - **Brújula de Producción del Producer**: Lectura y actualización automática de `production/roadmap.md` (`<!-- PRODUCER_STATE -->`) para saber en qué línea va el proyecto en todo momento.
-> - **Diagnóstico Multiplataforma (`/studio:doctor`)**: Auditoría automática de compiladores, toolchains y SDKs locales para los 5 motores (macOS, Linux y Windows).
+> - **Diagnóstico Multiplataforma y Salud ODD (`/studio:doctor`)**: Auditoría automática de compiladores, toolchains y SDKs locales para los 5 motores, integridad del árbol ODD y recuento de placeholders en `assets/manifest.yaml`.
+> - **Calidad Automatizada y Generadores Locales**: Runner de pruebas de estabilidad y fugas de memoria (`npm run test:soak`) y generador procedural de SFX (WAV) y texturas (BMP) sin dependencias (`npm run assets:placeholders`).
 
 ## Model Mapping
 

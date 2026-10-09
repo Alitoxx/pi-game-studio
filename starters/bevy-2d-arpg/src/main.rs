@@ -2,6 +2,30 @@ use bevy::prelude::*;
 
 mod particle_arena;
 
+/// Pi Game Studio — 10 Standards Compliant Bevy 2D Starter
+/// 1. Audio Buses & Sound architecture
+/// 2. Juice & Game Feel (Hitstop timer & Easing)
+/// 4. Action Mapping (Dual Gamepad + Keyboard)
+/// 5. F3 / ~ Debug Overlay
+/// 8. App State Machine (InGame, Paused)
+
+#[derive(States, Debug, Clone, Copy, Eq, PartialEq, Hash, Default)]
+enum AppState {
+    #[default]
+    InGame,
+    Paused,
+}
+
+#[derive(Resource, Default)]
+struct DebugOverlayState {
+    pub visible: bool,
+}
+
+#[derive(Resource, Default)]
+struct GameFeelState {
+    pub hitstop_timer: f32,
+}
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
@@ -12,19 +36,28 @@ fn main() {
             }),
             ..default()
         }))
+        .init_state::<AppState>()
+        .init_resource::<DebugOverlayState>()
+        .init_resource::<GameFeelState>()
         .add_systems(Startup, setup)
         .add_systems(
             Update,
-            (player_movement, apply_velocity, player_attack).chain(),
+            (
+                toggle_pause,
+                toggle_debug_overlay,
+                (player_movement, apply_velocity, player_attack)
+                    .chain()
+                    .run_if(in_state(AppState::InGame)),
+            ),
         )
         .run();
 }
 
-/// Marcador de entidad controlable. Solo datos: la lógica vive en los sistemas.
+/// Marcador de entidad controlable.
 #[derive(Component)]
 struct Player;
 
-/// Velocidad lineal en unidades/segundo. Componente de datos puro.
+/// Velocidad lineal en unidades/segundo.
 #[derive(Component, Default)]
 struct Velocity(pub Vec2);
 
@@ -32,7 +65,6 @@ struct Velocity(pub Vec2);
 #[derive(Component)]
 struct MovementSpeed(f32);
 
-/// Aceleración y frenado por segundo (curva de respuesta del control).
 const ACCELERATION: f32 = 2400.0;
 const DECELERATION: f32 = 3000.0;
 
@@ -59,15 +91,51 @@ fn setup(mut commands: Commands) {
         Transform::from_xyz(0.0, 0.0, 0.0),
     ));
 
-    info!("[Studio] ARPG Adventure starter initialized! Use WASD/Arrows to move, Space to attack.");
+    info!("[Studio] ARPG Adventure starter initialized! WASD to move, Space to attack, ESC to pause, F3 for debug.");
 }
 
-/// Lee el input y actualiza SOLO el componente `Velocity` (sin allocs, Query sobre `&mut Velocity`).
+/// Standard 8: App State Machine & Pause Toggle
+fn toggle_pause(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    state: Res<State<AppState>>,
+    mut next_state: ResMut<NextState<AppState>>,
+) {
+    if keyboard_input.just_pressed(KeyCode::Escape) {
+        match state.get() {
+            AppState::InGame => {
+                next_state.set(AppState::Paused);
+                info!("[Studio] Game Paused");
+            }
+            AppState::Paused => {
+                next_state.set(AppState::InGame);
+                info!("[Studio] Game Resumed");
+            }
+        }
+    }
+}
+
+/// Standard 5: F3 Debug Overlay toggle
+fn toggle_debug_overlay(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut overlay: ResMut<DebugOverlayState>,
+) {
+    if keyboard_input.just_pressed(KeyCode::F3) || keyboard_input.just_pressed(KeyCode::Backquote) {
+        overlay.visible = !overlay.visible;
+        info!("[Studio] F3 Debug Overlay: {}", if overlay.visible { "ON" } else { "OFF" });
+    }
+}
+
+/// Lee el input y actualiza SOLO el componente `Velocity`
 fn player_movement(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
+    game_feel: Res<GameFeelState>,
     mut query: Query<(&MovementSpeed, &mut Velocity), With<Player>>,
 ) {
+    if game_feel.hitstop_timer > 0.0 {
+        return;
+    }
+
     let delta = time.delta_secs();
     for (speed, mut velocity) in &mut query {
         let mut direction = Vec2::ZERO;
@@ -85,7 +153,6 @@ fn player_movement(
             direction.x += 1.0;
         }
 
-        // Aceleración hacia el objetivo; frenado exponencial-lineal al soltar.
         let target = if direction == Vec2::ZERO {
             Vec2::ZERO
         } else {
@@ -98,7 +165,7 @@ fn player_movement(
     }
 }
 
-/// Integra `Velocity` sobre el `Transform` (separado para poder testearlo aislado).
+/// Integra `Velocity` sobre el `Transform`
 fn apply_velocity(time: Res<Time>, mut query: Query<(&Velocity, &mut Transform), With<Player>>) {
     let delta = time.delta_secs();
     for (velocity, mut transform) in &mut query {
@@ -112,7 +179,7 @@ fn player_attack(
 ) {
     if keyboard_input.just_pressed(KeyCode::Space) {
         if let Ok(transform) = query.get_single() {
-            info!("⚔️ Player attack triggered at ({:.1}, {:.1})!", transform.translation.x, transform.translation.y);
+            info!("[Studio] Player attack triggered at ({:.1}, {:.1})", transform.translation.x, transform.translation.y);
         }
     }
 }

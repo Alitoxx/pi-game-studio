@@ -522,10 +522,38 @@ export function installStudioFiles(
 	}
 	writeFileSync(projectYamlPath, yamlContent, "utf8");
 
-	// 5. Establish standard project structure: design/ (GDDs & Art) and production/ (Tracking & Sprints)
+	// 5. Establish standard project structure: design/ (GDDs & Art) and production/ (Tracking, Sprints, QA)
 	mkdirSync(join(ctx.cwd, "design", "gdd"), { recursive: true });
 	mkdirSync(join(ctx.cwd, "design", "art"), { recursive: true });
-	mkdirSync(join(ctx.cwd, "production"), { recursive: true });
+	mkdirSync(join(ctx.cwd, "production", "qa"), { recursive: true });
+
+	// 5a. Initialize production/qa/bugs.md if missing
+	const bugsFilePath = join(ctx.cwd, "production", "qa", "bugs.md");
+	if (!existsSync(bugsFilePath)) {
+		const bugsTemplatePath = join(pkgRoot, "templates", "production", "qa", "bugs.md");
+		if (existsSync(bugsTemplatePath)) {
+			writeFileSync(bugsFilePath, readFileSync(bugsTemplatePath));
+		} else {
+			const fallbackContent = [
+				"# Bug Triage Log",
+				"",
+				"> Standard bug report and triage schema for QA and playtesting.",
+				"> Severity scale: P0 (Blocker / Crash) | P1 (Critical Gameplay Defect) | P2 (Major Functional / Asset Issue) | P3 (Minor / Polish)",
+				"",
+				"## Active Bugs",
+				"",
+				"| ID | Severity | System | Summary | Steps to Reproduce | Expected vs Actual | Status | Assigned |",
+				"|----|----------|--------|---------|---------------------|--------------------|--------|----------|",
+				"",
+				"## Closed / Resolved Bugs",
+				"",
+				"| ID | Severity | System | Summary | Resolution | Verified In | Date |",
+				"|----|----------|--------|---------|------------|-------------|------|",
+				"",
+			].join("\n");
+			writeFileSync(bugsFilePath, fallbackContent, "utf8");
+		}
+	}
 
 	// 5b. Configure local project theme and tuiMode (fullscreen) by default
 	const settingsJsonPath = join(ctx.cwd, ".pi", "settings.json");

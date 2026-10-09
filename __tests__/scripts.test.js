@@ -92,4 +92,55 @@ describe("Utility Scripts", () => {
 			expect(scriptContent).not.toMatch(/\.claude\//);
 		});
 	});
+
+	describe("soak-test.sh", () => {
+		const scriptPath = path.join(__dirname, "..", "scripts", "soak-test.sh");
+
+		test("soak-test.sh exists and is executable", () => {
+			expect(fs.existsSync(scriptPath)).toBe(true);
+			const stats = fs.statSync(scriptPath);
+			expect((stats.mode & 0o111) !== 0).toBe(true);
+		});
+
+		test("soak-test.sh has duration and cleanup handlers", () => {
+			const content = fs.readFileSync(scriptPath, "utf8");
+			expect(content).toMatch(/DURATION=60/);
+			expect(content).toMatch(/trap cleanup/);
+			expect(content).toMatch(/SOAK TEST/);
+		});
+	});
+
+	describe("generate-placeholders.js", () => {
+		const scriptPath = path.join(__dirname, "..", "scripts", "generate-placeholders.js");
+
+		test("generate-placeholders.js exports audio and texture generators", () => {
+			expect(fs.existsSync(scriptPath)).toBe(true);
+			const { sfxGenerators, textureGenerators, createWavBuffer, createBmpBuffer } = require(scriptPath);
+			expect(typeof createWavBuffer).toBe("function");
+			expect(typeof createBmpBuffer).toBe("function");
+			expect(typeof sfxGenerators.jump).toBe("function");
+			expect(typeof sfxGenerators.coin).toBe("function");
+			expect(typeof sfxGenerators.hit).toBe("function");
+			expect(typeof sfxGenerators.laser).toBe("function");
+			expect(typeof sfxGenerators.explosion).toBe("function");
+			expect(typeof textureGenerators["checker-magenta-32"]).toBe("function");
+		});
+
+		test("createWavBuffer returns valid RIFF/WAVE header", () => {
+			const { createWavBuffer } = require(scriptPath);
+			const samples = new Float32Array(4410); // 0.1s
+			const wav = createWavBuffer(samples);
+			expect(wav.toString("ascii", 0, 4)).toBe("RIFF");
+			expect(wav.toString("ascii", 8, 12)).toBe("WAVE");
+			expect(wav.length).toBe(44 + 4410 * 2);
+		});
+
+		test("createBmpBuffer returns valid BMP header", () => {
+			const { createBmpBuffer } = require(scriptPath);
+			const bmp = createBmpBuffer(16, 16, () => [255, 0, 0]);
+			expect(bmp.toString("ascii", 0, 2)).toBe("BM");
+			expect(bmp.length).toBeGreaterThan(54);
+		});
+	});
 });
+

@@ -403,22 +403,120 @@ export function auditEngineVersion(engine: string, dir = process.cwd()): Version
 	};
 }
 
-export function formatAuditReport(report: EngineAuditReport): string[] {
+export interface ProjectStructureCheck {
+	name: string;
+	path: string;
+	required: boolean;
+	satisfied: boolean;
+	details: string;
+}
+
+export interface ProjectStructureAudit {
+	checks: ProjectStructureCheck[];
+	assetStats?: {
+		total: number;
+		placeholders: number;
+		final: number;
+	};
+}
+
+export function auditProjectStructure(dir = process.cwd()): ProjectStructureAudit {
+	const checks: ProjectStructureCheck[] = [];
+
+	// 1. project.yaml
+	const projYaml = join(dir, "project.yaml");
+	const hasProjYaml = existsSync(projYaml);
+	checks.push({
+		name: "Configuracion de Proyecto (project.yaml)",
+		path: "project.yaml",
+		required: true,
+		satisfied: hasProjYaml,
+		details: hasProjYaml ? "Presente" : "No inicializado (/studio:setup)",
+	});
+
+	// 2. design/gdd/
+	const gddDir = join(dir, "design", "gdd");
+	const hasGdd = existsSync(gddDir);
+	checks.push({
+		name: "Especificaciones ODD (design/gdd/)",
+		path: "design/gdd/",
+		required: true,
+		satisfied: hasGdd,
+		details: hasGdd ? "Directorio activo" : "Falta directorio de diseño ODD",
+	});
+
+	// 3. production/roadmap.md
+	const roadmapPath = join(dir, "production", "roadmap.md");
+	const hasRoadmap = existsSync(roadmapPath);
+	checks.push({
+		name: "Brujula de Produccion (production/roadmap.md)",
+		path: "production/roadmap.md",
+		required: true,
+		satisfied: hasRoadmap,
+		details: hasRoadmap ? "Presente" : "No inicializado",
+	});
+
+	// 4. production/qa/bugs.md
+	const bugsPath = join(dir, "production", "qa", "bugs.md");
+	const hasBugs = existsSync(bugsPath);
+	checks.push({
+		name: "Triage de Bugs QA (production/qa/bugs.md)",
+		path: "production/qa/bugs.md",
+		required: false,
+		satisfied: hasBugs,
+		details: hasBugs ? "Presente" : "Opcional (se inicializa con /studio:setup)",
+	});
+
+	// 5. assets/manifest.yaml
+	const manifestPath = join(dir, "assets", "manifest.yaml");
+	const hasManifest = existsSync(manifestPath);
+	let assetStats: { total: number; placeholders: number; final: number } | undefined;
+
+	if (hasManifest) {
+		try {
+			const content = readFileSync(manifestPath, "utf8");
+			const placeholderMatches = content.match(/status:\s*["']?placeholder["']?/gi) || [];
+			const finalMatches = content.match(/status:\s*["']?final["']?/gi) || [];
+			const total = placeholderMatches.length + finalMatches.length;
+			assetStats = {
+				total,
+				placeholders: placeholderMatches.length,
+				final: finalMatches.length,
+			};
+		} catch {}
+	}
+
+	checks.push({
+		name: "Manifiesto de Assets (assets/manifest.yaml)",
+		path: "assets/manifest.yaml",
+		required: false,
+		satisfied: hasManifest,
+		details: hasManifest
+			? assetStats
+				? `${assetStats.total} assets (${assetStats.placeholders} placeholders, ${assetStats.final} finales)`
+				: "Presente"
+			: "Opcional (Standard 7)",
+	});
+
+	return { checks, assetStats };
+}
+
+export function formatAuditReport(report: EngineAuditReport, structureAudit?: ProjectStructureAudit): string[] {
 	const lines: string[] = [];
 	const isReady = report.ready;
 
 	lines.push("");
 	lines.push(
-		`\x1b[1m\x1b[38;2;167;139;250m🔍 Diagnóstico de Requisitos de Motor: ${report.engine}\x1b[0m`,
+		`\x1b[1m\x1b[38;2;167;139;250m[STUDIO DOCTOR] Diagnostico de Requisitos de Motor: ${report.engine}\x1b[0m`,
 	);
 	lines.push("\x1b[38;2;107;114;128m" + "─".repeat(70) + "\x1b[0m");
 
 	for (const check of report.checks) {
 		const symbol = check.satisfied
-			? "\x1b[38;2;52;211;153m✔\x1b[0m"
+			? "\x1b[38;2;52;211;153m[OK]\x1b[0m"
 			: check.required
-			? "\x1b[38;2;239;68;68m❌\x1b[0m"
-			: "\x1b[38;2;251;191;36mℹ\x1b[0m";
+			? "\x1b[38;2;239;68;68m[FAIL]\x1b[0m"
+			: "\x1b[38;2;251;191;36m[INFO]\x1b[0m";
 
 		const namePadded = check.name.padEnd(42);
 		const statusText = check.satisfied
@@ -436,42 +534,62 @@ export function formatAuditReport(report: EngineAuditReport): string[] {
 					: process.platform === "win32"
 					? check.installHelp.windows
 					: check.installHelp.linux;
-			lines.push(`     \x1b[38;2;243;244;246m👉 Para instalar: \x1b[38;2;56;189;248m${platformHelp}\x1b[0m`);
+			lines.push(`     \x1b[38;2;243;244;246m-> Para instalar: \x1b[38;2;56;189;248m${platformHelp}\x1b[0m`);
 		}
 	}
 
 	if (report.versionAudit) {
 		lines.push("");
 		lines.push(
-			`  \x1b[1m\x1b[38;2;56;189;248m📦 Auditoría de Versión y Base de Conocimiento:\x1b[0m`,
+			`  \x1b[1m\x1b[38;2;56;189;248m[VERSION] Auditoria de Version y Base de Conocimiento:\x1b[0m`,
 		);
 		const va = report.versionAudit;
 		const sym = va.status === "ok"
-			? "\x1b[38;2;52;211;153m✔\x1b[0m"
+			? "\x1b[38;2;52;211;153m[OK]\x1b[0m"
 			: va.status === "warning"
-			? "\x1b[38;2;239;68;68m⚠️\x1b[0m"
-			: "\x1b[38;2;251;191;36mℹ\x1b[0m";
+			? "\x1b[38;2;239;68;68m[WARN]\x1b[0m"
+			: "\x1b[38;2;251;191;36m[INFO]\x1b[0m";
 
 		lines.push(`     ${sym} ${va.summary}`);
 		if (va.referenceVersion) {
 			lines.push(`       \x1b[38;2;107;114;128mBase local de referencia: ${va.referenceVersion}\x1b[0m`);
 		}
 		if (va.advice) {
-			lines.push(`       \x1b[38;2;251;191;36m💡 Recomendación: ${va.advice}\x1b[0m`);
+			lines.push(`       \x1b[38;2;251;191;36m* Recomendacion: ${va.advice}\x1b[0m`);
+		}
+	}
+
+	if (structureAudit) {
+		lines.push("");
+		lines.push(
+			`  \x1b[1m\x1b[38;2;56;189;248m[STRUCTURE] Integridad del Proyecto ODD:\x1b[0m`,
+		);
+		for (const check of structureAudit.checks) {
+			const sym = check.satisfied
+				? "\x1b[38;2;52;211;153m[OK]\x1b[0m"
+				: check.required
+				? "\x1b[38;2;239;68;68m[FAIL]\x1b[0m"
+				: "\x1b[38;2;251;191;36m[INFO]\x1b[0m";
+			lines.push(`     ${sym} ${check.name.padEnd(42)} ${check.details}`);
+		}
+		if (structureAudit.assetStats && structureAudit.assetStats.placeholders > 0) {
+			lines.push(
+				`       \x1b[38;2;251;191;36m* Hay ${structureAudit.assetStats.placeholders} placeholders pendientes de reemplazo por assets finales.\x1b[0m`,
+			);
 		}
 	}
 
 	lines.push("");
 	if (isReady) {
 		lines.push(
-			`\x1b[38;2;52;211;153m✔ Tu sistema cuenta con todas las herramientas necesarias para compilar y ejecutar ${report.engine}.\x1b[0m`,
+			`\x1b[38;2;52;211;153m[STATUS] Tu sistema cuenta con todas las herramientas necesarias para compilar y ejecutar ${report.engine}.\x1b[0m`,
 		);
 	} else {
 		lines.push(
-			`\x1b[38;2;251;191;36m⚠️  ATENCIÓN: Tu sistema no tiene instaladas todas las herramientas para ${report.engine}.\x1b[0m`,
+			`\x1b[38;2;251;191;36m[STATUS] ATENCION: Tu sistema no tiene instaladas todas las herramientas para ${report.engine}.\x1b[0m`,
 		);
 		for (const rec of report.recommendations) {
-			lines.push(`   • ${rec}`);
+			lines.push(`   * ${rec}`);
 		}
 	}
 	lines.push("");
@@ -483,9 +601,9 @@ export async function handleStudioDoctor(
 	args: string,
 	ctx: ExtensionContext,
 ): Promise<void> {
+	const studioRoot = findStudioRoot(ctx.cwd) || ctx.cwd;
 	let targetEngine = args?.trim();
 	if (!targetEngine) {
-		const studioRoot = findStudioRoot(ctx.cwd) || ctx.cwd;
 		const detected = detectProjectEngine(studioRoot);
 		if (detected.detected) {
 			targetEngine = detected.engine;
@@ -496,13 +614,14 @@ export async function handleStudioDoctor(
 	}
 
 	const audit = auditEnginePrerequisites(targetEngine, studioRoot);
-	const lines = formatAuditReport(audit);
+	const structure = auditProjectStructure(studioRoot);
+	const lines = formatAuditReport(audit, structure);
 	for (const l of lines) console.log(l);
 
 	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 		const msg = audit.ready
-			? `✔ Herramientas para ${targetEngine} listas`
-			: `⚠️ Faltan herramientas para ${targetEngine}`;
+			? `[OK] Herramientas para ${targetEngine} listas`
+			: `[WARN] Faltan herramientas para ${targetEngine}`;
 		ctx.ui.notify(msg, audit.ready ? "info" : "warning");
 	}
 }

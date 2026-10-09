@@ -1,0 +1,6 @@
+version: 1
+assets:
+  - path: "Content/Characters/PlaceholderMannequin"
+    type: "mesh"
+    status: "placeholder"
+    description: "Default UE5 third-person mannequin"

@@ -19,6 +19,8 @@ import { handleStudioChains } from "./studio-chains.ts";
 import { handleStudioStart, readProducerState, recordFlowCompletion, auditProject } from "./studio-start.ts";
 import { handleStudioDoctor } from "./studio-doctor.ts";
 import { handleStudioWeb } from "./studio-web.ts";
+import { handleStudioProfile } from "./studio-profile.ts";
+import { handleStudioSfx, handleStudioPalettes } from "./studio-synth.ts";
 import { handleStudioNew } from "./studio-new.ts";
 import { handleStudioChanges } from "./studio-changes.ts";
 import { handleStudioTasks } from "./studio-tasks.ts";
@@ -149,6 +151,30 @@ export default function (pi: ExtensionAPI) {
 		description: "[Studio] Compilar versión WebAssembly y lanzar servidor local con aislamiento COOP/COEP",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioWeb(ctx, args);
+		},
+	});
+
+	// /studio:profile — Live Performance Profiler & Budget Tracker
+	(pi as any).registerCommand?.("studio:profile", {
+		description: "[Studio] Live Performance Profiler y monitor de presupuestos de FPS/Memoria",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioProfile(args, ctx);
+		},
+	});
+
+	// /studio:sfx — Sintetizador procedural de audio SFX
+	(pi as any).registerCommand?.("studio:sfx", {
+		description: "[Studio] Sintetizador procedural de audio WAV (ondas sine/square/saw/noise y ADSR)",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioSfx(args, ctx);
+		},
+	});
+
+	// /studio:palettes — Generador de paletas de color y shaders
+	(pi as any).registerCommand?.("studio:palettes", {
+		description: "[Studio] Generador de paletas retro y shaders cuantizadores para Godot y Raylib",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioPalettes(args, ctx);
 		},
 	});
 

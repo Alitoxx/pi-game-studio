@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.0] - 2026-10-09
+
+### Added
+- **Live Performance & Budget Tracker HUD (`/studio:profile`)**: Monitor de telemetría in-terminal para comprobar el cumplimiento de presupuestos técnicos (Target FPS, 16.6ms frame budget, RSS Memory MB). Integrado con el pie de estado TUI de Pi mostrando alertas visuales en vivo (`⚡ 60fps (48MB)`).
+- **Audio Synthesizer & Shader Palette Studio (`/studio:sfx`, `/studio:palettes` y `scripts/synth-studio.js`)**:
+  - Sintetizador procedural de audio WAV en Node.js puro compatible con formas de onda sine, square, saw y noise con curvas de envolvente ADSR y frequency sweeps.
+  - Generador de paletas retro (Pico-8, Cyberpunk, GameBoy, Solarized) y exportador automático de shaders cuantizadores para Godot (`.gdshader`) y Raylib C++ (`.fs`).
+
+---
+
 ## [1.3.0] - 2026-10-09
 
 ### Added

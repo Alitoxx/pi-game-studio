@@ -18,6 +18,7 @@ import { handleStudioSettings, getLanguage } from "./studio-settings.ts";
 import { handleStudioChains } from "./studio-chains.ts";
 import { handleStudioStart, readProducerState, recordFlowCompletion, auditProject } from "./studio-start.ts";
 import { handleStudioDoctor } from "./studio-doctor.ts";
+import { handleStudioWeb } from "./studio-web.ts";
 import { handleStudioNew } from "./studio-new.ts";
 import { handleStudioChanges } from "./studio-changes.ts";
 import { handleStudioTasks } from "./studio-tasks.ts";
@@ -140,6 +141,14 @@ export default function (pi: ExtensionAPI) {
 		description: "[Studio] Diagnóstico de prerrequisitos, herramientas y compiladores del motor de juego",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioDoctor(args, ctx);
+		},
+	});
+
+	// /studio:web — Compilar y servir versión Web/WASM en el navegador
+	(pi as any).registerCommand?.("studio:web", {
+		description: "[Studio] Compilar versión WebAssembly y lanzar servidor local con aislamiento COOP/COEP",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioWeb(ctx, args);
 		},
 	});
 

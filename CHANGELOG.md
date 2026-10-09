@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.0] - 2026-10-09
+
+### Added
+- **One-Click WebAssembly Build & Dev Server (`/studio:web`)**: Nuevo comando de estudio y scripts npm (`npm run build:web`, `npm run serve:web`) con compilación unificada para Bevy (`wasm-bindgen`), Raylib (`emscripten`) y Godot 4 (export headless).
+- **Servidor HTTP con Aislamiento Cross-Origin (`scripts/serve-web.js`)**: Servidor local ligero sin dependencias que inyecta cabeceras `Cross-Origin-Opener-Policy: same-origin` y `Cross-Origin-Embedder-Policy: require-corp` para habilitar `SharedArrayBuffer` y multithreading WebAssembly en navegadores modernos.
+- **Plantillas CI/CD de GitHub Actions (`templates/.github/workflows/gamedev-ci.yml`)**: Workflow estándar para repositorios gamedev que automatiza la suite de tests, generación de placeholders, soak testing de memoria de 60s, compilación Web/WASM y despliegue a GitHub Pages en ramas principales.
+
+---
+
 ## [1.2.1] - 2026-10-05
 
 ### Added

@@ -142,5 +142,34 @@ describe("Utility Scripts", () => {
 			expect(bmp.length).toBeGreaterThan(54);
 		});
 	});
+
+	describe("build-web.sh and serve-web.js", () => {
+		const buildPath = path.join(__dirname, "..", "scripts", "build-web.sh");
+		const servePath = path.join(__dirname, "..", "scripts", "serve-web.js");
+
+		test("build-web.sh exists and is executable", () => {
+			expect(fs.existsSync(buildPath)).toBe(true);
+			const stats = fs.statSync(buildPath);
+			expect((stats.mode & 0o111) !== 0).toBe(true);
+		});
+
+		test("serve-web.js exports server and injects COOP/COEP headers", () => {
+			expect(fs.existsSync(servePath)).toBe(true);
+			const { server, PORT, WEB_DIR } = require(servePath);
+			expect(server).toBeDefined();
+			expect(typeof PORT).toBe("number");
+			expect(typeof WEB_DIR).toBe("string");
+		});
+
+		test("templates and local GitHub actions CI/CD exist", () => {
+			const templateCi = path.join(__dirname, "..", "templates", ".github", "workflows", "gamedev-ci.yml");
+			const localCi = path.join(__dirname, "..", ".github", "workflows", "gamedev-ci.yml");
+			expect(fs.existsSync(templateCi)).toBe(true);
+			expect(fs.existsSync(localCi)).toBe(true);
+			const content = fs.readFileSync(templateCi, "utf8");
+			expect(content).toMatch(/build-web/);
+			expect(content).toMatch(/deploy-pages/);
+		});
+	});
 });
 

@@ -170,6 +170,35 @@ export async function handleStudioTasks(
 		return;
 	}
 
+	if (trimmed === "collapse" || trimmed.startsWith("collapse")) {
+		const { isTasksCardCollapsed, setTasksCardCollapsed, updateTasksWidget } = await import("./studio-tasks-widget.ts");
+		const { invalidateStudioSidebar } = await import("./studio-sidebar.ts");
+		const action = trimmed.replace("collapse", "").trim();
+		let nextState: boolean;
+		if (action === "on" || action === "true" || action === "enable") {
+			nextState = true;
+		} else if (action === "off" || action === "false" || action === "disable") {
+			nextState = false;
+		} else {
+			nextState = !isTasksCardCollapsed(rootDir);
+		}
+		setTasksCardCollapsed(rootDir, nextState);
+		updateTasksWidget(ctx);
+		invalidateStudioSidebar();
+		console.log(
+			nextState
+				? "\x1b[38;2;251;191;36mTarjeta de tareas colapsada [collapsed].\x1b[0m"
+				: "\x1b[38;2;52;211;153mTarjeta de tareas expandida.\x1b[0m"
+		);
+		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
+			ctx.ui.notify(
+				`Tareas: Tarjeta ${nextState ? "colapsada" : "expandida"}`,
+				"info",
+			);
+		}
+		return;
+	}
+
 	const summary = inspectStudioTasks(rootDir);
 	const lines = formatTasksOutput(summary);
 

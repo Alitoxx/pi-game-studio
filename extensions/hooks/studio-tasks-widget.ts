@@ -1,6 +1,6 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { existsSync, writeFileSync, unlinkSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, writeFileSync, unlinkSync, mkdirSync } from "node:fs";
+import { join, dirname } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
 import { inspectStudioTasks, type StudioTask } from "./studio-tasks.ts";
 import { renderStudioStatusCard } from "./studio-hud.ts";
@@ -22,6 +22,27 @@ import {
 
 export const TASKS_WIDGET_KEY = "studio-tasks";
 
+export function isTasksCardCollapsed(studioRoot: string): boolean {
+	const flag = join(studioRoot, ".pi", "game-studio", "tasks-collapsed");
+	return existsSync(flag);
+}
+
+export function setTasksCardCollapsed(studioRoot: string, collapsed: boolean): void {
+	const flag = join(studioRoot, ".pi", "game-studio", "tasks-collapsed");
+	if (collapsed) {
+		try {
+			mkdirSync(dirname(flag), { recursive: true });
+			writeFileSync(flag, "true", "utf8");
+		} catch {}
+	} else {
+		if (existsSync(flag)) {
+			try {
+				unlinkSync(flag);
+			} catch {}
+		}
+	}
+}
+
 export function isTasksWidgetEnabled(studioRoot: string): boolean {
 	const disabledFlag = join(studioRoot, ".pi", "game-studio", "widget-tasks-disabled");
 	return !existsSync(disabledFlag);
@@ -42,8 +63,17 @@ export function setTasksWidgetEnabled(studioRoot: string, enabled: boolean): voi
 	}
 }
 
-export function renderTasksWidgetCard(tasks: StudioTask[], width: number = 74): string[] {
+export function renderTasksWidgetCard(
+	tasks: StudioTask[],
+	width: number = 74,
+	collapsed?: boolean,
+	studioRoot?: string,
+): string[] {
 	if (!tasks || tasks.length === 0) return [];
+
+	const isCollapsed = collapsed !== undefined
+		? collapsed
+		: (studioRoot ? isTasksCardCollapsed(studioRoot) : false);
 
 	const cardWidth = Math.min(Math.max(width - 4, 46), 56);
 	const innerWidth = cardWidth - 4;
@@ -52,6 +82,18 @@ export function renderTasksWidgetCard(tasks: StudioTask[], width: number = 74): 
 	const countSummary = `${completedCount} of ${tasks.length}`;
 
 	const lines: string[] = [];
+	if (isCollapsed) {
+		const rawTitle = `❀ Tasks · ${countSummary} [collapsed]`;
+		const maxTitleLen = Math.max(10, cardWidth - 7);
+		const displayTitle = rawTitle.length > maxTitleLen ? truncateAnsi(rawTitle, maxTitleLen) : rawTitle;
+		const titleStyled = `${BLUE}${displayTitle}${RESET}`;
+		const titleVisibleLen = displayTitle.replace(/\x1b\[[0-9;]*m/g, "").length;
+		const ruleLen = Math.max(0, cardWidth - titleVisibleLen - 5);
+		lines.push(`  ${BORDER}╭─${RESET} ${titleStyled} ${BORDER}${"─".repeat(ruleLen)}╮${RESET}`);
+		lines.push(`  ${BORDER}╰${"─".repeat(cardWidth - 2)}╯${RESET}`);
+		return lines;
+	}
+
 	const titleText = `❀ Tasks · ${countSummary}`;
 	const titleStyled = `${BLUE}${titleText}${RESET}`;
 	const ruleLen = Math.max(0, cardWidth - titleText.length - 7);
@@ -129,7 +171,7 @@ export function updateTasksWidget(ctx: ExtensionContext): void {
 				return [];
 			}
 			const statusLines = renderStudioStatusCard(ctx, studioRoot, width || 74);
-			const taskLines = renderTasksWidgetCard(summary.tasks, width || 74);
+			const taskLines = renderTasksWidgetCard(summary.tasks, width || 74, undefined, studioRoot);
 			return [...statusLines, "", ...taskLines];
 		},
 		invalidate() {

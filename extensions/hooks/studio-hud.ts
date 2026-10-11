@@ -1,6 +1,6 @@
 import type { ExtensionContext, ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readFileSync, writeFileSync, unlinkSync, mkdirSync } from "node:fs";
+import { join, dirname } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
 import { readProducerState } from "./studio-start.ts";
 import { inspectSetup } from "./studio-setup.ts";
@@ -25,6 +25,27 @@ export interface ContextUsageInfo {
 	tokens: number;
 	contextWindow: number;
 	percent: number;
+}
+
+export function isStatusCardCollapsed(studioRoot: string): boolean {
+	const flag = join(studioRoot, ".pi", "game-studio", "status-collapsed");
+	return existsSync(flag);
+}
+
+export function setStatusCardCollapsed(studioRoot: string, collapsed: boolean): void {
+	const flag = join(studioRoot, ".pi", "game-studio", "status-collapsed");
+	if (collapsed) {
+		try {
+			mkdirSync(dirname(flag), { recursive: true });
+			writeFileSync(flag, "true", "utf8");
+		} catch {}
+	} else {
+		if (existsSync(flag)) {
+			try {
+				unlinkSync(flag);
+			} catch {}
+		}
+	}
 }
 
 export function formatTokens(count: number): string {
@@ -83,6 +104,7 @@ export function renderStudioStatusCard(
 	ctx: ExtensionContext,
 	studioRoot: string,
 	width: number = 74,
+	collapsed?: boolean,
 ): string[] {
 	const setup = inspectSetup(studioRoot);
 	const { state: prodState } = readProducerState(studioRoot);
@@ -99,6 +121,23 @@ export function renderStudioStatusCard(
 	const sprint = prodState?.sprint || "Sprint Activo";
 	const modelStr = formatModelDisplayName(model, thinking);
 
+	const cardWidth = Math.min(Math.max(width - 4, 46), 56);
+	const innerWidth = cardWidth - 4;
+
+	const isCollapsed = collapsed !== undefined ? collapsed : isStatusCardCollapsed(studioRoot);
+	if (isCollapsed) {
+		const rawTitle = `✿ Status · ${gameTitle} (${engine}) [collapsed]`;
+		const maxTitleLen = Math.max(10, cardWidth - 7);
+		const displayTitle = rawTitle.length > maxTitleLen ? truncateAnsi(rawTitle, maxTitleLen) : rawTitle;
+		const titleStyled = `${BLUE}${displayTitle}${RESET}`;
+		const titleVisibleLen = displayTitle.replace(/\x1b\[[0-9;]*m/g, "").length;
+		const ruleLen = Math.max(0, cardWidth - titleVisibleLen - 5);
+		const lines: string[] = [];
+		lines.push(`  ${BORDER}╭─${RESET} ${titleStyled} ${BORDER}${"─".repeat(ruleLen)}╮${RESET}`);
+		lines.push(`  ${BORDER}╰${"─".repeat(cardWidth - 2)}╯${RESET}`);
+		return lines;
+	}
+
 	const gaugeStr = usage
 		? `${renderContextGauge(usage.percent, 8)} ${getGaugeColor(usage.percent)}${usage.percent}%${RESET} (${formatTokens(usage.tokens)}/${formatTokens(usage.contextWindow)})`
 		: `${DIM}No telemetría${RESET}`;
@@ -106,9 +145,6 @@ export function renderStudioStatusCard(
 	const engramStr = setup.engramEnabled === true
 		? `${GREEN}✓ conectado${RESET}`
 		: `${GRAY}local Git${RESET}`;
-
-	const cardWidth = Math.min(Math.max(width - 4, 46), 56);
-	const innerWidth = cardWidth - 4;
 
 	const lines: string[] = [];
 	const titleText = `✿ Status`;

@@ -16,12 +16,16 @@ describe("Studio HUD and Live Tasks Widget", () => {
 		expect(hudSource).toContain("export function renderStudioStatusCard");
 		expect(hudSource).toContain("export function renderStudioFooterBar");
 		expect(hudSource).toContain("export function updateStudioHUD");
+		expect(hudSource).toContain("export function isStatusCardCollapsed");
+		expect(hudSource).toContain("export function setStatusCardCollapsed");
 
 		const widgetSource = fs.readFileSync(widgetModulePath, "utf8");
 		expect(widgetSource).toContain("export function renderTasksWidgetCard");
 		expect(widgetSource).toContain("export function updateTasksWidget");
 		expect(widgetSource).toContain("export function isTasksWidgetEnabled");
 		expect(widgetSource).toContain("export function setTasksWidgetEnabled");
+		expect(widgetSource).toContain("export function isTasksCardCollapsed");
+		expect(widgetSource).toContain("export function setTasksCardCollapsed");
 	});
 
 	test("studio-hud renders footer bar without reference errors", () => {
@@ -115,5 +119,197 @@ describe("Studio HUD and Live Tasks Widget", () => {
 		expect(sidebarSource).toContain("export function installStudioSidebar");
 		expect(sidebarSource).toContain("export function isStudioSidebarActive");
 		expect(sidebarSource).toContain("export function invalidateStudioSidebar");
+	});
+
+	test("persistence helpers toggle status-collapsed and tasks-collapsed flags", () => {
+		const os = require("os");
+		const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "studio-collapse-test-"));
+		try {
+			function isStatusCollapsed(root) {
+				return fs.existsSync(path.join(root, ".pi", "game-studio", "status-collapsed"));
+			}
+			function setStatusCollapsed(root, val) {
+				const flag = path.join(root, ".pi", "game-studio", "status-collapsed");
+				if (val) {
+					fs.mkdirSync(path.dirname(flag), { recursive: true });
+					fs.writeFileSync(flag, "true", "utf8");
+				} else if (fs.existsSync(flag)) {
+					fs.unlinkSync(flag);
+				}
+			}
+			function isTasksCollapsed(root) {
+				return fs.existsSync(path.join(root, ".pi", "game-studio", "tasks-collapsed"));
+			}
+			function setTasksCollapsed(root, val) {
+				const flag = path.join(root, ".pi", "game-studio", "tasks-collapsed");
+				if (val) {
+					fs.mkdirSync(path.dirname(flag), { recursive: true });
+					fs.writeFileSync(flag, "true", "utf8");
+				} else if (fs.existsSync(flag)) {
+					fs.unlinkSync(flag);
+				}
+			}
+
+			expect(isStatusCollapsed(tmpDir)).toBe(false);
+			expect(isTasksCollapsed(tmpDir)).toBe(false);
+
+			setStatusCollapsed(tmpDir, true);
+			expect(isStatusCollapsed(tmpDir)).toBe(true);
+			setStatusCollapsed(tmpDir, false);
+			expect(isStatusCollapsed(tmpDir)).toBe(false);
+
+			setTasksCollapsed(tmpDir, true);
+			expect(isTasksCollapsed(tmpDir)).toBe(true);
+			setTasksCollapsed(tmpDir, false);
+			expect(isTasksCollapsed(tmpDir)).toBe(false);
+		} finally {
+			fs.rmSync(tmpDir, { recursive: true, force: true });
+		}
+	});
+
+	test("status card renders compact 2-line header when collapsed", () => {
+		function renderStatusCard(gameTitle, engine, collapsed, width = 50) {
+			const cardWidth = Math.min(Math.max(width - 4, 46), 56);
+			if (collapsed) {
+				const rawTitle = `✿ Status · ${gameTitle} (${engine}) [collapsed]`;
+				const maxTitleLen = Math.max(10, cardWidth - 7);
+				const displayTitle = rawTitle.length > maxTitleLen ? rawTitle.slice(0, maxTitleLen - 1) + "…" : rawTitle;
+				const ruleLen = Math.max(0, cardWidth - displayTitle.length - 5);
+				return [
+					`  ╭─ ${displayTitle} ${"─".repeat(ruleLen)}╮`,
+					`  ╰${"─".repeat(cardWidth - 2)}╯`,
+				];
+			}
+			return [
+				`  ╭─ ✿ Status ${"─".repeat(cardWidth - 12)}╮`,
+				`  │ Project: ${gameTitle} │`,
+				`  ╰${"─".repeat(cardWidth - 2)}╯`,
+			];
+		}
+
+		const collapsedOutput = renderStatusCard("Super Game", "Godot 4", true, 74);
+		expect(collapsedOutput.length).toBe(2);
+		expect(collapsedOutput[0]).toContain("✿ Status · Super Game (Godot 4) [collapsed]");
+		expect(collapsedOutput[0].startsWith("  ╭─")).toBe(true);
+		expect(collapsedOutput[0].endsWith("╮")).toBe(true);
+		expect(collapsedOutput[1].startsWith("  ╰")).toBe(true);
+		expect(collapsedOutput[1].endsWith("╯")).toBe(true);
+
+		const expandedOutput = renderStatusCard("Super Game", "Godot 4", false);
+		expect(expandedOutput.length).toBeGreaterThan(2);
+		expect(expandedOutput[0]).not.toContain("[collapsed]");
+	});
+
+	test("tasks card renders compact 2-line header when collapsed", () => {
+		function renderTasksCard(tasks, collapsed, width = 50) {
+			if (!tasks || tasks.length === 0) return [];
+			const cardWidth = Math.min(Math.max(width - 4, 46), 56);
+			const completedCount = tasks.filter((t) => t.status === "completed").length;
+			const countSummary = `${completedCount} of ${tasks.length}`;
+
+			if (collapsed) {
+				const rawTitle = `❀ Tasks · ${countSummary} [collapsed]`;
+				const maxTitleLen = Math.max(10, cardWidth - 7);
+				const displayTitle = rawTitle.length > maxTitleLen ? rawTitle.slice(0, maxTitleLen - 1) + "…" : rawTitle;
+				const ruleLen = Math.max(0, cardWidth - displayTitle.length - 5);
+				return [
+					`  ╭─ ${displayTitle} ${"─".repeat(ruleLen)}╮`,
+					`  ╰${"─".repeat(cardWidth - 2)}╯`,
+				];
+			}
+			return [
+				`  ╭─ ❀ Tasks · ${countSummary} ${"─".repeat(cardWidth - 20)}╮`,
+				...tasks.map((t) => `  │ [${t.status === "completed" ? "x" : " "}] ${t.title} │`),
+				`  ╰${"─".repeat(cardWidth - 2)}╯`,
+			];
+		}
+
+		const mockTasks = [
+			{ title: "Task 1", status: "completed" },
+			{ title: "Task 2", status: "in_progress" },
+			{ title: "Task 3", status: "pending" },
+		];
+
+		const collapsedLines = renderTasksCard(mockTasks, true);
+		expect(collapsedLines.length).toBe(2);
+		expect(collapsedLines[0]).toContain("❀ Tasks · 1 of 3 [collapsed]");
+		expect(collapsedLines[0].startsWith("  ╭─")).toBe(true);
+		expect(collapsedLines[0].endsWith("╮")).toBe(true);
+		expect(collapsedLines[1].startsWith("  ╰")).toBe(true);
+		expect(collapsedLines[1].endsWith("╯")).toBe(true);
+
+		const expandedLines = renderTasksCard(mockTasks, false);
+		expect(expandedLines.length).toBe(5);
+		expect(expandedLines[0]).not.toContain("[collapsed]");
+	});
+
+	test("sidebar mouse event handler toggles status and tasks collapsed states on header clicks", () => {
+		const os = require("os");
+		const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "sidebar-click-test-"));
+		try {
+			let statusCollapsed = false;
+			let tasksCollapsed = false;
+			let invalidated = false;
+
+			const statusRange = [1, 1];
+			const tasksRange = [5, 5];
+
+			function handleMouse(event, scrollOffset = 0) {
+				if (event.type === "click" || event.type === "press") {
+					const lineY = scrollOffset + event.y;
+					if (statusRange && lineY >= statusRange[0] && lineY <= statusRange[1]) {
+						statusCollapsed = !statusCollapsed;
+						invalidated = true;
+						return { handled: true, render: true };
+					}
+					if (tasksRange && lineY >= tasksRange[0] && lineY <= tasksRange[1]) {
+						tasksCollapsed = !tasksCollapsed;
+						invalidated = true;
+						return { handled: true, render: true };
+					}
+				}
+				return undefined;
+			}
+
+			// Click on status header
+			const statusResult = handleMouse({ type: "click", y: 1 });
+			expect(statusResult).toEqual({ handled: true, render: true });
+			expect(statusCollapsed).toBe(true);
+			expect(invalidated).toBe(true);
+
+			// Press on status header again to uncollapse
+			invalidated = false;
+			const statusResult2 = handleMouse({ type: "press", y: 1 });
+			expect(statusResult2).toEqual({ handled: true, render: true });
+			expect(statusCollapsed).toBe(false);
+
+			// Click on tasks header
+			invalidated = false;
+			const tasksResult = handleMouse({ type: "click", y: 5 });
+			expect(tasksResult).toEqual({ handled: true, render: true });
+			expect(tasksCollapsed).toBe(true);
+
+			// Click elsewhere
+			const outsideResult = handleMouse({ type: "click", y: 3 });
+			expect(outsideResult).toBeUndefined();
+		} finally {
+			fs.rmSync(tmpDir, { recursive: true, force: true });
+		}
+	});
+
+	test("CLI commands support collapse subcommand in studio-tasks and studio-status", () => {
+		const tasksFile = path.join(__dirname, "..", "extensions", "hooks", "studio-tasks.ts");
+		const statusFile = path.join(__dirname, "..", "extensions", "hooks", "studio-status.ts");
+
+		const tasksSrc = fs.readFileSync(tasksFile, "utf8");
+		expect(tasksSrc).toContain('trimmed === "collapse" || trimmed.startsWith("collapse")');
+		expect(tasksSrc).toContain("setTasksCardCollapsed");
+		expect(tasksSrc).toContain("updateTasksWidget");
+		expect(tasksSrc).toContain("invalidateStudioSidebar");
+
+		const statusSrc = fs.readFileSync(statusFile, "utf8");
+		expect(statusSrc).toContain('trimmed === "collapse" || trimmed.startsWith("collapse")');
+		expect(statusSrc).toContain("setStatusCardCollapsed");
+		expect(statusSrc).toContain("updateStudioHUD");
 	});
 });

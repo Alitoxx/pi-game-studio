@@ -9,8 +9,8 @@ import {
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { findStudioRoot } from "./studio-root.ts";
 import { inspectStudioTasks } from "./studio-tasks.ts";
-import { renderStudioStatusCard } from "./studio-hud.ts";
-import { renderTasksWidgetCard, isTasksWidgetEnabled } from "./studio-tasks-widget.ts";
+import { renderStudioStatusCard, isStatusCardCollapsed, setStatusCardCollapsed } from "./studio-hud.ts";
+import { renderTasksWidgetCard, isTasksWidgetEnabled, isTasksCardCollapsed, setTasksCardCollapsed } from "./studio-tasks-widget.ts";
 import { studioAgentsRunner } from "./studio-agents-runner.ts";
 import { renderSubagentsWidgetCard } from "./studio-subagents-widget.ts";
 
@@ -40,6 +40,8 @@ export interface StudioSidebarState {
 	active: boolean;
 	revision: number;
 	ownsHost?: () => boolean;
+	statusHeaderRange?: [number, number];
+	tasksHeaderRange?: [number, number];
 }
 
 export function getStudioSidebarState(tui: TUI): StudioSidebarState {
@@ -47,11 +49,14 @@ export function getStudioSidebarState(tui: TUI): StudioSidebarState {
 	return (terminal[STATE] ??= { active: false, revision: 0 });
 }
 
+let activeTui: TUI | undefined;
+
 export function invalidateStudioSidebar(tui?: TUI): void {
-	if (tui?.terminal) {
-		getStudioSidebarState(tui).revision++;
+	const target = tui ?? activeTui;
+	if (target?.terminal) {
+		getStudioSidebarState(target).revision++;
 		try {
-			tui.requestRender();
+			target.requestRender();
 		} catch {}
 	}
 }
@@ -73,6 +78,7 @@ export function isStudioSidebarActive(tui?: TUI): boolean {
 export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => void {
 	if (!tui?.terminal) return () => {};
 
+	activeTui = tui;
 	const host = tui as Host;
 	const state = getStudioSidebarState(tui);
 	const cleanups: Array<() => void> = [];
@@ -82,6 +88,8 @@ export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => voi
 	let railLines: string[] = [];
 	let lastRevision = -1;
 	let lastWidth = -1;
+	let statusHeaderRange: [number, number] | undefined;
+	let tasksHeaderRange: [number, number] | undefined;
 
 	state.ownsHost = () =>
 		!stopped &&
@@ -118,6 +126,40 @@ export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => voi
 				},
 			};
 		}
+
+		if (event.type === "click" || event.type === "press") {
+			const lineY = (scroll.scrollTop ?? 0) + event.y;
+			const studioRoot = findStudioRoot(ctx.cwd) || ctx.cwd;
+
+			if (
+				statusHeaderRange &&
+				lineY >= statusHeaderRange[0] &&
+				lineY <= statusHeaderRange[1]
+			) {
+				const current = isStatusCardCollapsed(studioRoot);
+				setStatusCardCollapsed(studioRoot, !current);
+				invalidateStudioSidebar(tui);
+				try {
+					tui.requestRender();
+				} catch {}
+				return { handled: true, render: true };
+			}
+
+			if (
+				tasksHeaderRange &&
+				lineY >= tasksHeaderRange[0] &&
+				lineY <= tasksHeaderRange[1]
+			) {
+				const current = isTasksCardCollapsed(studioRoot);
+				setTasksCardCollapsed(studioRoot, !current);
+				invalidateStudioSidebar(tui);
+				try {
+					tui.requestRender();
+				} catch {}
+				return { handled: true, render: true };
+			}
+		}
+
 		return undefined;
 	};
 
@@ -137,15 +179,17 @@ export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => voi
 			const contentWidth = scroll.getContentWidth(RAIL_WIDTH);
 			const cardInnerWidth = Math.max(0, contentWidth - RAIL_PADDING * 2);
 
+			const statusCollapsed = isStatusCardCollapsed(studioRoot);
 			// Render Status Card
-			const statusLines = renderStudioStatusCard(ctx, studioRoot, cardInnerWidth);
+			const statusLines = renderStudioStatusCard(ctx, studioRoot, cardInnerWidth, statusCollapsed);
 
+			const tasksCollapsed = isTasksCardCollapsed(studioRoot);
 			// Render Tasks Card (if enabled and tasks exist)
 			let taskLines: string[] = [];
 			if (isTasksWidgetEnabled(studioRoot)) {
 				const summary = inspectStudioTasks(studioRoot);
 				if (summary.totalCount > 0 && summary.tasks.length > 0) {
-					taskLines = renderTasksWidgetCard(summary.tasks, cardInnerWidth);
+					taskLines = renderTasksWidgetCard(summary.tasks, cardInnerWidth, tasksCollapsed, studioRoot);
 				}
 			}
 
@@ -158,6 +202,11 @@ export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => voi
 
 			railLines = [];
 			railLines.push(""); // top margin
+
+			const statusStart = railLines.length;
+			const statusEnd = statusCollapsed ? statusStart + 1 : statusStart;
+			statusHeaderRange = [statusStart, statusEnd];
+			state.statusHeaderRange = statusHeaderRange;
 
 			for (const line of statusLines) {
 				railLines.push(" ".repeat(RAIL_PADDING) + line);
@@ -172,9 +221,16 @@ export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => voi
 
 			if (taskLines.length > 0) {
 				railLines.push(""); // gap between cards
+				const tasksStart = railLines.length;
+				const tasksEnd = tasksCollapsed ? tasksStart + 1 : tasksStart;
+				tasksHeaderRange = [tasksStart, tasksEnd];
+				state.tasksHeaderRange = tasksHeaderRange;
 				for (const line of taskLines) {
 					railLines.push(" ".repeat(RAIL_PADDING) + line);
 				}
+			} else {
+				tasksHeaderRange = undefined;
+				state.tasksHeaderRange = undefined;
 			}
 
 			const active =
@@ -303,6 +359,9 @@ export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => voi
 	}
 
 	return () => {
+		if (activeTui === tui) {
+			activeTui = undefined;
+		}
 		stopped = true;
 		state.active = false;
 		clearInterval(timer);

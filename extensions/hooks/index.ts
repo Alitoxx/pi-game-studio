@@ -30,6 +30,7 @@ import { updateSubagentsWidget, installSubagentsWidget } from "./studio-subagent
 import { handleStudioSubagentsViewer } from "./studio-subagents-viewer.ts";
 import { registerStudioSubagentTools } from "./studio-subagents.ts";
 import { registerAskUserChoice } from "./studio-choice.ts";
+import { studioAgentsRunner } from "./studio-agents-runner.ts";
 
 export default function (pi: ExtensionAPI) {
 	// ──────────────────────────────────────────────
@@ -37,6 +38,19 @@ export default function (pi: ExtensionAPI) {
 	// ──────────────────────────────────────────────
 	registerStudioSubagentTools(pi);
 	registerAskUserChoice(pi);
+
+	// ──────────────────────────────────────────────
+	// Escape & Abort Handling (Cancel All Subagents on Escape / Interrupt)
+	// ──────────────────────────────────────────────
+	(pi as any).on?.("session_abort", () => {
+		studioAgentsRunner.cancelAll("Sesión interrumpida por el usuario (Escape)");
+	});
+	(pi as any).on?.("turn_abort", () => {
+		studioAgentsRunner.cancelAll("Turno abortado por el usuario (Escape)");
+	});
+	(pi as any).on?.("agent_abort", () => {
+		studioAgentsRunner.cancelAll("Agente abortado por el usuario (Escape)");
+	});
 
 	// ──────────────────────────────────────────────
 	// Studio Suite Commands (Namespace: studio:*)

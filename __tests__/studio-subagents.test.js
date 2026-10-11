@@ -72,4 +72,18 @@ describe("Studio Subagents & Isolated Execution Engine", () => {
 		expect(indexSource).toContain('registerCommand?.("studio:subagents"');
 		expect(indexSource).toContain('registerCommand?.("studio:logs"');
 	});
+
+	test("subagent runner and index support immediate abort on Escape / interrupt", () => {
+		const runnerSource = fs.readFileSync(runnerPath, "utf8");
+		expect(runnerSource).toContain("cancelAll(");
+		expect(runnerSource).toContain("abortHandler");
+
+		const subagentsSource = fs.readFileSync(subagentsPath, "utf8");
+		expect(subagentsSource).toContain("_signal");
+
+		const indexSource = fs.readFileSync(indexPath, "utf8");
+		expect(indexSource).toContain('"session_abort"');
+		expect(indexSource).toContain('"turn_abort"');
+		expect(indexSource).toContain("studioAgentsRunner.cancelAll");
+	});
 });

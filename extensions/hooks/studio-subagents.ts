@@ -82,7 +82,7 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 				);
 			}
 
-			const record = await studioAgentsRunner.run(manifest, taskPrompt, ctx.cwd, mode);
+			const record = await studioAgentsRunner.run(manifest, taskPrompt, ctx.cwd, mode, _signal);
 
 			if (mode === "background") {
 				return {

@@ -78,9 +78,29 @@ export class StudioAgentsRunner {
 			task.status = "cancelled";
 			task.error = reason;
 			task.endedAt = Date.now();
+			this.notifyListeners(task);
 			return true;
 		}
 		return false;
+	}
+
+	cancelAll(reason = "cancelled by user"): number {
+		let count = 0;
+		for (const [id, child] of this.liveProcesses.entries()) {
+			try {
+				child.kill("SIGTERM");
+			} catch {}
+			this.liveProcesses.delete(id);
+			const task = this.tasks.get(id);
+			if (task && (task.status === "running" || task.status === "queued")) {
+				task.status = "cancelled";
+				task.error = reason;
+				task.endedAt = Date.now();
+				this.notifyListeners(task);
+				count++;
+			}
+		}
+		return count;
 	}
 
 	async run(
@@ -88,6 +108,7 @@ export class StudioAgentsRunner {
 		taskPrompt: string,
 		cwd: string,
 		mode: "task" | "background" = "task",
+		signal?: AbortSignal,
 	): Promise<TaskRecord> {
 		this.counter++;
 		const now = Date.now();
@@ -117,7 +138,7 @@ export class StudioAgentsRunner {
 		this.tasks.set(taskId, record);
 		this.notifyListeners(record);
 
-		const executionPromise = this.executeSubprocess(record, manifest);
+		const executionPromise = this.executeSubprocess(record, manifest, signal);
 
 		if (mode === "background") {
 			// Retornar de inmediato sin esperar
@@ -130,8 +151,18 @@ export class StudioAgentsRunner {
 	private executeSubprocess(
 		record: TaskRecord,
 		manifest: AgentManifest,
+		signal?: AbortSignal,
 	): Promise<TaskRecord> {
 		return new Promise<TaskRecord>((resolve) => {
+			if (signal?.aborted) {
+				record.status = "cancelled";
+				record.error = "Operación abortada por el usuario (Escape)";
+				record.endedAt = Date.now();
+				record.latestActivity = "Cancelado por usuario";
+				this.notifyListeners(record);
+				return resolve(record);
+			}
+
 			record.status = "running";
 			record.startedAt = Date.now();
 			record.latestActivity = "Iniciando especialista en modo RPC...";
@@ -200,6 +231,13 @@ export class StudioAgentsRunner {
 			}
 
 			this.liveProcesses.set(record.id, child);
+
+			const abortHandler = () => {
+				this.cancel(record.id, "Operación abortada por el usuario (Escape)");
+			};
+			if (signal) {
+				signal.addEventListener("abort", abortHandler, { once: true });
+			}
 
 			let resultText = "";
 			let stderr = "";
@@ -335,6 +373,9 @@ export class StudioAgentsRunner {
 			child.on("close", (code) => {
 				clearTimeout(timer);
 				clearTimeout(initTimer);
+				if (signal) {
+					signal.removeEventListener("abort", abortHandler);
+				}
 				this.liveProcesses.delete(record.id);
 				record.endedAt = Date.now();
 
@@ -362,6 +403,9 @@ export class StudioAgentsRunner {
 			child.on("error", (err) => {
 				clearTimeout(timer);
 				clearTimeout(initTimer);
+				if (signal) {
+					signal.removeEventListener("abort", abortHandler);
+				}
 				this.liveProcesses.delete(record.id);
 				record.status = "failed";
 				record.error = err.message;

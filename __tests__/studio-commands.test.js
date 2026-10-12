@@ -260,52 +260,43 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 		expect(source).toContain("production/roadmap.md");
 	});
 
-	test("studio-choice registers ask_user_choice and ask_user_question with custom response", () => {
+	test("studio-choice registers unified ask_user_question with custom response", () => {
 		const source = fs.readFileSync(
 			path.join(__dirname, "..", "extensions", "hooks", "studio-choice.ts"),
 			"utf8",
 		);
-		expect(source).toContain("registerAskUserChoice");
-		expect(source).toContain("ask_user_choice");
-		expect(source).toContain("ask_user_question");
+		expect(source).toContain("registerAskUserQuestion");
+		expect(source).toContain('name: "ask_user_question"');
+		expect(source).not.toContain('name: "ask_user_choice"');
 		expect(source).toContain("Otro (escribir respuesta personalizada)...");
 		expect(source).toContain("allowCustomResponse");
 	});
 
-	test("studio-choice execution logic handles custom responses and batch questions correctly", async () => {
+	test("studio-choice execution logic handles single questions, batch questions, and custom responses", async () => {
 		// Mock implementation representing the exact logic in studio-choice.ts
 		const OTHER_LABEL = "Otro (escribir respuesta personalizada)...";
 
-		async function executeAskUserChoice(params, ctx) {
-			if (!params.options || params.options.length === 0) {
-				return { content: [{ type: "text", text: "Error" }], details: { error: "empty_options" } };
-			}
-			const labels = params.options.map((opt, i) => `${i + 1}. ${opt.label}`);
-			if (params.allowCustomResponse) {
-				labels.push(OTHER_LABEL);
-			}
-			const picked = await ctx.ui.select(params.question, labels);
-			if (params.allowCustomResponse && picked === OTHER_LABEL) {
-				const customText = await ctx.ui.input(params.question, "");
-				return {
-					content: [{ type: "text", text: `User provided custom response: ${customText}` }],
-					details: { customResponse: customText },
-				};
-			}
-			const idx = typeof picked === "number" ? picked : labels.indexOf(picked);
-			const selectedOption = params.options[idx] || params.options[0];
-			return {
-				content: [{ type: "text", text: `Selected ${selectedOption.label}` }],
-				details: { selection: { label: selectedOption.label, value: selectedOption.value } },
-			};
-		}
-
 		async function executeAskUserQuestion(params, ctx) {
+			const questions = Array.isArray(params?.questions)
+				? params.questions
+				: params?.question
+					? [{ question: params.question, options: params.options, allowCustomResponse: params.allowCustomResponse }]
+					: [];
+
+			if (questions.length === 0) {
+				return { content: [{ type: "text", text: "Error" }], details: { error: "empty_questions" } };
+			}
+
 			const committedAnswers = [];
-			for (let i = 0; i < params.questions.length; i++) {
-				const q = params.questions[i];
-				const title = `[${i + 1}/${params.questions.length}] ${q.question}`;
-				const labels = q.options.map((opt, optIdx) => `${optIdx + 1}. ${opt.label}`);
+			for (let i = 0; i < questions.length; i++) {
+				const q = questions[i];
+				const header = q.header
+					? `[${q.header}] `
+					: questions.length > 1
+						? `[${i + 1}/${questions.length}] `
+						: "";
+				const title = `${header}${q.question}`;
+				const labels = (q.options || []).map((opt, optIdx) => `${optIdx + 1}. ${opt.label}`);
 				const allowCustom = q.allowCustomResponse !== false;
 				if (allowCustom) {
 					labels.push(OTHER_LABEL);
@@ -325,14 +316,14 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 					committedAnswers.push({
 						questionIndex: i + 1,
 						question: q.question,
-						answer: chosenOpt.label,
+						answer: chosenOpt?.label || String(picked),
 					});
 				}
 			}
-			return { details: { answers: committedAnswers } };
+			return { details: { answers: committedAnswers, selection: committedAnswers[0] || null } };
 		}
 
-		// Test 1: Single choice picking custom text
+		// Test 1: Single question picking custom text
 		const mockCtxCustom = {
 			hasUI: true,
 			ui: {
@@ -340,16 +331,44 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 				input: jest.fn().mockResolvedValue("Mi Motor Favorito"),
 			},
 		};
-		const resChoice = await executeAskUserChoice(
+		const resChoice = await executeAskUserQuestion(
 			{
-				question: "¿Qué motor usas?",
-				options: [{ label: "Godot", value: "godot" }, { label: "Unity", value: "unity" }],
-				allowCustomResponse: true,
+				questions: [
+					{
+						question: "¿Qué motor usas?",
+						options: [{ label: "Godot" }, { label: "Unity" }],
+					},
+				],
 			},
 			mockCtxCustom,
 		);
-		expect(resChoice.details.customResponse).toBe("Mi Motor Favorito");
+		expect(resChoice.details.answers[0].answer).toBe("Mi Motor Favorito");
+		expect(resChoice.details.answers[0].custom).toBe(true);
 		expect(mockCtxCustom.ui.input).toHaveBeenCalledWith("¿Qué motor usas?", "");
+
+		// Test 1b: Default allowCustomResponse when omitted (defaults to true)
+		const mockCtxDefault = {
+			hasUI: true,
+			ui: {
+				select: jest.fn().mockImplementation(async (title, labels) => {
+					expect(labels).toContain(OTHER_LABEL);
+					return OTHER_LABEL;
+				}),
+				input: jest.fn().mockResolvedValue("Respuesta Personalizada"),
+			},
+		};
+		const resChoiceDefault = await executeAskUserQuestion(
+			{
+				questions: [
+					{
+						question: "¿Qué opinas?",
+						options: [{ label: "Opción A" }, { label: "Opción B" }],
+					},
+				],
+			},
+			mockCtxDefault,
+		);
+		expect(resChoiceDefault.details.answers[0].answer).toBe("Respuesta Personalizada");
 
 		// Test 2: Batch questionnaire: step 1 preset, step 2 custom
 		let callCount = 0;

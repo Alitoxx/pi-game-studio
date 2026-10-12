@@ -7,7 +7,7 @@
 <p align="center">
   Turn a Pi session into a full game development studio.
   <br />
-  Compact AI Studio — 8 Core roles + 1 Engine Specialist (8+1). 80 skills. ODD workflow.
+  Compact AI Studio — 8 Core roles + 1 Engine Specialist (8+1). 6 ODD skills. ODD workflow.
 </p>
 
 <p align="center">
@@ -71,7 +71,7 @@ The result: you still make every decision, but now you have a fast, coordinated 
 | ------------- | ----- | ------------------------------------------------------------------------------------------------------------------------ |
 | **Agents**    | 8+1   | Compact active studio: 8 Core roles + 1 dedicated Engine Specialist per project                                           |
 | **Subagents** | Native| Isolated child process execution via `subagent_run`, `subagent_list`, `subagent_status` & `subagent_result`              |
-| **Interactive**| Native| Interactive terminal menus & batch questionnaires via `ask_user_choice` and `ask_user_question` (arrow keys & Enter)      |
+| **Interactive**| Native| Interactive terminal menus & batch questionnaires via `ask_user_question` (arrow keys & Enter)             |
 | **Skills**    | 6 ODD | Full lifecycle pipeline: `/concept`, `/spec`, `/arch`, `/code`, `/test`, `/ship`                                          |
 | **Templates** | 49    | Document templates for GDDs, UX specs, ADRs, sprint plans, vertical slice reports, game briefs, and more                  |
 | **Chains**    | 7     | Multi-agent execution pipelines via native isolated subagents (`subagent_run`)                                           |
@@ -127,7 +127,7 @@ Tier 3 — Engine Specialist (+1 per project)
 > - [`AGENTS.md`](AGENTS.md): Directorio completo y responsabilidades del equipo oficial **8+1**.
 > - [`docs/architecture-flowcharts.md`](docs/architecture-flowcharts.md): **Diagramas de Flujo y Arquitectura Completa** — Visualización paso a paso del pipeline ODD de 6 fases, la jerarquía 8+1, subagentes en vivo, compilación Web/WASM, profiler y sintetizador procedural.
 > - [`docs/gamedev-interaction-protocol.md`](docs/gamedev-interaction-protocol.md): **Protocolo de Respuestas y Decisiones (Gentle Shell for Games)** — Bloque 0: *Executive Delivery & Zero Bleed*, Pillars Header, Trade-offs Matrix, Choice Envelopes, Radar, Return Contracts y **Flow Completion Protocol**.
-> - [`docs/skills-reference.md`](docs/skills-reference.md): Catálogo de las **80 skills** y comandos `studio:*` organizados por fases.
+> - [`docs/skills-reference.md`](docs/skills-reference.md): Catálogo de las **6 skills ODD** y comandos `studio:*` organizados por fases.
 > - **Única Fuente de Verdad (Single Source of Truth)**: `design/gdd/` y `design/art/` exclusivos para diseño y arte; `production/` exclusivo para roadmaps y sprints.
 > - **Diagnóstico y Salud de Entorno**: Detección automática al iniciar o decir *"hola"` (`Estado: ✔ Entorno OK`), con setup Automático o Manual sin preguntas redundantes.
 > - **Brújula de Producción del Producer**: Lectura y actualización automática de `production/roadmap.md` (`<!-- PRODUCER_STATE -->`) para saber en qué línea va el proyecto en todo momento.
@@ -208,61 +208,34 @@ Agents not listed use the session default.
 
 ## Slash Commands
  
-Type `/` in Pi to browse all 80 skills:
+## Slash Commands
 
-> 📖 **Catálogo completo de skills**: Consulta [`docs/skills-reference.md`](docs/skills-reference.md) para ver la tabla detallada de comandos, agentes responsables y archivos que genera cada skill.
+Pi Game Studio opera con el pipeline de **6 Skills ODD (Organic Driven Development)** y la suite de comandos de administración **`studio:*`**:
 
-### Onboarding & Navigation
+> 📖 **Catálogo y especificación de skills**: Consulta [`docs/skills-reference.md`](docs/skills-reference.md) para ver la guía completa de fases, agentes responsables y artefactos de salida.
 
-`/start` `/help` `/project-stage-detect` `/setup-engine` `/adopt`
+### Pipeline ODD (6 Fases Oficiales)
 
-### Game Design & Research
+- **`/concept`** — Fase 1 (Authorize & Vision): Define la fantasía central, 3-5 pilares, anti-pilares y ancla visual. (`/concept pitch`, `/concept jam`)
+- **`/spec`** — Fase 2 (Live Specs & Systems): Diseña la mecánica viva con variables numéricas y checklist atómico en `design/gdd/<feature>.md`. (`/spec review`)
+- **`/arch`** — Fase 3 (Architecture & Boundaries): Fija presupuestos de RAM/FPS, redacta ADRs y audita servidores MCP. (`/arch adr`, `/arch budget`, `/arch mcp`)
+- **`/code`** — Fase 4 (Idiomatic Implementation): Implementa mecánicas en paquetes atómicos de ~400 líneas en el motor activo. (`/code review`)
+- **`/test`** — Fase 5 (Quality & Feel): Smoke checks de arranque, pruebas de regresión y soak test de memoria de 60s. (`/test smoke`, `/test regression`, `/test bugs`)
+- **`/ship`** — Fase 6 (Release & Certification): Auditoría de placeholders, compilación WASM/nativa y parches de versión. (`/ship build`, `/ship patch`, `/ship release`)
 
-`/brainstorm` `/market-research` `/jam` `/map-systems` `/design-system` `/quick-design` `/review-all-gdds` `/propagate-design-change`
+### Suite de Comandos del Estudio (`studio:*`)
 
-### Art & Assets
-
-`/art-bible` `/asset-spec` `/asset-audit`
-
-### UX & Interface Design
-
-`/ux-design` `/ux-review`
-
-### Architecture & Engine Tools
-
-`/create-architecture` `/architecture-decision` `/architecture-review` `/create-control-manifest` `/connect-engine-mcp`
-
-### Stories & Sprints
-
-`/create-epics` `/create-stories` `/dev-story` `/sprint-plan` `/sprint-status` `/story-readiness` `/story-done` `/estimate`
-
-### Reviews & Analysis
-
-`/design-review` `/code-review` `/balance-check` `/content-audit` `/scope-check` `/perf-profile` `/tech-debt` `/gate-check` `/consistency-check`
-
-### QA & Testing
-
-`/qa-plan` `/smoke-check` `/soak-test` `/regression-suite` `/test-setup` `/test-helpers` `/test-evidence-review` `/test-flakiness` `/skill-test` `/skill-improve`
-
-### Production
-
-`/milestone-review` `/retrospective` `/bug-report` `/bug-triage` `/reverse-document` `/playtest-report`
-
-### Release
-
-`/release-checklist` `/launch-checklist` `/changelog` `/patch-notes` `/hotfix`
-
-### Creative & Content
-
-`/prototype` `/onboard` `/localize`
-
-### Team Orchestration
-
-`/team-combat` `/team-narrative` `/team-ui` `/team-release` `/team-polish` `/team-audio` `/team-level` `/team-live-ops` `/team-qa`
-
-### Studio Suite & Admin (`studio:*`)
-
-`/studio` `/studio:start` `/studio:new` `/studio:setup` `/studio:doctor` `/studio:web` `/studio:profile` `/studio:sfx` `/studio:palettes` `/studio:subagents` `/studio:models` `/studio:status` `/studio:agents` `/studio:chains` `/studio:settings` `/setup` `/assign-models` `/connect-engram`
+- **`/studio`** (o **`/studio:start`**) — Menú principal y auditoría de estado del proyecto.
+- **`/studio:new`** — Asistente de creación de nuevo juego a partir de 5 starters (Bevy, Godot, Raylib, Unity, Unreal).
+- **`/studio:setup`** — Instalación del roster 8+1 (9 agentes) en el proyecto.
+- **`/studio:models`** — Configuración interactiva de modelos de IA por rol o nivel.
+- **`/studio:doctor`** — Diagnóstico integral de toolchains, compiladores y estructura ODD.
+- **`/studio:tools`** — Verificación e instalación de herramientas multimedia CLI (FFmpeg, ImageMagick, oxipng, wasm-opt, butler).
+- **`/studio:mcp`** — Gestión del ecosistema de 10 servidores MCP.
+- **`/studio:chains`** — Ejecutor de cadenas multi-agente (`feature-implement`, `gdd-review`, `perf-audit`, `release-gate`, etc.).
+- **`/studio:subagents`** — Monitor en vivo de subprocesos aislados.
+- **`/studio:web`** — Servidor local y empaquetador para builds Web/WASM.
+- **`/studio:hud`** — Alternar barra de estado y widgets interactivos de la terminal.
 
 ## Getting Started
 

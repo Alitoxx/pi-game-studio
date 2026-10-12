@@ -5,29 +5,29 @@ description: Pipeline de diseño narrativo, escritura de diálogos interactivos 
 
 > Cadena multi-agente para arcos narrativos, ramificaciones de diálogo y catálogo de localización.
 
-## narrative-director
+## creative-director
 
 reads: design/gdd/{quest}.md
 output: docs/narrative/{quest}-beat-sheet.md
 outputMode: file-only
 progress: true
 
-Estructura el arco dramático, motivaciones de personajes, tono, puntos de inflexión y bifurcaciones clave de la trama en `{quest}`.
+Estructura el arco dramático, motivaciones de personajes, tono, puntos de inflexión y bifurcaciones clave de la trama en `{quest}` asegurando la coherencia con los pilares del juego.
 
-## writer
+## game-designer
 
 reads: docs/narrative/{quest}-beat-sheet.md
 output: docs/narrative/{quest}-dialogue-script.md
 outputMode: file-only
 progress: true
 
-Redacta los árboles de diálogo, líneas de reacción (barks), descripciones de misiones y entradas de códice para `{quest}`, asignando IDs de texto únicos para cada cadena.
+Redacta los árboles de diálogo interactivos, líneas de reacción (barks), descripciones de misiones y entradas de códice para `{quest}`, asignando IDs de texto únicos para cada cadena vinculada al gameplay.
 
-## localization-lead
+## producer
 
 reads: docs/narrative/{quest}-dialogue-script.md
 output: docs/narrative/{quest}-i18n-catalog.md
 outputMode: file-only
 progress: true
 
-Estructura las claves de internacionalización (i18n), detecta variables gramaticales/género, verifica restricciones de espacio en UI y congela el catálogo de cadenas a traducir para `{quest}`.
+Estructura el catálogo de cadenas de internacionalización (i18n), revisa la densidad textual para evitar desbordes en UI y consolida los activos de texto para traducción en `{quest}`.

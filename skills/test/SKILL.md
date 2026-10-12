@@ -10,7 +10,6 @@ tools:
   - write
   - edit
   - bash
-  - ask_user_choice
   - ask_user_question
 ---
 

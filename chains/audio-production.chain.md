@@ -5,27 +5,27 @@ description: Pipeline de diseño e integración de audio desde el concepto sonor
 
 > Cadena multi-agente para producción, diseño sonoro e integración interactiva de audio.
 
-## audio-director
+## game-designer
 
 reads: design/gdd/{feature}.md
+output: docs/audio/{feature}-audio-requirements.md
+outputMode: file-only
+progress: true
+
+Define las necesidades de retroalimentación sonora para `{feature}`: eventos que requieren feedback, pistas contextuales, señales de advertencia y balance de volumen relativo al gameplay.
+
+## audio-director
+
+reads: docs/audio/{feature}-audio-requirements.md
 output: docs/audio/{feature}-audio-spec.md
 outputMode: file-only
 progress: true
 
-Define la visión sonora, paleta acústica, rangos dinámicos y requerimientos de música y efectos para `{feature}` conforme a los pilares artísticos del proyecto.
-
-## sound-designer
-
-reads: docs/audio/{feature}-audio-spec.md
-output: docs/audio/{feature}-foley-sheet.md
-outputMode: file-only
-progress: true
-
-Diseña y especifica la lista de activos sonoros (Foley, SFX, transiciones, loops ambientales), frecuencias, capas de variación y parámetros de pitch/volumen para evitar fatiga auditiva en `{feature}`.
+Define la visión sonora, paleta acústica, rangos dinámicos, especificación de activos de audio (SFX, Foley, loops ambientales, variaciones de pitch) y mapeo de buses de mezcla para `{feature}`.
 
 ## gameplay-programmer
 
-reads: docs/audio/{feature}-foley-sheet.md
+reads: docs/audio/{feature}-audio-spec.md
 output: docs/audio/{feature}-implementation-plan.md
 outputMode: file-only
 progress: true

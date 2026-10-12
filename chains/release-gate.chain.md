@@ -14,27 +14,18 @@ progress: true
 
 Execute comprehensive test regression triage for `{build}`. Audit open bug counts, blocker/critical defects, platform compliance, and crash logs. Issue a formal GO / NO-GO recommendation with defect severity breakdown.
 
-## performance-analyst
+## technical-director
 
 reads: docs/release/{build}-qa-verdict.md
-output: docs/release/{build}-performance-audit.md
+output: docs/release/{build}-technical-gate.md
 outputMode: file-only
 progress: true
 
-Audit framerate stability (1% and 0.1% lows), frame-time consistency, memory leaks, draw call count, and asset loading bottlenecks for `{build}` across target hardware profiles. Flag optimization targets.
+Audit framerate stability (1% and 0.1% lows), frame-time consistency, memory leaks, draw call count, savegame integrity, and build stability for `{build}` across target hardware profiles.
 
-## security-engineer
+## producer
 
-reads: docs/release/{build}-qa-verdict.md
-output: docs/release/{build}-security-audit.md
-outputMode: file-only
-progress: true
-
-Perform security and anti-tamper inspection on `{build}`. Verify save game integrity/encryption, credential exposure, cheat vulnerability in multiplayer/leaderboards, and data privacy compliance.
-
-## release-manager
-
-reads: docs/release/{build}-qa-verdict.md+docs/release/{build}-performance-audit.md+docs/release/{build}-security-audit.md
+reads: docs/release/{build}-qa-verdict.md+docs/release/{build}-technical-gate.md
 output: docs/release/{build}-release-package.md
 outputMode: file-only
 progress: true

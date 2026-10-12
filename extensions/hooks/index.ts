@@ -31,7 +31,7 @@ import { updateTasksWidget } from "./studio-tasks-widget.ts";
 import { updateSubagentsWidget, installSubagentsWidget } from "./studio-subagents-widget.ts";
 import { handleStudioSubagentsViewer } from "./studio-subagents-viewer.ts";
 import { registerStudioSubagentTools } from "./studio-subagents.ts";
-import { registerAskUserChoice } from "./studio-choice.ts";
+import { registerAskUserQuestion } from "./studio-choice.ts";
 import { studioAgentsRunner } from "./studio-agents-runner.ts";
 
 export default function (pi: ExtensionAPI) {
@@ -39,7 +39,7 @@ export default function (pi: ExtensionAPI) {
 	// Native Studio Subagent Tools (Gentle Architecture)
 	// ──────────────────────────────────────────────
 	registerStudioSubagentTools(pi);
-	registerAskUserChoice(pi);
+	registerAskUserQuestion(pi);
 
 	// ──────────────────────────────────────────────
 	// Escape & Abort Handling (Cancel All Subagents on Escape / Interrupt)
@@ -409,8 +409,8 @@ export default function (pi: ExtensionAPI) {
 						event.systemPromptOptions.promptGuidelines.push(
 							"Studio Environment Status: PENDING SETUP. The project is not configured yet. " +
 							"MANDATORY: You MUST NOT print text-based numbered menus asking the user to type '1' or '2'. " +
-							"Instead, you MUST immediately call the `ask_user_choice` tool to present the setup choice interactively so the user can select with arrow keys and Enter. " +
-							"Example tool call: ask_user_choice({ question: 'PRODUCER: ¡Bienvenido al estudio! ¿Cómo deseas inicializar el entorno?', options: [{ label: 'Instalación Automática', description: 'Recomendada: motor Godot 4 en modo inherit', value: 'auto' }, { label: 'Instalación Manual / Guiada', description: 'Elegir motor (Godot, Unity, Unreal, Bevy, Raylib), idioma y modelos', value: 'manual' }] })."
+							"Instead, you MUST immediately call the `ask_user_question` tool to present the setup choice interactively so the user can select with arrow keys and Enter. " +
+							"Example tool call: ask_user_question({ questions: [{ question: 'PRODUCER: ¡Bienvenido al estudio! ¿Cómo deseas inicializar el entorno?', options: [{ label: 'Instalación Automática', description: 'Recomendada: motor Godot 4 en modo inherit' }, { label: 'Instalación Manual / Guiada', description: 'Elegir motor (Godot, Unity, Unreal, Bevy, Raylib), idioma y modelos' }] }] })."
 						);
 					}
 
@@ -426,11 +426,11 @@ export default function (pi: ExtensionAPI) {
 						"- Natural Spanish: Express technical ideas fluidly and accessible in Spanish. Don't use dry jargon just for the sake of sounding technical. " +
 						"- Elegant Markdown Formatting: Structure your response cleanly using natural, polished GitHub-flavored Markdown. Use clean headings, concise bullet points, and high-contrast bold highlights. Speak fluidly as a lead dev and producer. " +
 						"- FOSS CLI Toolchain Acceleration: When generating or handling assets or builds, utilize the installed CLI tools directly via bash: `magick` (spritesheets & atlas), `oxipng` (lossless PNG compression), `ffmpeg` (audio normalization/conversion to .ogg), `sox` (audio DSP), `assimp` (3D conversion to .glb), `wasm-opt` (WASM optimization), `butler` (itch.io delta publishing), `gh` (GitHub releases/PRs), and `watchexec` (live-reload). If a tool is missing, recommend `/studio:tools`. " +
-						"- Interactive Choice Protocol (Mandatory Native Menus): You have access to `ask_user_choice` (for 1 decision) and `ask_user_question` (for 1 to 4 questions in a single batch). " +
-						"When you need multiple decisions from the user (such as setup steps: motor, idioma, modelos, alcance), " +
-						"DO NOT ask them one by one across multiple back-and-forth turns, and DO NOT print text blocks asking the user to type '1,1,1,1'. " +
-						"Always call `ask_user_question({ questions: [...] })` with all questions at once. " +
-						"Pi will present each question interactively in sequence with arrow keys (↑/↓) and Enter, returning all answers to you in a single result. " +
+						"- Interactive Question Protocol (Mandatory Native Menus): You have access to the unified tool `ask_user_question` (for 1 decision or up to 4 questions in a single batch). " +
+						"When you need decisions from the user (such as design trade-offs, architecture choices, or setup steps: motor, idioma, modelos, alcance), " +
+						"DO NOT print text blocks asking the user to type '1' or '2'. " +
+						"Always call `ask_user_question({ questions: [...] })`. " +
+						"Pi will present each question interactively in sequence with arrow keys (↑/↓) and Enter, including an automatic 'Otro (escribir respuesta personalizada)...' option for custom free-text input, and return all answers in a single result. " +
 						"- Subagent Delegation Protocol (Gentle Shell Execution): You have access to the native tool `subagent_run`. " +
 						"Ideation, brainstorming, user dialogue, and question formulation MUST happen INLINE in this parent session — do NOT spawn subagents for mere chat or high-level concept discussions. " +
 						"Delegate ONLY concrete, heavy implementation tasks (writing code, generating complex assets, auditing code, running tests) to specialized agents using `subagent_run({ agent: '<agent_name>', task: '<concrete_task>', mode: 'task' })`. " +

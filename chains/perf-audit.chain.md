@@ -5,7 +5,7 @@ description: Pipeline de análisis de rendimiento, perfilado de frame-time, opti
 
 > Cadena multi-agente para auditoría de cuello de botella de rendimiento, CPU, memoria y GPU.
 
-## performance-analyst
+## technical-director
 
 reads: docs/perf/{target}-telemetry.md
 output: docs/perf/{target}-perf-diagnostic.md
@@ -14,16 +14,16 @@ progress: true
 
 Analiza frame times, percentiles 1% / 0.1% low, conteo de draw calls, recolecciones de basura (GC) y consumo de VRAM/RAM para `{target}`, localizando el subsistema responsable del pico.
 
-## engine-programmer
+## gameplay-programmer
 
 reads: docs/perf/{target}-perf-diagnostic.md
 output: docs/perf/{target}-engine-optimizations.md
 outputMode: file-only
 progress: true
 
-Diseña y aplica optimizaciones en código de bajo nivel: iteraciones de sistemas ECS, paralelización de tareas en hilos de trabajo, layouts de datos cache-friendly y mitigación de asignaciones dinámicas en `{target}`.
+Diseña y aplica optimizaciones en código: iteraciones de sistemas ECS, paralelización de tareas en hilos de trabajo, layouts de datos cache-friendly y mitigación de asignaciones dinámicas en `{target}`.
 
-## technical-artist
+## art-director
 
 reads: docs/perf/{target}-perf-diagnostic.md+docs/perf/{target}-engine-optimizations.md
 output: docs/perf/{target}-asset-budget-adjustments.md

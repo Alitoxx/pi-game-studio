@@ -56,7 +56,7 @@ Orquestador presenta el resultado consolidado al usuario sin trazas internas
 - **Regla inquebrantable:** Un subagente **nunca interactúa directamente con el usuario** ni muestra herramientas interactivas.
 - Solo el **Orquestador Principal** en la sesión padre tiene permitido:
   1. Hablar con el usuario.
-  2. Invocar `ask_user_choice` / `ask_user_question` (modales interactivos nativos).
+  2. Invocar `ask_user_question` (modales interactivos nativos).
   3. Mostrar el Banner TUI y los resúmenes ejecutivos.
 - Si un subagente necesita una decisión humana, responde con:
   ```yaml

@@ -3,8 +3,8 @@
 Este archivo define los contratos y estándares compartidos para las **6 Skills ODD de Pi Game Studio**.
 
 ## 1. Zero Bleed & Executive Delivery
-- Queda terminantemente prohibido imprimir llamadas a herramientas crudas (`ask_user_choice`, `subagent_run`), trazas internas de pipelines, o monólogos de razonamiento en el chat del usuario.
-- Toda interacción humana se realiza mediante modales interactivos en la terminal (`ctx.ui.select` / `ask_user_choice`).
+- Queda terminantemente prohibido imprimir llamadas a herramientas crudas (`ask_user_question`, `subagent_run`), trazas internas de pipelines, o monólogos de razonamiento en el chat del usuario.
+- Toda interacción humana se realiza mediante modales interactivos en la terminal (`ctx.ui.select` / `ask_user_question`).
 
 ## 2. Live Specs Single Source of Truth
 - Todo diseño de sistema o mecánica reside exclusivamente en `design/gdd/<feature>.md`.

@@ -5,38 +5,38 @@ description: Pipeline de diseño, grayboxing, ambientación visual y validación
 
 > Cadena multi-agente para concepción, prototipado, arte técnico y control de calidad en diseño de niveles.
 
-## game-designer
+## creative-director
 
 reads: design/gdd/{level}.md
-output: docs/levels/{level}-encounter-spec.md
+output: docs/levels/{level}-concept-guide.md
 outputMode: file-only
 progress: true
 
-Define los objetivos de juego, ritmo de encuentros, curvas de tensión, mecánicas requeridas, colocación de recompensas y puntos de interés para `{level}`.
+Define la premisa ambiental, tono, anclas de escala, narrativa ambiental y puntos de interés visual para `{level}` alineados con los pilares del juego.
 
-## level-designer
+## game-designer
 
-reads: docs/levels/{level}-encounter-spec.md
+reads: docs/levels/{level}-concept-guide.md
 output: docs/levels/{level}-blockout-guide.md
 outputMode: file-only
 progress: true
 
-Diseña la geometría de graybox, líneas de visión, rutas principales y secundarias, zonas de cobertura, pacing espacial y métricas de navegación para `{level}`.
+Diseña los objetivos de juego, ritmo de encuentros, geometría graybox, líneas de visión, zonas de cobertura y métricas de movimiento para `{level}`.
 
-## technical-artist
+## art-director
 
 reads: docs/levels/{level}-blockout-guide.md
-output: docs/levels/{level}-techart-budget.md
+output: docs/levels/{level}-art-budget.md
 outputMode: file-only
 progress: true
 
-Audita y especifica el presupuesto de draw calls, iluminación estática/dinámica, mallas de colisión, niveles de detalle (LODs), materiales y oclusión ambiental en `{level}`.
+Audita y especifica el presupuesto de draw calls, iluminación, paleta cromática, niveles de detalle (LODs), materiales y assets visuales modulares para `{level}`.
 
-## qa-tester
+## qa-lead
 
-reads: docs/levels/{level}-blockout-guide.md+docs/levels/{level}-techart-budget.md
+reads: docs/levels/{level}-blockout-guide.md+docs/levels/{level}-art-budget.md
 output: docs/levels/{level}-qa-report.md
 outputMode: file-only
 progress: true
 
-Valida colisiones, zonas fuera de límites, problemas de navegación/NavMesh, atascos de jugador y consistencia visual en el entorno de `{level}`.
+Valida colisiones, zonas fuera de límites, problemas de navegación/NavMesh, atascos de jugador y estabilidad de framerate en el entorno de `{level}`.

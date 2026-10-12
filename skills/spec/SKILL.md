@@ -9,7 +9,6 @@ tools:
   - grep
   - write
   - edit
-  - ask_user_choice
   - ask_user_question
 ---
 
@@ -38,4 +37,4 @@ La Live Spec debe contener obligatoriamente:
 - **Checklist Atómico de Implementación**: Tareas de ~400 líneas cada una con formato `[ ]`, incluyendo explícitamente las tareas de creación de shaders, debug overlay, estados de pausa y assets de sonido.
 
 ### 3. Resolución de Incertidumbre
-Si existe un dilema de diseño (e.g. tipo de control o fórmula de progresión), se presenta una **TRADE-OFF MATRIX** concisa y se resuelve interactivamente con `ask_user_choice`.
+Si existe un dilema de diseño (e.g. tipo de control o fórmula de progresión), se presenta una **TRADE-OFF MATRIX** concisa y se resuelve interactivamente con `ask_user_question`.

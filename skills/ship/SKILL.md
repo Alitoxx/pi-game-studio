@@ -10,7 +10,7 @@ tools:
   - write
   - edit
   - bash
-  - ask_user_choice
+  - ask_user_question
 ---
 
 ## Fase 6 ODD: Release, Certification & Patching

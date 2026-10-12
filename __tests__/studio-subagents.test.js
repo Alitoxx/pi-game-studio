@@ -33,14 +33,14 @@ describe("Studio Subagents & Isolated Execution Engine", () => {
 		expect(subagentsSource).toContain('name: "subagent_result"');
 
 		const choiceSource = fs.readFileSync(choicePath, "utf8");
-		expect(choiceSource).toContain("export function registerAskUserChoice");
-		expect(choiceSource).toContain('name: "ask_user_choice"');
+		expect(choiceSource).toContain("export function registerAskUserQuestion");
 		expect(choiceSource).toContain('name: "ask_user_question"');
+		expect(choiceSource).not.toContain('name: "ask_user_choice"');
 
 		const indexSource = fs.readFileSync(indexPath, "utf8");
 		expect(indexSource).toContain("registerStudioSubagentTools(pi)");
-		expect(indexSource).toContain("registerAskUserChoice(pi)");
-		expect(indexSource).toContain("Interactive Choice Protocol (Mandatory Native Menus)");
+		expect(indexSource).toContain("registerAskUserQuestion(pi)");
+		expect(indexSource).toContain("Interactive Question Protocol (Mandatory Native Menus)");
 	});
 
 	test("frontmatter parser extracts YAML block from agent markdown files", () => {

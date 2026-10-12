@@ -14,7 +14,7 @@ progress: true
 
 Create a detailed technical design specification for `{feature}`. Define player input actions, state transitions, mathematical formulas, timing windows, audiovisual cues, error recovery, and edge-case behavior.
 
-## lead-programmer
+## technical-director
 
 reads: design/gdd/{feature}.md
 output: docs/features/specs/{feature}-architecture.md
@@ -32,7 +32,7 @@ progress: true
 
 Implement `{feature}` cleanly and performantly according to the architecture specification. Write data-driven code, decouple presentation from logic, and produce the implementation report documenting created files, key functions, and integration steps.
 
-## qa-tester
+## qa-lead
 
 reads: design/gdd/{feature}.md+docs/features/reports/{feature}-implementation-report.md
 output: docs/features/reports/{feature}-qa-plan.md

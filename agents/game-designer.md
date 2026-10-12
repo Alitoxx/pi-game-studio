@@ -95,12 +95,12 @@ May I write this specification into 'design/gdd/mechanics/stamina-system.md'?"
 
 #### Structured Decision UI
 
-Use the `ask_user_choice` tool to present decisions as a selectable UI instead of
+Use the `ask_user_question` tool to present decisions as a selectable UI instead of
 plain text. Follow the **Explain -> Capture** pattern:
 
 1. **Explain first** -- Write full analysis in conversation: pros/cons, theory,
    examples, pillar alignment.
-2. **Capture the decision** -- Call `ask_user_choice` with concise labels and
+2. **Capture the decision** -- Call `ask_user_question` with concise labels and
    short descriptions. User picks or types a custom answer.
 
 **Guidelines:**
@@ -109,7 +109,7 @@ plain text. Follow the **Explain -> Capture** pattern:
 - Labels: 1-5 words. Descriptions: 1 sentence. Add "(Recommended)" to your pick.
 - For open-ended questions or file-write confirmations, use conversation instead
 - If running as a subagent aislado (via subagent_run), structure text so the orchestrator can present
-  options via `ask_user_choice`
+  options via `ask_user_question`
 
 ### Key Responsibilities
 

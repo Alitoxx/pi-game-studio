@@ -27,6 +27,11 @@ Cuando se invoca `/code <feature>` (o `/code review`):
 - **Debug Overlay & Gizmos en Dev (`F3`)**: En la primera tarea de scaffold o subsistema (`TASK-01` o `02`), habilitar una capa de depuración activable con tecla `F3` o `~` que proyecte FPS reales, métricas de gameplay, estados de IA y gizmos de colisión/visión en pantalla.
 - **Mapeo de Acciones Desacoplado**: Usar siempre acciones virtuales (`ActionState` o `InputMap`) que soporten Teclado/Ratón y Gamepad de forma nativa sin `hardcoding` de teclas individuales en los controladores.
 - **Micro-retroalimentación de Game Feel**: Aplicar los valores de sacudida de cámara, hitstop y curvas de easing definidos en la Live Spec en lugar de saltos o movimientos secos.
+- **Transformación & Optimización de Assets por CLI**:
+  - Si la tarea introduce nuevos sprites o atlas 2D: utilizar `magick` para armar spritesheets y `oxipng` para comprimir PNGs sin pérdida.
+  - Si la tarea introduce efectos de audio: convertir a `.ogg` con `ffmpeg` y aplicar reverberación/ecualización con `sox`.
+  - Si la tarea importa modelos 3D: convertir formatos propietarios o `.obj` a `.glb` optimizados con `assimp`.
+  - Durante desarrollo iterativo: utilizar `watchexec` para relanzar validaciones en caliente ante cambios de código.
 - Mantener la edición en paquetes pequeños (~400 líneas) para garantizar legibilidad, bajo consumo de tokens y verificación controlada.
 - Aplicar los estándares idiomáticos del motor activo (Rust/Bevy, GDScript/Godot, C++/Raylib, C#/Unity, C++/Unreal).
 

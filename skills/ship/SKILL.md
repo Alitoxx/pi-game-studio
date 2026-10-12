@@ -23,12 +23,18 @@ Cuando se invoca `/ship` (o `/ship build`, `/ship patch`, `/ship release`):
 - Confirmar que el juego cumple con los presupuestos de memoria y framerate medidos en `/test`.
 - Asegurar que las cadenas de texto estén internacionalizadas si el juego soporta múltiples idiomas.
 
-### 2. Generación y Empaquetado de Builds Multiplataforma & Web (WASM)
+### 2. Generación, Optimización y Empaquetado Multiplataforma
 - **Compilación Nativa**: Generar binarios limpios para las plataformas de escritorio (Windows, macOS, Linux).
 - **Target Web / WASM**: Compilar el build web para distribución en navegador / itch.io (`wasm32-unknown-unknown` + `wasm-bindgen` en Bevy/Rust, export HTML5 en Godot/Raylib). Asegurar que todas las rutas de assets sean relativas y que la configuración CORS y canvas sea correcta.
+- **Optimización de Bytecode WASM con `wasm-opt`**: Si existe `wasm-opt` en el sistema (`which wasm-opt`), ejecutar `wasm-opt -O3 dist/game.wasm -o dist/game.wasm` para reducir el tamaño de carga web hasta un 65%.
+- **Compresión Final de Assets con `oxipng`**: Ejecutar `oxipng -o 2 dist/assets/**/*.png` para asegurar un empaquetado mínimo.
 - Validar checksums y estructura de directorios de distribución (`dist/` o `releases/`).
 
-### 3. Registro de Versión y Changelog
+### 3. Publicación y Distribución Automatizada
+- **Itch.io con `butler`**: Si `butler` está disponible y configurado, publicar el build web o de escritorio mediante parches delta: `butler push dist/ <usuario>/<juego>:<canal>`.
+- **GitHub Releases con `gh`**: Crear el release formal, taggear la versión y adjuntar los binarios o zips empaquetados: `gh release create <version> dist/* --title "<version>" --notes-file CHANGELOG.md`.
+
+### 4. Registro de Versión y Changelog
 - Actualizar `CHANGELOG.md` con los cambios notables bajo el estándar Keep a Changelog.
 - Actualizar la versión semántica en el manifiesto del proyecto (`project.yaml`, `package.json` o `Cargo.toml`).
 

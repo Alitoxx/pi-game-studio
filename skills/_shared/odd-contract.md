@@ -37,3 +37,21 @@ gameplay_impact: "Efecto observable en el juego"
 next_step: "Siguiente acción recomendada en el pipeline ODD"
 ```
 
+## 6. FOSS CLI Media & Distribution Toolchain
+Los agentes y especialistas con herramienta `bash` ejecutan tareas de transformación de assets y distribución usando los binarios auditados del estudio (`/studio:tools`):
+- **Sprites & Texturas 2D**:
+  - `magick`: Generación de atlas/spritesheets (`magick montage *.png -tile 4x4 -geometry +0+0 atlas.png`) y recortes de transparencia.
+  - `oxipng`: Optimización lossless inmediata tras guardar o regenerar sprites (`oxipng -o 2 -strip safe assets/**/*.png`).
+- **Audio & SFX**:
+  - `ffmpeg`: Normalización y conversión de masters WAV a formatos comprimidos de runtime (`ffmpeg -i input.wav -c:a libvorbis -q:a 4 output.ogg`).
+  - `sox`: Procesamiento DSP en batch (reverberación, pitch shift, fade-in/out procedural).
+- **Modelos 3D**:
+  - `assimp`: Conversión ultra rápida a formato estándar GLTF/GLB sin sobrecarga (`assimp export model.obj model.glb`).
+- **WebAssembly & Distribución**:
+  - `wasm-opt`: Optimización de bytecode WASM en builds web (`wasm-opt -O3 input.wasm -o output.wasm`).
+  - `butler`: Despliegue delta a itch.io (`butler push dist/ user/game:web`).
+  - `gh`: Releases y versionado de binarios (`gh release create <tag> ./dist/*`).
+- **Live-Reload & Watcher**:
+  - `watchexec`: Monitoreo y pruebas continuas ante cambios (`watchexec -e rs,gd,cpp,fs -- <test-command>`).
+
+

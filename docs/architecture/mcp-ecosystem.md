@@ -25,3 +25,26 @@
 - **Comando interactivo**: `/studio:mcp` (abre el menú TUI con navegación de flechas y selección).
 - **Desde terminal**: `pi mcp add <id> -l -- <comando>` o `/studio:setup` (opción 4).
 - **Archivo de configuración local**: `.pi/mcp.json`.
+
+---
+
+## Toolchain FOSS CLI & Diagnóstico de Viabilidad (`/studio:tools`)
+
+Además de los servidores MCP, Pi Game Studio integra un motor proactivo de auditoría e instalación de binarios de línea de comandos para producción autónoma:
+
+| Herramienta | Paquete Homebrew | Categoría | Agentes Beneficiados | Utilidad en Producción |
+|---|---|---|---|---|
+| `ffmpeg` | `ffmpeg` | Procesamiento de Audio & Video | `audio-director`, `qa-lead` | Normalización, recortes de silencios y conversión de formatos de audio/video. |
+| `imagemagick` | `imagemagick` | Manipulación de Sprites & Atlas | `art-director`, `gameplay-programmer` | Empaquetado de texturas, redimensionado y generación de atlas en CLI. |
+| `assimp` | `assimp` | Conversión 3D Rápida | `art-director`, `gameplay-programmer` | Conversión ultra rápida de modelos 3D (`.obj`, `.fbx`, `.dae`) a `.glb`/`.gltf`. |
+| `git-lfs` | `git-lfs` | Control de Versiones | `producer`, `technical-director` | Versionado de assets pesados (texturas, audio, 3D) sin inflar Git. |
+| `sox` | `sox` | Efectos y Filtros de Audio | `audio-director`, `gameplay-programmer` | DSP por línea de comandos: reverb, pitch shift y ecos para efectos generados. |
+| `blender` | `--cask blender` | Suite 3D & Exportador | `art-director`, `technical-director` | Generación procedural de colisiones, mallas y exportación Python headless. |
+| `oxipng` | `oxipng` | Optimización de Sprites PNG | `art-director`, `gameplay-programmer` | Optimizador multihilo sin pérdida (lossless) para texturas y sprites 2D. |
+| `wasm-opt` | `binaryen` | Optimización WebAssembly | `bevy-specialist`, `godot-specialist`, `raylib-specialist` | Reducción del peso de builds WASM hasta un 65% para itch.io y navegadores. |
+| `butler` | `--cask butler` | Distribución & Lanzamiento | `producer`, `technical-director` | Publicación de builds y demos a itch.io mediante parches delta en CLI. |
+| `gh` | `gh` | Releases & Workflows | `producer`, `technical-director`, `qa-lead` | Gestión de Pull Requests, creación de releases con binarios y CI/CD. |
+| `watchexec` | `watchexec` | Live-Reload & Hot Compilation | `gameplay-programmer`, especialistas | Recompilación y relanzamiento de pruebas en caliente ante cambios de código. |
+
+- **Comando interactivo**: `/studio:tools` (o automáticamente durante `/start`, `/studio:setup` y `/studio:doctor`).
+

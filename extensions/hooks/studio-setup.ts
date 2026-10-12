@@ -10,6 +10,8 @@ import { join, resolve } from "node:path";
 import { promptModelForRole } from "./provider-resolver.ts";
 import { auditEnginePrerequisites, formatAuditReport } from "./studio-doctor.ts";
 import { detectProjectEngine } from "./engine-detector.ts";
+import { handleStudioMcp } from "./studio-mcp.ts";
+import { promptMediaToolsInstall } from "./studio-media-tools.ts";
 
 function resolvePackageRoot(): string {
 	try {
@@ -84,7 +86,7 @@ export function filterAgentsForEngine(engineName: string, all = false): string[]
 
 export function inspectSetup(cwd: string): SetupStatus {
 	const pkgRoot = resolvePackageRoot();
-	let totalPackageAgents = 55;
+	let totalPackageAgents = 13;
 	try {
 		if (existsSync(join(pkgRoot, "agents"))) {
 			totalPackageAgents = readdirSync(join(pkgRoot, "agents")).filter((f) =>
@@ -184,8 +186,10 @@ export async function handleStudioSetup(
 			`1. Instalación Automática (${status.expectedAgents} agentes recomendados para ${status.currentEngine} en modo 'inherit')`,
 			"2. Instalación Manual / Guiada (Elegir motor, idioma y modelos por nivel)",
 			"3. Configurar Modelos de IA (/studio:models)",
-			"4. Ver diagnóstico del estudio (/studio:status)",
-			"5. Ver guía rápida de inicio",
+			"4. Diagnóstico de Viabilidad Multimedia (FFmpeg, ImageMagick, Assimp, Git-LFS, SoX)",
+			"5. Hub de Servidores MCP (/studio:mcp — REA, Playwright, Context7, etc.)",
+			"6. Ver diagnóstico del estudio (/studio:status)",
+			"7. Ver guía rápida de inicio",
 		];
 
 		const choice = await promptSelectSafe(
@@ -206,7 +210,13 @@ export async function handleStudioSetup(
 			case 2:
 				installModelsConfig(ctx);
 				break;
-			case 3: {
+			case 3:
+				await promptMediaToolsInstall(ctx);
+				break;
+			case 4:
+				await handleStudioMcp("", ctx);
+				break;
+			case 5: {
 				const diag = formatSetupDiagnostic(status);
 				if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 					ctx.ui.notify(diag, "info");
@@ -215,7 +225,7 @@ export async function handleStudioSetup(
 				}
 				break;
 			}
-			case 4: {
+			case 6: {
 				const guide = formatGettingStartedGuide();
 				if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 					ctx.ui.notify(guide, "info");

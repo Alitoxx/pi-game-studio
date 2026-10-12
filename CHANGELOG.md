@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.5.0] - 2026-10-11
+
+### Added
+- **Hub Interactivo de Servidores MCP (`/studio:mcp` y `extensions/hooks/studio-mcp.ts`)**:
+  - Soporte y registro nativo para **10 servidores MCP especializados** bajo la filosofía *"Files First, MCP Accelerated"*: REA MCP (ingeniería inversa de WebAssembly, JS y binarios con `morluto/rea`), Playwright MCP (testing visual y WebGL), Context7 MCP (APIs oficiales de Bevy/Godot/Raylib), Codegraph MCP (árbol AST y grafos de dependencias), SQLite MCP (balance y economía de tablas), Knowledge Vector DB MCP (Lore y biblia narrativa), Blender MCP (3D y colisiones con Python), Image Gen MCP (sprites y texturas), Audio/SFX MCP (síntesis procedural y voces) y Live Engine MCPs (Bevy BRP, Godot y Unreal en caliente).
+  - Presets en 1 clic: *Preset Rápido* (REA + Context7 + Codegraph), *Preset Completo* (10 MCPs) y menú interactivo de gestión por proyecto en `.pi/mcp.json`.
+- **Diagnóstico de Viabilidad Multimedia e Instalador FOSS CLI (`/studio:tools` y `extensions/hooks/studio-media-tools.ts`)**:
+  - Diagnóstico interactivo e instalación guiada con Homebrew para herramientas de terminal: **FFmpeg** (audio/video y compresión), **ImageMagick** (empaquetado de spritesheets y atlas), **Assimp** (conversión ultra rápida de modelos 3D a `.glb`), **Git LFS** (gestión de assets pesados sin inflar Git) y **SoX** (efectos y filtros de audio).
+  - Integrado de forma transparente en `/start`, `/studio:setup` (Paso 4) y `/studio:doctor`.
+
+### Changed
+- **Homologación 100% Dual-Mode ODD en Agentes y Subagentes**:
+  - Los agentes operan de forma dual: interactivos en chat directo con el usuario, pero **100% autónomos** cuando son delegados vía `subagent_run`, eliminando pausas conversacionales o bloqueos de aprobación.
+  - Watchdog de background adaptativo con timeout por defecto de 900s (15 min) configurable vía `timeout_seconds`.
+  - Herencia dinámica del modelo activo de la sesión del padre para subagentes con `model: inherit`.
+  - Cierre ordenado y graceful shutdown tras `agent_settled`.
+- **Purga de Roles Obsoletos y Homologación Compacta Oficial a 13 Agentes**:
+  - Eliminados los 42 archivos de especialistas obsoletos de `agents/`.
+  - La biblioteca oficial queda fijada estrictamente en **13 agentes** (8 Core esenciales + 5 especialistas principales de motor: Bevy, Godot, Raylib, Unity, Unreal).
+  - Actualizados `scripts/assign-models.js`, `studio-agents.ts`, `AGENTS.md`, `README.md` y la suite completa de pruebas de Jest (9 suites, 98 tests en verde).
+
+---
+
 ## [1.4.0] - 2026-10-09
 
 ### Added

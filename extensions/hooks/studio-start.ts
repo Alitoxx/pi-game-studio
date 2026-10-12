@@ -2,6 +2,7 @@ import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { inspectSetup, installStudioFiles, runGuidedSetup } from "./studio-setup.ts";
+import { auditMediaTools, promptMediaToolsInstall } from "./studio-media-tools.ts";
 
 export interface ProducerState {
 	gameTitle?: string;
@@ -232,6 +233,7 @@ export async function handleStudioStart(
 			const setupOptions = [
 				`1. Instalación Automática (Recomendada: Agentes optimizados para ${audit.engineName || "Godot 4"} en modo 'inherit')`,
 				"2. Instalación Manual / Guiada (Tú eliges el motor de juego, tu idioma preferido y personalizas los modelos de IA por rol)",
+				"3. Diagnóstico de Viabilidad Multimedia (FFmpeg, ImageMagick, Assimp, Git-LFS, SoX)",
 			];
 			const setupChoice = await (ctx.ui as any).select(
 				"PRODUCER: ¡Bienvenido al estudio! Tu entorno aún no está configurado. ¿Cómo prefieres inicializarlo?",
@@ -249,6 +251,9 @@ export async function handleStudioStart(
 			} else if (choiceIdx === 1) {
 				const currentStatus = inspectSetup(ctx.cwd);
 				await runGuidedSetup(ctx, currentStatus);
+				return;
+			} else if (choiceIdx === 2) {
+				await promptMediaToolsInstall(ctx);
 				return;
 			} else {
 				return;
@@ -322,7 +327,7 @@ export async function handleStudioStart(
 
 function displayProjectAudit(ctx: ExtensionContext, a: ProjectAudit): void {
 	const envStatus = a.isConfigured
-		? "OK (55 agentes)"
+		? "OK (9 agentes activos)"
 		: "Incompleto (/studio:setup)";
 	const roadmapStatus = a.hasRoadmap
 		? (a.producerState?.milestone ? `${a.producerState.milestone}` : "Roadmap activo")

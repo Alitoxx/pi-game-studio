@@ -1,4 +1,6 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { existsSync } from "node:fs";
+import { resolve, sep } from "node:path";
 import { loadAgentManifest, listAvailableAgents } from "./studio-agent-loader.ts";
 import { studioAgentsRunner } from "./studio-agents-runner.ts";
 
@@ -11,7 +13,7 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 		name: "subagent_run",
 		label: "Studio Subagent Run",
 		description:
-			"Delegates an isolated implementation, design, or review task to one of the 55 specialized game studio agents. The subagent runs in an isolated child process and returns a structured YAML completion receipt.",
+			"Delegates an isolated implementation, design, or review task to one of the specialized game studio agents (8+1 architecture). The subagent runs in an isolated child process and returns a structured YAML completion receipt.",
 		parameters: {
 			type: "object",
 			additionalProperties: false,
@@ -20,7 +22,7 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 				agent: {
 					type: "string",
 					description:
-						"The name of the specialist agent to invoke (e.g. 'game-designer', 'lead-programmer', 'gameplay-programmer', 'raylib-specialist', 'systems-designer', 'qa-tester').",
+						"The name of the specialist agent to invoke (e.g. 'game-designer', 'gameplay-programmer', 'bevy-specialist', 'godot-specialist', 'raylib-specialist', 'qa-lead').",
 				},
 				task: {
 					type: "string",
@@ -32,6 +34,16 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 					enum: ["task", "background"],
 					description:
 						"'task' waits for the subagent to finish (default); 'background' spawns the subagent and returns immediately with a task ID.",
+				},
+				timeout_seconds: {
+					type: "number",
+					description:
+						"Optional timeout limit in seconds (default is 300s for task mode, 900s for background mode).",
+				},
+				target_dir: {
+					type: "string",
+					description:
+						"Optional relative subdirectory or crate path to scope execution (e.g. 'crates/radio-core' or 'src').",
 				},
 			},
 		} as never,
@@ -45,6 +57,26 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 			const agentName = String(params.agent || "").trim();
 			const taskPrompt = String(params.task || "").trim();
 			const mode = (params.mode === "background" ? "background" : "task") as "task" | "background";
+			const timeoutSeconds = typeof params.timeout_seconds === "number" && params.timeout_seconds > 0
+				? params.timeout_seconds
+				: undefined;
+			const timeoutMs = timeoutSeconds ? timeoutSeconds * 1000 : undefined;
+			const targetDir = typeof params.target_dir === "string" ? params.target_dir.trim() : "";
+			// El hijo SIEMPRE corre en la raíz del proyecto: necesita design/gdd/ (Live Spec) y .pi/.
+			// target_dir sólo acota el alcance de edición y validación.
+			const executionCwd = ctx.cwd;
+			let scopedTaskPrompt = String(params.task || "").trim();
+			if (targetDir) {
+				const root = resolve(ctx.cwd);
+				const abs = resolve(root, targetDir);
+				if ((abs !== root && !abs.startsWith(root + sep)) || !existsSync(abs)) {
+					return {
+						content: [{ type: "text", text: `Error: target_dir '${targetDir}' no existe o queda fuera del proyecto.` }],
+						details: { error: "invalid_target_dir" },
+					};
+				}
+				scopedTaskPrompt += `\n\n[SCOPE] Edit only files under '${targetDir}' (Live Specs in design/gdd/ remain readable). Validate only this unit (e.g. 'cargo test -p <crate>' if it is a Rust crate).`;
+			}
 
 			if (!agentName) {
 				return {
@@ -82,7 +114,22 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 				);
 			}
 
-			const record = await studioAgentsRunner.run(manifest, taskPrompt, ctx.cwd, mode, _signal);
+			// ctx.model es un objeto ({ id, provider, ... }); el CLI de Pi espera "provider/id"
+			const sessionModel = (ctx as any)?.model;
+			const activeModel: string | undefined = sessionModel?.id
+				? (sessionModel.provider && !String(sessionModel.id).includes("/")
+					? `${sessionModel.provider}/${sessionModel.id}`
+					: String(sessionModel.id))
+				: undefined;
+			const record = await studioAgentsRunner.run(
+				manifest,
+				scopedTaskPrompt,
+				executionCwd,
+				mode,
+				_signal,
+				timeoutMs,
+				activeModel,
+			);
 
 			if (mode === "background") {
 				return {

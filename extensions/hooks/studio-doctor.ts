@@ -5,6 +5,7 @@ import { join, resolve } from "node:path";
 import { inspectSetup } from "./studio-setup.ts";
 import { findStudioRoot } from "./studio-root.ts";
 import { detectProjectEngine } from "./engine-detector.ts";
+import { auditMediaTools } from "./studio-media-tools.ts";
 
 function resolvePackageRoot(): string {
 	try {
@@ -274,6 +275,22 @@ export function auditEnginePrerequisites(engine: string, dir = process.cwd()): E
 				"Descarga Epic Games Launcher para instalar Unreal Engine 5.4+ y asegúrate de tener Visual Studio 2022 o Xcode instalado.",
 			);
 		}
+	}
+
+	// ── Herramientas Multimedia FOSS (Media Pipeline) ──
+	const mediaAudit = auditMediaTools();
+	for (const m of mediaAudit) {
+		checks.push({
+			name: `${m.tool.name} (${m.tool.category})`,
+			required: false,
+			satisfied: m.installed,
+			details: m.installed ? `Instalado: ${m.path}` : `No instalado — ${m.tool.whyNeeded}`,
+			installHelp: {
+				macos: `brew install ${m.tool.brewPkg}`,
+				linux: `sudo apt install ${m.tool.id}`,
+				windows: `winget install ${m.tool.id}`,
+			},
+		});
 	}
 
 	const versionAudit = auditEngineVersion(engine, dir);

@@ -31,14 +31,18 @@ Cuando se invoca `/code <feature>` (o `/code review`):
 - Aplicar los estándares idiomáticos del motor activo (Rust/Bevy, GDScript/Godot, C++/Raylib, C#/Unity, C++/Unreal).
 
 ### 3. Verificación de Compilación y Test por Motor
-Routing de validación según el motor activo:
+Routing de validación según el motor activo (priorizar validación rápida y acotada):
 - **Godot**: `godot --headless --check-only`
 - **Unity**: `Unity -batchmode -runTests` o análisis C# Roslyn
 - **Unreal**: `Build.bat` / `UnrealEditor-Cmd`
-- **Bevy**: `cargo check` o `cargo test`
+- **Bevy**: `cargo check` para el proyecto, o `cargo test -p <crate>` para crates desacoplados de lógica (e.g. `radio-core`). Evitar `cargo test` del root completo si recompila Bevy con perfiles pesados de debug.
 - **Raylib**: `cmake --build build && ./build/game`
 Asegurar que la compilación sea limpia (0 errores).
 
-### 4. Cierre y Actualización de Tarea
-- Marcar la tarea completada `[x]` en la Live Spec.
-- Devolver el resumen ejecutivo de archivos modificados y estado de compilación.
+### 4. Cierre Automático de Tarea & Producer Handoff
+Tras recibir el Delivery Receipt del especialista con `status: completed`:
+- **Live Spec**: Abrir `design/gdd/<feature>.md` y marcar la tarea completada de `[ ]` (o `[/]`) a `[x] <tarea>` con su fecha y hash/resumen de validación.
+- **Roadmap & Estado**: Actualizar `production/roadmap.md` dentro del bloque `<!-- PRODUCER_STATE -->` actualizando:
+  - `Última Tarea Completada: <ID de la tarea>`
+  - `Siguiente Paso: <siguiente tarea pendiente [ ]>`
+- **Resumen Ejecutivo**: Devolver exclusivamente el Delivery Receipt en 10-15 líneas indicando el siguiente paso ejecutable sin especulación.

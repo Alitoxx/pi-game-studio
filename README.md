@@ -304,7 +304,7 @@ The violet **Pi Game Studio** dashboard will welcome you automatically. Then run
 ```
 *(Or `/studio:setup manual` to interactively choose your engine, language, and AI models).*
 
-This deploys the 55 agents to `.pi/agents/`, configures `.pi/gentle-ai/models.json`, and sets up `project.yaml`.
+This deploys the 9 active agents to `.pi/agents/` (8 Core + 1 Motor activo), configures `.pi/gentle-ai/models.json`, and sets up `project.yaml`.
 
 ### Start Developing
 
@@ -372,8 +372,8 @@ pi-game-studio/                     # Package root
 ├── LICENSE                         # MIT
 ├── AGENTS.md                       # Full agent roster
 ├── models.default.json             # Recommended 3-tier model mapping
-├── agents/                         # 55 source agents (model: inherit)
-├── skills/                         # 80 skills (SKILL.md per directory)
+├── agents/                         # 13 source agents (8 Core + 5 Engine Specialists)
+├── skills/                         # 6 ODD lifecycle skills (SKILL.md per directory)
 ├── prompts/                        # 49 document templates
 ├── extensions/                     # Hooks extension
 │   └── hooks/
@@ -626,7 +626,7 @@ This project is a migration of **Claude Code Game Studios** to run natively on P
 
 ### Homologation note
 
-- Imported counts were normalized to the current Pi tree: 55 agents, 6 skills, 49 templates, 4 runtime hooks.
+- Imported counts were normalized to the current Pi tree: 13 agents, 6 skills, 49 templates, 4 runtime hooks.
 - `extensions/hooks/index.ts` remains the single hook entrypoint; hook behavior is split across four handlers.
 
 Este port no existiría sin el trabajo fundacional de Donchitos y striderZA. Gracias.

@@ -19,12 +19,12 @@ tools:
 Cuando se invoca `/test` (o `/test smoke`, `/test regression`, `/test bugs`):
 
 ### 1. Smoke Checks y Arranque Rápido por Motor
-Ejecutar el juego en modo headless o ventana mínima para verificar que arranca sin crashes ni panics:
+Ejecutar el juego en modo headless, timeout acotado o verificación rápida para validar arranque sin crashes ni panics:
 - **Godot**: `godot --headless`
 - **Unity**: `Unity.exe -batchmode`
 - **Unreal**: `UnrealEditor-Cmd.exe`
-- **Bevy**: `cargo run`
-- **Raylib**: `./build/game`
+- **Bevy**: `cargo check` (validación estática instantánea) o `cargo test -p <crate>` para lógica pura. Para smoke de runtime con ventana: `cargo run` sólo con el usuario presente o mediante flag de timeout/headless para no bloquear procesos automatizados.
+- **Raylib**: `./build/game` (o compilación previa con `cmake --build build`)
 Comprobar que los sistemas esenciales (player loop, render básico, inputs) responden.
 
 ### 2. Suites de Regresión y Pruebas Unitarias

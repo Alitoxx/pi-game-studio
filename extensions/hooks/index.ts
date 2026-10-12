@@ -20,6 +20,8 @@ import { handleStudioStart, readProducerState, recordFlowCompletion, auditProjec
 import { handleStudioDoctor } from "./studio-doctor.ts";
 import { handleStudioWeb } from "./studio-web.ts";
 import { handleStudioProfile } from "./studio-profile.ts";
+import { handleStudioMcp } from "./studio-mcp.ts";
+import { promptMediaToolsInstall } from "./studio-media-tools.ts";
 import { handleStudioSfx, handleStudioPalettes } from "./studio-synth.ts";
 import { handleStudioNew } from "./studio-new.ts";
 import { handleStudioChanges } from "./studio-changes.ts";
@@ -120,9 +122,9 @@ export default function (pi: ExtensionAPI) {
 		},
 	});
 
-	// /studio:agents — Catálogo de los 55 agentes
+	// /studio:agents — Catálogo interactivo de los agentes
 	(pi as any).registerCommand?.("studio:agents", {
-		description: "[Studio] Catálogo interactivo de los 55 agentes y sus especialidades",
+		description: "[Studio] Navegador interactivo de los 13 agentes oficiales (8 Core + 5 Especialistas de motor)",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioAgents(args, ctx);
 		},
@@ -231,6 +233,22 @@ export default function (pi: ExtensionAPI) {
 		description: "[Studio] Visor e inspector en vivo de logs y actividades de subagentes",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioSubagentsViewer(args, ctx);
+		},
+	});
+
+	// /studio:mcp — Gestor interactivo de los 10 Servidores MCP del Estudio
+	(pi as any).registerCommand?.("studio:mcp", {
+		description: "[Studio] Hub interactivo de los 10 servidores MCP (REA, Playwright, Context7, Blender, etc.)",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioMcp(args, ctx);
+		},
+	});
+
+	// /studio:tools — Diagnóstico de viabilidad e instalador de herramientas multimedia CLI (FFmpeg, ImageMagick, Assimp, SoX)
+	(pi as any).registerCommand?.("studio:tools", {
+		description: "[Studio] Diagnóstico de viabilidad e instalador interactivo de herramientas multimedia CLI",
+		handler: async (_args: string, ctx: ExtensionContext) => {
+			await promptMediaToolsInstall(ctx);
 		},
 	});
 

@@ -17,6 +17,7 @@ export interface TaskRecord {
 	error: string | null;
 	startedAt: number | null;
 	endedAt: number | null;
+	timeoutMs?: number;
 	logs: string[];
 }
 
@@ -109,14 +110,17 @@ export class StudioAgentsRunner {
 		cwd: string,
 		mode: "task" | "background" = "task",
 		signal?: AbortSignal,
+		timeoutMs?: number,
+		activeModel?: string,
 	): Promise<TaskRecord> {
 		this.counter++;
 		const now = Date.now();
 		const taskId = `task-${now.toString(36)}-${this.counter.toString(36)}`;
 
+		// Si el modelo es inherit o no está definido, hereda el modelo activo de la sesión; si no, usa el manifest o fallback
 		const chosenModel = manifest.model && manifest.model !== "inherit"
 			? manifest.model
-			: "space-bunny-free";
+			: activeModel || "inherit";
 
 		const record: TaskRecord = {
 			id: taskId,
@@ -132,6 +136,7 @@ export class StudioAgentsRunner {
 			error: null,
 			startedAt: null,
 			endedAt: null,
+			timeoutMs: timeoutMs || (mode === "background" ? 900000 : this.timeoutMs),
 			logs: [],
 		};
 
@@ -168,18 +173,26 @@ export class StudioAgentsRunner {
 			record.latestActivity = "Iniciando especialista en modo RPC...";
 			this.notifyListeners(record);
 
-			// Preparar instrucción ejecutiva para el especialista
+			// Watchdog timeout específico o según modo (background: 15 min, task: 5 min)
+			const activeTimeout = record.timeoutMs
+				|| (record.mode === "background" ? 900000 : this.timeoutMs);
+
+			// Preparar instrucción ejecutiva para el especialista bajo protocolo ODD estricto
 			const executivePrompt = [
-				`[PI GAME STUDIO SPECIALIST DISPATCH]`,
+				`[PI GAME STUDIO SPECIALIST DISPATCH — ODD PROTOCOL ACTIVE]`,
 				`Role: ${manifest.name} (${manifest.title} - Tier: ${manifest.tier})`,
 				`Working Directory: ${record.cwd}`,
 				`Assigned Task:`,
 				record.task,
 				``,
-				`[STRICT RETURN CONTRACT - GENTLE HIGH-SIGNAL ODD STANDARD]`,
-				`Do NOT output chit-chat, conversational filler, greetings, or meta-explanations.`,
-				`Execute your assigned role using your allowed tools (${manifest.tools.join(", ")}).`,
-				`At the very end of your response, output ONLY a clean YAML block formatted exactly like this:`,
+				`[ODD GAMEDEV EXECUTION RULES — MANDATORY]`,
+				`1. AUTONOMOUS DIRECT EXECUTION: This task has already been authorized by the Producer/User. Do NOT ask conversational questions, do NOT output menus, and do NOT wait for confirmation before writing files. Execute the task directly on disk using your allowed tools (${manifest.tools.join(", ")}).`,
+				`2. ATOMIC SCOPE (~400 LINES): Deliver coherent changes of ~400 lines (code + data/tests). Do NOT dump monolithic 800+ line blocks in one pass. If the design requires more, implement the foundational core cleanly and set status: partial in the completion receipt.`,
+				`3. SCOPED ENGINE VALIDATION (NO MONOLITHIC BUILDS): If you validate via bash:`,
+				`   - If working on an isolated crate or component (e.g. crates/radio-core), run ONLY focused tests: e.g. 'cargo test -p <crate>' or 'cargo check -p <crate>'.`,
+				`   - NEVER trigger full workspace builds or tests that recompile heavy game engines (like Bevy, Unreal, Unity) during an isolated logic task. Keep bash commands bounded and fast.`,
+				`4. SINGLE SOURCE OF TRUTH (LIVE SPECS): Read existing design documents in 'design/gdd/<feature>.md' and current code in 'src/'. Never assume non-existent APIs.`,
+				`5. STRICT RETURN CONTRACT: At the very end of your response, output ONLY a clean YAML block formatted exactly like this:`,
 				`\`\`\`yaml`,
 				`status: completed # or partial / failed / blocked`,
 				`summary: "<executive 1-2 sentence summary of what was done>"`,
@@ -200,9 +213,13 @@ export class StudioAgentsRunner {
 				manifest.systemPrompt,
 			];
 
-			// Añadir modelo si no es inherit
-			if (manifest.model && manifest.model !== "inherit") {
-				args.push("--model", manifest.model);
+			// Añadir modelo si se resolvió uno explícito
+			const targetModel = (manifest.model && manifest.model !== "inherit")
+				? manifest.model
+				: (record.model && record.model !== "inherit" ? record.model : undefined);
+
+			if (targetModel) {
+				args.push("--model", targetModel);
 			}
 
 			// Herramientas permitidas
@@ -243,6 +260,7 @@ export class StudioAgentsRunner {
 			let stderr = "";
 			let rpcBuffer = "";
 			let promptSent = false;
+			let agentSettled = false; // true tras agent_settled: un SIGTERM de gracia posterior no es un fallo
 
 			const sendRpc = (payload: Record<string, unknown>) => {
 				try {
@@ -335,12 +353,22 @@ export class StudioAgentsRunner {
 
 						// 5. Finalización natural en agent_settled
 						if (event.type === "agent_settled") {
+							agentSettled = true;
 							record.latestActivity = "Sintetizando entrega...";
 							this.notifyListeners(record);
-							// Cerrar stdin de forma limpia para que el proceso hijo finalice normalmente de inmediato (evita colgarse hasta el timeout)
+							// Cerrar stdin para que el hijo termine solo
 							try {
 								child.stdin?.end();
 							} catch {}
+
+							// Timer de gracia: si tras 2.5s el proceso hijo no cerró, forzar cierre limpio con SIGTERM
+							setTimeout(() => {
+								if (this.liveProcesses.has(record.id)) {
+									try {
+										child.kill("SIGTERM");
+									} catch {}
+								}
+							}, 2500);
 						}
 					} catch {
 						// Si la línea no es JSON puro, podría ser log estándar
@@ -362,13 +390,13 @@ export class StudioAgentsRunner {
 				}
 			});
 
-			// Watchdog timeout
+			// Watchdog timeout adaptativo (activeTimeout)
 			const timer = setTimeout(() => {
 				if (this.liveProcesses.has(record.id)) {
-					this.cancel(record.id, `Timeout: agent exceeded ${this.timeoutMs / 1000}s limit`);
+					this.cancel(record.id, `Timeout: agent exceeded ${activeTimeout / 1000}s limit`);
 					resolve(record);
 				}
-			}, this.timeoutMs);
+			}, activeTimeout);
 
 			child.on("close", (code) => {
 				clearTimeout(timer);
@@ -385,7 +413,7 @@ export class StudioAgentsRunner {
 					return resolve(record);
 				}
 
-				if (code === 0) {
+				if (code === 0 || (agentSettled && code === null)) {
 					record.status = "completed";
 					record.result = resultText.trim() || "(el especialista no produjo salida)";
 					record.latestActivity = "Completado exitosamente";

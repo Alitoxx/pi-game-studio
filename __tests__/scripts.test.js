@@ -14,15 +14,15 @@ describe("Utility Scripts", () => {
 			`(function(LIGHTWEIGHT_AGENTS){ return ${tiersMatch[1]}; })(LIGHTWEIGHT_AGENTS)`
 		);
 
-		test("total count of unique agents across all tiers equals 55", () => {
+		test("total count of unique agents across all tiers equals 13", () => {
 			const allAgents = [
 				...TIERS.director,
 				...TIERS.workhorse,
 				...TIERS.lightweight,
 			];
 			const uniqueAgents = new Set(allAgents);
-			expect(allAgents.length).toBe(55);
-			expect(uniqueAgents.size).toBe(55);
+			expect(allAgents.length).toBe(13);
+			expect(uniqueAgents.size).toBe(13);
 		});
 
 		test("each agent in TIERS exists as a file in agents/", () => {
@@ -54,19 +54,19 @@ describe("Utility Scripts", () => {
 			for (const agent of agentFiles) {
 				expect(uniqueAgents.has(agent)).toBe(true);
 			}
-			expect(agentFiles.length).toBe(55);
+			expect(agentFiles.length).toBe(13);
 		});
 
-		test("all 5 raylib specialists must be in workhorse tier", () => {
-			const raylibSpecialists = [
+		test("all 5 engine specialists must be in workhorse tier", () => {
+			const engineSpecialists = [
+				"bevy-specialist",
+				"godot-specialist",
 				"raylib-specialist",
-				"raylib-entt-specialist",
-				"raylib-shader-specialist",
-				"raylib-ui-specialist",
-				"raylib-build-specialist",
+				"unity-specialist",
+				"unreal-specialist",
 			];
 
-			for (const specialist of raylibSpecialists) {
+			for (const specialist of engineSpecialists) {
 				expect(TIERS.workhorse).toContain(specialist);
 			}
 		});

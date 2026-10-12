@@ -36,83 +36,26 @@ export const AGENT_GROUPS: Array<{
 		agents: ["creative-director", "technical-director", "producer"],
 	},
 	{
-		name: "TIER 2 — LEADS DE DEPARTAMENTO",
+		name: "TIER 2 — LEADS & DESARROLLADORES CORE",
 		emoji: "•",
 		agents: [
 			"game-designer",
-			"lead-programmer",
+			"gameplay-programmer",
 			"art-director",
 			"audio-director",
-			"narrative-director",
 			"qa-lead",
-			"release-manager",
-			"localization-lead",
-		],
-	},
-	{
-		name: "TIER 3 — PROGRAMACION & MOTORES",
-		emoji: "•",
-		agents: [
-			"gameplay-programmer",
-			"engine-programmer",
-			"ai-programmer",
-			"network-programmer",
-			"tools-programmer",
-			"ui-programmer",
 		],
 	},
 	{
 		name: "TIER 3 — ESPECIALISTAS DE MOTOR DEDICADOS",
 		emoji: "•",
 		agents: [
-			"godot-specialist",
-			"godot-gdscript-specialist",
-			"godot-shader-specialist",
-			"godot-gdextension-specialist",
-			"godot-csharp-specialist",
-			"unity-specialist",
-			"unity-dots-specialist",
-			"unity-shader-specialist",
-			"unity-addressables-specialist",
-			"unity-ui-specialist",
-			"unreal-specialist",
-			"ue-gas-specialist",
-			"ue-blueprint-specialist",
-			"ue-replication-specialist",
-			"ue-umg-specialist",
 			"bevy-specialist",
+			"godot-specialist",
 			"raylib-specialist",
-			"raylib-entt-specialist",
-			"raylib-shader-specialist",
-			"raylib-ui-specialist",
-			"raylib-build-specialist",
+			"unity-specialist",
+			"unreal-specialist",
 		],
-	},
-	{
-		name: "TIER 3 — DISENO & SISTEMAS",
-		emoji: "•",
-		agents: [
-			"systems-designer",
-			"level-designer",
-			"economy-designer",
-			"ux-designer",
-			"prototyper",
-		],
-	},
-	{
-		name: "TIER 3 — ARTE, AUDIO & NARRATIVA",
-		emoji: "•",
-		agents: ["technical-artist", "writer", "world-builder", "sound-designer"],
-	},
-	{
-		name: "TIER 3 — QA, RENDIMIENTO & SEGURIDAD",
-		emoji: "•",
-		agents: ["qa-tester", "performance-analyst", "security-engineer", "analytics-engineer"],
-	},
-	{
-		name: "TIER 3 — OPERACIONES & COMUNIDAD",
-		emoji: "•",
-		agents: ["devops-engineer", "accessibility-specialist", "live-ops-designer", "community-manager"],
 	},
 ];
 
@@ -137,13 +80,10 @@ export async function handleStudioAgents(
 
 	if (ctx.hasUI && typeof (ctx.ui as any)?.select === "function" && query !== "all") {
 		const objectiveOptions = [
-			"1. Diseñar mecánicas, combate o balance -> game-designer",
-			"2. Programar, resolver arquitectura o motor -> technical-director / leads",
-			"3. Definir arte, audio o historia -> art-director / audio / narrativa",
-			"4. Probar, optimizar o reportar bugs -> qa-lead / qa-tester",
-			"5. Visión global o planificar entregas -> producer / creative-director",
-			"6. Explorar agentes por área técnica (Directores, Leads, Motores...)",
-			"7. Ver el catálogo completo de los 55 agentes",
+			"1. Directores (Visión, Arquitectura y Producción)",
+			"2. Desarrolladores Core (Diseño, Gameplay, Arte, Audio, QA)",
+			"3. Especialistas de Motor (Bevy, Godot, Raylib, Unity, Unreal)",
+			"4. Ver la dotación completa (13 agentes)",
 		];
 
 		const selected = await (ctx.ui as any).select(
@@ -158,38 +98,15 @@ export async function handleStudioAgents(
 
 		switch (idx) {
 			case 0:
-				// Mecánicas & Balance
-				printGroup(AGENT_GROUPS[4] || AGENT_GROUPS[1], ctx);
-				break;
-			case 1:
-				// Programación & Motor
-				printGroup(AGENT_GROUPS[2], ctx);
-				break;
-			case 2:
-				// Arte, Audio & Narrativa
-				printGroup(AGENT_GROUPS[5], ctx);
-				break;
-			case 3:
-				// QA & Rendimiento
-				printGroup(AGENT_GROUPS[6], ctx);
-				break;
-			case 4:
-				// Visión & Directores
 				printGroup(AGENT_GROUPS[0], ctx);
 				break;
-			case 5: {
-				// Submenú por grupos
-				const groupOpts = AGENT_GROUPS.map((g) => `${g.name} (${g.agents.length} agentes)`);
-				const groupPick = await (ctx.ui as any).select("Selecciona un área del estudio:", groupOpts);
-				if (groupPick !== undefined && groupPick !== null) {
-					const gIdx = typeof groupPick === "number" ? groupPick : groupOpts.indexOf(groupPick);
-					if (gIdx !== -1 && gIdx < AGENT_GROUPS.length) {
-						printGroup(AGENT_GROUPS[gIdx], ctx);
-					}
-				}
+			case 1:
+				printGroup(AGENT_GROUPS[1], ctx);
 				break;
-			}
-			case 6:
+			case 2:
+				printGroup(AGENT_GROUPS[2], ctx);
+				break;
+			case 3:
 				printAllAgents(ctx);
 				break;
 		}
@@ -234,7 +151,7 @@ function printGroup(
 function printAllAgents(ctx: ExtensionContext): void {
 	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 		const lines = [
-			"PI GAME STUDIO — CATÁLOGO DE 55 AGENTES",
+			"PI GAME STUDIO — DOTACIÓN DE 13 AGENTES (8+1)",
 			"─".repeat(50),
 			...AGENT_GROUPS.map((g) => `${g.name}: ${g.agents.length} agentes`),
 			"",
@@ -243,7 +160,7 @@ function printAllAgents(ctx: ExtensionContext): void {
 		ctx.ui.notify(lines.join("\n"), "info");
 	} else {
 		console.log("");
-		console.log("\x1b[1m\x1b[38;2;167;139;250mPI GAME STUDIO — CATÁLOGO DE 55 AGENTES\x1b[0m");
+		console.log("\x1b[1m\x1b[38;2;167;139;250mPI GAME STUDIO — DOTACIÓN DE 13 AGENTES (8+1)\x1b[0m");
 		console.log("\x1b[38;2;107;114;128m" + "─".repeat(60) + "\x1b[0m");
 
 		for (const group of AGENT_GROUPS) {

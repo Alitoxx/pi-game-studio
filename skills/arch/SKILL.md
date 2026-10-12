@@ -35,4 +35,7 @@ Soporte simétrico para los 5 motores oficiales con su arquitectura de shaders, 
 - **Unity**: MonoBehaviour / DOTS, Burst, URP/HDRP, Shader Graph y custom HLSL (`.shader`). AudioMixer con Snapshots y ducking. Input System (Actions). Serialización JSON/Binary.
 - **Unreal**: C++, GAS, Enhanced Input, Blueprints, Material Editor y Niagara. Sound Cues y MetaSounds con Submixes. SaveGame nativo.
 
-Verificar toolchains locales, extensiones de assets para shaders, buses de audio y servidores MCP según el motor configurado en `project.yaml`.
+### 4. Ecosistema de Servidores MCP ("Files First, MCP Accelerated")
+Cuando se ejecuta `/arch mcp` o `/studio:mcp`:
+- **Auditoría de Entorno**: Consultar el estado de los 10 servidores MCP disponibles (REA, Playwright, Context7, Codegraph, SQLite, Chroma/Vector, Blender, Image Gen, Audio SFX, Live Engine).
+- **Aceleración ODD**: Los servidores MCP no sustituyen los archivos en disco (`design/gdd/`), sino que aceleran las capacidades de inspección de los especialistas. Generar o actualizar `docs/architecture/mcp-ecosystem.md` con los servidores recomendados y activados para el proyecto.

@@ -1,14 +1,14 @@
 const fs = require("fs");
 const path = require("path");
 
-describe("Exhaustive Agent Validation (All 55 Agents)", () => {
+describe("Exhaustive Agent Validation (Compact 8+1 Studio Architecture: 13 Agents)", () => {
 	const agentsDir = path.join(__dirname, "..", "agents");
 	const agentFiles = fs
 		.readdirSync(agentsDir)
 		.filter((f) => f.endsWith(".md"));
 
-	test("exactly 55 agent files exist in agents/ directory", () => {
-		expect(agentFiles.length).toBe(55);
+	test("exactly 13 agent files exist in agents/ directory", () => {
+		expect(agentFiles.length).toBe(13);
 	});
 
 	const validPiTools = [

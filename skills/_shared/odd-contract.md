@@ -11,17 +11,29 @@ Este archivo define los contratos y estándares compartidos para las **6 Skills 
 - El seguimiento de producción y sprints vive exclusivamente en `production/roadmap.md`.
 - Cero archivos de especificación muertos o burocracia de documentos intermedios.
 
-## 3. Compact YAML Return Contract
+## 3. Atomic Scoping & Execution Budgets (~400 Líneas)
+- Toda implementación delegada a un subagente se realiza en paquetes atómicos de **~400 líneas** (código + tests/datos).
+- Prohibido delegar monolitos de 800+ líneas en una sola pasada. Si una mecánica es más grande, se implementa el núcleo funcional primero, se reporta `status: partial` y se continúa en el siguiente ciclo.
+- **Cero Diálogos Intermedios en Ejecución**: Las tareas delegadas ya están autorizadas por el usuario/productor. El especialista no debe formular preguntas conversacionales ni pedir confirmaciones intermedias; ejecuta directamente sobre disco.
+
+## 4. Scoped Engine Validation (Protección contra Monolitos de Build)
+- En motores compilados (Rust/Bevy, C++/Raylib, C++/Unreal):
+  - Tareas de lógica pura o crates desacoplados (e.g. `crates/radio-core`) **deben** validarse exclusivamente con comandos acotados (`cargo test -p radio-core`, `cargo check -p radio-core`).
+  - **Prohibido** ejecutar builds globales del workspace o suites completas que fuercen recompilaciones del motor (como Bevy en modo test) dentro de un subagente con timeout acotado.
+  - La compilación del juego completo o smoke test visual se reserva para el paso de integración del orquestador o la skill `/test`.
+
+## 5. Compact YAML Return Contract
 Cuando una sub-tarea o skill delega la ejecución a un especialista de motor, este devuelve exclusivamente un bloque YAML compacto:
 
 ```yaml
-status: complete | partial | blocked
+status: completed | partial | blocked
 summary: "Qué se implementó en una oración precisa"
 files_changed:
   - "ruta/al/archivo.ext"
 validation:
-  command: "cargo check / godot --headless"
+  command: "cargo check / cargo test -p <crate> / godot --headless"
   result: "0 errors, target FPS preserved"
 gameplay_impact: "Efecto observable en el juego"
 next_step: "Siguiente acción recomendada en el pipeline ODD"
 ```
+

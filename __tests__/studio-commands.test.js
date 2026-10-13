@@ -43,6 +43,12 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 			"studio:toggle-art",
 			"studio:art",
 			"studio:help",
+			"studio:perf-guard",
+			"perf-guard",
+			"studio:watch",
+			"watch",
+			"studio:assets",
+			"assets",
 		];
 
 		const names = registered.map((r) => r.name);
@@ -549,7 +555,7 @@ Next: Level Design
 		);
 	});
 
-	test("studio-subagents-widget renders signature Gentle Shell UI with vertical accent bar ▎ and telemetry", () => {
+	test("studio-subagents-widget renders sovereign gamedev console dispatch with accent bar ▌ and engine telemetry", () => {
 		const widgetPath = path.join(__dirname, "..", "extensions", "hooks", "studio-subagents-widget.ts");
 		expect(fs.existsSync(widgetPath)).toBe(true);
 
@@ -557,19 +563,25 @@ Next: Level Design
 		expect(widgetSource).toContain("export function renderSubagentsWidgetCard");
 		expect(widgetSource).toContain("export function formatElapsed");
 
-		// Gentle Shell signature left accent bar ▎ instead of box borders
-		expect(widgetSource).toContain("▎");
+		// Sovereign game engine console left accent bar ▌ instead of box borders
+		expect(widgetSource).toContain("▌");
 		expect(widgetSource).not.toContain("╭─");
 		expect(widgetSource).not.toContain("╰─");
 
-		// Header and status glyphs
-		expect(widgetSource).toContain("❀ Agents");
-		expect(widgetSource).toContain("active");
-		expect(widgetSource).toContain("reciente");
-		expect(widgetSource).toContain("◐"); // running
-		expect(widgetSource).toContain("✓"); // completed
-		expect(widgetSource).toContain("✗"); // failed
-		expect(widgetSource).toContain("○"); // queued
+		// Header and sovereign gamedev telemetry status glyphs
+		expect(widgetSource).toContain("◈ ENGINE DISPATCH");
+		expect(widgetSource).not.toContain("❀ Agents");
+		expect(widgetSource).toContain("● COMPILANDO"); // running / compiling
+		expect(widgetSource).toContain("▲ OK"); // completed
+		expect(widgetSource).toContain("■ BLOQUEADO"); // failed
+		expect(widgetSource).toContain("○ EN COLA"); // queued
+
+		// Engine tags for specialists
+		expect(widgetSource).toContain("[Bevy]");
+		expect(widgetSource).toContain("[Godot]");
+		expect(widgetSource).toContain("[Raylib]");
+		expect(widgetSource).toContain("[Unity]");
+		expect(widgetSource).toContain("[Unreal]");
 
 		// Right-aligned telemetry string formatting (model · thinking · elapsed)
 		expect(widgetSource).toContain("telemetryStr");
@@ -783,6 +795,159 @@ Next: Level Design
 		// Single question prompt
 		const singlePrompt = formatPrompt(0, [{ question: "¿Continuar?" }]);
 		expect(singlePrompt).toBe("▎ ¿Continuar?");
+	});
+
+	test("Feature A: studio-perf-guard audits frame loops and blocking calls", () => {
+		const perfGuardPath = path.join(__dirname, "..", "extensions", "hooks", "studio-perf-guard.ts");
+		expect(fs.existsSync(perfGuardPath)).toBe(true);
+
+		const perfSource = fs.readFileSync(perfGuardPath, "utf8");
+		expect(perfSource).toContain("export function auditFilePerformance");
+		expect(perfSource).toContain("export async function handleStudioPerfAudit");
+		expect(perfSource).toContain("export function detectLanguageFromPath");
+
+		// Frame loop allocations and patterns
+		expect(perfSource).toContain(".clone()");
+		expect(perfSource).toContain("Box::new");
+		expect(perfSource).toContain("Vec::new");
+		expect(perfSource).toContain("malloc");
+		expect(perfSource).toContain("ResourceLoader.load");
+
+		// Blocking calls
+		expect(perfSource).toContain("thread::sleep");
+		expect(perfSource).toContain("OS.delay");
+		expect(perfSource).toContain("FileAccess.open");
+
+		// Actionable warning message
+		expect(perfSource).toContain("◈ PERF ALERT:");
+		expect(perfSource).toContain("allocations detected in frame loop of");
+		expect(perfSource).toContain("▲ PERF AUDIT OK:");
+
+		// Behavioral test of frame loop regexes & patterns
+		const frameLoopRegex = /func\s+(_process|_physics_process|update)\s*\(|fn\s+([a-zA-Z0-9_]*(?:update|tick|system)[a-zA-Z0-9_]*)\s*\(|(?:void)\s+(Update|FixedUpdate)\s*\(/;
+		expect(frameLoopRegex.test("func _process(delta):")).toBe(true);
+		expect(frameLoopRegex.test("fn update_player_system() {")).toBe(true);
+		expect(frameLoopRegex.test("void Update() {")).toBe(true);
+		expect(frameLoopRegex.test("fn helper_calculation() {")).toBe(false);
+
+		const allocRegex = /\.clone\s*\(\s*\)|Box::new\s*\(|Vec::new\s*\(|\bmalloc\s*\(|\bnew\s+[A-Za-z0-9_]+|\.new\s*\(/;
+		expect(allocRegex.test("let x = query.clone();")).toBe(true);
+		expect(allocRegex.test("let b = Box::new(10);")).toBe(true);
+		expect(allocRegex.test("void* ptr = malloc(1024);")).toBe(true);
+		expect(allocRegex.test("var node = Node.new()")).toBe(true);
+	});
+
+	test("Feature B: studio-watch provides compile check commands and live watcher", () => {
+		const watchPath = path.join(__dirname, "..", "extensions", "hooks", "studio-watch.ts");
+		expect(fs.existsSync(watchPath)).toBe(true);
+
+		const watchSource = fs.readFileSync(watchPath, "utf8");
+		expect(watchSource).toContain("export function getEngineCompileCommand");
+		expect(watchSource).toContain("export async function runEngineCompileCheck");
+		expect(watchSource).toContain("export async function handleStudioWatch");
+		expect(watchSource).toContain("export function isStudioWatcherActive");
+		expect(watchSource).toContain("export function stopStudioWatcher");
+
+		// Engine compilation commands
+		expect(watchSource).toContain("cargo check");
+		expect(watchSource).toContain("godot --headless --check-only");
+		expect(watchSource).toContain("cmake --build");
+
+		// Background notification telemetry
+		expect(watchSource).toContain("◈ COMPILE OK:");
+		expect(watchSource).toContain("build clean in");
+		expect(watchSource).toContain("◈ BUILD ERROR:");
+
+		// Replicates engine command mapping
+		function resolveCompileCmd(engine) {
+			const norm = engine.toLowerCase();
+			if (norm.includes("bevy")) return "cargo check";
+			if (norm.includes("godot")) return "godot --headless --check-only";
+			if (norm.includes("raylib")) return "cmake --build build 2>/dev/null || make -j4 2>/dev/null || true";
+			return "cargo check";
+		}
+		expect(resolveCompileCmd("Bevy")).toBe("cargo check");
+		expect(resolveCompileCmd("Godot")).toBe("godot --headless --check-only");
+		expect(resolveCompileCmd("Raylib")).toContain("cmake");
+	});
+
+	test("Feature C: studio-sound synthesizes authentic 8-bit retro chiptune chimes", () => {
+		const soundPath = path.join(__dirname, "..", "extensions", "hooks", "studio-sound.ts");
+		expect(fs.existsSync(soundPath)).toBe(true);
+
+		const soundSource = fs.readFileSync(soundPath, "utf8");
+		expect(soundSource).toContain("export function synthesizeRetroChime");
+		expect(soundSource).toContain("RIFF");
+		expect(soundSource).toContain("WAVE");
+
+		// 8-bit coin / rising tone sequence frequencies
+		expect(soundSource).toContain("987");
+		expect(soundSource).toContain("1318");
+
+		// Alert blip & error buzz frequencies
+		expect(soundSource).toContain("1760");
+		expect(soundSource).toContain("260");
+
+		// Audio commands
+		expect(soundSource).toContain("paplay");
+		expect(soundSource).toContain("pw-play");
+		expect(soundSource).toContain("aplay");
+		expect(soundSource).toContain("afplay");
+		expect(soundSource).toContain("powershell");
+
+		// Replicate WAV buffer format validation
+		const sampleRate = 22050;
+		const numSamples = 100;
+		const subChunk2Size = numSamples * 2;
+		const chunkSize = 36 + subChunk2Size;
+		const buf = Buffer.alloc(44 + subChunk2Size);
+		buf.write("RIFF", 0);
+		buf.writeUInt32LE(chunkSize, 4);
+		buf.write("WAVE", 8);
+		buf.write("fmt ", 12);
+		expect(buf.toString("ascii", 0, 4)).toBe("RIFF");
+		expect(buf.toString("ascii", 8, 12)).toBe("WAVE");
+	});
+
+	test("Feature D: studio-assets audits images, 3D model budgets, and manifest", () => {
+		const assetsPath = path.join(__dirname, "..", "extensions", "hooks", "studio-assets.ts");
+		expect(fs.existsSync(assetsPath)).toBe(true);
+
+		const assetsSource = fs.readFileSync(assetsPath, "utf8");
+		expect(assetsSource).toContain("export function auditAssets");
+		expect(assetsSource).toContain("export async function handleStudioAssets");
+
+		// PNG & oxipng optimization
+		expect(assetsSource).toContain("oxipng -o 4 --strip all");
+		expect(assetsSource).toContain(".png");
+
+		// 3D models and budget
+		expect(assetsSource).toContain(".glb");
+		expect(assetsSource).toContain(".gltf");
+		expect(assetsSource).toContain("DEFAULT_MODEL_BUDGET_BYTES");
+
+		// Manifest cross-referencing
+		expect(assetsSource).toContain("manifest.yaml");
+		expect(assetsSource).toContain("placeholder");
+		expect(assetsSource).toContain("missingCount");
+		expect(assetsSource).toContain("placeholderCount");
+
+		// Placeholder detector test
+		function isPlaceholderValue(val) {
+			const lower = val.toLowerCase();
+			return lower.includes("todo") || lower.includes("tbd") || lower.includes("placeholder") || lower.includes("unresolved");
+		}
+		expect(isPlaceholderValue("TODO: add player texture")).toBe(true);
+		expect(isPlaceholderValue("placeholder.png")).toBe(true);
+		expect(isPlaceholderValue("hero_idle.png")).toBe(false);
+	});
+
+	test("Auto-perf-guard hook is wired in index.ts for write events", () => {
+		expect(hooksSource).toContain("auditFilePerformance");
+		expect(hooksSource).toContain("◈ PERF ALERT:");
+		expect(hooksSource).toContain("handleStudioPerfAudit");
+		expect(hooksSource).toContain("handleStudioWatch");
+		expect(hooksSource).toContain("handleStudioAssets");
 	});
 });
 

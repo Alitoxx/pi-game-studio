@@ -39,6 +39,9 @@ import {
 	playErrorChime,
 	handleStudioSound,
 } from "./studio-sound.ts";
+import { handleStudioPerfAudit, auditFilePerformance } from "./studio-perf-guard.ts";
+import { handleStudioWatch } from "./studio-watch.ts";
+import { handleStudioAssets } from "./studio-assets.ts";
 
 export default function (pi: ExtensionAPI) {
 	// ──────────────────────────────────────────────
@@ -325,6 +328,54 @@ export default function (pi: ExtensionAPI) {
 		},
 	});
 
+	// /studio:perf-guard — Auditor de rendimiento y detección de allocs en frame loops
+	(pi as any).registerCommand?.("studio:perf-guard", {
+		description: "[Studio] Auditor de rendimiento y detección de allocs en frame loops (Rust, GDScript, C++, C#)",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioPerfAudit(args, ctx);
+		},
+	});
+
+	// /perf-guard — Alias de studio:perf-guard
+	(pi as any).registerCommand?.("perf-guard", {
+		description: "[Studio] Alias de auditor de rendimiento y allocaciones en frame loops",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioPerfAudit(args, ctx);
+		},
+	});
+
+	// /studio:watch — Live Engine Hot-Reload & Watcher
+	(pi as any).registerCommand?.("studio:watch", {
+		description: "[Studio] Live engine watcher y compilación en segundo plano (cargo check, godot, cmake)",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioWatch(args, ctx);
+		},
+	});
+
+	// /watch — Alias de studio:watch
+	(pi as any).registerCommand?.("watch", {
+		description: "[Studio] Alias de live engine watcher y hot-reload en segundo plano",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioWatch(args, ctx);
+		},
+	});
+
+	// /studio:assets — Asset Pipeline & Manifest Inspector
+	(pi as any).registerCommand?.("studio:assets", {
+		description: "[Studio] Auditor de pipeline de assets, optimización oxipng y verificación de manifest",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioAssets(args, ctx);
+		},
+	});
+
+	// /assets — Alias de studio:assets
+	(pi as any).registerCommand?.("assets", {
+		description: "[Studio] Alias de auditor de pipeline de assets y manifest inspector",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioAssets(args, ctx);
+		},
+	});
+
 	// ──────────────────────────────────────────────
 	// Hook: Validate git commits
 	// Fires on tool_call for git commit commands
@@ -370,6 +421,35 @@ export default function (pi: ExtensionAPI) {
 			console.log(
 				`Reminder: run skill-test to validate ${skillName} after changes.`,
 			);
+		}
+
+		// Auto-check performance anti-patterns on code files
+		const ext = filePath.split(".").pop()?.toLowerCase();
+		if (
+			ext === "rs" ||
+			ext === "gd" ||
+			ext === "cs" ||
+			ext === "cpp" ||
+			ext === "hpp" ||
+			ext === "h" ||
+			ext === "cc"
+		) {
+			const content = (event.input as any)?.content;
+			const perfRes = auditFilePerformance(
+				filePath,
+				typeof content === "string" ? content : undefined,
+			);
+			if (!perfRes.isClean && perfRes.allocationsCount > 0) {
+				console.log(
+					`\x1b[38;2;253;230;138m◈ PERF ALERT: ${perfRes.allocationsCount} allocations detected in frame loop of ${filePath}\x1b[0m`,
+				);
+				if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
+					(ctx.ui as any).notify(
+						`◈ PERF ALERT: ${perfRes.allocationsCount} allocs en frame loop de ${filePath.split("/").pop()}`,
+						"warning",
+					);
+				}
+			}
 		}
 
 		// Auto-detect production deliveries and update Producer roadmap
@@ -500,7 +580,8 @@ export default function (pi: ExtensionAPI) {
 						"Flow Completion Protocol: When any specialist finishes a task (design doc, mechanic, art asset, code review), the Producer immediately closes the loop: " +
 						"1. Acknowledges the completed item and updates the production roadmap line. " +
 						"2. Declares the next concrete step in the sprint and hands off to the next specialist directly without asking what to do next. " +
-						"If the user greets (e.g. 'hola', 'buenas'), acknowledge the OK environment in 1 polite sentence, state the current project state, and present the immediate next options cleanly."
+						"If the user greets (e.g. 'hola', 'buenas'), acknowledge the OK environment in 1 polite sentence, state the current project state, and present the immediate next options cleanly. " +
+						"- Game Engine Performance Guard: Zero allocations in frame loops (update, _process, FixedUpdate). Avoid .clone(), Box::new, malloc, new, or blocking I/O on the main thread."
 					);
 			}
 		}

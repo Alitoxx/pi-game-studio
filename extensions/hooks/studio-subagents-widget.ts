@@ -11,11 +11,37 @@ import {
 	YELLOW,
 	GRAY,
 	ACCENT as BLUE,
+	SECONDARY,
 	WHITE,
 	RED,
 } from "./studio-palette.ts";
 
 export const AGENTS_WIDGET_KEY = "studio-subagents";
+
+export const SPECIALIST_ENGINE_TAGS: Record<string, string> = {
+	"bevy-specialist": "[Bevy]",
+	"godot-specialist": "[Godot]",
+	"raylib-specialist": "[Raylib]",
+	"unity-specialist": "[Unity]",
+	"unreal-specialist": "[Unreal]",
+};
+
+export function getAgentEngineTag(agent: string): string {
+	if (SPECIALIST_ENGINE_TAGS[agent]) {
+		return SPECIALIST_ENGINE_TAGS[agent];
+	}
+	const lower = agent.toLowerCase();
+	if (lower.includes("bevy")) return "[Bevy]";
+	if (lower.includes("godot")) return "[Godot]";
+	if (lower.includes("raylib")) return "[Raylib]";
+	if (lower.includes("unity")) return "[Unity]";
+	if (lower.includes("unreal")) return "[Unreal]";
+	return "";
+}
+
+function stripAnsi(text: string): string {
+	return text.replace(/\x1b\[[0-9;]*m/g, "");
+}
 
 export function formatElapsed(ms: number): string {
 	const total = Math.max(0, Math.floor(ms / 1000));
@@ -26,9 +52,10 @@ export function formatElapsed(ms: number): string {
 }
 
 /**
- * Signature Gentle Shell style subagents widget card.
- * Uses a left vertical accent bar (▎) instead of closed box borders,
- * right-aligned telemetry strings, and clean spacing.
+ * Sovereign Gamedev Console Engine Dispatch telemetry widget.
+ * Uses left studio accent (▌) with authentic gamedev pipeline badges:
+ * ● COMPILANDO (amber), ▲ OK (green), ■ BLOQUEADO (red), ○ EN COLA (gray),
+ * and engine tags ([Bevy], [Godot], [Raylib], [Unity], [Unreal]) for specialists.
  */
 export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 74): string[] {
 	if (!tasks || tasks.length === 0) return [];
@@ -40,19 +67,19 @@ export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 7
 	if (activeTasks.length === 0) return [];
 
 	const targetWidth = Math.max(40, width);
-	const contentWidth = targetWidth - 2; // Reserve 2 columns for "▎ "
+	const contentWidth = targetWidth - 2; // Reserve 2 columns for "▌ "
 
 	const runningCount = activeTasks.filter((t) => t.status === "running").length;
 	const countText = runningCount > 0 ? `${runningCount} active` : "reciente";
 
-	const bar = `${BLUE}▎${RESET}`;
+	const bar = `${BLUE}▌${RESET}`;
 	const lines: string[] = [];
 
 	// Top padding bar
 	lines.push(bar);
 
-	// Header: ▎ ❀ Agents  <N> active (or reciente)
-	const headerTitle = `${BLUE}❀ Agents${RESET}  ${DIM}${countText}${RESET}`;
+	// Header: ▌ ◈ ENGINE DISPATCH  <N> active (or reciente)
+	const headerTitle = `${BLUE}◈ ENGINE DISPATCH${RESET}  ${DIM}${countText}${RESET}`;
 	lines.push(`${bar} ${headerTitle}`);
 
 	// Spacing bar between header and items
@@ -60,13 +87,13 @@ export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 7
 
 	const now = Date.now();
 	for (const task of activeTasks) {
-		let icon = `${GRAY}○${RESET}`;
+		let statusBadge = `${GRAY}○ EN COLA${RESET}`;
 		if (task.status === "completed") {
-			icon = `${GREEN}✓${RESET}`;
+			statusBadge = `${GREEN}▲ OK${RESET}`;
 		} else if (task.status === "running") {
-			icon = `${YELLOW}◐${RESET}`;
+			statusBadge = `${YELLOW}● COMPILANDO${RESET}`;
 		} else if (task.status === "failed") {
-			icon = `${RED}✗${RESET}`;
+			statusBadge = `${RED}■ BLOQUEADO${RESET}`;
 		}
 
 		// Calculate elapsed runtime
@@ -90,11 +117,14 @@ export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 7
 		teleParts.push(elapsedStr);
 		const telemetryStr = teleParts.join(" · ");
 
-		// Format row: glyph, agent name in bold/white, activity, right-aligned telemetry
+		// Format specialist engine tag and agent name
+		const engineTag = getAgentEngineTag(task.agent);
+		const enginePrefix = engineTag ? `${SECONDARY}${engineTag}${RESET} ` : "";
+		const leftPrefix = `${statusBadge}  ${enginePrefix}${BOLD}${WHITE}${task.agent}${RESET}  `;
+
 		const rawActivity = (task.latestActivity || task.task).replace(/\s+/g, " ").trim();
-		const leftPrefix = `${icon}  ${BOLD}${WHITE}${task.agent}${RESET}  `;
-		const leftVisible = 1 + 2 + task.agent.length + 2; // glyph (1) + "  " (2) + agent (len) + "  " (2)
-		const teleVisible = telemetryStr.length;
+		const leftVisible = stripAnsi(leftPrefix).length;
+		const teleVisible = stripAnsi(telemetryStr).length;
 
 		const maxActivityLen = contentWidth - leftVisible - teleVisible - 2;
 		if (maxActivityLen > 6) {
@@ -106,7 +136,7 @@ export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 7
 			lines.push(`${bar} ${row}`);
 		} else {
 			// Compact row for narrow viewports
-			const row = `${icon}  ${BOLD}${WHITE}${task.agent}${RESET}  ${DIM}${telemetryStr}${RESET}`;
+			const row = `${leftPrefix}${DIM}${telemetryStr}${RESET}`;
 			lines.push(`${bar} ${row}`);
 		}
 	}

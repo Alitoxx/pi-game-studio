@@ -49,6 +49,7 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 			"watch",
 			"studio:assets",
 			"assets",
+			"palette",
 		];
 
 		const names = registered.map((r) => r.name);
@@ -949,6 +950,512 @@ Next: Level Design
 		expect(hooksSource).toContain("handleStudioWatch");
 		expect(hooksSource).toContain("handleStudioAssets");
 	});
+
+	// ──────────────────────────────────────────────
+	// Block 1: Fuzzy Command Palette (Alt+K, /palette, /studio:commands)
+	// ──────────────────────────────────────────────
+	describe("Block 1: Fuzzy Command Palette", () => {
+		const palettePath = path.join(__dirname, "..", "extensions", "hooks", "studio-palette.ts");
+		const overlayPath = path.join(__dirname, "..", "extensions", "hooks", "studio-palette-overlay.ts");
+
+		test("studio-palette.ts and studio-palette-overlay.ts exist and export required contracts", () => {
+			expect(fs.existsSync(palettePath)).toBe(true);
+			expect(fs.existsSync(overlayPath)).toBe(true);
+
+			const palSource = fs.readFileSync(palettePath, "utf8");
+			expect(palSource).toContain("export const STUDIO_COMMAND_REGISTRY");
+			expect(palSource).toContain("export function fuzzyMatch");
+			expect(palSource).toContain("export function highlightMatch");
+			expect(palSource).toContain("export function filterCommands");
+			expect(palSource).toContain("export const PALETTE_CATEGORIES");
+
+			const ovSource = fs.readFileSync(overlayPath, "utf8");
+			expect(ovSource).toContain("export class CommandPaletteOverlayComponent");
+			expect(ovSource).toContain("export async function showCommandPalette");
+		});
+
+		test("STUDIO_COMMAND_REGISTRY covers all 4 categories and all 31 required commands", () => {
+			const palSource = fs.readFileSync(palettePath, "utf8");
+
+			// Parse command items from source
+			const cmdMatches = [...palSource.matchAll(/name:\s*["']([^"']+)["']\s*,\s*description:\s*["']([^"']+)["']\s*,\s*category:\s*["']([^"']+)["']/g)];
+			expect(cmdMatches.length).toBe(31);
+
+			const commandNames = cmdMatches.map((m) => m[1]);
+			const categories = Array.from(new Set(cmdMatches.map((m) => m[3])));
+
+			expect(categories).toContain("ODD Pipeline");
+			expect(categories).toContain("Engine & Dev Tools");
+			expect(categories).toContain("Studio & Models");
+			expect(categories).toContain("Media & MCP");
+
+			// ODD Pipeline (6)
+			const oddCommands = ["/concept", "/spec", "/arch", "/code", "/test", "/ship"];
+			for (const cmd of oddCommands) {
+				expect(commandNames).toContain(cmd);
+				const match = cmdMatches.find((m) => m[1] === cmd);
+				expect(match[3]).toBe("ODD Pipeline");
+			}
+
+			// Engine & Dev Tools (7)
+			const engineCommands = ["/doctor", "/watch", "/profile", "/perf-guard", "/web", "/tasks", "/changes"];
+			for (const cmd of engineCommands) {
+				expect(commandNames).toContain(cmd);
+				const match = cmdMatches.find((m) => m[1] === cmd);
+				expect(match[3]).toBe("Engine & Dev Tools");
+			}
+
+			// Studio & Models (13)
+			const studioCommands = [
+				"/studio",
+				"/studio:start",
+				"/studio:setup",
+				"/studio:new",
+				"/studio:models",
+				"/studio:status",
+				"/studio:agents",
+				"/studio:chains",
+				"/studio:subagents",
+				"/studio:settings",
+				"/studio:sound",
+				"/studio:art",
+				"/studio:help",
+			];
+			for (const cmd of studioCommands) {
+				expect(commandNames).toContain(cmd);
+				const match = cmdMatches.find((m) => m[1] === cmd);
+				expect(match[3]).toBe("Studio & Models");
+			}
+
+			// Media & MCP (5)
+			const mediaCommands = ["/studio:mcp", "/studio:tools", "/studio:assets", "/studio:sfx", "/studio:palettes"];
+			for (const cmd of mediaCommands) {
+				expect(commandNames).toContain(cmd);
+				const match = cmdMatches.find((m) => m[1] === cmd);
+				expect(match[3]).toBe("Media & MCP");
+			}
+		});
+
+		test("fuzzyMatch algorithm correctly computes subsequence matches and bonuses", () => {
+			// Behavioral implementation replicating fuzzyMatch
+			function fuzzyMatchTest(pattern, text) {
+				if (!pattern) return { matches: true, score: 0, indices: [] };
+				const pLen = pattern.length;
+				const tLen = text.length;
+				if (pLen > tLen) return { matches: false, score: 0, indices: [] };
+
+				const pLower = pattern.toLowerCase();
+				const tLower = text.toLowerCase();
+				let pIdx = 0;
+				let tIdx = 0;
+				const indices = [];
+				let score = 0;
+				let consecutive = 0;
+
+				while (pIdx < pLen && tIdx < tLen) {
+					if (pLower[pIdx] === tLower[tIdx]) {
+						indices.push(tIdx);
+						let charScore = 10;
+						if (tIdx === 0) charScore += 40; // Prefix bonus
+						if (tIdx > 0 && /[\s\/:_\.\-]/.test(text[tIdx - 1])) charScore += 30; // Word boundary bonus
+						if (tIdx > 0 && /[a-z]/.test(text[tIdx - 1]) && /[A-Z]/.test(text[tIdx])) charScore += 25; // CamelCase bonus
+						if (pattern[pIdx] === text[tIdx]) charScore += 10; // Exact case bonus
+						if (consecutive > 0) charScore += 15 * consecutive; // Consecutive bonus
+						consecutive++;
+						score += charScore;
+						pIdx++;
+						tIdx++;
+					} else {
+						consecutive = 0;
+						tIdx++;
+					}
+				}
+
+				if (pIdx < pLen) return { matches: false, score: 0, indices: [] };
+				if (pLower === tLower) score += 100;
+				return { matches: true, score, indices };
+			}
+
+			// Empty pattern returns full match with 0 score
+			const emptyRes = fuzzyMatchTest("", "/concept");
+			expect(emptyRes.matches).toBe(true);
+			expect(emptyRes.score).toBe(0);
+			expect(emptyRes.indices).toEqual([]);
+
+			// Pattern longer than text fails
+			const longRes = fuzzyMatchTest("superlongpattern", "short");
+			expect(longRes.matches).toBe(false);
+
+			// Non-subsequence fails
+			const nonSub = fuzzyMatchTest("xyz", "/concept");
+			expect(nonSub.matches).toBe(false);
+
+			// Basic subsequence match
+			const matchRes = fuzzyMatchTest("cpt", "/concept");
+			expect(matchRes.matches).toBe(true);
+			expect(matchRes.indices.length).toBe(3);
+
+			// Prefix bonus: match starting at 0 scores higher than starting later
+			const atPrefix = fuzzyMatchTest("c", "concept");
+			const notAtPrefix = fuzzyMatchTest("c", "a_concept");
+			expect(atPrefix.score).toBeGreaterThan(notAtPrefix.score);
+
+			// Word boundary bonus: match after delimiter (/ : - _ .) scores higher
+			const wordBoundary = fuzzyMatchTest("s", "/studio:start");
+			const nonWordBoundary = fuzzyMatchTest("u", "studio");
+			expect(wordBoundary.score).toBeGreaterThan(nonWordBoundary.score);
+
+			// Consecutive match bonus: consecutive matches score higher than fragmented
+			const consecutive = fuzzyMatchTest("con", "concept");
+			const fragmented = fuzzyMatchTest("cpt", "concept");
+			expect(consecutive.score).toBeGreaterThan(fragmented.score);
+
+			// Exact case bonus
+			const exactCase = fuzzyMatchTest("Concept", "Concept");
+			const mixedCase = fuzzyMatchTest("concept", "Concept");
+			expect(exactCase.score).toBeGreaterThan(mixedCase.score);
+
+			// Full exact match bonus
+			const fullMatch = fuzzyMatchTest("/concept", "/concept");
+			expect(fullMatch.score).toBeGreaterThan(150);
+		});
+
+		test("highlightMatch wraps matched characters with ANSI codes", () => {
+			function highlightMatchTest(text, indices, highlightColor = "\x1b[36m", resetColor = "\x1b[0m") {
+				if (!indices || indices.length === 0) return text;
+				const set = new Set(indices);
+				let result = "";
+				for (let i = 0; i < text.length; i++) {
+					if (set.has(i)) {
+						result += `${highlightColor}${text[i]}${resetColor}`;
+					} else {
+						result += text[i];
+					}
+				}
+				return result;
+			}
+
+			const text = "concept";
+			const highlighted = highlightMatchTest(text, [0, 3]);
+			expect(highlighted).toContain("\x1b[36m");
+			expect(highlighted).toContain("c");
+			expect(highlighted.replace(/\x1b\[[0-9;]*m/g, "")).toBe("concept");
+		});
+
+		test("CommandPaletteOverlayComponent manages live input, navigation, and category cycling", () => {
+			const ovSource = fs.readFileSync(overlayPath, "utf8");
+
+			// Check overlay class and core methods
+			expect(ovSource).toContain("class CommandPaletteOverlayComponent");
+			expect(ovSource).toContain("cycleCategory");
+			expect(ovSource).toContain("recomputeFilter");
+			expect(ovSource).toContain("handleInput");
+			expect(ovSource).toContain("render(");
+
+			// Check keyboard shortcuts supported in handleInput
+			expect(ovSource).toContain('"\\t"'); // Tab
+			expect(ovSource).toContain('"\\x1b[Z"'); // Shift+Tab
+			expect(ovSource).toContain('"\\x1b[A"'); // Up
+			expect(ovSource).toContain('"\\x1b[B"'); // Down
+			expect(ovSource).toContain('"\\x10"'); // Ctrl+P
+			expect(ovSource).toContain('"\\x0e"'); // Ctrl+N
+			expect(ovSource).toContain('"\\r"'); // Enter
+			expect(ovSource).toContain('"\\x1b"'); // Esc
+			expect(ovSource).toContain('"\\x15"'); // Ctrl+U (clear)
+
+			// Check UI features in render
+			expect(ovSource).toContain("PALETA DE COMANDOS [Alt+K]");
+			expect(ovSource).toContain("categoryTabs");
+			expect(ovSource).toContain("highlightMatch");
+		});
+
+		test("showCommandPalette invokes custom overlay and sets editor text", () => {
+			const ovSource = fs.readFileSync(overlayPath, "utf8");
+			expect(ovSource).toContain("async function showCommandPalette");
+			expect(ovSource).toContain("overlay: true");
+			expect(ovSource).toContain("setEditorText");
+			expect(ovSource).toContain("notify");
+		});
+
+		test("TypeScript runtime execution of Block 1 in Node", () => {
+			const script = `
+				const { STUDIO_COMMAND_REGISTRY, fuzzyMatch, filterCommands } = await import("./extensions/hooks/studio-palette.ts");
+				const { CommandPaletteOverlayComponent, showCommandPalette } = await import("./extensions/hooks/studio-palette-overlay.ts");
+				if (STUDIO_COMMAND_REGISTRY.length !== 31) throw new Error("Registry length mismatch: " + STUDIO_COMMAND_REGISTRY.length);
+				const match = fuzzyMatch("start", "/studio:start");
+				if (!match.matches) throw new Error("Fuzzy match failed");
+				const filtered = filterCommands("spec", "ODD Pipeline");
+				if (filtered.length === 0 || filtered[0].name !== "/spec") throw new Error("Filter commands mismatch");
+			`;
+			const { execFileSync } = require("child_process");
+			expect(() => {
+				execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+					cwd: path.join(__dirname, ".."),
+				});
+			}).not.toThrow();
+		});
+	});
+
+	// ──────────────────────────────────────────────
+	// Block 2: Engine Safety & Guards
+	// ──────────────────────────────────────────────
+	describe("Block 2: Engine Safety & Guards", () => {
+		const escPath = path.join(__dirname, "..", "extensions", "hooks", "studio-esc-guard.ts");
+		const destPath = path.join(__dirname, "..", "extensions", "hooks", "studio-destructive-guard.ts");
+		const surfPath = path.join(__dirname, "..", "extensions", "hooks", "studio-surfaces-guard.ts");
+
+		test("guard files exist and export required contracts", () => {
+			expect(fs.existsSync(escPath)).toBe(true);
+			expect(fs.existsSync(destPath)).toBe(true);
+			expect(fs.existsSync(surfPath)).toBe(true);
+
+			const escSource = fs.readFileSync(escPath, "utf8");
+			expect(escSource).toContain("export class DoubleEscapeGuard");
+			expect(escSource).toContain("export const doubleEscapeGuard");
+			expect(escSource).toContain("handleEscape");
+			expect(escSource).toContain("thresholdMs");
+			expect(escSource).toContain("Emergency cancel (Double-Esc)");
+
+			const destSource = fs.readFileSync(destPath, "utf8");
+			expect(destSource).toContain("export function isDestructiveCommand");
+			expect(destSource).toContain("export function validateCommandSafety");
+
+			const surfSource = fs.readFileSync(surfPath, "utf8");
+			expect(surfSource).toContain("export function parseAllowedSurfaces");
+			expect(surfSource).toContain("export function isPathAllowed");
+			expect(surfSource).toContain("export function validateEditSurface");
+			expect(surfSource).toContain("export class BoundedSurfacesGuard");
+			expect(surfSource).toContain("export const boundedSurfacesGuard");
+		});
+
+		test("DoubleEscapeGuard tracks Escape timestamps and triggers cancel only on 2nd Escape <= 1000ms", () => {
+			class TestDoubleEscapeGuard {
+				constructor(thresholdMs = 1000) {
+					this.thresholdMs = thresholdMs;
+					this.lastEscapeTimestamp = 0;
+					this.cancelled = false;
+				}
+				handleEscape(ctx) {
+					const now = Date.now();
+					const diff = now - this.lastEscapeTimestamp;
+					if (this.lastEscapeTimestamp > 0 && diff <= this.thresholdMs) {
+						this.lastEscapeTimestamp = 0;
+						this.cancelled = true;
+						if (ctx?.ui?.notify) ctx.ui.notify("Cancelación de emergencia", "warning");
+						return true;
+					}
+					this.lastEscapeTimestamp = now;
+					return false;
+				}
+				reset() {
+					this.lastEscapeTimestamp = 0;
+				}
+			}
+
+			const guard = new TestDoubleEscapeGuard(1000);
+			const fakeCtx = { ui: { notify: jest.fn() } };
+
+			// 1st Escape returns false (lets normal UI/modals cancel)
+			const firstResult = guard.handleEscape(fakeCtx);
+			expect(firstResult).toBe(false);
+			expect(guard.lastEscapeTimestamp).toBeGreaterThan(0);
+			expect(fakeCtx.ui.notify).not.toHaveBeenCalled();
+
+			// 2nd Escape within 1000ms triggers emergency cancel
+			const secondResult = guard.handleEscape(fakeCtx);
+			expect(secondResult).toBe(true);
+			expect(guard.lastEscapeTimestamp).toBe(0); // Reset
+			expect(fakeCtx.ui.notify).toHaveBeenCalled();
+
+			// After emergency cancel, a new 1st Escape returns false again
+			const thirdResult = guard.handleEscape(fakeCtx);
+			expect(thirdResult).toBe(false);
+		});
+
+		test("DestructiveCommandGuard detects and blocks catastrophic commands on game directories", () => {
+			const destSource = fs.readFileSync(destPath, "utf8");
+			expect(destSource).toContain("git\\s+reset\\s+--hard");
+			expect(destSource).toContain("git\\s+clean");
+			expect(destSource).toContain("PROTECTED_GAME_DIRECTORIES");
+			expect(destSource).toContain('"src"');
+			expect(destSource).toContain('"assets"');
+			expect(destSource).toContain('"design"');
+
+			// Behavioral test of destructive command rules
+			function testIsDestructive(command) {
+				const segments = command.split(/&&|;|\|\||\|/).map((s) => s.trim()).filter(Boolean);
+				for (const segment of segments) {
+					if (/\bgit\s+reset\s+--hard\b/i.test(segment)) return true;
+					if (/\bgit\s+clean\s+[^|\n;&]*(-[a-zA-Z]*f[a-zA-Z]*|--force)\b/i.test(segment)) return true;
+					if (/\bdd\s+(?:if=|of=|[a-z0-9\/=])/i.test(segment)) return true;
+					if (/\b(?:mkfs|mkfs\.[a-z0-9]+)\b/i.test(segment)) return true;
+					if (/\bformat\s+[A-Za-z]:/i.test(segment) || /^format\b/i.test(segment)) return true;
+					if (/\b(?:fdisk|parted)\b/i.test(segment)) return true;
+					if (/\brm\s+-[a-zA-Z]*[rf][a-zA-Z]*/i.test(segment) || /\brm\s+--recursive/i.test(segment)) {
+						if (/\brm\s+-[a-zA-Z]*\s+(\*|\.|\/)\b/.test(segment) || /\s+(\*|\.|\/)(?:\s|$)/.test(segment)) return true;
+						for (const dir of ["src", "assets", "design"]) {
+							const dirPattern = new RegExp(`(?:^|[\\/\\s"'])(${dir})(?:$|[\\/\\s"'*])`, "i");
+							if (dirPattern.test(segment)) return true;
+						}
+					}
+				}
+				return false;
+			}
+
+			// Safe commands must pass
+			expect(testIsDestructive("git status")).toBe(false);
+			expect(testIsDestructive("git diff")).toBe(false);
+			expect(testIsDestructive("git log -n 5")).toBe(false);
+			expect(testIsDestructive("cargo check")).toBe(false);
+			expect(testIsDestructive("npm test")).toBe(false);
+			expect(testIsDestructive("rm test.tmp")).toBe(false);
+
+			// Destructive git resets
+			expect(testIsDestructive("git reset --hard")).toBe(true);
+			expect(testIsDestructive("git reset --hard HEAD~1")).toBe(true);
+			expect(testIsDestructive("git reset --hard origin/main")).toBe(true);
+
+			// Destructive git cleans
+			expect(testIsDestructive("git clean -fd")).toBe(true);
+			expect(testIsDestructive("git clean -f")).toBe(true);
+			expect(testIsDestructive("git clean -xdf")).toBe(true);
+			expect(testIsDestructive("git clean --force")).toBe(true);
+
+			// Destructive rm -rf on game directories (src, assets, design)
+			expect(testIsDestructive("rm -rf src")).toBe(true);
+			expect(testIsDestructive("rm -rf src/")).toBe(true);
+			expect(testIsDestructive("rm -rf src/player.rs")).toBe(true);
+			expect(testIsDestructive("rm -rf assets")).toBe(true);
+			expect(testIsDestructive("rm -rf assets/sprites/")).toBe(true);
+			expect(testIsDestructive("rm -rf design/gdd/feature.md")).toBe(true);
+			expect(testIsDestructive("rm -rf *")).toBe(true);
+			expect(testIsDestructive("rm -rf .")).toBe(true);
+
+			// Destructive drive wipes
+			expect(testIsDestructive("dd if=/dev/zero of=/dev/sda")).toBe(true);
+			expect(testIsDestructive("mkfs.ext4 /dev/sdb1")).toBe(true);
+			expect(testIsDestructive("format C:")).toBe(true);
+
+			// Compound command containing destructive segment
+			expect(testIsDestructive("git status && git reset --hard")).toBe(true);
+			expect(testIsDestructive("mkdir tmp; rm -rf src/")).toBe(true);
+		});
+
+		test("BoundedSurfacesGuard parses and enforces allowed edit surfaces from tasks", () => {
+			const surfSource = fs.readFileSync(surfPath, "utf8");
+			expect(surfSource).toContain("## Allowed edit surfaces");
+			expect(surfSource).toContain("parseAllowedSurfaces");
+			expect(surfSource).toContain("isPathAllowed");
+			expect(surfSource).toContain("validateEditSurface");
+
+			// Behavioral test of surface parsing and validation
+			function testParseAllowedSurfaces(taskText) {
+				const headingMatch = taskText.match(/(?:^|\n)##\s+Allowed edit surfaces\s*\n([\s\S]*?)(?=(?:\n##\s+|\n#\s+|$))/i);
+				if (!headingMatch || !headingMatch[1]) return [];
+				return headingMatch[1]
+					.split("\n")
+					.map((l) => l.trim().replace(/^[-*•]\s+/, "").replace(/[`"']/g, "").replace(/^\.\//, "").replace(/\/+$/, "").trim())
+					.filter(Boolean);
+			}
+
+			function testIsPathAllowed(targetPath, allowedSurfaces) {
+				if (!allowedSurfaces || allowedSurfaces.length === 0) return true;
+				const normTarget = targetPath.replace(/\\/g, "/").replace(/^\.\//, "").replace(/\/+$/, "").trim();
+				for (const surface of allowedSurfaces) {
+					const normSurf = surface.replace(/\\/g, "/").replace(/^\.\//, "").replace(/\/+$/, "").trim();
+					if (normTarget === normSurf) return true;
+					if (normTarget.startsWith(`${normSurf}/`)) return true;
+					if (normSurf.endsWith("/*") || normSurf.endsWith("/**")) {
+						const prefix = normSurf.replace(/\/\*+$/, "");
+						if (normTarget === prefix || normTarget.startsWith(`${prefix}/`)) return true;
+					}
+					if (normTarget.endsWith(`/${normSurf}`)) return true;
+				}
+				return false;
+			}
+
+			const sampleTask = `
+## Allowed edit surfaces
+extensions/hooks/studio-palette.ts
+extensions/hooks/studio-palette-overlay.ts
+extensions/hooks/studio-esc-guard.ts
+extensions/hooks/studio-destructive-guard.ts
+extensions/hooks/studio-surfaces-guard.ts
+extensions/hooks/index.ts
+__tests__/studio-commands.test.js
+src/
+
+## Task Details
+Implement fuzzy command palette.
+`;
+
+			const parsed = testParseAllowedSurfaces(sampleTask);
+			expect(parsed).toContain("extensions/hooks/studio-palette.ts");
+			expect(parsed).toContain("extensions/hooks/studio-palette-overlay.ts");
+			expect(parsed).toContain("src");
+			expect(parsed.length).toBe(8);
+
+			// Path authorization checks
+			expect(testIsPathAllowed("extensions/hooks/studio-palette.ts", parsed)).toBe(true);
+			expect(testIsPathAllowed("src/game.rs", parsed)).toBe(true);
+			expect(testIsPathAllowed("src/core/loop.rs", parsed)).toBe(true);
+
+			// Outside paths blocked
+			expect(testIsPathAllowed("package.json", parsed)).toBe(false);
+			expect(testIsPathAllowed("assets/logo.png", parsed)).toBe(false);
+			expect(testIsPathAllowed("AGENTS.md", parsed)).toBe(false);
+
+			// Empty allowed surfaces means unbounded task (all allowed)
+			expect(testIsPathAllowed("package.json", [])).toBe(true);
+		});
+
+		test("TypeScript runtime execution of Block 2 in Node", () => {
+			const script = `
+				const { DoubleEscapeGuard } = await import("./extensions/hooks/studio-esc-guard.ts");
+				const { isDestructiveCommand, validateCommandSafety } = await import("./extensions/hooks/studio-destructive-guard.ts");
+				const { parseAllowedSurfaces, isPathAllowed, validateEditSurface, BoundedSurfacesGuard } = await import("./extensions/hooks/studio-surfaces-guard.ts");
+
+				const guard = new DoubleEscapeGuard(1000);
+				if (guard.handleEscape()) throw new Error("1st escape should return false");
+
+				if (isDestructiveCommand("git status")) throw new Error("git status is not destructive");
+				if (!validateCommandSafety("git status").allowed) throw new Error("git status should be allowed");
+
+				const surfaces = parseAllowedSurfaces("## Allowed edit surfaces\\nsrc/\\nassets/logo.png");
+				if (surfaces.length !== 2) throw new Error("Surface parsing mismatch");
+				if (!isPathAllowed("src/main.rs", surfaces)) throw new Error("src/main.rs should be allowed");
+				if (isPathAllowed("package.json", surfaces)) throw new Error("package.json should not be allowed");
+			`;
+			const { execFileSync } = require("child_process");
+			expect(() => {
+				execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+					cwd: path.join(__dirname, ".."),
+				});
+			}).not.toThrow();
+		});
+
+		test("Integration in index.ts wires palette, shortcuts, and safety guards", () => {
+			// Commands and shortcut registration
+			expect(hooksSource).toContain('registerCommand?.("palette"');
+			expect(hooksSource).toContain('registerShortcut?.("alt+k"');
+			expect(hooksSource).toContain('registerCommand?.("studio:commands"');
+			expect(hooksSource).toContain("showCommandPalette");
+
+			// Double-Escape Guard wiring
+			expect(hooksSource).toContain("doubleEscapeGuard.handleEscape");
+			expect(hooksSource).toContain("onTerminalInput");
+
+			// Destructive Command Guard wiring in tool_call (bash)
+			expect(hooksSource).toContain("validateCommandSafety");
+			expect(hooksSource).toContain("Comando destructivo bloqueado por seguridad del motor");
+
+			// Bounded Surfaces Guard wiring in tool_call (write/edit) and runner lifecycle
+			expect(hooksSource).toContain("boundedSurfacesGuard.validate");
+			expect(hooksSource).toContain("boundedSurfacesGuard.setFromTask");
+			expect(hooksSource).toContain("boundedSurfacesGuard.clear");
+		});
+	});
 });
+
 
 

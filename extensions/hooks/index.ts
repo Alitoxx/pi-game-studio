@@ -42,6 +42,10 @@ import {
 import { handleStudioPerfAudit, auditFilePerformance } from "./studio-perf-guard.ts";
 import { handleStudioWatch } from "./studio-watch.ts";
 import { handleStudioAssets } from "./studio-assets.ts";
+import { showCommandPalette } from "./studio-palette-overlay.ts";
+import { doubleEscapeGuard } from "./studio-esc-guard.ts";
+import { validateCommandSafety, isDestructiveCommand } from "./studio-destructive-guard.ts";
+import { boundedSurfacesGuard } from "./studio-surfaces-guard.ts";
 
 export default function (pi: ExtensionAPI) {
 	// ──────────────────────────────────────────────
@@ -56,21 +60,30 @@ export default function (pi: ExtensionAPI) {
 	studioAgentsRunner.subscribe((task) => {
 		if (task.status === "completed") {
 			playSuccessChime();
+			boundedSurfacesGuard.clear();
 		} else if (task.status === "failed") {
 			playErrorChime();
+			boundedSurfacesGuard.clear();
+		} else if (task.status === "cancelled") {
+			boundedSurfacesGuard.clear();
+		} else if (task.status === "running" && task.task) {
+			boundedSurfacesGuard.setFromTask(task.task);
 		}
 	});
 
 	// ──────────────────────────────────────────────
-	// Escape & Abort Handling (Cancel All Subagents on Escape / Interrupt)
+	// Escape & Abort Handling (Double-Escape Emergency Cancel)
 	// ──────────────────────────────────────────────
-	(pi as any).on?.("session_abort", () => {
+	(pi as any).on?.("session_abort", (_event: any, ctx: any) => {
+		doubleEscapeGuard.handleEscape(ctx);
 		studioAgentsRunner.cancelAll("Sesión interrumpida por el usuario (Escape)");
 	});
-	(pi as any).on?.("turn_abort", () => {
+	(pi as any).on?.("turn_abort", (_event: any, ctx: any) => {
+		doubleEscapeGuard.handleEscape(ctx);
 		studioAgentsRunner.cancelAll("Turno abortado por el usuario (Escape)");
 	});
-	(pi as any).on?.("agent_abort", () => {
+	(pi as any).on?.("agent_abort", (_event: any, ctx: any) => {
+		doubleEscapeGuard.handleEscape(ctx);
 		studioAgentsRunner.cancelAll("Agente abortado por el usuario (Escape)");
 	});
 
@@ -257,8 +270,24 @@ export default function (pi: ExtensionAPI) {
 	// /studio:commands — Paleta curada de comandos del estudio
 	(pi as any).registerCommand?.("studio:commands", {
 		description: "[Studio] Paleta curada y búsqueda rápida de comandos y herramientas del estudio",
-		handler: async (args: string, ctx: ExtensionContext) => {
-			await handleStudioCommand(args, ctx);
+		handler: async (_args: string, ctx: ExtensionContext) => {
+			await showCommandPalette(ctx);
+		},
+	});
+
+	// /palette — Paleta difusa de comandos interactiva (Alt+K)
+	(pi as any).registerCommand?.("palette", {
+		description: "[Studio] Paleta difusa de comandos interactiva (Alt+K)",
+		handler: async (_args: string, ctx: ExtensionContext) => {
+			await showCommandPalette(ctx);
+		},
+	});
+
+	// Shortcut Alt+K — Abre la paleta de comandos
+	(pi as any).registerShortcut?.("alt+k", {
+		description: "[Studio] Paleta difusa de comandos",
+		handler: async (ctx: ExtensionContext) => {
+			await showCommandPalette(ctx);
 		},
 	});
 
@@ -389,6 +418,18 @@ export default function (pi: ExtensionAPI) {
 
 		const cmd = event.input.command?.trim() || "";
 
+		// --- Destructive Command Guard ---
+		const safetyCheck = validateCommandSafety(cmd);
+		if (!safetyCheck.allowed) {
+			if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
+				(ctx.ui as any).notify(
+					safetyCheck.reason || "Comando destructivo bloqueado por seguridad del motor",
+					"error",
+				);
+			}
+			return { block: true, reason: safetyCheck.reason };
+		}
+
 		// --- Git commit validation ---
 		if (/^git\s+commit/.test(cmd)) {
 			return handleGitCommit(event, cmd, ctx);
@@ -413,6 +454,19 @@ export default function (pi: ExtensionAPI) {
 
 		// Check if writing to a skill file (skills/ or .pi/skills/)
 		const filePath = event.input.path || "";
+
+		// --- Bounded Edit Surfaces Guard ---
+		const surfaceCheck = boundedSurfacesGuard.validate(filePath);
+		if (!surfaceCheck.allowed) {
+			if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
+				(ctx.ui as any).notify(
+					surfaceCheck.reason || "Edición fuera de las superficies permitidas",
+					"error",
+				);
+			}
+			return { block: true, reason: surfaceCheck.reason };
+		}
+
 		const skillMatch = filePath.match(/(?:\/skills\/|\.pi\/skills\/)([^/]+)/);
 
 		if (skillMatch) {
@@ -618,6 +672,15 @@ export default function (pi: ExtensionAPI) {
 
 		// Only run in the game-studio project context
 		if (!studioRoot) return;
+
+		// Raw terminal input listener for Double-Escape emergency guard
+		if ((ctx as any).hasUI && typeof (ctx as any).ui?.onTerminalInput === "function") {
+			(ctx as any).ui.onTerminalInput((data: string) => {
+				if (data === "\x1b") {
+					doubleEscapeGuard.handleEscape(ctx);
+				}
+			});
+		}
 
 		// Mount header banner cleanly via TUI
 		try {

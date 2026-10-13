@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.6.0] - 2026-10-13
+
+### Added
+- **Identidad Soberana de Consola de Motor (Gamedev Console & TUI)**:
+  - Header de subagentes renovado con **`◈ ENGINE DISPATCH`**, badges de telemetría de consola (`● COMPILANDO`, `▲ OK`, `■ BLOQUEADO`, `○ EN COLA`), barra lateral sólida `▌` y etiquetas de motor por especialista (`[Bevy]`, `[Godot]`, `[Raylib]`, `[Unity]`, `[Unreal]`).
+  - Visor interactivo split-screen para subagentes con logs en vivo y atajos (`↑/↓`, `Esc`, `c`).
+  - Chips reactivos de fase ODD en HUD y banner: `[concept 1/6]` a `[ship 6/6]`.
+  - Cuestionarios en pestañas con indicadores paso a paso `[ 1. Motor* ]  [ 2. Género ]`.
+- **Gamedev Fuzzy Command Palette (`Alt+K` / `/palette` / `/studio:commands`)**:
+  - Paleta difusa flotante con 31 comandos categorizados (`ODD Pipeline`, `Engine & Dev Tools`, `Studio & Models`, `Media & MCP`).
+  - Algoritmo de ranking difuso con bonus por separadores, prefijos, mayúsculas y adyacencia.
+  - Navegación con flechas, ciclado de categorías con `Tab` / `Shift+Tab` y ejecución instantánea con `Enter`.
+- **Blindaje de Motor y Control de Emergencia**:
+  - **Double-Escape Panic Button**: `Esc x 2` en $\le 1000$ms aborta de inmediato todos los subagentes colgados (`cancelAll`) con `SIGTERM` limpio y alerta sonora retro, permitiendo que el primer `Esc` cierre modales normalmente.
+  - **Destructive Command Guard**: Intercepta comandos de shell peligrosos (`git reset --hard`, `git clean -fd`, `rm -rf`, `dd`, `format`) sobre carpetas clave del juego (`src/`, `assets/`, `design/`).
+  - **Bounded Edit Surfaces Guard**: Aplica las restricciones de `## Allowed edit surfaces` en herramientas de escritura/edición para evitar mutaciones no autorizadas entre disciplinas.
+- **Herramientas Avanzadas de Gamedev**:
+  - **Performance & Allocation Guard (`/perf-guard`)**: Escanea código en Rust, GDScript, C++ y C# detectando allocations en caliente en bucles de frame (`.clone()`, `Box::new`, `malloc`, `new`, `Vec::new`) y llamadas bloqueantes a I/O.
+  - **Live Engine Hot-Reload & Watcher (`/watch`)**: Compilación automática en segundo plano para Bevy (`cargo check`), Godot (`headless`) y Raylib (`cmake`) con telemetría de tiempos y warnings.
+  - **Asset Pipeline Inspector (`/assets`)**: Auditoría de compresión PNG con `oxipng`, presupuestos de peso para modelos 3D y detección de placeholders en `assets/manifest.yaml`.
+  - **Sintetizador Chiptune de 8-Bits (`/sound`)**: Audio PCM procedural nativo sin dependencias externas (arpegio de moneda ascendente, daño retro descendente y blip de menú arcade).
+  - **Modo Game Jam (`/jam`)**: Modo de prototipado rápido de 48h que silencia confirmaciones innecesarias y convierte alertas estrictas de performance en advertencias suaves.
+  - **Studio Token & Cost Tracker (`/budget`)**: Medición precisa de tokens por disciplina (Directores, Diseñadores, Especialistas) con estimación de costos en USD y barras ASCII.
+  - **Production Timeline & Lore (`/timeline`)**: Visor interactivo split-screen que unifica hitos de `production/roadmap.md`, ADRs de arquitectura y Live Specs de diseño.
+- **Visor Interactivo de Cambios Git (`/changes`)**:
+  - Modal interactivo con estadísticas de líneas `+X -Y` e inspección de diffs unificados.
+
+---
+
 ## [1.5.2] - 2026-10-13
 
 ### Added

@@ -233,6 +233,16 @@ Pi Game Studio opera con el pipeline de **6 Skills ODD (Organic Driven Developme
 - **`/studio:tools`** — Verificación e instalación de herramientas multimedia CLI (FFmpeg, ImageMagick, oxipng, wasm-opt, butler).
 - **`/studio:mcp`** — Gestión del ecosistema de 10 servidores MCP.
 - **`/studio:chains`** — Ejecutor de cadenas multi-agente (`feature-implement`, `gdd-review`, `perf-audit`, `release-gate`, etc.).
+- **`/palette`** (o **`Alt+K`**) — Paleta de comandos difusa interactiva con categorías y búsqueda en tiempo real.
+- **`/perf-guard`** (o **`/studio:perf-guard`**) — Auditor de allocations en bucles de frame (Rust, GDScript, C++, C#).
+- **`/watch`** (o **`/studio:watch`**) — Hot-reload y compilación en caliente para Bevy, Godot y Raylib.
+- **`/assets`** (o **`/studio:assets`**) — Auditoría de assets, compresión `oxipng` y manifiesto `assets/manifest.yaml`.
+- **`/changes`** (o **`/studio:changes`**) — Visor interactivo de cambios Git con estadísticas `+X -Y` y diffs.
+- **`/agents`** (o **`/studio:agents`**) — Visor interactivo split-screen del pipeline de subagentes en vivo.
+- **`/sound`** (o **`/studio:sound`**) — Sintetizador de audio chiptune retro arcade de 8 bits (on/off).
+- **`/jam`** (o **`/studio:jam`**) — Modo Game Jam / Prototipado rápido de 48h con alertas suaves.
+- **`/budget`** (o **`/studio:budget`**) — Monitor de tokens y estimación de costos en USD por disciplina.
+- **`/timeline`** (o **`/studio:timeline`**) — Visor interactivo de hitos, ADRs y decisiones de producción.
 - **`/studio:subagents`** — Monitor en vivo de subprocesos aislados.
 - **`/studio:web`** — Servidor local y empaquetador para builds Web/WASM.
 - **`/studio:hud`** — Alternar barra de estado y widgets interactivos de la terminal.

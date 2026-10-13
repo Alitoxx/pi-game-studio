@@ -7,7 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.5.0] - 2026-10-11
+## [1.5.2] - 2026-10-13
+
+### Added
+- **Homologación Integral de la Dotación Oficial 8+1 (13 Agentes)**:
+  - **Tier 1 (Directores)**: `producer`, `creative-director` y `technical-director` homologados con roster idéntico de 9 herramientas, `thinking: high`, y adopción explícita de `ask_user_question` para el patrón interactivo `Explain → Capture`.
+  - **Tier 2 (Leads & Core Devs)**: `game-designer`, `gameplay-programmer`, `art-director`, `audio-director` y `qa-lead` sincronizados con `web_search` y `ask_user_question`, incorporando menús interactivos de decisión estructurada.
+  - **Tier 3 (Especialistas de Motor)**: `bevy-specialist`, `godot-specialist`, `raylib-specialist`, `unity-specialist` y `unreal-specialist` habilitados como implementadores idiomáticos directos de motor, con inclusión canónica del bloque de código YAML de `Return Contract` y herramienta interactiva `ask_user_question`.
+- **Pipeline de 6 Skills ODD (`skills/`)**:
+  - Declaración explícita del Lead Role Owner (8+1) en las cabeceras de `concept` (`creative-director`), `spec` (`game-designer`), `arch` (`technical-director`), `code` (`gameplay-programmer` + motor), `test` (`qa-lead`) y `ship` (`producer` + `qa-lead`).
+  - Vinculación explícita al contrato maestro `skills/_shared/odd-contract.md` en todas las fases.
+  - Inclusión de `ask_user_question` en `skills/code/SKILL.md`.
+
+### Fixed
+- **Producer como Orquestador Interactivo en Sesión Padre**:
+  - Corrección de fuga de responsabilidades en `chains/narrative-flow.chain.md` (extracción de strings delegada a `game-designer`; `producer` enfocado en compuerta `[PR-SCOPE]`).
+  - Parser resiliente y bilingüe para `<!-- PRODUCER_STATE -->` en `extensions/hooks/studio-start.ts` (`Juego`/`Game`, `Hito Actual`/`Milestone`, `Sprint Activo`/`Sprint`, `En Progreso`/`In Progress`, `Siguiente Paso`/`Next Step`).
+- **Eliminación de Auto-Parálisis y Sub-especialistas Fantasma**:
+  - Removida la prohibición de escribir código en `godot-specialist`, `unity-specialist` y `unreal-specialist`.
+  - Purgadas referencias a sub-especialistas inexistentes y al falso "Task tool".
+  - Completada la sección de restricciones negativas en `raylib-specialist`.
+  - Purgados roles retirados (`lead-programmer`, `systems-designer`, `sound-designer`, `devops-engineer`, etc.) en `extensions/hooks/studio-mcp.ts` y `studio-models.ts`.
+  - Corregida la numeración duplicada en `skills/ship/SKILL.md`.
+
+---
+
+## [1.5.1] - 2026-10-12
+
+### Added
+- **Unificación de Herramientas de Pregunta Interactiva (`ask_user_question`)**:
+  - Homologación de herramientas interactivas en una única herramienta canónica `ask_user_question`, soportando preguntas individuales, cuestionarios en lote (hasta 4 preguntas) y respuesta libre por defecto.
+  - Removida la herramienta redundante `ask_user_choice`.
+  - Homologadas las 6 cadenas multi-agente en `chains/` a los 8 roles Core.
+  - Limpieza del catálogo de tests huérfano `skills/test-catalog.yaml`.
+
+---
 
 ### Added
 - **Hub Interactivo de Servidores MCP (`/studio:mcp` y `extensions/hooks/studio-mcp.ts`)**:

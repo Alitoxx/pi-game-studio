@@ -1,6 +1,6 @@
 ---
 name: ship
-description: "[ODD Fase 6] Release & Ship. Empaquetado final de builds para distribución, parches de emergencia (hotfix), changelogs y checklists de certificación."
+description: "[ODD Fase 6] Release & Ship. Role Owner: producer (Tier 1 Director) + qa-lead. Empaquetado final de builds para distribución, parches de emergencia (hotfix), changelogs y checklists de certificación."
 model: inherit
 inheritProjectContext: true
 tools:
@@ -14,6 +14,9 @@ tools:
 ---
 
 ## Fase 6 ODD: Release, Certification & Patching
+
+- **Role Owner**: `producer` (Tier 1 Director) + `qa-lead`
+- **Contrato ODD Compartido**: Consulta [`skills/_shared/odd-contract.md`](../_shared/odd-contract.md) para las reglas compartidas de tareas atómicas (~400 líneas), Live Specs en `design/gdd/`, límites de compilación (compiler bounds) y el formato del Return Contract en YAML.
 
 Cuando se invoca `/ship` (o `/ship build`, `/ship patch`, `/ship release`):
 
@@ -38,5 +41,5 @@ Cuando se invoca `/ship` (o `/ship build`, `/ship patch`, `/ship release`):
 - Actualizar `CHANGELOG.md` con los cambios notables bajo el estándar Keep a Changelog.
 - Actualizar la versión semántica en el manifiesto del proyecto (`project.yaml`, `package.json` o `Cargo.toml`).
 
-### 4. Soporte y Parches
+### 5. Soporte y Parches
 - En caso de errores en producción, ejecutar el flujo de hotfix atómico para generar un parche de emergencia focalizado.

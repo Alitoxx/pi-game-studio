@@ -1,6 +1,6 @@
 ---
 name: test
-description: "[ODD Fase 5] Validate & Feel. Verificación de calidad, smoke checks de arranque, pruebas de regresión, detección de memory leaks y triaje de bugs."
+description: "[ODD Fase 5] Validate & Feel. Role Owner: qa-lead (Tier 2 Lead). Verificación de calidad, smoke checks de arranque, pruebas de regresión, detección de memory leaks y triaje de bugs."
 model: inherit
 inheritProjectContext: true
 tools:
@@ -14,6 +14,9 @@ tools:
 ---
 
 ## Fase 5 ODD: Quality, Smoke Checks & Feel
+
+- **Role Owner**: `qa-lead` (Tier 2 Lead)
+- **Contrato ODD Compartido**: Consulta [`skills/_shared/odd-contract.md`](../_shared/odd-contract.md) para las reglas compartidas de tareas atómicas (~400 líneas), Live Specs en `design/gdd/`, límites de compilación (compiler bounds) y el formato del Return Contract en YAML.
 
 Cuando se invoca `/test` (o `/test smoke`, `/test regression`, `/test bugs`):
 

@@ -1,6 +1,6 @@
 ---
 name: concept
-description: "[ODD Fase 1] Authorize & Vision. De la idea inicial a la visión de juego ejecutable: define la fantasía central, los 3-5 pilares inquebrantables, los anti-pilares y el ancla visual."
+description: "[ODD Fase 1] Authorize & Vision. Role Owner: creative-director (Tier 1 Director). De la idea inicial a la visión de juego ejecutable: define la fantasía central, los 3-5 pilares inquebrantables, los anti-pilares y el ancla visual."
 model: inherit
 inheritProjectContext: true
 tools:
@@ -13,6 +13,9 @@ tools:
 ---
 
 ## Fase 1 ODD: Concept & Vision
+
+- **Role Owner**: `creative-director` (Tier 1 Director)
+- **Contrato ODD Compartido**: Consulta [`skills/_shared/odd-contract.md`](../_shared/odd-contract.md) para las reglas compartidas de tareas atómicas (~400 líneas), Live Specs en `design/gdd/`, límites de compilación (compiler bounds) y el formato del Return Contract en YAML.
 
 Cuando se invoca `/concept` (o `/concept pitch`, `/concept jam`):
 

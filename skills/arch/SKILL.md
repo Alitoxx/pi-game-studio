@@ -1,6 +1,6 @@
 ---
 name: arch
-description: "[ODD Fase 3] Technical Boundaries. Registra Architecture Decision Records (ADRs), presupuestos de VRAM/RAM, target FPS, manifiesto de control y configuración de motor/MCP."
+description: "[ODD Fase 3] Technical Boundaries. Role Owner: technical-director (Tier 1 Director). Registra Architecture Decision Records (ADRs), presupuestos de VRAM/RAM, target FPS, manifiesto de control y configuración de motor/MCP."
 model: inherit
 inheritProjectContext: true
 tools:
@@ -14,6 +14,9 @@ tools:
 ---
 
 ## Fase 3 ODD: Architecture & Engine Boundaries
+
+- **Role Owner**: `technical-director` (Tier 1 Director)
+- **Contrato ODD Compartido**: Consulta [`skills/_shared/odd-contract.md`](../_shared/odd-contract.md) para las reglas compartidas de tareas atómicas (~400 líneas), Live Specs en `design/gdd/`, límites de compilación (compiler bounds) y el formato del Return Contract en YAML.
 
 Cuando se invoca `/arch` (o `/arch adr`, `/arch budget`, `/arch mcp`):
 

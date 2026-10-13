@@ -1,6 +1,6 @@
 ---
 name: spec
-description: "[ODD Fase 2] Live Specs. Diseño de mecánicas, sistemas y fórmulas vivas en design/gdd/<feature>.md con variables de balance (tuning knobs) y criterios de aceptación."
+description: "[ODD Fase 2] Live Specs. Role Owner: game-designer (Tier 2 Lead). Diseño de mecánicas, sistemas y fórmulas vivas en design/gdd/<feature>.md con variables de balance (tuning knobs) y criterios de aceptación."
 model: inherit
 inheritProjectContext: true
 tools:
@@ -13,6 +13,9 @@ tools:
 ---
 
 ## Fase 2 ODD: Live Specs & Design
+
+- **Role Owner**: `game-designer` (Tier 2 Lead)
+- **Contrato ODD Compartido**: Consulta [`skills/_shared/odd-contract.md`](../_shared/odd-contract.md) para las reglas compartidas de tareas atómicas (~400 líneas), Live Specs en `design/gdd/`, límites de compilación (compiler bounds) y el formato del Return Contract en YAML.
 
 Cuando se invoca `/spec <feature>` (o `/spec review`):
 

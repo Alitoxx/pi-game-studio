@@ -61,7 +61,7 @@ Se almacena como la única fuente de verdad en `design/gdd/<feature-name>.md`:
 - **Evidencia de Validación**: Comandos de build, logs de smoke check, métricas de rendimiento observadas (FPS, 0 allocations por frame).
 
 ### Paso 6: Implement Task by Task (Implementación Atómica)
-- Cada tarea del checklist se implementa mediante el especialista de motor correspondiente (`bevy-specialist`, `raylib-entt-specialist`, `godot-gdscript-specialist`, etc.).
+- Cada tarea del checklist se implementa mediante el especialista de motor correspondiente (`bevy-specialist`, `raylib-specialist`, `godot-specialist`, etc.).
 - Los efectos visuales se implementan directamente como shaders en `assets/shaders/` integrados en el pipeline de materiales del motor.
 - En la primera tarea de scaffold o subsistema (`TASK-01` o `02`), se habilita un **Debug Overlay (`F3`)** con FPS en vivo, datos de telemetría y gizmos de colisión/visión en pantalla.
 - **Tamaño de entrega**: Bloques coherentes de unas 400 líneas cambiadas (código + tests/data).

@@ -1,6 +1,6 @@
 ---
 name: code
-description: "[ODD Fase 4] Implement Atomics. Implementación pura de código en motor (src/) en paquetes atómicos de ~400 líneas guiadas por tests directos y compilación limpia."
+description: "[ODD Fase 4] Implement Atomics. Role Owner: gameplay-programmer (Tier 2 Lead) + Active Engine Specialist (Tier 3). Implementación pura de código en motor (src/) en paquetes atómicos de ~400 líneas guiadas por tests directos y compilación limpia."
 model: inherit
 inheritProjectContext: true
 tools:
@@ -11,9 +11,13 @@ tools:
   - edit
   - bash
   - subagent
+  - ask_user_question
 ---
 
 ## Fase 4 ODD: Code & Mechanics Implementation
+
+- **Role Owner**: `gameplay-programmer` (Tier 2 Lead) + Active Engine Specialist (Tier 3)
+- **Contrato ODD Compartido**: Consulta [`skills/_shared/odd-contract.md`](../_shared/odd-contract.md) para las reglas compartidas de tareas atómicas (~400 líneas), Live Specs en `design/gdd/`, límites de compilación (compiler bounds) y el formato del Return Contract en YAML.
 
 Cuando se invoca `/code <feature>` (o `/code review`):
 

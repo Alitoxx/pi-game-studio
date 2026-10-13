@@ -522,6 +522,85 @@ Next: Level Design
 			nextStep: "Level Design",
 		});
 	});
+
+	test("studio:agents and agents aliases are registered pointing to handleStudioSubagentsViewer", () => {
+		const names = registered.map((r) => r.name);
+		expect(names).toContain("studio:agents");
+		expect(names).toContain("agents");
+		expect(names).toContain("studio:subagents");
+		expect(names).toContain("studio:logs");
+
+		// Assert command descriptions highlight live subagent inspector
+		const agentsCmd = registered.find((r) => r.name === "agents");
+		const studioAgentsCmd = registered.find((r) => r.name === "studio:agents");
+		expect(agentsCmd.description).toContain("[Studio]");
+		expect(agentsCmd.description.toLowerCase()).toContain("subagentes");
+		expect(studioAgentsCmd.description).toContain("[Studio]");
+		expect(studioAgentsCmd.description.toLowerCase()).toContain("subagentes");
+
+		// Assert handlers call handleStudioSubagentsViewer
+		expect(hooksSource).toMatch(
+			/registerCommand\?\.\(\s*["']agents["'][\s\S]*?handleStudioSubagentsViewer/,
+		);
+		expect(hooksSource).toMatch(
+			/registerCommand\?\.\(\s*["']studio:agents["'][\s\S]*?handleStudioSubagentsViewer/,
+		);
+	});
+
+	test("studio-subagents-widget renders signature Gentle Shell UI with vertical accent bar ▎ and telemetry", () => {
+		const widgetPath = path.join(__dirname, "..", "extensions", "hooks", "studio-subagents-widget.ts");
+		expect(fs.existsSync(widgetPath)).toBe(true);
+
+		const widgetSource = fs.readFileSync(widgetPath, "utf8");
+		expect(widgetSource).toContain("export function renderSubagentsWidgetCard");
+		expect(widgetSource).toContain("export function formatElapsed");
+
+		// Gentle Shell signature left accent bar ▎ instead of box borders
+		expect(widgetSource).toContain("▎");
+		expect(widgetSource).not.toContain("╭─");
+		expect(widgetSource).not.toContain("╰─");
+
+		// Header and status glyphs
+		expect(widgetSource).toContain("❀ Agents");
+		expect(widgetSource).toContain("active");
+		expect(widgetSource).toContain("reciente");
+		expect(widgetSource).toContain("◐"); // running
+		expect(widgetSource).toContain("✓"); // completed
+		expect(widgetSource).toContain("✗"); // failed
+		expect(widgetSource).toContain("○"); // queued
+
+		// Right-aligned telemetry string formatting (model · thinking · elapsed)
+		expect(widgetSource).toContain("telemetryStr");
+	});
+
+	test("studio-subagents-viewer provides split-screen and modal views with panels and navigation hints", () => {
+		const viewerPath = path.join(__dirname, "..", "extensions", "hooks", "studio-subagents-viewer.ts");
+		expect(fs.existsSync(viewerPath)).toBe(true);
+
+		const viewerSource = fs.readFileSync(viewerPath, "utf8");
+		expect(viewerSource).toContain("export async function handleStudioSubagentsViewer");
+		expect(viewerSource).toContain("export function renderSubagentModalView");
+		expect(viewerSource).toContain("export function renderSubagentSplitView");
+		expect(viewerSource).toContain("export class SubagentsViewerComponent");
+
+		// Header bar with status, model, elapsed, task ID
+		expect(viewerSource).toContain("INSPECTOR DE ESPECIALISTA");
+		expect(viewerSource).toContain("Task ID");
+		expect(viewerSource).toContain("EN EJECUCIÓN");
+
+		// Instruction / Prompt panel
+		expect(viewerSource).toContain("Instrucción Asignada");
+
+		// Live Tool Call Events & Logs panel
+		expect(viewerSource).toContain("Eventos y Llamadas de Herramientas (En Vivo)");
+
+		// Final Result / Delivery or Error panel
+		expect(viewerSource).toContain("Resultado / Entrega Final");
+		expect(viewerSource).toContain("Error Registrado");
+
+		// Navigation hints in footer
+		expect(viewerSource).toContain("↑/↓: Seleccionar agente • Esc: Salir • c: Cancelar");
+	});
 });
 
 

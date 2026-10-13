@@ -122,8 +122,24 @@ export default function (pi: ExtensionAPI) {
 		},
 	});
 
-	// /studio:agents — Catálogo interactivo de los agentes
+	// /studio:agents — Visor e inspector en vivo de actividad y logs de subagentes
 	(pi as any).registerCommand?.("studio:agents", {
+		description: "[Studio] Visor e inspector en vivo de logs, herramientas y actividad de subagentes",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioSubagentsViewer(args, ctx);
+		},
+	});
+
+	// /agents — Alias directo del visor e inspector en vivo de subagentes
+	(pi as any).registerCommand?.("agents", {
+		description: "[Studio] Visor e inspector en vivo de logs, herramientas y actividad de subagentes",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioSubagentsViewer(args, ctx);
+		},
+	});
+
+	// /studio:roster — Navegador del catálogo de los 13 agentes del estudio
+	(pi as any).registerCommand?.("studio:roster", {
 		description: "[Studio] Navegador interactivo de los 13 agentes oficiales (8 Core + 5 Especialistas de motor)",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioAgents(args, ctx);
@@ -230,7 +246,7 @@ export default function (pi: ExtensionAPI) {
 
 	// /studio:subagents — Visor e inspector en vivo de logs y actividades de subagentes
 	(pi as any).registerCommand?.("studio:subagents", {
-		description: "[Studio] Visor e inspector en vivo de logs y actividades de subagentes",
+		description: "[Studio] Visor e inspector en vivo de logs, herramientas y actividad de subagentes",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioSubagentsViewer(args, ctx);
 		},
@@ -254,7 +270,7 @@ export default function (pi: ExtensionAPI) {
 
 	// /studio:logs — Alias de inspección en vivo de subagentes
 	(pi as any).registerCommand?.("studio:logs", {
-		description: "[Studio] Alias de inspección en vivo de logs de subagentes",
+		description: "[Studio] Alias de inspección en vivo de logs, herramientas y actividad de subagentes",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioSubagentsViewer(args, ctx);
 		},

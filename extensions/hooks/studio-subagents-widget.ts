@@ -1,6 +1,7 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { studioAgentsRunner, type TaskRecord } from "./studio-agents-runner.ts";
 import { isStudioSidebarActive, invalidateStudioSidebar } from "./studio-sidebar.ts";
+import { loadAgentManifest } from "./studio-agent-loader.ts";
 
 import {
 	RESET,
@@ -10,12 +11,8 @@ import {
 	YELLOW,
 	GRAY,
 	ACCENT as BLUE,
-	HEADING as LAVENDER,
 	WHITE,
-	BORDER,
 	RED,
-	truncateAnsi,
-	padAnsi,
 } from "./studio-palette.ts";
 
 export const AGENTS_WIDGET_KEY = "studio-subagents";
@@ -28,6 +25,11 @@ export function formatElapsed(ms: number): string {
 	return `${Math.floor(minutes / 60)}h${String(minutes % 60).padStart(2, "0")}m`;
 }
 
+/**
+ * Signature Gentle Shell style subagents widget card.
+ * Uses a left vertical accent bar (▎) instead of closed box borders,
+ * right-aligned telemetry strings, and clean spacing.
+ */
 export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 74): string[] {
 	if (!tasks || tasks.length === 0) return [];
 
@@ -37,53 +39,81 @@ export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 7
 
 	if (activeTasks.length === 0) return [];
 
-	const cardWidth = Math.min(Math.max(width - 4, 46), 56);
-	const innerWidth = cardWidth - 4;
+	const targetWidth = Math.max(40, width);
+	const contentWidth = targetWidth - 2; // Reserve 2 columns for "▎ "
 
 	const runningCount = activeTasks.filter((t) => t.status === "running").length;
+	const countText = runningCount > 0 ? `${runningCount} active` : "reciente";
+
+	const bar = `${BLUE}▎${RESET}`;
 	const lines: string[] = [];
-	const titleText = `❀ Subagents · ${runningCount > 0 ? `${runningCount} activo(s)` : "reciente"}`;
-	const titleStyled = `${BLUE}${titleText}${RESET}`;
-	const ruleLen = Math.max(0, cardWidth - titleText.length - 7);
-	lines.push(`  ${BORDER}╭─${RESET} ${titleStyled} ${BORDER}${"─".repeat(ruleLen)}╮${RESET}`);
+
+	// Top padding bar
+	lines.push(bar);
+
+	// Header: ▎ ❀ Agents  <N> active (or reciente)
+	const headerTitle = `${BLUE}❀ Agents${RESET}  ${DIM}${countText}${RESET}`;
+	lines.push(`${bar} ${headerTitle}`);
+
+	// Spacing bar between header and items
+	lines.push(bar);
 
 	const now = Date.now();
 	for (const task of activeTasks) {
 		let icon = `${GRAY}○${RESET}`;
-		let stateColor = WHITE;
-
 		if (task.status === "completed") {
 			icon = `${GREEN}✓${RESET}`;
-			stateColor = `${DIM}${GRAY}`;
 		} else if (task.status === "running") {
 			icon = `${YELLOW}◐${RESET}`;
-			stateColor = `${BOLD}${WHITE}`;
 		} else if (task.status === "failed") {
 			icon = `${RED}✗${RESET}`;
-			stateColor = `${RED}`;
 		}
 
+		// Calculate elapsed runtime
 		const elapsedMs = task.startedAt
 			? (task.endedAt ? task.endedAt - task.startedAt : now - task.startedAt)
 			: 0;
 		const elapsedStr = formatElapsed(elapsedMs);
 
-		// Fila 1: Glifo, Nombre del Agente, Modelo, Tiempo transcurrido
-		const modelTag = task.model ? ` ${DIM}${task.model.split("/").pop()}${RESET}` : "";
-		const headerRow = `${icon} ${stateColor}${task.agent}${RESET}${modelTag} ${DIM}${elapsedStr}${RESET}`;
-		lines.push(`  ${BORDER}│${RESET} ${padAnsi(truncateAnsi(headerRow, innerWidth), innerWidth)} ${BORDER}│${RESET}`);
+		// Build telemetry string: model · thinking · elapsed
+		const teleParts: string[] = [];
+		if (task.model && task.model !== "inherit") {
+			const shortModel = task.model.split("/").pop() || task.model;
+			teleParts.push(shortModel);
+		}
+		try {
+			const manifest = loadAgentManifest(task.agent, task.cwd);
+			if (manifest?.thinking) {
+				teleParts.push(manifest.thinking);
+			}
+		} catch {}
+		teleParts.push(elapsedStr);
+		const telemetryStr = teleParts.join(" · ");
 
-		// Fila 2: Actividad en curso o tarea
-		const activity = task.latestActivity || task.task.slice(0, 35);
-		const detailRow = `  ${DIM}└─ ${activity}${RESET}`;
-		lines.push(`  ${BORDER}│${RESET} ${padAnsi(truncateAnsi(detailRow, innerWidth), innerWidth)} ${BORDER}│${RESET}`);
+		// Format row: glyph, agent name in bold/white, activity, right-aligned telemetry
+		const rawActivity = (task.latestActivity || task.task).replace(/\s+/g, " ").trim();
+		const leftPrefix = `${icon}  ${BOLD}${WHITE}${task.agent}${RESET}  `;
+		const leftVisible = 1 + 2 + task.agent.length + 2; // glyph (1) + "  " (2) + agent (len) + "  " (2)
+		const teleVisible = telemetryStr.length;
+
+		const maxActivityLen = contentWidth - leftVisible - teleVisible - 2;
+		if (maxActivityLen > 6) {
+			const activityDisplay = rawActivity.length > maxActivityLen
+				? (maxActivityLen > 1 ? rawActivity.slice(0, maxActivityLen - 1) + "…" : "")
+				: rawActivity;
+			const spacesCount = Math.max(2, contentWidth - leftVisible - activityDisplay.length - teleVisible);
+			const row = `${leftPrefix}${WHITE}${activityDisplay}${RESET}${" ".repeat(spacesCount)}${DIM}${telemetryStr}${RESET}`;
+			lines.push(`${bar} ${row}`);
+		} else {
+			// Compact row for narrow viewports
+			const row = `${icon}  ${BOLD}${WHITE}${task.agent}${RESET}  ${DIM}${telemetryStr}${RESET}`;
+			lines.push(`${bar} ${row}`);
+		}
 	}
 
-	const hint = `${DIM}ver: /studio:subagents${RESET}`;
-	const hintVisibleLen = 22; // "ver: /studio:subagents" length
-	const leftDashes = Math.max(1, Math.floor((cardWidth - 2 - hintVisibleLen - 2) / 2));
-	const rightDashes = Math.max(1, cardWidth - 2 - hintVisibleLen - 2 - leftDashes);
-	lines.push(`  ${BORDER}╰${"─".repeat(leftDashes)}┤${RESET} ${hint} ${BORDER}├${"─".repeat(rightDashes)}╯${RESET}`);
+	// Bottom padding bar
+	lines.push(bar);
+
 	return lines;
 }
 

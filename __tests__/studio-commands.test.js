@@ -420,6 +420,108 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 		expect(doctorSource).toContain("[STUDIO DOCTOR]");
 		expect(doctorSource).toContain("[STRUCTURE]");
 	});
+
+	test("readProducerState regex logic correctly parses bilingual keys in English and Spanish for ProducerState", () => {
+		const startSource = fs.readFileSync(
+			path.join(__dirname, "..", "extensions", "hooks", "studio-start.ts"),
+			"utf8",
+		);
+
+		// 1. Verify studio-start.ts defines readProducerState with bilingual regexes
+		expect(startSource).toContain("export function readProducerState");
+		expect(startSource).toContain("(?:Juego|Game|Project|Title):");
+		expect(startSource).toContain("(?:Motor|Engine):");
+		expect(startSource).toContain("(?:Hito Actual|Milestone|Current Milestone):");
+		expect(startSource).toContain("(?:Sprint Activo|Sprint|Active Sprint):");
+		expect(startSource).toContain("(?:En Progreso|In Progress|Working On):");
+		expect(startSource).toContain("(?:Siguiente Paso|Next Step|Next):");
+
+		// 2. Parser replicating readProducerState block extraction and field matching
+		function parseProducerBlock(block) {
+			const state = {};
+			const game = block.match(/(?:Juego|Game|Project|Title):\s*([^\n]+)/i);
+			if (game) state.gameTitle = game[1].trim();
+
+			const engine = block.match(/(?:Motor|Engine):\s*([^\n]+)/i);
+			if (engine) state.engine = engine[1].trim();
+
+			const milestone = block.match(/(?:Hito Actual|Milestone|Current Milestone):\s*([^\n]+)/i);
+			if (milestone) state.milestone = milestone[1].trim();
+
+			const sprint = block.match(/(?:Sprint Activo|Sprint|Active Sprint):\s*([^\n]+)/i);
+			if (sprint) state.sprint = sprint[1].trim();
+
+			const inProgress = block.match(/(?:En Progreso|In Progress|Working On):\s*([^\n]+)/i);
+			if (inProgress) state.inProgress = inProgress[1].trim();
+
+			const nextStep = block.match(/(?:Siguiente Paso|Next Step|Next):\s*([^\n]+)/i);
+			if (nextStep) state.nextStep = nextStep[1].trim();
+			return state;
+		}
+
+		// 3. Assert Spanish block parsing
+		const spanishBlock = `
+<!-- PRODUCER_STATE
+Juego: Chrono Space
+Motor: Godot 4
+Hito Actual: Vertical Slice
+Sprint Activo: Sprint 4
+En Progreso: Mecánicas de Salto
+Siguiente Paso: Audio y Pulido
+<!-- /PRODUCER_STATE -->
+`;
+		const spanishState = parseProducerBlock(spanishBlock);
+		expect(spanishState).toEqual({
+			gameTitle: "Chrono Space",
+			engine: "Godot 4",
+			milestone: "Vertical Slice",
+			sprint: "Sprint 4",
+			inProgress: "Mecánicas de Salto",
+			nextStep: "Audio y Pulido",
+		});
+
+		// 4. Assert English block parsing
+		const englishBlock = `
+<!-- PRODUCER_STATE
+Game: Chrono Space
+Engine: Bevy
+Milestone: Beta Milestone
+Sprint: Sprint 2
+In Progress: Physics System
+Next Step: Networking
+<!-- /PRODUCER_STATE -->
+`;
+		const englishState = parseProducerBlock(englishBlock);
+		expect(englishState).toEqual({
+			gameTitle: "Chrono Space",
+			engine: "Bevy",
+			milestone: "Beta Milestone",
+			sprint: "Sprint 2",
+			inProgress: "Physics System",
+			nextStep: "Networking",
+		});
+
+		// 5. Assert English alternate key variations (Project, Title, Current Milestone, Active Sprint, Working On, Next)
+		const altBlock = `
+<!-- PRODUCER_STATE
+Title: Void Runner
+Engine: Raylib
+Current Milestone: Alpha 1.0
+Active Sprint: Sprint 7
+Working On: Shader Pipeline
+Next: Level Design
+<!-- /PRODUCER_STATE -->
+`;
+		const altState = parseProducerBlock(altBlock);
+		expect(altState).toEqual({
+			gameTitle: "Void Runner",
+			engine: "Raylib",
+			milestone: "Alpha 1.0",
+			sprint: "Sprint 7",
+			inProgress: "Shader Pipeline",
+			nextStep: "Level Design",
+		});
+	});
 });
 
 

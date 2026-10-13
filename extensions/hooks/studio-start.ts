@@ -107,22 +107,22 @@ export function readProducerState(cwd: string): { hasRoadmap: boolean; roadmapPa
 		const block = match[1];
 		const state: ProducerState = {};
 
-		const game = block.match(/Juego:\s*([^\n]+)/i);
+		const game = block.match(/(?:Juego|Game|Project|Title):\s*([^\n]+)/i);
 		if (game) state.gameTitle = game[1].trim();
 
-		const engine = block.match(/Motor:\s*([^\n]+)/i);
+		const engine = block.match(/(?:Motor|Engine):\s*([^\n]+)/i);
 		if (engine) state.engine = engine[1].trim();
 
-		const milestone = block.match(/Hito Actual:\s*([^\n]+)/i);
+		const milestone = block.match(/(?:Hito Actual|Milestone|Current Milestone):\s*([^\n]+)/i);
 		if (milestone) state.milestone = milestone[1].trim();
 
-		const sprint = block.match(/Sprint Activo:\s*([^\n]+)/i);
+		const sprint = block.match(/(?:Sprint Activo|Sprint|Active Sprint):\s*([^\n]+)/i);
 		if (sprint) state.sprint = sprint[1].trim();
 
-		const inProgress = block.match(/En Progreso:\s*([^\n]+)/i);
+		const inProgress = block.match(/(?:En Progreso|In Progress|Working On):\s*([^\n]+)/i);
 		if (inProgress) state.inProgress = inProgress[1].trim();
 
-		const nextStep = block.match(/Siguiente Paso:\s*([^\n]+)/i);
+		const nextStep = block.match(/(?:Siguiente Paso|Next Step|Next):\s*([^\n]+)/i);
 		if (nextStep) state.nextStep = nextStep[1].trim();
 
 		return { hasRoadmap: true, roadmapPath, state };

@@ -20,6 +20,7 @@ describe("Exhaustive Agent Validation (Compact 8+1 Studio Architecture: 13 Agent
 		"bash",
 		"web_search",
 		"subagent",
+		"ask_user_question",
 	];
 
 	test.each(agentFiles)(

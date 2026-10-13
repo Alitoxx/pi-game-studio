@@ -47,6 +47,19 @@ export function formatQuestionPrompt(currentIndex: number, questions: QuestionIt
 }
 
 export function registerAskUserQuestion(pi: ExtensionAPI): void {
+	// If tool is already registered globally (e.g. by gentle-pi), don't register duplicate
+	const hasTool = (name: string) => {
+		try {
+			return typeof (pi as any).hasTool === "function" ? (pi as any).hasTool(name) : false;
+		} catch {
+			return false;
+		}
+	};
+
+	if (hasTool("ask_user_question")) {
+		return;
+	}
+
 	// ──────────────────────────────────────────────
 	// Unified Tool: ask_user_question (Single & Batch Questions)
 	// ──────────────────────────────────────────────

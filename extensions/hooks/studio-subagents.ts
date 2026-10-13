@@ -5,6 +5,19 @@ import { loadAgentManifest, listAvailableAgents } from "./studio-agent-loader.ts
 import { studioAgentsRunner } from "./studio-agents-runner.ts";
 
 export function registerStudioSubagentTools(pi: ExtensionAPI): void {
+	// If tools are already provided globally (e.g. by gentle-pi / gentle-agents), don't register duplicates
+	const hasTool = (name: string) => {
+		try {
+			return typeof (pi as any).hasTool === "function" ? (pi as any).hasTool(name) : false;
+		} catch {
+			return false;
+		}
+	};
+
+	if (hasTool("subagent_run")) {
+		return;
+	}
+
 	// ──────────────────────────────────────────────
 	// Tool: subagent_run
 	// Ejecuta un especialista aislado en un proceso hijo de Pi

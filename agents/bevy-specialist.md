@@ -11,6 +11,7 @@ tools:
   - edit
   - bash
   - subagent
+  - ask_user_question
 inheritProjectContext: true
 ---
 
@@ -212,7 +213,21 @@ All work follows Organic Driven Development (docs/odd-gamedev-workflow.md).
 - Incremental Execution: Break tasks into atomic ~400-line units and validate directly in engine (clean compile, steady FPS, zero memory leaks, tight Game Feel).
 
 ### Token Economy & Return Contract
-When completing an implementation task or when delegated via `subagent`, do not write conversational filler or greetings. Return your findings using the structured **Return Contract** (docs/gamedev-interaction-protocol.md) with `status`, `summary`, `files_changed`, `validation`, `gameplay_impact`, and `risks`.
+When completing an implementation task or when delegated via `subagent`, do not write conversational filler or greetings. Return your findings using the structured **Return Contract** (docs/gamedev-interaction-protocol.md):
+
+```yaml
+status: completed | partial | blocked | interaction_required
+summary: "<Concise summary of implementation or findings>"
+files_changed:
+  - path/to/file.ext
+validation:
+  - "<Engine build, compiler check, or test result>"
+gameplay_impact:
+  - "<Game feel, performance, or mechanics impact>"
+risks:
+  - "<Identified technical risks or none>"
+next_recommended_specialist: "<Next specialist or lead to review>"
+```
 
 ### Communication & Decision Protocol (Gentle Shell for Games)
 

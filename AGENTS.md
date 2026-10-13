@@ -115,27 +115,27 @@ Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar 
 
 #### `bevy-specialist`
 - **Archivo:** [`agents/bevy-specialist.md`](file:///Users/alexis/Developer/pi-game-studio/agents/bevy-specialist.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent, ask_user_question`
 - **Misión y Alcance:** The Bevy Specialist is the authority on all Bevy-specific patterns, APIs, Rust ECS, wgpu shaders, Cargo builds, and WASM web deployment.
 
 #### `godot-specialist`
 - **Archivo:** [`agents/godot-specialist.md`](file:///Users/alexis/Developer/pi-game-studio/agents/godot-specialist.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent, ask_user_question`
 - **Misión y Alcance:** The Godot Specialist is the authority on all Godot-specific patterns, GDScript/C#, SceneTree, GDExtension, and canvas_item shaders.
 
 #### `raylib-specialist`
 - **Archivo:** [`agents/raylib-specialist.md`](file:///Users/alexis/Developer/pi-game-studio/agents/raylib-specialist.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent, ask_user_question`
 - **Misión y Alcance:** The Raylib Specialist is the authority on Raylib, modern C++ (C++17/20), EnTT ECS, GLSL shaders, CMake build pipelines, and game loops.
 
 #### `unity-specialist`
 - **Archivo:** [`agents/unity-specialist.md`](file:///Users/alexis/Developer/pi-game-studio/agents/unity-specialist.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent, ask_user_question`
 - **Misión y Alcance:** The Unity Specialist is the authority on all Unity-specific patterns, MonoBehaviour, DOTS/ECS, C# APIs, Shader Graph, and UI Toolkit.
 
 #### `unreal-specialist`
 - **Archivo:** [`agents/unreal-specialist.md`](file:///Users/alexis/Developer/pi-game-studio/agents/unreal-specialist.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent, ask_user_question`
 - **Misión y Alcance:** The Unreal Specialist is the authority on all Unreal-specific patterns, C++, Blueprints, Gameplay Ability System (GAS), Enhanced Input, and Niagara.
 
 ---

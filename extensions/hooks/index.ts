@@ -777,18 +777,25 @@ export default function (pi: ExtensionAPI) {
 		// Mount header banner cleanly via TUI
 		try {
 			if ((ctx as any).hasUI && (ctx as any).ui?.setHeader) {
-				(ctx as any).ui.setHeader((_tui: any, _theme: any) => ({
-					render(width: number) {
-						return renderBanner(width, studioRoot);
-					},
-					invalidate() {},
-				}));
+				setTimeout(() => {
+					try {
+						(ctx as any).ui?.setHeader?.((_tui: any, _theme: any) => ({
+							render(width: number) {
+								return renderBanner(width, studioRoot);
+							},
+							invalidate() {},
+						}));
+					} catch {}
+				}, 50);
 			}
 
 			// Install Studio Footer Bar (Model, Context Gauge, Engine, Sprint)
-			updateStudioHUD(ctx, pi);
-			// Mount Live Tasks Widget (only if active tasks exist)
-			updateTasksWidget(ctx);
+			setTimeout(() => {
+				try {
+					updateStudioHUD(ctx, pi);
+					updateTasksWidget(ctx);
+				} catch {}
+			}, 100);
 
 			// Ensure local project theme and tuiMode (fullscreen) are initialized if unconfigured
 			const localSettingsPath = join(studioRoot, ".pi", "settings.json");

@@ -50,6 +50,12 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 			"studio:assets",
 			"assets",
 			"palette",
+			"studio:jam",
+			"jam",
+			"studio:budget",
+			"budget",
+			"studio:timeline",
+			"timeline",
 		];
 
 		const names = registered.map((r) => r.name);
@@ -1453,6 +1459,337 @@ Implement fuzzy command palette.
 			expect(hooksSource).toContain("boundedSurfacesGuard.validate");
 			expect(hooksSource).toContain("boundedSurfacesGuard.setFromTask");
 			expect(hooksSource).toContain("boundedSurfacesGuard.clear");
+		});
+	});
+
+	// ──────────────────────────────────────────────
+	// Block 3 & Block 4: Jam Mode, Budget Tracker & Production Timeline
+	// ──────────────────────────────────────────────
+	describe("Block 3 & Block 4: Jam Mode, Budget Tracker & Timeline Viewer", () => {
+		const jamPath = path.join(__dirname, "..", "extensions", "hooks", "studio-jam.ts");
+		const budgetPath = path.join(__dirname, "..", "extensions", "hooks", "studio-budget.ts");
+		const timelinePath = path.join(__dirname, "..", "extensions", "hooks", "studio-timeline.ts");
+		const viewerPath = path.join(__dirname, "..", "extensions", "hooks", "studio-timeline-viewer.ts");
+
+		test("required files exist and export required contracts", () => {
+			expect(fs.existsSync(jamPath)).toBe(true);
+			expect(fs.existsSync(budgetPath)).toBe(true);
+			expect(fs.existsSync(timelinePath)).toBe(true);
+			expect(fs.existsSync(viewerPath)).toBe(true);
+
+			const jamSource = fs.readFileSync(jamPath, "utf8");
+			expect(jamSource).toContain("export function isJamModeActive");
+			expect(jamSource).toContain("export function handleStudioJam");
+
+			const budgetSource = fs.readFileSync(budgetPath, "utf8");
+			expect(budgetSource).toContain("export function recordTokenUsage");
+			expect(budgetSource).toContain("export function getBudgetReport");
+			expect(budgetSource).toContain("export function handleStudioBudget");
+
+			const timelineSource = fs.readFileSync(timelinePath, "utf8");
+			expect(timelineSource).toContain("export function parseProductionTimeline");
+			expect(timelineSource).toContain("export function handleStudioTimeline");
+
+			const viewerSource = fs.readFileSync(viewerPath, "utf8");
+			expect(viewerSource).toContain("TimelineViewerComponent");
+		});
+
+		test("Block 3: Game Jam Mode toggles and persists in .pi/game-studio/jam-mode", () => {
+			const { execFileSync } = require("child_process");
+			const script = `
+				const fs = await import("node:fs");
+				const path = await import("node:path");
+				const os = await import("node:os");
+
+				const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "jam-test-"));
+				const { isJamModeActive, setJamMode, toggleJamMode } = await import("./extensions/hooks/studio-jam.ts");
+
+				if (isJamModeActive(tmpDir) !== false) throw new Error("Jam mode should be inactive by default");
+
+				setJamMode(true, tmpDir);
+				if (!isJamModeActive(tmpDir)) throw new Error("Jam mode should be active after setJamMode(true)");
+
+				const jamFilePath = path.join(tmpDir, ".pi", "game-studio", "jam-mode");
+				if (!fs.existsSync(jamFilePath)) throw new Error("jam-mode file should exist");
+
+				toggleJamMode(tmpDir);
+				if (isJamModeActive(tmpDir)) throw new Error("Jam mode should be inactive after toggle");
+
+				toggleJamMode(tmpDir);
+				if (!isJamModeActive(tmpDir)) throw new Error("Jam mode should be active after second toggle");
+
+				fs.rmSync(tmpDir, { recursive: true, force: true });
+			`;
+			expect(() => {
+				execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+					cwd: path.join(__dirname, ".."),
+				});
+			}).not.toThrow();
+		});
+
+		test("Block 3: Studio Budget Tracker records tokens and generates discipline report", () => {
+			const { execFileSync } = require("child_process");
+			const script = `
+				const {
+					recordTokenUsage,
+					getBudgetReport,
+					resetBudget,
+					categorizeDiscipline,
+					estimateCost,
+					renderBudgetCard,
+				} = await import("./extensions/hooks/studio-budget.ts");
+
+				resetBudget();
+
+				if (categorizeDiscipline("producer") !== "Directors") throw new Error("producer should be Directors");
+				if (categorizeDiscipline("creative-director") !== "Directors") throw new Error("creative-director should be Directors");
+				if (categorizeDiscipline("game-designer") !== "Game Designer") throw new Error("game-designer should be Game Designer");
+				if (categorizeDiscipline("bevy-specialist") !== "Specialists") throw new Error("bevy-specialist should be Specialists");
+				if (categorizeDiscipline("gameplay-programmer") !== "Specialists") throw new Error("gameplay-programmer should be Specialists");
+
+				// Record usages
+				recordTokenUsage("producer", "anthropic/claude-sonnet-4", 1000, 500, 200);
+				recordTokenUsage("game-designer", "openai/gpt-4o", 2000, 1000, 0);
+				recordTokenUsage("bevy-specialist", "openrouter/openai/gpt-oss-120b:free", 5000, 3000, 0);
+
+				const report = getBudgetReport();
+				if (report.totalTokens !== 12700) throw new Error("Total tokens mismatch: " + report.totalTokens);
+				if (report.totalInputTokens !== 8000) throw new Error("Total input tokens mismatch: " + report.totalInputTokens);
+				if (report.totalOutputTokens !== 4500) throw new Error("Total output tokens mismatch: " + report.totalOutputTokens);
+				if (report.totalCacheTokens !== 200) throw new Error("Total cache tokens mismatch: " + report.totalCacheTokens);
+
+				if (!report.byDiscipline["Directors"]) throw new Error("Missing Directors discipline in report");
+				if (!report.byDiscipline["Game Designer"]) throw new Error("Missing Game Designer discipline in report");
+				if (!report.byDiscipline["Specialists"]) throw new Error("Missing Specialists discipline in report");
+
+				// Free model should have 0 cost
+				if (report.byDiscipline["Specialists"].costUsd !== 0) throw new Error("Free model cost should be 0");
+				if (report.totalCostUsd <= 0) throw new Error("Total cost should be greater than 0");
+
+				const cardLines = renderBudgetCard(report);
+				const cardText = cardLines.join("\\n");
+				if (!cardText.includes("ESTIMATED STUDIO BUDGET")) throw new Error("Card missing header");
+				if (!cardText.includes("Directors")) throw new Error("Card missing Directors");
+				if (!cardText.includes("Game Designer")) throw new Error("Card missing Game Designer");
+				if (!cardText.includes("Specialists")) throw new Error("Card missing Specialists");
+			`;
+			expect(() => {
+				execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+					cwd: path.join(__dirname, ".."),
+				});
+			}).not.toThrow();
+		});
+
+		test("Block 4: Production Timeline parses roadmap, ADRs and Live Specs", () => {
+			const { execFileSync } = require("child_process");
+			const script = `
+				const fs = await import("node:fs");
+				const path = await import("node:path");
+				const os = await import("node:os");
+
+				const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "timeline-test-"));
+				fs.mkdirSync(path.join(tmpDir, "production"), { recursive: true });
+				fs.mkdirSync(path.join(tmpDir, "docs", "architecture"), { recursive: true });
+				fs.mkdirSync(path.join(tmpDir, "design", "gdd"), { recursive: true });
+
+				// 1. Roadmap fixture
+				const roadmapContent = [
+					"# Roadmap",
+					"<!-- PRODUCER_STATE -->",
+					"Juego: CyberBlade",
+					"Motor: Godot 4",
+					"Hito Actual: M0 — Visión",
+					"Sprint Activo: Sprint 1",
+					"<!-- /PRODUCER_STATE -->",
+					"### M0 — Visión",
+					"- [x] Concepto base",
+					"- [x] Pilares de diseño",
+					"- [ ] Título final",
+					"### M1 — Spike Técnico",
+					"- [ ] Test de motor",
+				].join("\\n");
+				fs.writeFileSync(path.join(tmpDir, "production", "roadmap.md"), roadmapContent, "utf8");
+
+				// 2. ADR fixture
+				const adrContent = [
+					"# ADR-001: Usar Godot 4 con C# para lógica de combate",
+					"Status: Accepted",
+					"Date: 2026-10-10",
+					"## Context",
+					"Se requiere alto rendimiento y tipado fuerte para el simulador de combate.",
+					"## Decision",
+					"Adoptar Godot 4 .NET con C# 12 para los subsistemas de gameplay core.",
+					"## Consequences",
+					"Mayor velocidad de iteración y compatibilidad con bibliotecas existentes.",
+					"## Trade-offs",
+					"Mayor tiempo de build inicial frente a GDScript puro.",
+				].join("\\n");
+				fs.writeFileSync(path.join(tmpDir, "docs", "architecture", "adr-001-godot-csharp.md"), adrContent, "utf8");
+
+				// 3. Live Spec fixture
+				const specContent = [
+					"# Live Spec: Sistema de Combate y Parrying",
+					"Status: Approved",
+					"## Overview",
+					"Mecánica de parry de precisión con ventana de 12 frames.",
+					"## Acceptance Criteria",
+					"- [x] Ventana de parry configurable en milisegundos",
+					"- [ ] Sonido de impacto al acertar",
+					"## Tuning Knobs",
+					"- PARRY_WINDOW_MS = 200",
+				].join("\\n");
+				fs.writeFileSync(path.join(tmpDir, "design", "gdd", "combat-parry.md"), specContent, "utf8");
+
+				const { parseProductionTimeline } = await import("./extensions/hooks/studio-timeline.ts");
+				const timeline = parseProductionTimeline(tmpDir);
+
+				if (timeline.items.length === 0) throw new Error("Timeline items should not be empty");
+				if (timeline.milestonesCount < 2) throw new Error("Should have at least 2 milestones");
+				if (timeline.adrsCount !== 1) throw new Error("Should have 1 ADR, got " + timeline.adrsCount);
+				if (timeline.specsCount !== 1) throw new Error("Should have 1 Spec, got " + timeline.specsCount);
+
+				const m0 = timeline.items.find(i => i.title.includes("M0"));
+				if (!m0) throw new Error("M0 milestone not found");
+				if (m0.progress !== 67) throw new Error("M0 progress should be 67% (2/3), got " + m0.progress);
+
+				const adr = timeline.items.find(i => i.type === "adr");
+				if (!adr) throw new Error("ADR item not found");
+				if (!adr.details.decision.includes("Godot 4 .NET")) throw new Error("ADR decision detail missing");
+
+				const spec = timeline.items.find(i => i.type === "spec");
+				if (!spec) throw new Error("Spec item not found");
+				if (!spec.details.summary.includes("parry")) throw new Error("Spec summary detail missing");
+
+				fs.rmSync(tmpDir, { recursive: true, force: true });
+			`;
+			expect(() => {
+				execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+					cwd: path.join(__dirname, ".."),
+				});
+			}).not.toThrow();
+		});
+
+		test("Block 4: TimelineViewerComponent handles tree navigation and filtering", () => {
+			const { execFileSync } = require("child_process");
+			const script = `
+				const { TimelineViewerComponent } = await import("./extensions/hooks/studio-timeline-viewer.ts");
+
+				const mockItems = [
+					{
+						id: "m0",
+						type: "milestone",
+						category: "Milestones",
+						title: "M0 — Visión",
+						status: "In Progress",
+						icon: "◉",
+						sourceFile: "production/roadmap.md",
+						progress: 67,
+						details: { summary: "Fase de visión" },
+					},
+					{
+						id: "m0-t1",
+						type: "task",
+						category: "Milestones",
+						title: "Concepto base",
+						status: "Completed",
+						icon: "✓",
+						sourceFile: "production/roadmap.md",
+						treeSpine: "├─ ",
+						details: { summary: "Concepto aprobado" },
+					},
+					{
+						id: "adr-1",
+						type: "adr",
+						category: "ADRs",
+						title: "ADR-001: Godot 4 C#",
+						status: "Accepted",
+						icon: "◈",
+						sourceFile: "docs/architecture/adr-001.md",
+						details: {
+							context: "Alto rendimiento",
+							decision: "Usar C#",
+							consequences: "Compilación rápida",
+							tradeoffs: "Mayor overhead de build",
+						},
+					},
+					{
+						id: "spec-1",
+						type: "spec",
+						category: "Specs",
+						title: "Spec: Combat Loop",
+						status: "Approved",
+						icon: "📄",
+						sourceFile: "design/gdd/combat.md",
+						details: {
+							summary: "Bucle de combate",
+							acceptanceCriteria: ["Ventana de 12 frames"],
+						},
+					},
+				];
+
+				let closed = false;
+				let renderRequested = false;
+				const mockTui = {
+					requestRender: () => { renderRequested = true; }
+				};
+
+				const viewer = new TimelineViewerComponent(mockItems, mockTui, {}, () => { closed = true; });
+
+				// Test render
+				const lines = viewer.render(80);
+				if (!lines || lines.length === 0) throw new Error("Viewer render returned no lines");
+				const text = lines.join("\\n");
+				if (!text.includes("M0 — Visión")) throw new Error("Render missing M0");
+
+				// Test arrow down
+				viewer.handleInput("\\x1b[B"); // Down
+				if (viewer.getSelectedIndex() !== 1) throw new Error("Index should be 1 after down key");
+
+				// Test tab filtering
+				viewer.handleInput("\\t"); // Tab -> Milestones
+				if (viewer.getActiveFilter() !== "Milestones") throw new Error("Filter should be Milestones");
+
+				viewer.handleInput("\\t"); // Tab -> ADRs
+				if (viewer.getActiveFilter() !== "ADRs") throw new Error("Filter should be ADRs");
+
+				viewer.handleInput("\\t"); // Tab -> Specs
+				if (viewer.getActiveFilter() !== "Specs") throw new Error("Filter should be Specs");
+
+				viewer.handleInput("\\t"); // Tab -> All
+				if (viewer.getActiveFilter() !== "All") throw new Error("Filter should be All");
+
+				// Test close key
+				viewer.handleInput("q");
+				if (!closed) throw new Error("Viewer should close on q");
+			`;
+			expect(() => {
+				execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+					cwd: path.join(__dirname, ".."),
+				});
+			}).not.toThrow();
+		});
+
+		test("Integration in index.ts wires commands, token tracking, and jam mode bypass", () => {
+			// Commands registered
+			expect(hooksSource).toContain('registerCommand?.("studio:jam"');
+			expect(hooksSource).toContain('registerCommand?.("jam"');
+			expect(hooksSource).toContain('registerCommand?.("studio:budget"');
+			expect(hooksSource).toContain('registerCommand?.("budget"');
+			expect(hooksSource).toContain('registerCommand?.("studio:timeline"');
+			expect(hooksSource).toContain('registerCommand?.("timeline"');
+
+			// Imports & Handlers
+			expect(hooksSource).toContain("handleStudioJam");
+			expect(hooksSource).toContain("isJamModeActive");
+			expect(hooksSource).toContain("handleStudioBudget");
+			expect(hooksSource).toContain("recordTokenUsage");
+			expect(hooksSource).toContain("handleStudioTimeline");
+
+			// Jam mode prompt and perf bypass wiring
+			expect(hooksSource).toContain("GAME JAM");
+
+			// Token tracking wiring in turn/tool hooks
+			expect(hooksSource).toContain("recordTokenUsage(");
 		});
 	});
 });

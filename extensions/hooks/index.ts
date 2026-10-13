@@ -46,6 +46,9 @@ import { showCommandPalette } from "./studio-palette-overlay.ts";
 import { doubleEscapeGuard } from "./studio-esc-guard.ts";
 import { validateCommandSafety, isDestructiveCommand } from "./studio-destructive-guard.ts";
 import { boundedSurfacesGuard } from "./studio-surfaces-guard.ts";
+import { handleStudioJam, isJamModeActive } from "./studio-jam.ts";
+import { handleStudioBudget, recordTokenUsage } from "./studio-budget.ts";
+import { handleStudioTimeline } from "./studio-timeline.ts";
 
 export default function (pi: ExtensionAPI) {
 	// ──────────────────────────────────────────────
@@ -61,6 +64,9 @@ export default function (pi: ExtensionAPI) {
 		if (task.status === "completed") {
 			playSuccessChime();
 			boundedSurfacesGuard.clear();
+			const inTokens = Math.ceil((task.task?.length || 0) / 4);
+			const outTokens = Math.ceil(((task.result?.length || 0) + (task.logs?.join("\n").length || 0)) / 4);
+			recordTokenUsage(task.agent, task.model || "inherit", inTokens, outTokens);
 		} else if (task.status === "failed") {
 			playErrorChime();
 			boundedSurfacesGuard.clear();
@@ -405,6 +411,54 @@ export default function (pi: ExtensionAPI) {
 		},
 	});
 
+	// /studio:jam — Alternar modo Game Jam / Rapid Prototyping
+	(pi as any).registerCommand?.("studio:jam", {
+		description: "[Studio] Alternar modo Game Jam / Rapid Prototyping (relaja perf-guard y acelera iteración)",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioJam(args, ctx);
+		},
+	});
+
+	// /jam — Alias de studio:jam
+	(pi as any).registerCommand?.("jam", {
+		description: "[Studio] Alias de modo Game Jam / Rapid Prototyping",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioJam(args, ctx);
+		},
+	});
+
+	// /studio:budget — Monitor de tokens y presupuesto estimado en USD
+	(pi as any).registerCommand?.("studio:budget", {
+		description: "[Studio] Monitor de consumo de tokens y presupuesto estimado en USD",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioBudget(args, ctx);
+		},
+	});
+
+	// /budget — Alias de studio:budget
+	(pi as any).registerCommand?.("budget", {
+		description: "[Studio] Alias de monitor de presupuesto y tokens",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioBudget(args, ctx);
+		},
+	});
+
+	// /studio:timeline — Línea de tiempo de producción y registro histórico de decisiones
+	(pi as any).registerCommand?.("studio:timeline", {
+		description: "[Studio] Línea de tiempo de producción, hitos y registro histórico de decisiones (ADRs y Specs)",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioTimeline(args, ctx);
+		},
+	});
+
+	// /timeline — Alias de studio:timeline
+	(pi as any).registerCommand?.("timeline", {
+		description: "[Studio] Alias de línea de tiempo de producción",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioTimeline(args, ctx);
+		},
+	});
+
 	// ──────────────────────────────────────────────
 	// Hook: Validate git commits
 	// Fires on tool_call for git commit commands
@@ -412,6 +466,12 @@ export default function (pi: ExtensionAPI) {
 	pi.on("tool_call", async (event, ctx) => {
 		if ((event as any)?.toolName === "ask_user_question") {
 			playAlertChime();
+		}
+
+		// Track tool call input tokens in session budget
+		const toolInputLen = JSON.stringify(event.input || {}).length;
+		if (toolInputLen > 0) {
+			recordTokenUsage("tool", "system", Math.ceil(toolInputLen / 4), 0);
 		}
 
 		if (!isToolCallEventType("bash", event)) return;
@@ -493,15 +553,28 @@ export default function (pi: ExtensionAPI) {
 				filePath,
 				typeof content === "string" ? content : undefined,
 			);
+			const jamActive = isJamModeActive(findStudioRoot(ctx.cwd) || ctx.cwd);
 			if (!perfRes.isClean && perfRes.allocationsCount > 0) {
-				console.log(
-					`\x1b[38;2;253;230;138m◈ PERF ALERT: ${perfRes.allocationsCount} allocations detected in frame loop of ${filePath}\x1b[0m`,
-				);
-				if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
-					(ctx.ui as any).notify(
-						`◈ PERF ALERT: ${perfRes.allocationsCount} allocs en frame loop de ${filePath.split("/").pop()}`,
-						"warning",
+				if (jamActive) {
+					console.log(
+						`\x1b[38;2;253;230;138m◈ [JAM MODE] Soft Perf Warning: ${perfRes.allocationsCount} allocations detected in frame loop of ${filePath} (blocking bypassed for rapid prototyping)\x1b[0m`,
 					);
+					if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
+						(ctx.ui as any).notify(
+							`◈ [JAM MODE] Soft Perf Warning: ${perfRes.allocationsCount} allocs en frame loop (no bloqueante)`,
+							"warning",
+						);
+					}
+				} else {
+					console.log(
+						`\x1b[38;2;253;230;138m◈ PERF ALERT: ${perfRes.allocationsCount} allocations detected in frame loop of ${filePath}\x1b[0m`,
+					);
+					if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
+						(ctx.ui as any).notify(
+							`◈ PERF ALERT: ${perfRes.allocationsCount} allocs en frame loop de ${filePath.split("/").pop()}`,
+							"warning",
+						);
+					}
 				}
 			}
 		}
@@ -568,10 +641,19 @@ export default function (pi: ExtensionAPI) {
 		if (studioRoot) {
 			const activeLang = getLanguage(studioRoot);
 			const setup = inspectSetup(studioRoot);
+			const jamActive = isJamModeActive(studioRoot);
 
 			if (event?.systemPromptOptions) {
 				if (!event.systemPromptOptions.promptGuidelines) {
 					event.systemPromptOptions.promptGuidelines = [];
+				}
+
+				if (jamActive) {
+					event.systemPromptOptions.promptGuidelines.push(
+						"⚡ GAME JAM / RAPID PROTOTYPING MODE IS ACTIVE: Maximum iteration velocity is prioritized. " +
+						"Silence non-critical confirmation prompts, bypass formalities, and focus immediately on producing working, playable gameplay. " +
+						"Strict performance guard budgets are relaxed into soft warnings for rapid prototyping. Move fast and iterate."
+					);
 				}
 
 				if (activeLang === "es") {
@@ -650,8 +732,18 @@ export default function (pi: ExtensionAPI) {
 
 	pi.on("turn_start", handleAgentTurnStart);
 	(pi as any).on?.("before_agent_start", handleAgentTurnStart);
-	(pi as any).on?.("turn_end", async (_event: any, ctx: any) => {
+	(pi as any).on?.("turn_end", async (event: any, ctx: any) => {
 		try {
+			if (event?.usage || (event as any)?.tokens) {
+				const usage = event?.usage || (event as any)?.tokens;
+				const inT = usage?.inputTokens ?? usage?.prompt_tokens ?? usage?.input ?? 0;
+				const outT = usage?.outputTokens ?? usage?.completion_tokens ?? usage?.output ?? 0;
+				const cacheT = usage?.cacheReadTokens ?? usage?.cache_tokens ?? usage?.cache ?? 0;
+				const modelId = (ctx as any)?.model?.id || (ctx as any)?.model || "inherit";
+				if (inT > 0 || outT > 0) {
+					recordTokenUsage("parent", modelId, inT, outT, cacheT);
+				}
+			}
 			updateStudioHUD(ctx, pi);
 			updateTasksWidget(ctx);
 			updateSubagentsWidget(ctx);

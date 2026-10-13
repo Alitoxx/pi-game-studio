@@ -215,8 +215,9 @@ export function renderStudioStatusCard(
 
 	const gameTitle = prodState?.gameTitle || "Sin título";
 	const rawEngine = prodState?.engine || setup.currentEngine || "Sin configurar";
-	const engine = rawEngine === "Sin configurar" ? "Sin motor (/start)" : rawEngine;
-	const milestone = prodState?.milestone || "M1 — Prototipo";
+	const isEngineUnconfigured = rawEngine === "Sin configurar" || !rawEngine || rawEngine.toLowerCase() === "sin motor";
+	const engine = isEngineUnconfigured ? "Sin motor (/studio:setup)" : rawEngine;
+	const milestone = prodState?.milestone || "Pendiente (/concept)";
 	const sprint = prodState?.sprint || "Sprint Activo";
 	const modelStr = formatModelDisplayName(model, thinking);
 	const phaseChip = inferOddPhase(prodState);
@@ -296,8 +297,9 @@ export function renderStudioFooterBar(
 	const usage = extractContextUsage(ctx);
 
 	const rawEngine = prodState?.engine || setup.currentEngine || "Sin configurar";
-	const engineDisplay = rawEngine === "Sin configurar" ? "Sin motor (/start)" : rawEngine;
-	const milestone = prodState?.milestone || "M1 — Prototipo";
+	const isEngineUnconfigured = rawEngine === "Sin configurar" || !rawEngine || rawEngine.toLowerCase() === "sin motor";
+	const engineDisplay = isEngineUnconfigured ? "Sin configurar" : rawEngine;
+	const milestone = prodState?.milestone || "Pendiente (/concept)";
 	const sprint = prodState?.sprint || "Sprint Activo";
 	const phaseChip = inferOddPhase(prodState);
 
@@ -400,8 +402,9 @@ export function updateStudioHUD(ctx: ExtensionContext, pi?: ExtensionAPI): void 
 			: undefined;
 
 		const rawEngine = prodState?.engine || setup.currentEngine || "Sin configurar";
-		const engineDisplay = rawEngine === "Sin configurar" ? "Sin motor (/start)" : rawEngine;
-		const milestone = prodState?.milestone || "M1 — Prototipo";
+		const isEngineUnconfigured = rawEngine === "Sin configurar" || !rawEngine || rawEngine.toLowerCase() === "sin motor";
+		const engineDisplay = isEngineUnconfigured ? "Sin configurar" : rawEngine;
+		const milestone = prodState?.milestone || "Pendiente (/concept)";
 		const sprint = prodState?.sprint || "Sprint Activo";
 		const phaseChip = inferOddPhase(prodState);
 		const contextDisplay = usage ? `${usage.percent}%` : "100%";

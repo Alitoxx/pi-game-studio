@@ -27,8 +27,8 @@ export function recordFlowCompletion(cwd: string, receipt: FlowCompletionReceipt
 	mkdirSync(join(roadmapPath, ".."), { recursive: true });
 
 	const gameTitle = state?.gameTitle || "Mi Videojuego";
-	const engine = state?.engine || "Bevy";
-	const milestone = state?.milestone || "M1 — Prototipo Jugable";
+	const engine = state?.engine || "Sin motor";
+	const milestone = state?.milestone || "M0 — Concepto";
 	const sprint = state?.sprint || "Sprint 1";
 	const next = receipt.nextStep || state?.nextStep || "Siguiente tarea de desarrollo";
 

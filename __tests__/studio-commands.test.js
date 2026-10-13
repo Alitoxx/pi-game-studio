@@ -184,6 +184,121 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 		expect(testResolve("/tmp")).toBeNull();
 	});
 
+	test("findStudioRoot respects .pi boundaries and prevents inheriting parent studio root", () => {
+		const { execFileSync } = require("child_process");
+		const script = `
+			const { findStudioRoot } = await import("./extensions/hooks/studio-root.ts");
+			const path = await import("node:path");
+			const fs = await import("node:fs");
+
+			const studioRoot = path.resolve(".");
+			if (findStudioRoot(studioRoot) !== studioRoot) {
+				throw new Error("Failed to find studio root from root");
+			}
+
+			// Project like mi-primer-juego with .pi/agents or .pi/settings.json or .pi/extensions
+			const neighborProject = "/home/alexis/Games/mi-primer-juego";
+			if (fs.existsSync(neighborProject)) {
+				if (findStudioRoot(neighborProject) !== neighborProject) {
+					throw new Error("Failed to detect neighbor project as boundary: " + findStudioRoot(neighborProject));
+				}
+				if (findStudioRoot(path.join(neighborProject, "production")) !== neighborProject) {
+					throw new Error("Failed to detect neighbor project from subdir: " + findStudioRoot(path.join(neighborProject, "production")));
+				}
+			}
+
+			// A directory with .pi must never traverse upwards to parent studio
+			const tmpDir = path.join(studioRoot, "sandbox", "test-child-project-" + Date.now());
+			const tmpPi = path.join(tmpDir, ".pi");
+			fs.mkdirSync(tmpPi, { recursive: true });
+			try {
+				if (findStudioRoot(tmpDir) !== null) {
+					throw new Error("Must stop search at .pi and return null, but returned: " + findStudioRoot(tmpDir));
+				}
+				fs.mkdirSync(path.join(tmpPi, "agents"), { recursive: true });
+				if (findStudioRoot(tmpDir) !== tmpDir) {
+					throw new Error("Should recognize .pi/agents as project boundary");
+				}
+			} finally {
+				fs.rmSync(tmpDir, { recursive: true, force: true });
+			}
+		`;
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.resolve(__dirname, ".."),
+			});
+		}).not.toThrow();
+	});
+
+	test("recordFlowCompletion uses 'Sin motor' and 'M0 — Concepto' fallbacks without Bevy hardcoded", () => {
+		const startSource = fs.readFileSync(
+			path.join(__dirname, "..", "extensions", "hooks", "studio-start.ts"),
+			"utf8",
+		);
+
+		expect(startSource).not.toContain('state?.engine || "Bevy"');
+		expect(startSource).toContain('state?.engine || "Sin motor"');
+		expect(startSource).not.toContain('state?.milestone || "M1 — Prototipo Jugable"');
+		expect(startSource).toContain('state?.milestone || "M0 — Concepto"');
+
+		// Behavioral verification of recordFlowCompletion unconfigured fallback block
+		function generateProducerStateBlock(state, receipt) {
+			const gameTitle = state?.gameTitle || "Mi Videojuego";
+			const engine = state?.engine || "Sin motor";
+			const milestone = state?.milestone || "M0 — Concepto";
+			const sprint = state?.sprint || "Sprint 1";
+			const next = receipt.nextStep || state?.nextStep || "Siguiente tarea de desarrollo";
+
+			return [
+				"<!-- PRODUCER_STATE -->",
+				`Juego: ${gameTitle}`,
+				`Motor: ${engine}`,
+				`Hito Actual: ${milestone}`,
+				`Sprint Activo: ${sprint}`,
+				`Última Tarea Completada: ${receipt.task}`,
+				`En Progreso: ${next}`,
+				`Siguiente Paso: ${next}`,
+				"<!-- /PRODUCER_STATE -->",
+			].join("\n");
+		}
+
+		const unconfiguredBlock = generateProducerStateBlock(undefined, { task: "Definir concepto" });
+		expect(unconfiguredBlock).toContain("Motor: Sin motor");
+		expect(unconfiguredBlock).toContain("Hito Actual: M0 — Concepto");
+		expect(unconfiguredBlock).not.toContain("Bevy");
+		expect(unconfiguredBlock).not.toContain("M1");
+	});
+
+	test("studio-hud and banner fallbacks do not use Bevy or phantom M1 milestone when unconfigured", () => {
+		const hudSource = fs.readFileSync(
+			path.join(__dirname, "..", "extensions", "hooks", "studio-hud.ts"),
+			"utf8",
+		);
+		const bannerSource = fs.readFileSync(
+			path.join(__dirname, "..", "extensions", "hooks", "banner.ts"),
+			"utf8",
+		);
+		const startSource = fs.readFileSync(
+			path.join(__dirname, "..", "extensions", "hooks", "studio-start.ts"),
+			"utf8",
+		);
+
+		// studio-start: no Bevy fallback
+		expect(startSource).not.toContain('state?.engine || "Bevy"');
+		expect(startSource).toContain('state?.engine || "Sin motor"');
+		expect(startSource).toContain('state?.milestone || "M0 — Concepto"');
+
+		// studio-hud: milestone fallback is Pendiente (/concept)
+		expect(hudSource).toContain('prodState?.milestone || "Pendiente (/concept)"');
+		expect(hudSource).toContain('"Sin motor (/studio:setup)"');
+		expect(hudSource).toContain('"Sin configurar"');
+
+		// banner: stage fallback is Pendiente setup (/studio:setup) and engine fallback is Sin motor
+		expect(bannerSource).toContain("Pendiente setup (/studio:setup)");
+		expect(bannerSource).toContain('"Sin motor"');
+		expect(bannerSource).not.toContain("Pendiente setup (/start)");
+	});
+
 	test("detectProjectEngine correctly identifies all 3 starters and their languages", () => {
 		const detectorSource = fs.readFileSync(
 			path.join(__dirname, "..", "extensions", "hooks", "engine-detector.ts"),

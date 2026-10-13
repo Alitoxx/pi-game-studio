@@ -103,16 +103,23 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 		}
 	} catch {}
 
+	const setup = inspectSetup(root);
+	const { state: prodState } = readProducerState(root);
+
 	// Engine
 	const engineResult = detectProjectEngine(root);
 	let engineInfo = formatEngineBadge(engineResult);
-	if (!engineResult.detected) {
-		engineInfo = "Godot · Unity · Unreal · Bevy · Raylib";
+	const hasConfiguredEngine = engineResult.detected ||
+		(prodState?.engine && prodState.engine !== "Sin motor" && prodState.engine !== "Sin configurar") ||
+		(setup.currentEngine && setup.currentEngine !== "Sin configurar");
+
+	if (!hasConfiguredEngine) {
+		engineInfo = "Sin motor";
+	} else if (!engineResult.detected) {
+		engineInfo = prodState?.engine || setup.currentEngine || "Godot · Unity · Unreal · Bevy · Raylib";
 	}
 
-	const setup = inspectSetup(root);
-	const { state: prodState } = readProducerState(root);
-	const stage = prodState?.milestone || (setup.isConfigured ? "Entorno OK" : "Pendiente setup (/start)");
+	const stage = prodState?.milestone || (setup.isConfigured ? "Entorno OK" : "Pendiente setup (/studio:setup)");
 	const gitBranch = getGitBranch(root);
 	const shortPath = root.replace(process.env.HOME || "", "~");
 

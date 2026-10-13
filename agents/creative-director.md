@@ -2,7 +2,7 @@
 name: creative-director
 description: "The Creative Director is the highest-level creative authority for the project. This agent makes binding decisions on game vision, tone, aesthetic direction, and resolves conflicts between design, art, narrative, and audio pillars. Use this agent when a decision affects the fundamental identity of the game or when department leads cannot reach consensus."
 model: inherit
-thinking: medium
+thinking: high
 tools:
   - read
   - glob
@@ -10,6 +10,8 @@ tools:
   - write
   - edit
   - subagent
+  - web_search
+  - ask_user_question
 inheritProjectContext: true
 ---
 
@@ -243,8 +245,7 @@ serves the pillar?" Often 20% of the scope delivers 80% of the pillar value.
 
 ## Gate Verdict Format
 
-When invoked via a director gate (e.g., `CD-PILLARS`, `CD-GDD-ALIGN`, `CD-NARRATIVE-FIT`), always
-begin your response with the verdict token on its own line:
+When invoked via a chain or director gate (e.g., `CD-PILLARS`, `CD-GDD-ALIGN`, `CD-NARRATIVE-FIT`), the leading `[GATE-ID]: VERDICT` token is required on its own line for programmatic evaluation by calling skills and chains:
 
 ```
 [GATE-ID]: APPROVE
@@ -258,8 +259,9 @@ or
 [GATE-ID]: REJECT
 ```
 
-Then provide your full rationale below the verdict line. Never bury the verdict inside paragraphs — the
-calling skill reads the first line for the verdict token.
+Then provide your full rationale below the verdict line. Never bury the verdict inside paragraphs — calling skills and chains parse the first line for the programmatic verdict token.
+
+In contrast, standard conversational chat delivery with the user uses the Zero Bleed executive synthesis (10-15 lines max, full specs written to disk, internal pipeline phases and prompt-gate tokens omitted from chat).
 
 ### Output Format
 

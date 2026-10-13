@@ -71,12 +71,12 @@ Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar 
 
 #### `producer`
 - **Archivo:** [`agents/producer.md`](file:///Users/alexis/Developer/pi-game-studio/agents/producer.md)
-- **Presupuesto de Razonamiento:** `high` | **Herramientas:** `read, glob, grep, write, edit, bash, web_search`
+- **Presupuesto de Razonamiento:** `high` | **Herramientas:** `read, glob, grep, write, edit, bash, web_search, subagent, ask_user_question`
 - **Misión y Alcance:** The Producer manages all production concerns: sprint planning, milestone tracking, risk management, scope negotiation, and cross-department coordination. This is the primary coordination agent.
 
 #### `creative-director`
 - **Archivo:** [`agents/creative-director.md`](file:///Users/alexis/Developer/pi-game-studio/agents/creative-director.md)
-- **Presupuesto de Razonamiento:** `high` | **Herramientas:** `read, glob, grep, write, edit, web_search`
+- **Presupuesto de Razonamiento:** `high` | **Herramientas:** `read, glob, grep, write, edit, web_search, subagent, ask_user_question`
 - **Misión y Alcance:** The Creative Director is the highest-level creative authority for the project. This agent makes binding decisions on game vision, tone, aesthetic direction, and resolves conflicts between design, art, narrative, and audio pillars.
 
 #### `technical-director`

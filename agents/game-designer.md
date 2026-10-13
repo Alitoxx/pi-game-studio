@@ -9,6 +9,8 @@ tools:
   - grep
   - write
   - edit
+  - web_search
+  - ask_user_question
 inheritProjectContext: true
 ---
 

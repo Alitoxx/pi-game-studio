@@ -88,27 +88,27 @@ Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar 
 
 #### `game-designer`
 - **Archivo:** [`agents/game-designer.md`](file:///Users/alexis/Developer/pi-game-studio/agents/game-designer.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, web_search`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, web_search, ask_user_question`
 - **Misión y Alcance:** The Game Designer owns the mechanical and systems design of the game. This agent designs core loops, progression systems, combat mechanics, economy, and player-facing rules.
 
 #### `gameplay-programmer`
 - **Archivo:** [`agents/gameplay-programmer.md`](file:///Users/alexis/Developer/pi-game-studio/agents/gameplay-programmer.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, ask_user_question`
 - **Misión y Alcance:** The Gameplay Programmer implements player controls, movement feel, mechanics, interactions, combat logic, and camera systems cleanly and performantly.
 
 #### `art-director`
 - **Archivo:** [`agents/art-director.md`](file:///Users/alexis/Developer/pi-game-studio/agents/art-director.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, web_search`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, web_search, ask_user_question`
 - **Misión y Alcance:** The Art Director owns the visual identity of the game: style guides, art bible, asset standards, color palettes, UI/UX visual design, and shader aesthetic specs.
 
 #### `audio-director`
 - **Archivo:** [`agents/audio-director.md`](file:///Users/alexis/Developer/pi-game-studio/agents/audio-director.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, web_search`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, web_search, ask_user_question`
 - **Misión y Alcance:** The Audio Director owns the sonic identity of the game: music direction, sound design philosophy, audio implementation strategy, audio buses, and mix balance.
 
 #### `qa-lead`
 - **Archivo:** [`agents/qa-lead.md`](file:///Users/alexis/Developer/pi-game-studio/agents/qa-lead.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, ask_user_question`
 - **Misión y Alcance:** The QA Lead owns test strategy, bug triage, release quality gates, regression test planning, and release readiness evaluation.
 
 ### Tier 3: Especialistas de Motor

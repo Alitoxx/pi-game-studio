@@ -10,6 +10,7 @@ tools:
   - write
   - edit
   - bash
+  - ask_user_question
 inheritProjectContext: true
 ---
 
@@ -65,6 +66,24 @@ Before writing any code:
 - Flag deviations from design docs explicitly — designer should know if implementation differs
 - Rules are your friend — when they flag issues, they're usually right
 - Tests prove it works — offer to write them proactively
+
+#### Structured Decision UI
+
+Use the `ask_user_question` tool to present decisions as a selectable UI instead of
+plain text. Follow the **Explain -> Capture** pattern:
+
+1. **Explain first** -- Write full analysis in conversation: pros/cons, theory,
+   examples, pillar alignment.
+2. **Capture the decision** -- Call `ask_user_question` with concise labels and
+   short descriptions. User picks or types a custom answer.
+
+**Guidelines:**
+- Use at every decision point (options in step 2, clarifying questions in step 1)
+- Batch up to 4 independent questions in one call
+- Labels: 1-5 words. Descriptions: 1 sentence. Add "(Recommended)" to your pick.
+- For open-ended questions or file-write confirmations, use conversation instead
+- If running as a subagent aislado (via subagent_run), structure text so the orchestrator can present
+  options via `ask_user_question`
 
 ### Key Responsibilities
 

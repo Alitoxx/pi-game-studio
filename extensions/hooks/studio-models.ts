@@ -204,10 +204,10 @@ async function configureTierModels(
 		config.workhorse = workPick;
 	}
 
-	// Ligeros
+	// Especialistas
 	const lightPick = await promptModelForRole(
 		ctx,
-		"Tier 3 — Ligeros (Comunidad, DevOps, Sonido)",
+		"Tier 3 — Especialistas de Motor",
 		"lightweight",
 		config.lightweight || "openrouter/openai/gpt-oss-20b:free",
 	);
@@ -225,17 +225,19 @@ async function configureAgentModel(
 	const config = { ...base };
 
 	const agents = [
+		"producer",
 		"creative-director",
 		"technical-director",
 		"game-designer",
-		"lead-programmer",
+		"gameplay-programmer",
+		"art-director",
+		"audio-director",
+		"qa-lead",
+		"bevy-specialist",
 		"godot-specialist",
+		"raylib-specialist",
 		"unity-specialist",
 		"unreal-specialist",
-		"bevy-specialist",
-		"raylib-specialist",
-		"art-director",
-		"qa-lead",
 		"✏️ Escribir otro nombre de agente...",
 	];
 
@@ -243,8 +245,8 @@ async function configureAgentModel(
 	if (!pick) return config;
 
 	let target = agents[pick.index];
-	if (pick.index === 11) {
-		target = await promptInputSafe(ctx, "Nombre del agente (ej. level-designer):", "gameplay-programmer");
+	if (pick.index === agents.length - 1) {
+		target = await promptInputSafe(ctx, "Nombre del agente (ej. gameplay-programmer):", "gameplay-programmer");
 	}
 
 	const chosenModel = await promptModelForRole(
@@ -271,6 +273,9 @@ function formatModelsList(cfg: Record<string, string>): string {
 
 	const allInherit = dirModel === "inherit" && workModel === "inherit" && lightModel === "inherit";
 
+	const TIER_1 = ["producer", "creative-director", "technical-director"];
+	const TIER_3 = ["bevy-specialist", "godot-specialist", "raylib-specialist", "unity-specialist", "unreal-specialist"];
+
 	// An override is an agent explicitly configured with a model different from its role/tier default
 	const overrides = Object.entries(cfg)
 		.filter(([k, v]) => {
@@ -278,9 +283,9 @@ function formatModelsList(cfg: Record<string, string>): string {
 			// If all tiers inherit, any agent set to "inherit" is not an override
 			if (allInherit && v === "inherit") return false;
 			// If tier 1 agent equals dirModel, it's not an override
-			if (["creative-director", "technical-director", "producer"].includes(k) && v === dirModel) return false;
-			// If tier 3 agent equals lightModel, it's not an override
-			if (["community-manager", "devops-engineer", "sound-designer"].includes(k) && v === lightModel) return false;
+			if (TIER_1.includes(k) && v === dirModel) return false;
+			// If tier 3 specialist equals lightModel or workModel, it's not an override
+			if (TIER_3.includes(k) && (v === lightModel || v === workModel)) return false;
 			// If tier 2 agent equals workModel, it's not an override
 			if (v === workModel) return false;
 			return true;
@@ -290,13 +295,13 @@ function formatModelsList(cfg: Record<string, string>): string {
 	const lines = [
 		"┌── STUDIO MODELS: ASIGNACIÓN Y MONITOR DE CUOTAS POR TIER ──────┐",
 		`│ • Tier 1 (Directores - Visión & Gating):   ${dirModel.padEnd(27)} │`,
-		`│ • Tier 2 (Workhorses - Código & Sistemas): ${workModel.padEnd(27)} │`,
-		`│ • Tier 3 (Ligeros - Ops & Comunidad):      ${lightModel.padEnd(27)} │`,
+		`│ • Tier 2 (Leads & Core Devs - Mecánicas):  ${workModel.padEnd(27)} │`,
+		`│ • Tier 3 (Especialistas de Motor):         ${lightModel.padEnd(27)} │`,
 		"├─────────────────────────────────────────────────────────────────┤",
 		"│ PRESUPUESTO & REASONING BUDGET:                                 │",
 		"│ • Tier 1: Thinking 'high'   (Estrategia, arquitectura, triaje)  │",
 		"│ • Tier 2: Thinking 'medium' (Implementación, mecánicas, tests) │",
-		"│ • Tier 3: Thinking 'low'    (Scripts, logs, tareas operativas)  │",
+		"│ • Tier 3: Thinking 'medium' (Motor idiomático, shaders, build) │",
 		"└─────────────────────────────────────────────────────────────────┘",
 	];
 
@@ -339,9 +344,9 @@ async function promptInputSafe(
 
 async function configureThinkingEffort(ctx: ExtensionContext): Promise<void> {
 	const targets = [
-		"Tier 1 — Directores (creative-director, technical-director, producer)",
-		"Tier 2 — Workhorses & Leads (gameplay, engine, systems, etc.)",
-		"Tier 3 — Ligeros & Soporte (community-manager, devops, sound)",
+		"Tier 1 — Directores (producer, creative-director, technical-director)",
+		"Tier 2 — Leads & Core Devs (game-designer, gameplay-programmer, etc.)",
+		"Tier 3 — Especialistas de Motor (bevy, godot, raylib, unity, unreal)",
 		"Personalizar un agente específico...",
 	];
 
@@ -370,19 +375,28 @@ async function configureThinkingEffort(ctx: ExtensionContext): Promise<void> {
 	const pkgRoot = resolvePackageRoot();
 	const agentsDirs = [join(ctx.cwd, ".pi", "agents"), join(pkgRoot, "agents")].filter(existsSync);
 
-	const TIER_1 = ["creative-director", "technical-director", "producer"];
-	const TIER_3 = ["community-manager", "devops-engineer", "sound-designer"];
+	const TIER_1 = ["producer", "creative-director", "technical-director"];
+	const TIER_2 = [
+		"game-designer",
+		"gameplay-programmer",
+		"art-director",
+		"audio-director",
+		"qa-lead",
+	];
+	const TIER_3 = [
+		"bevy-specialist",
+		"godot-specialist",
+		"raylib-specialist",
+		"unity-specialist",
+		"unreal-specialist",
+	];
 
 	let affectedCount = 0;
 
 	if (targetChoice.index === 0) {
 		affectedCount = updateAgentsThinking(agentsDirs, TIER_1, level);
 	} else if (targetChoice.index === 1) {
-		affectedCount = updateAgentsThinking(
-			agentsDirs,
-			(name) => !TIER_1.includes(name) && !TIER_3.includes(name),
-			level,
-		);
+		affectedCount = updateAgentsThinking(agentsDirs, TIER_2, level);
 	} else if (targetChoice.index === 2) {
 		affectedCount = updateAgentsThinking(agentsDirs, TIER_3, level);
 	} else {

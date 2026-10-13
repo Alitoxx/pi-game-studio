@@ -396,6 +396,7 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 			"utf8",
 		);
 		expect(source).toContain("registerAskUserQuestion");
+		expect(source).toContain("StudioQuestionnaireComponent");
 		expect(source).toContain('name: "ask_user_question"');
 		expect(source).not.toContain('name: "ask_user_choice"');
 		expect(source).toContain("Otro (escribir respuesta personalizada)...");
@@ -532,6 +533,222 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 		expect(resBatch.details.answers[0].custom).toBeUndefined();
 		expect(resBatch.details.answers[1].answer).toBe("modelo-custom-gpt-5");
 		expect(resBatch.details.answers[1].custom).toBe(true);
+	});
+
+	test("StudioQuestionnaireComponent provides interactive TUI tab strip, cursor movement, drafts, and inline custom editor", () => {
+		const { execFileSync } = require("child_process");
+		const script = `
+			const { StudioQuestionnaireComponent, OTHER_LABEL } = await import("./extensions/hooks/studio-choice.ts");
+
+			const sampleQuestions = [
+				{
+					question: "¿Qué motor prefieres?",
+					header: "Paso 1: Motor",
+					options: [
+						{ label: "Godot 4", description: "Excelente 2D y 3D ligero" },
+						{ label: "Bevy", description: "Rust ECS de alto rendimiento" },
+					],
+				},
+				{
+					question: "¿Qué género desarrollarás?",
+					header: "Paso 2: Género",
+					options: [
+						{ label: "ARPG 2D", description: "Hack and slash con inventario" },
+						{ label: "Plataformas", description: "Salto y plataformas de precisión" },
+					],
+				},
+			];
+
+			let completedResult = null;
+			let renderRequested = 0;
+			const mockTui = {
+				requestRender: () => { renderRequested++; },
+			};
+
+			const component = new StudioQuestionnaireComponent(
+				sampleQuestions,
+				mockTui,
+				{},
+				(res) => { completedResult = res; },
+			);
+
+			// 1. Initial render tab strip assertions
+			const tabsInitial = component.renderTabs();
+			if (!tabsInitial.includes("[1/2]")) throw new Error("Missing progress [1/2]");
+			if (!tabsInitial.includes("▸") || !tabsInitial.includes("Paso 1: Motor")) throw new Error("Step 1 should be active");
+			if (!tabsInitial.includes("Paso 2: Género")) throw new Error("Step 2 should be in tabs");
+
+			// 2. Initial body assertions
+			const renderedLines = component.render(80);
+			const fullText = renderedLines.join("\\n");
+			if (!fullText.includes("¿Qué motor prefieres?")) throw new Error("Missing question title");
+			if (!fullText.includes("Godot 4")) throw new Error("Missing Godot 4 option");
+			if (!fullText.includes("Excelente 2D y 3D ligero")) throw new Error("Missing dimmed description");
+			if (!fullText.includes("Otro (escribir respuesta personalizada)...")) throw new Error("Missing custom response row");
+
+			// 3. Navigation: Down arrow moves cursor to Bevy
+			component.handleInput("\\x1b[B"); // Down
+			if (component.cursor[0] !== 1) throw new Error("Cursor should be 1");
+
+			// 4. Enter on Bevy selects answer and advances to Paso 2
+			component.handleInput("\\r"); // Enter
+			if (component.activeQuestion !== 1) throw new Error("Should advance to question 1");
+			if (!component.answers[0] || component.answers[0].answer !== "Bevy") throw new Error("Answer 0 should be Bevy");
+
+			// Tab strip now shows answered checkmark for Paso 1 and active indicator for Paso 2
+			const tabsStep2 = component.renderTabs();
+			if (!tabsStep2.includes("[2/2]")) throw new Error("Missing progress [2/2]");
+			if (!tabsStep2.includes("✓") || !tabsStep2.includes("Paso 1: Motor")) throw new Error("Step 1 should show checkmark ✓");
+			if (!tabsStep2.includes("▸") || !tabsStep2.includes("Paso 2: Género")) throw new Error("Step 2 should be active ▸");
+
+			// 5. Tab / Shift+Tab switches questions and keeps drafts/selections
+			component.handleInput("\\x1b[Z"); // Shift+Tab back to Step 1
+			if (component.activeQuestion !== 0) throw new Error("Should be back at question 0");
+			component.handleInput("\\t"); // Tab to Step 2
+			if (component.activeQuestion !== 1) throw new Error("Should be back at question 1");
+
+			// 6. Navigate to custom row on Step 2 (options: 0, 1 -> custom row is index 2)
+			component.handleInput("\\x1b[B"); // cursor 1 (Plataformas)
+			component.handleInput("\\x1b[B"); // cursor 2 (Otro...)
+			if (component.cursor[1] !== 2) throw new Error("Cursor should be on custom row (2)");
+
+			// Enter opens inline custom text editor
+			component.handleInput("\\r");
+			if (!component.isEditingCustom) throw new Error("Should enter inline text editor mode");
+
+			// Type 'Metroidvania'
+			for (const char of "Metroidvania") {
+				component.handleInput(char);
+			}
+			if (component.drafts[1] !== "Metroidvania") throw new Error("Draft should be Metroidvania");
+
+			// Test Backspace
+			component.handleInput("\\x7f"); // deletes 'a'
+			component.handleInput("a"); // re-adds 'a'
+
+			// Enter commits custom answer and since step 2 is the last question and all answered -> submits!
+			component.handleInput("\\r");
+			if (completedResult === null) throw new Error("Questionnaire should be completed");
+			if (completedResult.cancelled) throw new Error("Questionnaire should not be cancelled");
+			if (completedResult.answers.length !== 2) throw new Error("Should have 2 answers");
+			if (completedResult.answers[0].answer !== "Bevy") throw new Error("Answer 0 should be Bevy");
+			if (completedResult.answers[1].answer !== "Metroidvania") throw new Error("Answer 1 should be Metroidvania");
+			if (!completedResult.answers[1].custom) throw new Error("Answer 1 should have custom: true");
+
+			// 7. Cancellation test
+			let cancelled = false;
+			const comp2 = new StudioQuestionnaireComponent(
+				sampleQuestions,
+				mockTui,
+				{},
+				(res) => { cancelled = res.cancelled; },
+			);
+			comp2.handleInput("q");
+			if (!cancelled) throw new Error("comp2 should be cancelled with 'q'");
+
+			// 8. k/j navigation and footer hint check
+			const comp3 = new StudioQuestionnaireComponent(
+				sampleQuestions,
+				mockTui,
+				{},
+				() => {},
+			);
+			comp3.handleInput("j"); // j moves down
+			if (comp3.cursor[0] !== 1) throw new Error("'j' should move cursor down");
+			comp3.handleInput("k"); // k moves up
+			if (comp3.cursor[0] !== 0) throw new Error("'k' should move cursor up");
+			const footer = comp3.renderFooter();
+			if (!footer.includes("↑↓ navegar") || !footer.includes("enter seleccionar") || !footer.includes("tab cambiar pregunta") || !footer.includes("esc cancelar")) {
+				throw new Error("Footer missing expected navigation hints: " + footer);
+			}
+
+			// 9. Jump to last question before step 1 is answered: pressing Enter jumps to unanswered step 1
+			const comp4 = new StudioQuestionnaireComponent(
+				sampleQuestions,
+				mockTui,
+				{},
+				() => {},
+			);
+			comp4.handleInput("\\t"); // Tab to step 2
+			if (comp4.activeQuestion !== 1) throw new Error("Should be at question 1");
+			comp4.handleInput("\\r"); // Enter on step 2 option 0
+			if (comp4.activeQuestion !== 0) throw new Error("Should jump back to unanswered question 0");
+			if (!comp4.answers[1]) throw new Error("Step 2 should have recorded answer");
+		`;
+
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.resolve(__dirname, ".."),
+			});
+		}).not.toThrow();
+	});
+
+	test("ask_user_question mounts StudioQuestionnaireComponent when ctx.mode === 'tui' and ctx.ui.custom is available", async () => {
+		const { execFileSync } = require("child_process");
+		const script = `
+			const { registerAskUserQuestion } = await import("./extensions/hooks/studio-choice.ts");
+
+			let registeredTool = null;
+			const mockPi = {
+				hasTool: () => false,
+				registerTool: (t) => { registeredTool = t; },
+			};
+
+			registerAskUserQuestion(mockPi);
+			if (!registeredTool) throw new Error("Tool not registered");
+
+			// Mock interactive TUI context
+			let customComponentMounted = null;
+			const mockCtx = {
+				hasUI: true,
+				mode: "tui",
+				ui: {
+					custom: async (factory) => {
+						const mockTui = { requestRender: () => {} };
+						const comp = factory(mockTui, {}, {}, (result) => {
+							mockCtx._lastResult = result;
+						});
+						customComponentMounted = comp;
+						// Simulate user selecting option 0 on question 1 (advance), option 0 on question 2 (finish)
+						comp.handleInput("\\r");
+						comp.handleInput("\\r");
+						return mockCtx._lastResult;
+					},
+				},
+			};
+
+			const result = await registeredTool.execute(
+				"test-id",
+				{
+					questions: [
+						{ question: "Q1", header: "Paso 1", options: [{ label: "A" }, { label: "B" }] },
+						{ question: "Q2", header: "Paso 2", options: [{ label: "X" }, { label: "Y" }] },
+					],
+				},
+				undefined,
+				undefined,
+				mockCtx,
+			);
+
+			if (!result || !result.details || !result.details.answers) {
+				throw new Error("Missing answers in result details");
+			}
+			if (result.details.answers.length !== 2) {
+				throw new Error("Expected 2 answers, got: " + result.details.answers.length);
+			}
+			if (result.details.answers[0].answer !== "A" || result.details.answers[1].answer !== "X") {
+				throw new Error("Unexpected answer values");
+			}
+			if (!result.content[0].text.includes("1. Q1 -> A")) {
+				throw new Error("Missing summary text for Q1");
+			}
+		`;
+
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.resolve(__dirname, ".."),
+			});
+		}).not.toThrow();
 	});
 
 	test("studio-doctor.ts exports handleStudioDoctor, auditProjectStructure and adheres to sober TUI", () => {

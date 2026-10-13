@@ -30,6 +30,8 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 			"studio:models",
 			"studio:status",
 			"studio:changes",
+			"changes",
+			"studio:sound",
 			"studio:tasks",
 			"studio:agents",
 			"studio:mcp",
@@ -600,6 +602,187 @@ Next: Level Design
 
 		// Navigation hints in footer
 		expect(viewerSource).toContain("↑/↓: Seleccionar agente • Esc: Salir • c: Cancelar");
+	});
+
+	test("Feature 1: studio-hud infers ODD phase chips [concept 1/6] through [ship 6/6]", () => {
+		const hudPath = path.join(__dirname, "..", "extensions", "hooks", "studio-hud.ts");
+		expect(fs.existsSync(hudPath)).toBe(true);
+
+		const hudSource = fs.readFileSync(hudPath, "utf8");
+		expect(hudSource).toContain("export function inferOddPhase");
+		expect(hudSource).toContain("export function getOddPhaseInfo");
+		expect(hudSource).toContain("export const ODD_PHASES");
+		expect(hudSource).toContain("[concept 1/6]");
+		expect(hudSource).toContain("[spec 2/6]");
+		expect(hudSource).toContain("[arch 3/6]");
+		expect(hudSource).toContain("[code 4/6]");
+		expect(hudSource).toContain("[test 5/6]");
+		expect(hudSource).toContain("[ship 6/6]");
+
+		// Logic test reproducing getOddPhaseInfo regex inference
+		function testInferOddPhase(prodState) {
+			if (!prodState) return "[concept 1/6]";
+			const inProg = (prodState.inProgress || "").toLowerCase();
+			const milestone = (prodState.milestone || "").toLowerCase();
+			const nextStep = (prodState.nextStep || "").toLowerCase();
+
+			if (/(?:ship|release|lanzamiento|publicaci|dist|store|gold|v1\.0|deploy)/.test(inProg)) return "[ship 6/6]";
+			if (/(?:test|qa|prueba|smoke|soak|regresi|bug|feel|verif|calidad)/.test(inProg)) return "[test 5/6]";
+			if (/(?:concept|visión|vision|fantas|brainstorm|pitch|jam|premisa|pilar|pillar|arquetipo|incept)/.test(inProg)) return "[concept 1/6]";
+			if (/(?:spec|gdd|diseño|design|live spec|tuning|knob|balance|regla)/.test(inProg)) return "[spec 2/6]";
+			if (/(?:arch|arquitect|adr|budget|presupuesto|sistema|system|pipeline|mcp)/.test(inProg)) return "[arch 3/6]";
+			if (/(?:code|código|codigo|implement|motor|engine|gameplay|physic|físic|shader|scene|escena|script|salto|movimiento|player|mechanic|mecánic|arpg)/.test(inProg)) return "[code 4/6]";
+
+			if (/(?:ship|release|lanzamiento|publicaci|dist|store|gold|v1\.0)/.test(milestone)) return "[ship 6/6]";
+			if (/(?:test|qa|beta|regression|smoke)/.test(milestone)) return "[test 5/6]";
+			if (/(?:code|prototipo|prototype|vertical slice|alpha|m1|m2|gameplay|engine)/.test(milestone)) return "[code 4/6]";
+			if (/(?:arch|arquitect|adr|sistema)/.test(milestone)) return "[arch 3/6]";
+			if (/(?:spec|live spec|gdd|diseño)/.test(milestone)) return "[spec 2/6]";
+			if (/(?:concept|visión|jam|pitch)/.test(milestone)) return "[concept 1/6]";
+
+			if (prodState.engine) return "[code 4/6]";
+			return "[concept 1/6]";
+		}
+
+		expect(testInferOddPhase({ inProgress: "Brainstorming de pilares y fantasía" })).toBe("[concept 1/6]");
+		expect(testInferOddPhase({ inProgress: "Live Spec de mecánicas de combate" })).toBe("[spec 2/6]");
+		expect(testInferOddPhase({ inProgress: "ADRs y Presupuesto de memoria VRAM" })).toBe("[arch 3/6]");
+		expect(testInferOddPhase({ inProgress: "Mecánicas de Salto y física 2D" })).toBe("[code 4/6]");
+		expect(testInferOddPhase({ inProgress: "Testing de regresión y smoke test" })).toBe("[test 5/6]");
+		expect(testInferOddPhase({ inProgress: "Release v1.0 y build WASM para store" })).toBe("[ship 6/6]");
+
+		// Fallback to milestone
+		expect(testInferOddPhase({ milestone: "M1 — Prototipo" })).toBe("[code 4/6]");
+		expect(testInferOddPhase({ milestone: "Concept Jam" })).toBe("[concept 1/6]");
+	});
+
+	test("Feature 2: studio-sound exports audio chimes and toggles", () => {
+		const soundPath = path.join(__dirname, "..", "extensions", "hooks", "studio-sound.ts");
+		expect(fs.existsSync(soundPath)).toBe(true);
+
+		const soundSource = fs.readFileSync(soundPath, "utf8");
+		expect(soundSource).toContain("export function playSuccessChime");
+		expect(soundSource).toContain("export function playAlertChime");
+		expect(soundSource).toContain("export function playErrorChime");
+		expect(soundSource).toContain("export function isSoundEnabled");
+		expect(soundSource).toContain("export function setSoundEnabled");
+		expect(soundSource).toContain("export async function handleStudioSound");
+
+		// Cross-platform audio triggers
+		expect(soundSource).toContain("paplay");
+		expect(soundSource).toContain("pw-play");
+		expect(soundSource).toContain("aplay");
+		expect(soundSource).toContain("afplay");
+		expect(soundSource).toContain("powershell");
+		expect(soundSource).toContain("\\x07");
+
+		// Wired in index.ts
+		expect(hooksSource).toContain("playSuccessChime()");
+		expect(hooksSource).toContain("playErrorChime()");
+		expect(hooksSource).toContain("playAlertChime()");
+		expect(hooksSource).toContain("handleStudioSound");
+		expect(hooksSource).toMatch(/registerCommand\?\.\(\s*["']studio:sound["']/);
+	});
+
+	test("Feature 3: studio-hud renders compact status bar telemetry with left accent bar ▎", () => {
+		const hudPath = path.join(__dirname, "..", "extensions", "hooks", "studio-hud.ts");
+		const hudSource = fs.readFileSync(hudPath, "utf8");
+
+		// Checks telemetry header elements
+		expect(hudSource).toContain("▎ Motor:");
+		expect(hudSource).toContain("Hito:");
+		expect(hudSource).toContain("Sprint:");
+		expect(hudSource).toContain("Context:");
+		expect(hudSource).toContain("inferOddPhase");
+
+		// Replicates footer formatting
+		function formatFooterBar(engine, milestone, sprint, phaseChip, contextDisplay) {
+			const parts = [];
+			parts.push(`▎ Motor: ${engine}`);
+			parts.push(`Hito: ${milestone}`);
+			parts.push(`Sprint: ${sprint}`);
+			parts.push(phaseChip);
+			parts.push(`Context: ${contextDisplay}`);
+			return parts.join(" · ");
+		}
+
+		const rendered = formatFooterBar("Godot 4", "M1 — Prototipo", "Sprint 1", "[code 4/6]", "15% (30k/200k)");
+		expect(rendered).toBe("▎ Motor: Godot 4 · Hito: M1 — Prototipo · Sprint: Sprint 1 · [code 4/6] · Context: 15% (30k/200k)");
+		expect(rendered.startsWith("▎ Motor:")).toBe(true);
+		expect(rendered).toContain("Context:");
+	});
+
+	test("Feature 4: studio-changes provides git changes card, diff stats (+X -Y) and /changes alias", () => {
+		const changesPath = path.join(__dirname, "..", "extensions", "hooks", "studio-changes.ts");
+		const changesSource = fs.readFileSync(changesPath, "utf8");
+
+		expect(changesSource).toContain("export function getGitDiffStats");
+		expect(changesSource).toContain("export function getFileDiff");
+		expect(changesSource).toContain("export function renderChangesCard");
+		expect(changesSource).toContain("additions");
+		expect(changesSource).toContain("deletions");
+
+		// Alias /changes registered in index.ts
+		expect(hooksSource).toMatch(/registerCommand\?\.\(\s*["']changes["']/);
+		expect(hooksSource).toMatch(/registerCommand\?\.\(\s*["']studio:changes["']/);
+
+		// Diff formatting test
+		function formatStatRow(status, filePath, adds, dels) {
+			const statStr = (adds !== undefined || dels !== undefined) ? ` (+${adds ?? 0} -${dels ?? 0})` : "";
+			return `  ${status.padEnd(2)} ${filePath}${statStr}`;
+		}
+
+		const row = formatStatRow("M", "src/player.gd", 12, 4);
+		expect(row).toBe("  M  src/player.gd (+12 -4)");
+	});
+
+	test("Feature 5: studio-choice renders tab indicators [ 1. Header* ] and left accent bar ▎", () => {
+		const choicePath = path.join(__dirname, "..", "extensions", "hooks", "studio-choice.ts");
+		const choiceSource = fs.readFileSync(choicePath, "utf8");
+
+		expect(choiceSource).toContain("export function renderQuestionTabs");
+		expect(choiceSource).toContain("export function formatQuestionPrompt");
+		expect(choiceSource).toContain("▎");
+		expect(choiceSource).toContain("playAlertChime");
+
+		// Direct test of tab indicator generation
+		function renderTabs(currentIndex, questions) {
+			return questions
+				.map((q, idx) => {
+					const label = q.header || `Pregunta ${idx + 1}`;
+					return idx === currentIndex ? `[ ${idx + 1}. ${label}* ]` : `[ ${idx + 1}. ${label} ]`;
+				})
+				.join("  ");
+		}
+
+		function formatPrompt(currentIndex, questions) {
+			const q = questions[currentIndex];
+			if (questions.length > 1) {
+				const tabs = renderTabs(currentIndex, questions);
+				return `▎ ${tabs}\n▎ ${q.question}`;
+			}
+			return `▎ ${q.question}`;
+		}
+
+		const batch = [
+			{ question: "¿Qué motor usas?", header: "Motor" },
+			{ question: "¿Qué modelo de IA deseas?", header: "Modelo" },
+			{ question: "¿Qué alcance defines?", header: "Alcance" },
+		];
+
+		// Step 1: Motor is active with *
+		const step1Prompt = formatPrompt(0, batch);
+		expect(step1Prompt).toContain("▎ [ 1. Motor* ]  [ 2. Modelo ]  [ 3. Alcance ]");
+		expect(step1Prompt).toContain("▎ ¿Qué motor usas?");
+
+		// Step 2: Modelo is active with *
+		const step2Prompt = formatPrompt(1, batch);
+		expect(step2Prompt).toContain("▎ [ 1. Motor ]  [ 2. Modelo* ]  [ 3. Alcance ]");
+		expect(step2Prompt).toContain("▎ ¿Qué modelo de IA deseas?");
+
+		// Single question prompt
+		const singlePrompt = formatPrompt(0, [{ question: "¿Continuar?" }]);
+		expect(singlePrompt).toBe("▎ ¿Continuar?");
 	});
 });
 

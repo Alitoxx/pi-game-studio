@@ -1,4 +1,5 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { playAlertChime } from "./studio-sound.ts";
 
 export interface QuestionOption {
 	label: string;
@@ -16,6 +17,33 @@ export interface QuestionItem {
 
 export interface QuestionParams {
 	questions: QuestionItem[];
+}
+
+/**
+ * Renders tab indicators for multi-step questionnaires:
+ * e.g. [ 1. Header* ]  [ 2. Header ]
+ */
+export function renderQuestionTabs(currentIndex: number, questions: QuestionItem[]): string {
+	return questions
+		.map((q, idx) => {
+			const label = q.header || `Pregunta ${idx + 1}`;
+			return idx === currentIndex ? `[ ${idx + 1}. ${label}* ]` : `[ ${idx + 1}. ${label} ]`;
+		})
+		.join("  ");
+}
+
+/**
+ * Formats question prompt using Gentle Shell style left accent bar ▎
+ * and tab indicators for multi-step questions.
+ */
+export function formatQuestionPrompt(currentIndex: number, questions: QuestionItem[]): string {
+	const q = questions[currentIndex];
+	if (questions.length > 1) {
+		const tabs = renderQuestionTabs(currentIndex, questions);
+		return `▎ ${tabs}\n▎ ${q.question}`;
+	}
+	const headerPrefix = q.header ? `[${q.header}] ` : "";
+	return `▎ ${headerPrefix}${q.question}`;
 }
 
 export function registerAskUserQuestion(pi: ExtensionAPI): void {
@@ -114,12 +142,7 @@ export function registerAskUserQuestion(pi: ExtensionAPI): void {
 			// Presentar cada pregunta secuencialmente con el selector de flechas
 			for (let i = 0; i < questions.length; i++) {
 				const q = questions[i];
-				const header = q.header
-					? `[${q.header}] `
-					: questions.length > 1
-						? `[${i + 1}/${questions.length}] `
-						: "";
-				const title = `${header}${q.question}`;
+				const title = formatQuestionPrompt(i, questions);
 
 				const labels = (q.options || []).map((opt, optIdx) => {
 					const desc = opt.description ? ` — ${opt.description}` : "";
@@ -131,6 +154,11 @@ export function registerAskUserQuestion(pi: ExtensionAPI): void {
 				if (allowCustom) {
 					labels.push(OTHER_LABEL);
 				}
+
+				// Trigger sound alert when user interaction is required
+				try {
+					playAlertChime();
+				} catch {}
 
 				const picked = await (ctx.ui as any).select(title, labels);
 

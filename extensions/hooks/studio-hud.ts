@@ -5,6 +5,105 @@ import { findStudioRoot } from "./studio-root.ts";
 import { readProducerState } from "./studio-start.ts";
 import { inspectSetup } from "./studio-setup.ts";
 
+export type OddPhaseId = "concept" | "spec" | "arch" | "code" | "test" | "ship";
+
+export interface OddPhaseInfo {
+	id: OddPhaseId;
+	step: number;
+	chip: string;
+	label: string;
+}
+
+export const ODD_PHASES: Record<OddPhaseId, OddPhaseInfo> = {
+	concept: { id: "concept", step: 1, chip: "[concept 1/6]", label: "Visión & Concepto" },
+	spec: { id: "spec", step: 2, chip: "[spec 2/6]", label: "Live Spec" },
+	arch: { id: "arch", step: 3, chip: "[arch 3/6]", label: "Arquitectura" },
+	code: { id: "code", step: 4, chip: "[code 4/6]", label: "Código & Motor" },
+	test: { id: "test", step: 5, chip: "[test 5/6]", label: "QA & Feel" },
+	ship: { id: "ship", step: 6, chip: "[ship 6/6]", label: "Release & Store" },
+};
+
+/**
+ * Infers the active ODD phase from ProducerState (inProgress, milestone, nextStep).
+ */
+export function getOddPhaseInfo(prodState?: any): OddPhaseInfo {
+	if (!prodState) return ODD_PHASES.concept;
+
+	const inProg = (prodState.inProgress || "").toLowerCase();
+	const milestone = (prodState.milestone || "").toLowerCase();
+	const nextStep = (prodState.nextStep || "").toLowerCase();
+
+	// 1. Try matching inProgress first (active work)
+	if (/(?:ship|release|lanzamiento|publicaci|dist|store|gold|v1\.0|deploy)/.test(inProg)) {
+		return ODD_PHASES.ship;
+	}
+	if (/(?:test|qa|prueba|smoke|soak|regresi|bug|feel|verif|calidad)/.test(inProg)) {
+		return ODD_PHASES.test;
+	}
+	if (/(?:concept|visión|vision|fantas|brainstorm|pitch|jam|premisa|pilar|pillar|arquetipo|incept)/.test(inProg)) {
+		return ODD_PHASES.concept;
+	}
+	if (/(?:spec|gdd|diseño|design|live spec|tuning|knob|balance|regla)/.test(inProg)) {
+		return ODD_PHASES.spec;
+	}
+	if (/(?:arch|arquitect|adr|budget|presupuesto|sistema|system|pipeline|mcp)/.test(inProg)) {
+		return ODD_PHASES.arch;
+	}
+	if (/(?:code|código|codigo|implement|motor|engine|gameplay|physic|físic|shader|scene|escena|script|salto|movimiento|player|mechanic|mecánic|arpg)/.test(inProg)) {
+		return ODD_PHASES.code;
+	}
+
+	// 2. Try matching milestone
+	if (/(?:ship|release|lanzamiento|publicaci|dist|store|gold|v1\.0)/.test(milestone)) {
+		return ODD_PHASES.ship;
+	}
+	if (/(?:test|qa|beta|regression|smoke)/.test(milestone)) {
+		return ODD_PHASES.test;
+	}
+	if (/(?:code|prototipo|prototype|vertical slice|alpha|m1|m2|gameplay|engine)/.test(milestone)) {
+		return ODD_PHASES.code;
+	}
+	if (/(?:arch|arquitect|adr|sistema)/.test(milestone)) {
+		return ODD_PHASES.arch;
+	}
+	if (/(?:spec|live spec|gdd|diseño)/.test(milestone)) {
+		return ODD_PHASES.spec;
+	}
+	if (/(?:concept|visión|jam|pitch)/.test(milestone)) {
+		return ODD_PHASES.concept;
+	}
+
+	// 3. Try nextStep inferences
+	if (/(?:concept|visión|brainstorm)/.test(nextStep)) {
+		return ODD_PHASES.concept;
+	}
+	if (/(?:spec|gdd|diseño)/.test(nextStep)) {
+		return ODD_PHASES.concept;
+	}
+	if (/(?:arch|arquitect|adr)/.test(nextStep)) {
+		return ODD_PHASES.spec;
+	}
+	if (/(?:code|código|implement)/.test(nextStep)) {
+		return ODD_PHASES.arch;
+	}
+	if (/(?:test|qa|prueba)/.test(nextStep)) {
+		return ODD_PHASES.code;
+	}
+	if (/(?:ship|release)/.test(nextStep)) {
+		return ODD_PHASES.test;
+	}
+
+	// Default
+	if (prodState.engine) {
+		return ODD_PHASES.code;
+	}
+	return ODD_PHASES.concept;
+}
+
+export function inferOddPhase(prodState?: any): string {
+	return getOddPhaseInfo(prodState).chip;
+}
+
 import {
 	RESET,
 	BOLD,
@@ -120,6 +219,7 @@ export function renderStudioStatusCard(
 	const milestone = prodState?.milestone || "M1 — Prototipo";
 	const sprint = prodState?.sprint || "Sprint Activo";
 	const modelStr = formatModelDisplayName(model, thinking);
+	const phaseChip = inferOddPhase(prodState);
 
 	const cardWidth = Math.min(Math.max(width - 4, 46), 56);
 	const innerWidth = cardWidth - 4;
@@ -169,7 +269,7 @@ export function renderStudioStatusCard(
 
 	if (prodState?.inProgress || prodState?.nextStep) {
 		lines.push(`  ${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
-		lines.push(`  ${BORDER}│${RESET} ${padAnsi(`${LAVENDER}${BOLD}Progress (ODD)${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`  ${BORDER}│${RESET} ${padAnsi(`${LAVENDER}${BOLD}Progress (ODD)${RESET} ${BLUE}${phaseChip}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 		if (prodState.inProgress) {
 			const progLine = truncateAnsi(`  ${YELLOW}◐${RESET} ${WHITE}${prodState.inProgress}${RESET}`, innerWidth);
 			lines.push(`  ${BORDER}│${RESET} ${padAnsi(progLine, innerWidth)} ${BORDER}│${RESET}`);
@@ -190,44 +290,30 @@ export function renderStudioFooterBar(
 	_width: number,
 	footerData?: any,
 ): string {
-	const studioRoot = findStudioRoot(ctx.cwd) || ctx.cwd;
+	const studioRoot = (ctx && ctx.cwd) ? (findStudioRoot(ctx.cwd) || ctx.cwd) : process.cwd();
 	const setup = inspectSetup(studioRoot);
 	const { state: prodState } = readProducerState(studioRoot);
 	const usage = extractContextUsage(ctx);
-	const model = (ctx as any).model;
-	const thinking = pi && typeof (pi as any).getThinkingLevel === "function"
-		? (pi as any).getThinkingLevel()
-		: undefined;
 
 	const rawEngine = prodState?.engine || setup.currentEngine || "Sin configurar";
 	const engineDisplay = rawEngine === "Sin configurar" ? "Sin motor (/start)" : rawEngine;
-	const modelId = formatModelDisplayName(model, thinking);
-	const branch = typeof footerData?.getGitBranch === "function" ? footerData.getGitBranch() : undefined;
+	const milestone = prodState?.milestone || "M1 — Prototipo";
+	const sprint = prodState?.sprint || "Sprint Activo";
+	const phaseChip = inferOddPhase(prodState);
+
+	const contextDisplay = usage
+		? `${renderContextGauge(usage.percent, 6)} ${getGaugeColor(usage.percent)}${usage.percent}%${RESET} (${formatTokens(usage.tokens)}/${formatTokens(usage.contextWindow)})`
+		: `${GREEN}100%${RESET}`;
 
 	const parts: string[] = [];
 
-	// Location
-	const shortCwd = ctx.cwd.replace(process.env.HOME || "", "~");
-	parts.push(`${DIM}${shortCwd}${RESET}`);
-	if (branch) {
-		parts.push(`${DIM}${branch}${RESET}`);
-	}
-
-	// Engine & Sprint
-	parts.push(`${BLUE}${engineDisplay}${RESET}`);
-	if (prodState?.sprint) {
-		parts.push(`${WHITE}${prodState.sprint}${RESET}`);
-	}
-
-	// Model
-	parts.push(`${WHITE}${modelId}${RESET}`);
-
-	// Context Gauge
-	if (usage) {
-		const gauge = renderContextGauge(usage.percent, 6);
-		const col = getGaugeColor(usage.percent);
-		parts.push(`${DIM}ctx${RESET} ${gauge} ${col}${usage.percent}%${RESET} ${DIM}(${formatTokens(usage.tokens)})${RESET}`);
-	}
+	// Feature 3: Gamedev Status Bar Telemetry
+	// Format: ▎ Motor: <Engine> · Hito: <Milestone> · Sprint: <Sprint> · Context: <ActiveContext>
+	parts.push(`▎ Motor: ${BLUE}${engineDisplay}${RESET}`);
+	parts.push(`Hito: ${WHITE}${milestone}${RESET}`);
+	parts.push(`Sprint: ${WHITE}${sprint}${RESET}`);
+	parts.push(`${BLUE}${phaseChip}${RESET}`);
+	parts.push(`Context: ${contextDisplay}`);
 
 	// Live Performance & Budget Tracker
 	try {
@@ -315,16 +401,14 @@ export function updateStudioHUD(ctx: ExtensionContext, pi?: ExtensionAPI): void 
 
 		const rawEngine = prodState?.engine || setup.currentEngine || "Sin configurar";
 		const engineDisplay = rawEngine === "Sin configurar" ? "Sin motor (/start)" : rawEngine;
-		const modelId = formatModelDisplayName(model, thinking);
+		const milestone = prodState?.milestone || "M1 — Prototipo";
+		const sprint = prodState?.sprint || "Sprint Activo";
+		const phaseChip = inferOddPhase(prodState);
+		const contextDisplay = usage ? `${usage.percent}%` : "100%";
 
-		const parts: string[] = [];
-		parts.push(engineDisplay);
-		if (prodState?.sprint) parts.push(prodState.sprint);
-		parts.push(modelId);
-		if (usage) {
-			const gauge = renderContextGauge(usage.percent, 6);
-			parts.push(`${gauge} ${usage.percent}%`);
-		}
-		(ctx.ui as any).setStatus("studio", parts.join(" · "));
+		(ctx.ui as any).setStatus(
+			"studio",
+			`▎ Motor: ${engineDisplay} · Hito: ${milestone} · Sprint: ${sprint} · ${phaseChip} · Context: ${contextDisplay}`,
+		);
 	}
 }

@@ -33,6 +33,12 @@ import { handleStudioSubagentsViewer } from "./studio-subagents-viewer.ts";
 import { registerStudioSubagentTools } from "./studio-subagents.ts";
 import { registerAskUserQuestion } from "./studio-choice.ts";
 import { studioAgentsRunner } from "./studio-agents-runner.ts";
+import {
+	playSuccessChime,
+	playAlertChime,
+	playErrorChime,
+	handleStudioSound,
+} from "./studio-sound.ts";
 
 export default function (pi: ExtensionAPI) {
 	// ──────────────────────────────────────────────
@@ -40,6 +46,17 @@ export default function (pi: ExtensionAPI) {
 	// ──────────────────────────────────────────────
 	registerStudioSubagentTools(pi);
 	registerAskUserQuestion(pi);
+
+	// ──────────────────────────────────────────────
+	// Audio Notifications & Chimes (Gentle Shell Sound Alerts)
+	// ──────────────────────────────────────────────
+	studioAgentsRunner.subscribe((task) => {
+		if (task.status === "completed") {
+			playSuccessChime();
+		} else if (task.status === "failed") {
+			playErrorChime();
+		}
+	});
 
 	// ──────────────────────────────────────────────
 	// Escape & Abort Handling (Cancel All Subagents on Escape / Interrupt)
@@ -111,6 +128,30 @@ export default function (pi: ExtensionAPI) {
 		description: "[Studio] Clasificación de cambios pendientes en diseño, código, assets y drift de ODD",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioChanges(args, ctx);
+		},
+	});
+
+	// /changes — Alias directo de clasificación de cambios gamedev (Gentle Changes)
+	(pi as any).registerCommand?.("changes", {
+		description: "[Studio] Clasificación de cambios pendientes en diseño, código, assets y drift de ODD",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioChanges(args, ctx);
+		},
+	});
+
+	// /studio:sound — Activar o desactivar notificaciones de audio (on/off)
+	(pi as any).registerCommand?.("studio:sound", {
+		description: "[Studio] Activar o desactivar notificaciones de audio del estudio (on/off)",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioSound(args, ctx);
+		},
+	});
+
+	// /sound — Alias de notificaciones de audio (on/off)
+	(pi as any).registerCommand?.("sound", {
+		description: "[Studio] Activar o desactivar notificaciones de audio del estudio (on/off)",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioSound(args, ctx);
 		},
 	});
 
@@ -289,6 +330,10 @@ export default function (pi: ExtensionAPI) {
 	// Fires on tool_call for git commit commands
 	// ──────────────────────────────────────────────
 	pi.on("tool_call", async (event, ctx) => {
+		if ((event as any)?.toolName === "ask_user_question") {
+			playAlertChime();
+		}
+
 		if (!isToolCallEventType("bash", event)) return;
 
 		const cmd = event.input.command?.trim() || "";

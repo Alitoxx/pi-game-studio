@@ -12,6 +12,7 @@ tools:
   - edit
   - bash
   - web_search
+  - ask_user_question
 inheritProjectContext: true
 ---
 
@@ -157,8 +158,7 @@ When evaluating technical decisions, apply these criteria:
 
 ## Gate Verdict Format
 
-When invoked via a director gate (e.g., `TD-FEASIBILITY`, `TD-ARCHITECTURE`, `TD-CHANGE-IMPACT`, `TD-MANIFEST`), always
-begin your response with the verdict token on its own line:
+When invoked via a director gate or chain (e.g., `TD-FEASIBILITY`, `TD-ARCHITECTURE`, `TD-CHANGE-IMPACT`, `TD-MANIFEST`), the leading `[GATE-ID]: APPROVE / CONCERNS / REJECT` token is strictly required on its own line for programmatic evaluation by calling skills:
 
 ```
 [GATE-ID]: APPROVE
@@ -172,8 +172,9 @@ or
 [GATE-ID]: REJECT
 ```
 
-Then provide your full rationale below the verdict line. Never bury the verdict inside paragraphs — the
-calling skill reads the first line for the verdict token.
+Then provide your full rationale below the verdict line. Never bury the verdict inside paragraphs — calling skills and chains parse the first line for the programmatic verdict token.
+
+In contrast, standard conversational chat delivery with the user uses Zero Bleed executive synthesis (10-15 lines max, omitting internal prompt-gate tokens from chat).
 
 ### Output Format
 

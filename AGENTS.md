@@ -81,7 +81,7 @@ Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar 
 
 #### `technical-director`
 - **Archivo:** [`agents/technical-director.md`](file:///Users/alexis/Developer/pi-game-studio/agents/technical-director.md)
-- **Presupuesto de Razonamiento:** `high` | **Herramientas:** `read, glob, grep, write, edit, bash, web_search`
+- **Presupuesto de Razonamiento:** `high` | **Herramientas:** `read, glob, grep, write, edit, bash, web_search, subagent, ask_user_question`
 - **Misión y Alcance:** The Technical Director owns all high-level technical decisions including engine architecture, technology choices, performance strategy, and technical risk management.
 
 ### Tier 2: Leads & Core Devs

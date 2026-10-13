@@ -49,7 +49,7 @@ export const STUDIO_MCP_REGISTRY: McpServerDef[] = [
 		name: "Codegraph MCP (AST & Dependency Graph)",
 		category: "Indexación de Código",
 		description: "Grafo de dependencias entre componentes, sistemas y llamadas del motor",
-		targetRoles: ["lead-programmer", "gameplay-programmer", "technical-director"],
+		targetRoles: ["gameplay-programmer", "technical-director"],
 		command: "codegraph",
 		args: ["serve", "--mcp"],
 		isInstalledCheck: "which codegraph",

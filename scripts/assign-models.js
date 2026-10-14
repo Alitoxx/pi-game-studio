@@ -32,7 +32,7 @@ const path = require("path");
 const PACKAGE_ROOT = path.resolve(__dirname, "..");
 const MODELS_FILE = path.join(PACKAGE_ROOT, "models.default.json");
 
-// ── Agent roster by tier (Compact 8+1 Studio Architecture: 13 agents total) ────
+// ── Agent roster by tier (Compact 8+1 Studio Architecture: 14 agents total) ────
 const LIGHTWEIGHT_AGENTS = [
 	"art-director",
 	"audio-director",
@@ -46,6 +46,7 @@ const TIERS = {
 		"qa-lead",
 		"bevy-specialist",
 		"godot-specialist",
+		"phaser-specialist",
 		"raylib-specialist",
 		"unity-specialist",
 		"unreal-specialist",

@@ -2124,6 +2124,233 @@ Implement fuzzy command palette.
 			expect(hooksSource).toContain("recordTokenUsage(");
 		});
 	});
+
+	// ──────────────────────────────────────────────
+	// Block 5: Subagent Run Custom UI Renderers (renderCall & renderResult)
+	// ──────────────────────────────────────────────
+	describe("Block 5: Subagent Run Custom UI Renderers (renderCall & renderResult)", () => {
+		const subagentsPath = path.join(__dirname, "..", "extensions", "hooks", "studio-subagents.ts");
+
+		// Helper to ensure @earendil-works/pi-tui is resolvable in child process scripts
+		const tuiResolverHook = `
+			import { register } from "node:module";
+			import { pathToFileURL } from "node:url";
+			import { existsSync } from "node:fs";
+
+			const candidateTui = [
+				"/home/alexis/.local/share/mise/installs/node/25.9.0/lib/node_modules/gentle-pi/node_modules/@earendil-works/pi-tui/dist/index.js",
+			].find(p => existsSync(p));
+
+			if (candidateTui) {
+				const targetUrl = pathToFileURL(candidateTui).href;
+				const loaderCode = "export async function resolve(specifier, context, nextResolve) {" +
+					"if (specifier === '@earendil-works/pi-tui') { return { url: '" + targetUrl + "', shortCircuit: true }; }" +
+					"return nextResolve(specifier, context);" +
+				"}";
+				register("data:text/javascript," + encodeURIComponent(loaderCode), import.meta.url);
+			}
+		`;
+
+		test("studio-subagents.ts imports Text from @earendil-works/pi-tui", () => {
+			const source = fs.readFileSync(subagentsPath, "utf8");
+			expect(source).toMatch(/import\s*\{[^}]*\bText\b[^}]*\}\s*from\s*["']@earendil-works\/pi-tui["']/);
+		});
+
+		test("subagent_run registers renderCall and renderResult handlers", () => {
+			const { execFileSync } = require("child_process");
+			const script = `
+				${tuiResolverHook}
+				const { registerStudioSubagentTools } = await import("./extensions/hooks/studio-subagents.ts");
+				let subagentTool = null;
+				const mockPi = {
+					hasTool: () => false,
+					registerTool: (t) => {
+						if (t.name === "subagent_run") subagentTool = t;
+					},
+				};
+				registerStudioSubagentTools(mockPi);
+				if (!subagentTool) throw new Error("subagent_run tool was not registered");
+				if (typeof subagentTool.renderCall !== "function") throw new Error("renderCall is not defined on subagent_run");
+				if (typeof subagentTool.renderResult !== "function") throw new Error("renderResult is not defined on subagent_run");
+			`;
+			expect(() => {
+				execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+					cwd: path.join(__dirname, ".."),
+				});
+			}).not.toThrow();
+		});
+
+		test("renderCall formats sovereign gamedev console dispatch card with theme tokens", () => {
+			const { execFileSync } = require("child_process");
+			const script = `
+				${tuiResolverHook}
+				const { registerStudioSubagentTools } = await import("./extensions/hooks/studio-subagents.ts");
+				const { Text } = await import("@earendil-works/pi-tui");
+				let subagentTool = null;
+				const mockPi = {
+					hasTool: () => false,
+					registerTool: (t) => {
+						if (t.name === "subagent_run") subagentTool = t;
+					},
+				};
+				registerStudioSubagentTools(mockPi);
+
+				const mockTheme = {
+					fg: (slot, text) => \`[\${slot}]\${text}[/\${slot}]\`,
+					bold: (text) => \`[bold]\${text}[/bold]\`,
+				};
+
+				// 1. Task mode call
+				const callComp = subagentTool.renderCall(
+					{ agent: "game-designer", task: "Diseñar tabla de armas y drop rate\\nDetalles adicionales", mode: "task" },
+					mockTheme,
+					{ cwd: process.cwd() }
+				);
+				if (!(callComp instanceof Text)) throw new Error("renderCall must return a Text instance");
+				const text = callComp.text;
+				if (!text.includes("▌ ◈ ENGINE DISPATCH")) throw new Error("Missing ENGINE DISPATCH badge: " + text);
+				if (!text.includes("[accent]▌ ◈ ENGINE DISPATCH[/accent]")) throw new Error("Badge not styled with accent: " + text);
+				if (!text.includes("[bold]game-designer[/bold]")) throw new Error("Agent name not bold: " + text);
+				if (!text.includes("Diseñar tabla de armas y drop rate")) throw new Error("Missing compact 1-line task: " + text);
+				if (text.includes("Detalles adicionales")) throw new Error("Task prompt not truncated to 1 line: " + text);
+				if (!text.includes("[mode: task]")) throw new Error("Missing [mode: task]: " + text);
+				if (!text.includes("[dim]")) throw new Error("Task prompt not dimmed: " + text);
+
+				// 2. Background mode call
+				const bgComp = subagentTool.renderCall(
+					{ agent: "bevy-specialist", task: "Compilar shaders wgpu", mode: "background" },
+					mockTheme,
+					{ cwd: process.cwd() }
+				);
+				const bgText = bgComp.text;
+				if (!bgText.includes("[mode: bg]")) throw new Error("Missing [mode: bg]: " + bgText);
+			`;
+			expect(() => {
+				execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+					cwd: path.join(__dirname, ".."),
+				});
+			}).not.toThrow();
+		});
+
+		test("renderResult renders partial running spinner, compact receipt, expanded delivery, and failed error", () => {
+			const { execFileSync } = require("child_process");
+			const script = `
+				${tuiResolverHook}
+				const { registerStudioSubagentTools } = await import("./extensions/hooks/studio-subagents.ts");
+				const { Text } = await import("@earendil-works/pi-tui");
+				let subagentTool = null;
+				const mockPi = {
+					hasTool: () => false,
+					registerTool: (t) => {
+						if (t.name === "subagent_run") subagentTool = t;
+					},
+				};
+				registerStudioSubagentTools(mockPi);
+
+				const mockTheme = {
+					fg: (slot, text) => \`[\${slot}]\${text}[/\${slot}]\`,
+					bold: (text) => \`[bold]\${text}[/bold]\`,
+				};
+
+				// 1. Partial / running state
+				const partialComp = subagentTool.renderResult(
+					{ content: [], details: { agent: "gameplay-programmer", status: "running" } },
+					{ expanded: false, isPartial: true },
+					mockTheme,
+					{ args: { agent: "gameplay-programmer" } }
+				);
+				if (!(partialComp instanceof Text)) throw new Error("renderResult must return Text");
+				const partialText = partialComp.text;
+				if (!partialText.includes("▌ ● COMPILANDO / EJECUTANDO")) throw new Error("Missing running badge: " + partialText);
+				if (!partialText.includes("gameplay-programmer") || !partialText.includes("...")) {
+					throw new Error("Missing agent name in running state: " + partialText);
+				}
+
+				// 2. Complete and not expanded (compact executive receipt)
+				const sampleCompletedResult = {
+					content: [
+						{
+							type: "text",
+							text: [
+								"┌── DELIVERY RECEIPT: GAME DESIGNER ────────────────────────┐",
+								"│ Resumen:    Diseño de sistema de progresión y loot        │",
+								"│ Archivos:   design/gdd/loot.md, design/gdd/economy.md     │",
+								"└────────────────────────────────────────────────────────────┘",
+								"",
+								"\\\`\\\`\\\`yaml",
+								"status: completed",
+								"summary: 'Diseño de sistema de progresión y loot'",
+								"files_changed:",
+								"  - design/gdd/loot.md",
+								"  - design/gdd/economy.md",
+								"validation: 'odd check passed'",
+								"\\\`\\\`\\\`",
+							].join("\\n"),
+						},
+					],
+					details: { agent: "game-designer", status: "completed", taskId: "task-123" },
+				};
+
+				const compactComp = subagentTool.renderResult(
+					sampleCompletedResult,
+					{ expanded: false, isPartial: false },
+					mockTheme,
+					{ args: { agent: "game-designer" } }
+				);
+				const compactText = compactComp.text;
+				if (!compactText.includes("▌ ▲ DISPATCH OK")) throw new Error("Missing DISPATCH OK badge: " + compactText);
+				if (!compactText.includes("game-designer")) throw new Error("Missing agent name: " + compactText);
+				if (!compactText.includes("Resumen: Diseño de sistema de progresión y loot")) throw new Error("Missing parsed summary: " + compactText);
+				if (!compactText.includes("Archivos: design/gdd/loot.md, design/gdd/economy.md")) throw new Error("Missing parsed files: " + compactText);
+				if (!compactText.includes("(Ctrl+O para expandir entrega completa)")) throw new Error("Missing expand hint: " + compactText);
+
+				// 3. Complete and expanded (full delivery receipt & YAML block)
+				const expandedComp = subagentTool.renderResult(
+					sampleCompletedResult,
+					{ expanded: true, isPartial: false },
+					mockTheme,
+					{ args: { agent: "game-designer" } }
+				);
+				const expandedText = expandedComp.text;
+				if (!expandedText.includes("DELIVERY RECEIPT: GAME DESIGNER")) throw new Error("Missing full delivery receipt: " + expandedText);
+				if (!expandedText.includes("yaml")) throw new Error("Missing yaml block: " + expandedText);
+
+				// 4. Failed dispatch
+				const failedResult = {
+					content: [{ type: "text", text: "Error: Agent 'godot-specialist' crashed on script validation" }],
+					details: { agent: "godot-specialist", status: "failed", error: "Agent 'godot-specialist' crashed on script validation" },
+				};
+				const failedComp = subagentTool.renderResult(
+					failedResult,
+					{ expanded: false, isPartial: false },
+					mockTheme,
+					{ args: { agent: "godot-specialist" } }
+				);
+				const failedText = failedComp.text;
+				if (!failedText.includes("▌ ■ DISPATCH ERROR")) throw new Error("Missing DISPATCH ERROR badge: " + failedText);
+				if (!failedText.includes("godot-specialist") || !failedText.includes("crashed on script validation")) {
+					throw new Error("Missing agent error message: " + failedText);
+				}
+			`;
+			expect(() => {
+				execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+					cwd: path.join(__dirname, ".."),
+				});
+			}).not.toThrow();
+		});
+
+		test("Preserves subagent_run parameter schema and all subagent auxiliary tools", () => {
+			const source = fs.readFileSync(subagentsPath, "utf8");
+			expect(source).toContain('name: "subagent_run"');
+			expect(source).toContain('name: "subagent_list"');
+			expect(source).toContain('name: "subagent_status"');
+			expect(source).toContain('name: "subagent_result"');
+			expect(source).toContain('required: ["agent", "task"]');
+			expect(source).toMatch(/\bmode\s*:/);
+			expect(source).toMatch(/\btimeout_seconds\s*:/);
+			expect(source).toMatch(/\btarget_dir\s*:/);
+		});
+	});
 });
 
 

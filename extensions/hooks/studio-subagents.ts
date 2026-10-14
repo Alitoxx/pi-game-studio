@@ -1,4 +1,5 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { Text } from "@earendil-works/pi-tui";
 import { existsSync } from "node:fs";
 import { resolve, sep } from "node:path";
 import { loadAgentManifest, listAvailableAgents } from "./studio-agent-loader.ts";
@@ -60,6 +61,142 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 				},
 			},
 		} as never,
+		renderCall(args: any, theme: any, _context?: any) {
+			const agentName = String(args?.agent || "").trim() || "unknown";
+			let title = agentName;
+			try {
+				const manifest = loadAgentManifest(agentName, _context?.cwd || process.cwd());
+				if (manifest?.title) {
+					title = manifest.title;
+				}
+			} catch {}
+
+			const fg = (slot: string, text: string) => (theme?.fg ? theme.fg(slot as any, text) : text);
+			const bold = (text: string) => (theme?.bold ? theme.bold(text) : text);
+
+			const badge = fg("accent", "▌ ◈ ENGINE DISPATCH");
+			const header = `${badge} · ${bold(agentName)} (${title})`;
+
+			const rawTask = String(args?.task || "").trim();
+			const firstLine = rawTask.split(/\r?\n/)[0].trim();
+			const compactTask = firstLine.length > 70 ? `${firstLine.slice(0, 67)}...` : (firstLine || "...");
+
+			const modeStr = (args?.mode === "background" || args?.mode === "bg") ? "bg" : "task";
+			const taskLine = `  ${fg("dim", `Task: ${compactTask} [mode: ${modeStr}]`)}`;
+
+			return new Text(`${header}\n${taskLine}`, 0, 0);
+		},
+		renderResult(result: any, options: { expanded?: boolean; isPartial?: boolean } = {}, theme: any, _context?: any) {
+			const expanded = Boolean(options?.expanded);
+			const isPartial = Boolean(options?.isPartial);
+
+			const fg = (slot: string, text: string) => (theme?.fg ? theme.fg(slot as any, text) : text);
+			const bold = (text: string) => (theme?.bold ? theme.bold(text) : text);
+
+			const agentName = String((result?.details as any)?.agent || _context?.args?.agent || "").trim() || "unknown";
+
+			// 1. Partial / running state
+			if (isPartial) {
+				const badge = fg("accent", "▌ ● COMPILANDO / EJECUTANDO");
+				return new Text(`${badge} · ${bold(agentName)}...`, 0, 0);
+			}
+
+			// 2. Failed state
+			const isFailed = Boolean(
+				(result as any)?.isError ||
+				(result?.details as any)?.error ||
+				(result?.details as any)?.status === "failed" ||
+				(result?.details as any)?.status === "error" ||
+				(result?.details as any)?.status === "timeout" ||
+				(typeof result?.content?.[0]?.text === "string" && (
+					result.content[0].text.startsWith("Error:") ||
+					result.content[0].text.startsWith("[STUDIO TASK FAILED]") ||
+					result.content[0].text.startsWith("[STUDIO TASK TIMEOUT]") ||
+					result.content[0].text.startsWith("[STUDIO TASK ERROR]")
+				))
+			);
+
+			if (isFailed) {
+				let errorMsg = "";
+				if (typeof (result?.details as any)?.error === "string") {
+					errorMsg = (result.details as any).error;
+				}
+				const raw = typeof result?.content?.[0]?.text === "string" ? result.content[0].text : "";
+				if (!errorMsg && raw) {
+					const match = raw.match(/^(?:Error:\s*|\[STUDIO TASK [^\]]+\]\s*(?:[^:]+:\s*)?)(.+)/m);
+					if (match) {
+						errorMsg = match[1].trim();
+					} else {
+						errorMsg = raw.split(/\r?\n/)[0].trim();
+					}
+				}
+				if (!errorMsg) {
+					errorMsg = "unknown error";
+				}
+
+				const badge = fg("error", "▌ ■ DISPATCH ERROR");
+				const line = `${badge} · ${bold(agentName)}: ${errorMsg}`;
+				return new Text(line, 0, 0);
+			}
+
+			// 3. Complete and not expanded
+			const raw = typeof result?.content?.[0]?.text === "string" ? result.content[0].text : "";
+			const yamlMatch = raw.match(/```(?:yaml)?\s*([\s\S]*?)\s*```/);
+			const block = yamlMatch ? yamlMatch[1] : raw;
+
+			let summary = block.match(/summary:\s*["']?([^"'\n]+)/i)?.[1]?.trim() || "";
+			if (!summary) {
+				summary = raw.match(/(?:Resumen|Summary):\s*([^\n│]+)/i)?.[1]?.trim() || "";
+			}
+			if (!summary) {
+				summary = (result?.details as any)?.taskId ? `Task ${(result.details as any).taskId}` : "(sin resumen)";
+			}
+			if (summary.length > 80) {
+				summary = summary.slice(0, 77) + "...";
+			}
+
+			let files: string[] = [];
+			const filesMatch = block.match(/files_changed:\s*([\s\S]*?)(?:validation:|tdd_evidence:|gameplay_impact:|risks:|review_focus:|$)/i)?.[1];
+			if (filesMatch) {
+				files = filesMatch
+					.split(/\r?\n/)
+					.map((l) => l.replace(/^\s*-\s*["']?/, "").replace(/["']?\s*$/, "").trim())
+					.filter((f) => f && !f.startsWith("#") && !f.startsWith("["));
+			}
+			if (files.length === 0) {
+				const boxFiles = raw.match(/(?:Archivos|Files):\s*([^\n│]+)/i)?.[1];
+				if (boxFiles) {
+					files = boxFiles.split(",").map((f) => f.trim()).filter(Boolean);
+				}
+			}
+			const filesStr = files.length > 0 ? files.join(", ") : "(ninguno)";
+
+			if (!expanded) {
+				const badge = fg("success", "▌ ▲ DISPATCH OK");
+				const header = `${badge} · ${bold(agentName)}`;
+				const hint = fg("dim", "(Ctrl+O para expandir entrega completa)");
+				const lines = [
+					header,
+					`  Resumen: ${summary}`,
+					`  Archivos: ${filesStr}`,
+					`  ${hint}`,
+				];
+				return new Text(lines.join("\n"), 0, 0);
+			}
+
+			// 4. Complete and expanded
+			const badge = fg("success", "▌ ▲ DISPATCH OK");
+			const header = `${badge} · ${bold(agentName)}`;
+			const receiptBox = [
+				`┌── DELIVERY RECEIPT: ${agentName.toUpperCase()} ────────────────────────┐`,
+				summary ? `│ Resumen:    ${summary.padEnd(52, " ")}│` : null,
+				files.length > 0 ? `│ Archivos:   ${files.slice(0, 2).join(", ").padEnd(52, " ")}│` : null,
+				`└────────────────────────────────────────────────────────────┘`,
+			].filter(Boolean).join("\n");
+
+			const formattedBody = raw.includes("DELIVERY RECEIPT") ? raw : `${receiptBox}\n\n${raw}`.trim();
+			return new Text(`${header}\n\n${formattedBody}`.trim(), 0, 0);
+		},
 		async execute(
 			_id: string,
 			params: Record<string, unknown>,

@@ -106,10 +106,10 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 		}
 	});
 
-	test("all 13 agents define structured YAML tools and thinking effort levels", () => {
+	test("all 14 agents define structured YAML tools and thinking effort levels", () => {
 		const agentsDir = path.join(__dirname, "..", "agents");
 		const agentFiles = fs.readdirSync(agentsDir).filter((f) => f.endsWith(".md"));
-		expect(agentFiles.length).toBe(13);
+		expect(agentFiles.length).toBe(14);
 
 		for (const f of agentFiles) {
 			const content = fs.readFileSync(path.join(agentsDir, f), "utf8");
@@ -299,7 +299,7 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 		expect(bannerSource).not.toContain("Pendiente setup (/start)");
 	});
 
-	test("detectProjectEngine correctly identifies all 3 starters and their languages", () => {
+	test("detectProjectEngine correctly identifies all starters and their languages", () => {
 		const detectorSource = fs.readFileSync(
 			path.join(__dirname, "..", "extensions", "hooks", "engine-detector.ts"),
 			"utf8",
@@ -311,10 +311,12 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 		const bevyDir = path.join(studioRoot, "starters", "bevy-2d-arpg");
 		const raylibDir = path.join(studioRoot, "starters", "raylib-cpp-entt");
 		const godotDir = path.join(studioRoot, "starters", "godot-2d-character");
+		const phaserDir = path.join(studioRoot, "starters", "phaser-web-2d");
 
 		expect(fs.existsSync(path.join(bevyDir, "Cargo.toml"))).toBe(true);
 		expect(fs.existsSync(path.join(raylibDir, "CMakeLists.txt"))).toBe(true);
 		expect(fs.existsSync(path.join(godotDir, "project.godot"))).toBe(true);
+		expect(fs.existsSync(path.join(phaserDir, "package.json"))).toBe(true);
 
 		// Basic sniffing simulation
 		const cargo = fs.readFileSync(path.join(bevyDir, "Cargo.toml"), "utf8");
@@ -326,21 +328,25 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 
 		const godot = fs.readFileSync(path.join(godotDir, "project.godot"), "utf8");
 		expect(godot).toContain("config/name=\"Godot 2D Character Starter\"");
+
+		const phaserPkg = JSON.parse(fs.readFileSync(path.join(phaserDir, "package.json"), "utf8"));
+		expect(phaserPkg.dependencies.phaser).toBeDefined();
 	});
 
-	test("banner.ts includes Raylib in the 5 supported engines and 8 Core + 1 Motor", () => {
+	test("banner.ts includes Phaser in the 6 supported engines and 8 Core + 1 Motor", () => {
 		const bannerSource = fs.readFileSync(
 			path.join(__dirname, "..", "extensions", "hooks", "banner.ts"),
 			"utf8",
 		);
 		expect(bannerSource).toContain("Raylib");
-		expect(bannerSource).toContain("Godot · Unity · Unreal · Bevy · Raylib");
+		expect(bannerSource).toContain("Phaser");
+		expect(bannerSource).toContain("Godot · Unity · Unreal · Bevy · Raylib · Phaser");
 		expect(bannerSource).toContain("8 Core + 1 Motor");
 	});
 
-	test("engine reference docs exist for all 5 engines (bevy, godot, raylib, unity, unreal)", () => {
+	test("engine reference docs exist for all 6 engines (bevy, godot, phaser, raylib, unity, unreal)", () => {
 		const refDir = path.join(__dirname, "..", "docs", "engine-reference");
-		const engines = ["bevy", "godot", "raylib", "unity", "unreal"];
+		const engines = ["bevy", "godot", "phaser", "raylib", "unity", "unreal"];
 		for (const eng of engines) {
 			const versionFile = path.join(refDir, eng, "VERSION.md");
 			expect(fs.existsSync(versionFile)).toBe(true);

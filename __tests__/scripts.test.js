@@ -14,15 +14,15 @@ describe("Utility Scripts", () => {
 			`(function(LIGHTWEIGHT_AGENTS){ return ${tiersMatch[1]}; })(LIGHTWEIGHT_AGENTS)`
 		);
 
-		test("total count of unique agents across all tiers equals 13", () => {
+		test("total count of unique agents across all tiers equals 14", () => {
 			const allAgents = [
 				...TIERS.director,
 				...TIERS.workhorse,
 				...TIERS.lightweight,
 			];
 			const uniqueAgents = new Set(allAgents);
-			expect(allAgents.length).toBe(13);
-			expect(uniqueAgents.size).toBe(13);
+			expect(allAgents.length).toBe(14);
+			expect(uniqueAgents.size).toBe(14);
 		});
 
 		test("each agent in TIERS exists as a file in agents/", () => {
@@ -54,13 +54,14 @@ describe("Utility Scripts", () => {
 			for (const agent of agentFiles) {
 				expect(uniqueAgents.has(agent)).toBe(true);
 			}
-			expect(agentFiles.length).toBe(13);
+			expect(agentFiles.length).toBe(14);
 		});
 
-		test("all 5 engine specialists must be in workhorse tier", () => {
+		test("all 6 engine specialists must be in workhorse tier", () => {
 			const engineSpecialists = [
 				"bevy-specialist",
 				"godot-specialist",
+				"phaser-specialist",
 				"raylib-specialist",
 				"unity-specialist",
 				"unreal-specialist",
@@ -76,7 +77,7 @@ describe("Utility Scripts", () => {
 		const scriptPath = path.join(__dirname, "..", "scripts", "yaml-helper.sh");
 		const scriptContent = fs.readFileSync(scriptPath, "utf8");
 
-		test("engine.name enum contains all 5 engines", () => {
+		test("engine.name enum contains all 6 engines", () => {
 			const enumLineMatch = scriptContent.match(/engine\.name::([^\n]+)/);
 			expect(enumLineMatch).not.toBeNull();
 
@@ -86,6 +87,7 @@ describe("Utility Scripts", () => {
 			expect(enumValues).toContain("Unreal");
 			expect(enumValues).toContain("Bevy");
 			expect(enumValues).toContain("Raylib");
+			expect(enumValues).toContain("Phaser");
 		});
 
 		test("no .claude/ paths remain", () => {

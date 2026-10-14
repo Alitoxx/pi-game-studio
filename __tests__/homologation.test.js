@@ -49,7 +49,7 @@ describe("Homologation metadata", () => {
 		);
 		const hooks = (hooksSource.match(/pi\.on\(/g) || []).length;
 
-		expect(readme).toContain(`${agents} agents`);
+		expect(readme).toMatch(new RegExp(`${agents}\\s+(?:source\\s+)?agents`));
 		expect(readme).toContain(`${skills} skills`);
 		expect(readme).toContain(`${prompts} templates`);
 		expect(readme).toContain(`${hooks} hooks`);
@@ -76,10 +76,10 @@ describe("Homologation metadata", () => {
 	});
 });
 
-describe("Engine Support Symmetry (Godot, Unity, Unreal, Bevy, Raylib)", () => {
-	const engines = ["Godot", "Unity", "Unreal", "Bevy", "Raylib"];
+describe("Engine Support Symmetry (Godot, Unity, Unreal, Bevy, Raylib, Phaser)", () => {
+	const engines = ["Godot", "Unity", "Unreal", "Bevy", "Raylib", "Phaser"];
 
-	test("arch skill covers all 5 engines in Guided Mode, Stack templates, and Routing", () => {
+	test("arch skill covers all 6 engines in Guided Mode, Stack templates, and Routing", () => {
 		const content = fs.readFileSync(
 			path.join(__dirname, "..", "skills", "arch", "SKILL.md"),
 			"utf8",
@@ -91,9 +91,10 @@ describe("Engine Support Symmetry (Godot, Unity, Unreal, Bevy, Raylib)", () => {
 		expect(content).toContain("Appendix A — Godot");
 		expect(content).toContain("Appendix B — Bevy");
 		expect(content).toContain("Appendix C — Raylib");
+		expect(content).toContain("Appendix D — Phaser");
 	});
 
-	test("code skill routing table includes all 5 engines", () => {
+	test("code skill routing table includes all 6 engines", () => {
 		const content = fs.readFileSync(
 			path.join(__dirname, "..", "skills", "code", "SKILL.md"),
 			"utf8",
@@ -104,7 +105,7 @@ describe("Engine Support Symmetry (Godot, Unity, Unreal, Bevy, Raylib)", () => {
 		}
 	});
 
-	test("test skill includes test execution for all 5 engines", () => {
+	test("test skill includes test execution for all 6 engines", () => {
 		const testSkill = fs.readFileSync(
 			path.join(__dirname, "..", "skills", "test", "SKILL.md"),
 			"utf8",
@@ -115,7 +116,7 @@ describe("Engine Support Symmetry (Godot, Unity, Unreal, Bevy, Raylib)", () => {
 		}
 	});
 
-	test("models.default.json maps all 5 engine primary specialists", () => {
+	test("models.default.json maps all 6 engine primary specialists", () => {
 		const defaultModels = JSON.parse(
 			fs.readFileSync(
 				path.join(__dirname, "..", "models.default.json"),
@@ -127,6 +128,7 @@ describe("Engine Support Symmetry (Godot, Unity, Unreal, Bevy, Raylib)", () => {
 		expect(defaultModels["unity-specialist"]).toBeDefined();
 		expect(defaultModels["unreal-specialist"]).toBeDefined();
 		expect(defaultModels["bevy-specialist"]).toBeDefined();
+		expect(defaultModels["phaser-specialist"]).toBeDefined();
 		expect(defaultModels["raylib-specialist"]).toBeDefined();
 	});
 });

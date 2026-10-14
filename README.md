@@ -126,7 +126,7 @@ Tier 3 — Engine Specialist (+1 per project)
 > 📖 **Manuales y Herramientas del Estudio**:
 > - [`AGENTS.md`](AGENTS.md): Directorio completo y responsabilidades del equipo oficial **8+1**.
 > - [`docs/architecture-flowcharts.md`](docs/architecture-flowcharts.md): **Diagramas de Flujo y Arquitectura Completa** — Visualización paso a paso del pipeline ODD de 6 fases, la jerarquía 8+1, subagentes en vivo, compilación Web/WASM, profiler y sintetizador procedural.
-> - [`docs/gamedev-interaction-protocol.md`](docs/gamedev-interaction-protocol.md): **Protocolo de Respuestas y Decisiones (Gentle Shell for Games)** — Bloque 0: *Executive Delivery & Zero Bleed*, Pillars Header, Trade-offs Matrix, Choice Envelopes, Radar, Return Contracts y **Flow Completion Protocol**.
+> - [`docs/gamedev-interaction-protocol.md`](docs/gamedev-interaction-protocol.md): **Protocolo de Respuestas y Decisiones (Gentle Shell for Games)** — Bloque 0: *Executive Delivery & Zero Bleed*, Pillars Header, Trade-offs Matrix, Choice Envelopes, Radar, Return Contracts, **Gobernanza Comercial & Modelado Boxleiter** y **Flow Completion Protocol**.
 > - [`docs/skills-reference.md`](docs/skills-reference.md): Catálogo de las **6 skills ODD** y comandos `studio:*` organizados por fases.
 > - **Única Fuente de Verdad (Single Source of Truth)**: `design/gdd/` y `design/art/` exclusivos para diseño y arte; `production/` exclusivo para roadmaps y sprints.
 > - **Diagnóstico y Salud de Entorno**: Detección automática al iniciar o decir *"hola"` (`Estado: ✔ Entorno OK`), con setup Automático o Manual sin preguntas redundantes.
@@ -234,7 +234,7 @@ Pi Game Studio opera con el pipeline de **6 Skills ODD (Organic Driven Developme
 - **`/studio:mcp`** — Gestión del ecosistema de 10 servidores MCP.
 - **`/studio:chains`** — Ejecutor de cadenas multi-agente (`feature-implement`, `gdd-review`, `perf-audit`, `release-gate`, etc.).
 - **`/palette`** (o **`Alt+K`**) — Paleta de comandos difusa interactiva con categorías y búsqueda en tiempo real.
-- **`/market`** (o **`/studio:market`**) — Steam Reality Check: Auditoría de saturación de mercado en vivo, competidores top, ratings y viabilidad comercial del pitch.
+- **`/market`** (o **`/studio:market`**) — Steam Reality Check & Financial Modeling: Auditoría de mercado en vivo, estimación de ventas e ingresos netos dev con multiplicador Boxleiter (`Reviews * 40x`), umbral de wishlists (`Popular Upcoming`) y gobernanza comercial del Producer (veto de scope y presupuesto temporal).
 - **`/scaffold`** (o **`/studio:scaffold`**) — Generador de sandbox jugable inmediato según motor activo (Godot 4, Bevy, Raylib) y dimensión (2D/3D).
 - **`/game-feel`** (o **`/studio:game-feel`**) — Auditor estático de Game Feel y respuesta de control (coyote time, jump buffer, inercia, salto variable, screen shake).
 - **`/capsule-check`** (o **`/studio:capsule`**) — Auditor de portadas y cápsulas de Steamworks (Header, Small 231x87 crítica para CTR, Main, Vertical) con ImageMagick.

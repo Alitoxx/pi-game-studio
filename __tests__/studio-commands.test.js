@@ -1312,12 +1312,12 @@ Next: Level Design
 			expect(ovSource).toContain("export async function showCommandPalette");
 		});
 
-		test("STUDIO_COMMAND_REGISTRY covers all 4 categories and all 31 required commands", () => {
+		test("STUDIO_COMMAND_REGISTRY covers all 4 categories and all 37 required commands", () => {
 			const palSource = fs.readFileSync(palettePath, "utf8");
 
 			// Parse command items from source
 			const cmdMatches = [...palSource.matchAll(/name:\s*["']([^"']+)["']\s*,\s*description:\s*["']([^"']+)["']\s*,\s*category:\s*["']([^"']+)["']/g)];
-			expect(cmdMatches.length).toBe(31);
+			expect(cmdMatches.length).toBe(37);
 
 			const commandNames = cmdMatches.map((m) => m[1]);
 			const categories = Array.from(new Set(cmdMatches.map((m) => m[3])));
@@ -1327,16 +1327,16 @@ Next: Level Design
 			expect(categories).toContain("Studio & Models");
 			expect(categories).toContain("Media & MCP");
 
-			// ODD Pipeline (6)
-			const oddCommands = ["/concept", "/spec", "/arch", "/code", "/test", "/ship"];
+			// ODD Pipeline (8)
+			const oddCommands = ["/market", "/concept", "/spec", "/arch", "/code", "/test", "/ship", "/steam-page"];
 			for (const cmd of oddCommands) {
 				expect(commandNames).toContain(cmd);
 				const match = cmdMatches.find((m) => m[1] === cmd);
 				expect(match[3]).toBe("ODD Pipeline");
 			}
 
-			// Engine & Dev Tools (7)
-			const engineCommands = ["/doctor", "/watch", "/profile", "/perf-guard", "/web", "/tasks", "/changes"];
+			// Engine & Dev Tools (10)
+			const engineCommands = ["/doctor", "/watch", "/profile", "/perf-guard", "/web", "/tasks", "/changes", "/scaffold", "/game-feel", "/audio-bus"];
 			for (const cmd of engineCommands) {
 				expect(commandNames).toContain(cmd);
 				const match = cmdMatches.find((m) => m[1] === cmd);
@@ -1365,8 +1365,8 @@ Next: Level Design
 				expect(match[3]).toBe("Studio & Models");
 			}
 
-			// Media & MCP (5)
-			const mediaCommands = ["/studio:mcp", "/studio:tools", "/studio:assets", "/studio:sfx", "/studio:palettes"];
+			// Media & MCP (6)
+			const mediaCommands = ["/studio:mcp", "/studio:tools", "/studio:assets", "/studio:sfx", "/studio:palettes", "/capsule-check"];
 			for (const cmd of mediaCommands) {
 				expect(commandNames).toContain(cmd);
 				const match = cmdMatches.find((m) => m[1] === cmd);
@@ -1519,7 +1519,7 @@ Next: Level Design
 			const script = `
 				const { STUDIO_COMMAND_REGISTRY, fuzzyMatch, filterCommands } = await import("./extensions/hooks/studio-palette.ts");
 				const { CommandPaletteOverlayComponent, showCommandPalette } = await import("./extensions/hooks/studio-palette-overlay.ts");
-				if (STUDIO_COMMAND_REGISTRY.length !== 31) throw new Error("Registry length mismatch: " + STUDIO_COMMAND_REGISTRY.length);
+				if (STUDIO_COMMAND_REGISTRY.length !== 37) throw new Error("Registry length mismatch: " + STUDIO_COMMAND_REGISTRY.length);
 				const match = fuzzyMatch("start", "/studio:start");
 				if (!match.matches) throw new Error("Fuzzy match failed");
 				const filtered = filterCommands("spec", "ODD Pipeline");

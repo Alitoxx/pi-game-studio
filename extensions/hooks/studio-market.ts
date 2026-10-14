@@ -55,8 +55,22 @@ export interface SteamCompetitor {
 	ratingPercent: number | null;
 	totalReviews: number;
 	priceFormatted: string;
+	priceUsd?: number | null;
 	isReleased: boolean;
 	genres: string[];
+	boxleiter?: BoxleiterEstimate;
+}
+
+export interface BoxleiterEstimate {
+	copies: number;
+	grossUsd: number;
+	netDevUsd: number;
+}
+
+export interface ProducerFinancialRules {
+	maxDevBudget: string;
+	wishlistThreshold: string;
+	scopeVeto: string;
 }
 
 export interface MarketMetrics {
@@ -79,7 +93,75 @@ export interface MarketAnalysis {
 		tropesCritique: string;
 		mandatoryHook: string;
 	};
+	financialRules: ProducerFinancialRules;
 	isOfflineFallback?: boolean;
+}
+
+/**
+ * Calculates real units sold and net developer revenue using the Boxleiter Multiplier method.
+ * - copies: reviews * 40
+ * - grossUsd: copies * priceUsd * 0.92 (adjusting for Steam regional pricing)
+ * - netDevUsd: grossUsd * 0.55 (after 30% Steam cut, 8-10% refunds, VAT/taxes)
+ */
+export function calculateBoxleiterEstimate(reviews: number, priceUsd: number): BoxleiterEstimate {
+	const safeReviews = Math.max(0, Number.isFinite(reviews) ? reviews : 0);
+	const safePrice = Math.max(0, Number.isFinite(priceUsd) ? priceUsd : 0);
+	const copies = Math.round(safeReviews * 40);
+	const grossUsd = Math.round(copies * safePrice * 0.92);
+	const netDevUsd = Math.round(grossUsd * 0.55);
+	return {
+		copies,
+		grossUsd,
+		netDevUsd,
+	};
+}
+
+/**
+ * Generates financial guidelines and producer scope veto rules based on market saturation and genre.
+ */
+export function generateProducerFinancialRules(
+	query: string,
+	saturation: SaturationLevel,
+): ProducerFinancialRules {
+	const lower = query.toLowerCase();
+	const isExtremelySaturated = saturation === "Saturación Extrema";
+	const isHighlySaturated = saturation === "Alta";
+
+	let maxDevBudget =
+		"Máximo 6-9 meses para 1 dev para no caer bajo la línea de rentabilidad comercial frente al retorno proyectado.";
+	if (isExtremelySaturated) {
+		maxDevBudget =
+			"Máximo 4-6 meses para 1 dev para no caer bajo la línea de rentabilidad. En saturación extrema, dilatar la producción sin tracción demostrada destruye cualquier margen de beneficio.";
+	} else if (isHighlySaturated) {
+		maxDevBudget =
+			"Máximo 6-8 meses para 1 dev para no caer bajo la línea de rentabilidad frente al retorno mediano proyectado del nicho.";
+	}
+
+	const wishlistThreshold =
+		"Meta crítica: 7.000 - 10.000 wishlists antes de lanzar para activar 'Popular Upcoming' en la portada de Steam (Conversión Día 1: 10-15%, multiplicador de ventas Año 1: 2-3x Día 1).";
+
+	let scopeVeto =
+		"Features vetadas en este nicho: multijugador online, mundos abiertos o mecánicas secundarias no esenciales. Priorizar pulido extremo del core loop de 15 minutos.";
+
+	if (lower.includes("deckbuilder") || lower.includes("cartas") || lower.includes("card")) {
+		scopeVeto =
+			"Features vetadas en este nicho: multijugador online/coop (triplica costos de red y QA), mundos abiertos o árboles meta de más de 150 cartas antes de validar 40 balanceadas. Cero mecánicas secundarias de relleno.";
+	} else if (lower.includes("metroidvania") || lower.includes("soulslike") || lower.includes("souls")) {
+		scopeVeto =
+			"Features vetadas en este nicho: multijugador online, mundos abiertos masivos no balanceados o más de 100 tipos de enemigos/variantes redundantes. Prohibido expandir el mapa antes de perfeccionar la física de movimiento y 3 jefes insignia.";
+	} else if (lower.includes("survival") || lower.includes("crafting") || lower.includes("supervivencia")) {
+		scopeVeto =
+			"Features vetadas en este nicho: multijugador masivo online (MMO), árboles de crafteo con cientos de recetas redundantes o mapas infinitos sin eventos emergentes. Veto a mecánicas secundarias de relleno.";
+	} else if (lower.includes("bullet heaven") || lower.includes("vampire") || lower.includes("survivors") || lower.includes("horde")) {
+		scopeVeto =
+			"Features vetadas en este nicho: multijugador online sincronizado, cinemáticas narrativas complejas o más de 50 armas antes de asegurar 60 FPS estables con 2.000 proyectiles en pantalla.";
+	}
+
+	return {
+		maxDevBudget,
+		wishlistThreshold,
+		scopeVeto,
+	};
 }
 
 /**
@@ -356,6 +438,7 @@ export async function analyzeSteamMarket(
 			: determineVerdict(saturation, total, 0, query);
 
 		const ceroFiltro = generateCeroFiltro(query, saturation);
+		const financialRules = generateProducerFinancialRules(query, saturation);
 
 		return {
 			query,
@@ -372,6 +455,7 @@ export async function analyzeSteamMarket(
 			},
 			competitors: [],
 			ceroFiltro,
+			financialRules,
 			isOfflineFallback: isOffline,
 		};
 	}
@@ -424,6 +508,8 @@ export async function analyzeSteamMarket(
 
 		const isReleased = appData?.release_date ? !appData.release_date.coming_soon : true;
 		const genres: string[] = (appData?.genres || []).map((g: any) => g.description || "");
+		const priceUsd = priceCents !== null ? priceCents / 100 : null;
+		const boxleiter = calculateBoxleiterEstimate(totalReviews, priceUsd ?? (totalReviews > 0 ? 14.99 : 0));
 
 		const competitor: SteamCompetitor = {
 			id: item.id,
@@ -433,8 +519,10 @@ export async function analyzeSteamMarket(
 			ratingPercent,
 			totalReviews,
 			priceFormatted,
+			priceUsd,
 			isReleased,
 			genres,
+			boxleiter,
 		};
 
 		return { competitor, priceCents };
@@ -482,6 +570,7 @@ export async function analyzeSteamMarket(
 
 	const verdict = determineVerdict(saturation, effectiveCount, maxReviews, query);
 	const ceroFiltro = generateCeroFiltro(query, saturation);
+	const financialRules = generateProducerFinancialRules(query, saturation);
 
 	return {
 		query,
@@ -498,6 +587,7 @@ export async function analyzeSteamMarket(
 		},
 		competitors,
 		ceroFiltro,
+		financialRules,
 	};
 }
 
@@ -609,6 +699,12 @@ export function renderMarketReport(analysis: MarketAnalysis, cardWidth = 76): st
 			const reviewRow = `      ${GRAY}Rating:${RESET} ${WHITE}${c.ratingDesc}${RESET}  ${GRAY}•${RESET}  ${WHITE}${formatNumber(c.totalReviews)}${RESET} ${GRAY}reviews${RESET}  ${GRAY}•${RESET}  ${statusBadge}`;
 			lines.push(`${BORDER}│${RESET} ${padAnsi(reviewRow, innerWidth)} ${BORDER}│${RESET}`);
 
+			const est = c.boxleiter ?? calculateBoxleiterEstimate(c.totalReviews, c.priceUsd ?? 0);
+			const salesEstText = `${GRAY}Ventas Est:${RESET} ${WHITE}~${formatNumber(est.copies)} copias${RESET}`;
+			const revenueEstText = `${GRAY}Facturación Neta Dev:${RESET} ${GREEN}~$${formatNumber(est.netDevUsd)} USD${RESET}`;
+			const estRow = `      ${salesEstText} ${GRAY}•${RESET} ${revenueEstText}`;
+			lines.push(`${BORDER}│${RESET} ${padAnsi(estRow, innerWidth)} ${BORDER}│${RESET}`);
+
 			const linkRow = `      ${GRAY}Enlace:${RESET} ${GRAY}${c.steamUrl}${RESET}`;
 			lines.push(`${BORDER}│${RESET} ${padAnsi(linkRow, innerWidth)} ${BORDER}│${RESET}`);
 
@@ -619,7 +715,35 @@ export function renderMarketReport(analysis: MarketAnalysis, cardWidth = 76): st
 	}
 	lines.push(`${BORDER}└${"─".repeat(width - 2)}┘${RESET}`);
 
-	// ── 3. Cero Filtro (Análisis Implacable de Dirección) ──
+	// ── 3. Análisis Financiero & Reglas del Productor ──
+	lines.push("");
+	const finRules = analysis.financialRules || generateProducerFinancialRules(query, metrics.saturationLevel);
+	const financialHeader = `${YELLOW}${BOLD}ANÁLISIS FINANCIERO & REGLAS DEL PRODUCTOR${RESET}`;
+	const financialBorderLen = Math.max(0, width - 45);
+	lines.push(`${BORDER}┌─${RESET} ${financialHeader} ${BORDER}${"─".repeat(financialBorderLen)}┐${RESET}`);
+
+	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${YELLOW}${BOLD}PRESUPUESTO TEMPORAL MÁXIMO:${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	const devBudgetLines = wrapText(finRules.maxDevBudget, innerWidth - 6);
+	for (const bl of devBudgetLines) {
+		lines.push(`${BORDER}│${RESET} ${padAnsi(`    ${WHITE}${bl}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	}
+
+	lines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${GREEN}${BOLD}UMBRAL DE WISHLISTS (ALGORITMO STEAM):${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	const wishlistLines = wrapText(finRules.wishlistThreshold, innerWidth - 6);
+	for (const wl of wishlistLines) {
+		lines.push(`${BORDER}│${RESET} ${padAnsi(`    ${WHITE}${wl}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	}
+
+	lines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${RED}${BOLD}VETO DE SCOPE PREVENTIVO (RUTHLESS DESCOPING):${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	const vetoLines = wrapText(finRules.scopeVeto, innerWidth - 6);
+	for (const vl of vetoLines) {
+		lines.push(`${BORDER}│${RESET} ${padAnsi(`    ${WHITE}${vl}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	}
+	lines.push(`${BORDER}└${"─".repeat(width - 2)}┘${RESET}`);
+
+	// ── 4. Cero Filtro (Análisis Implacable de Dirección) ──
 	lines.push("");
 	const filtroHeader = `${RED}${BOLD}CERO FILTRO (ANÁLISIS IMPLACABLE DE DIRECCIÓN)${RESET}`;
 	const filtroBorderLen = Math.max(0, width - 50);
@@ -639,7 +763,7 @@ export function renderMarketReport(analysis: MarketAnalysis, cardWidth = 76): st
 	}
 	lines.push(`${BORDER}└${"─".repeat(width - 2)}┘${RESET}`);
 
-	// ── 4. Próximos Pasos ──
+	// ── 5. Próximos Pasos ──
 	lines.push("");
 	const nextHeader = `${HEADING}${BOLD}PRÓXIMOS PASOS RECOMENDADOS${RESET}`;
 	const nextBorderLen = Math.max(0, width - 33);

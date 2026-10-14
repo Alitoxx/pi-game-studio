@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.1] - 2026-10-14
+
+### Added
+- **Inteligencia Comercial y Gobernanza Financiera del Productor**:
+  - Incorporada la sección `Market Intelligence & Commercial Governance (Steam Strategy)` en las directivas de sistema de `producer.md`.
+  - Integrado el **Método Multiplicador de Boxleiter** en `/market` para estimar automáticamente copias vendidas y facturación neta de los competidores (`Reviews * 30-50x`, comisiones de Valve -30%, retenciones fiscales -20%, reembolsos -10% y precios regionales -8%).
+  - Nuevo bloque de **Análisis Financiero y Reglas del Productor** en el reporte de `/market`:
+    - Presupuesto temporal máximo de desarrollo en meses para 1 dev según saturación.
+    - Metas críticas de wishlists (barrera de 7.000 a 10.000 antes del lanzamiento para 'Popular Upcoming').
+    - Veto de Scope Preventivo (*Ruthless Descoping*) contra features trampas que destruyen el ROI (multijugador no presupuestado, mundos abiertos desmedidos o bloat procedural).
+
+---
+
 ## [1.8.0] - 2026-10-14
 
 ### Added

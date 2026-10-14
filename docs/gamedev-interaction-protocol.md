@@ -189,13 +189,21 @@ Para mantener el ritmo de desarrollo sin fricciones ni preguntas redundantes:
 
 Pi Game Studio integra herramientas de terminal para gobernar la producción y auditar la viabilidad comercial:
 
-### `/market` (o `/studio:market`) — Steam Reality Check & Idea Viability Validator
+### `/market` (o `/studio:market`) — Steam Reality Check, Commercial Governance & Financial Modeling
 
-Audita el pitch o género de tu juego contra los datos en vivo de la tienda de Steam antes de escribir una sola línea de código:
+Audita el pitch o género de tu juego contra los datos en vivo de la tienda de Steam y aplica las reglas de gobernanza comercial del Producer antes de escribir una sola línea de código:
 
 - **Saturación en vivo**: Conexión directa a la API de Steam (`storesearch`) para medir la cantidad de competidores indexados y su nivel de saturación (`Baja`, `Moderada`, `Alta`, `Saturación Extrema`).
-- **Top Competidores**: Métricas reales de precio en USD (`appdetails`), volumen de reviews (`appreviews`), rating porcentual y estado de lanzamiento (`Lanzado` vs `Próximo`).
+- **Top Competidores & Modelado Boxleiter**: Métricas reales de precio en USD (`appdetails`), volumen de reviews (`appreviews`), rating porcentual, estado de lanzamiento (`Lanzado` vs `Próximo`) y estimación comercial de unidades vendidas y facturación neta dev:
+  - *Copias estimadas*: $\text{Reviews} \times 40$ (rango típico 30–50x).
+  - *Facturación Bruta Ajustada*: $\text{Copias} \times \text{Precio USD} \times 0.92$ (factor de paridad regional Steam).
+  - *Facturación Neta Desarrollador*: $\text{Bruto} \times 0.55$ (deduciendo el 30% de Steam, 8–10% de devoluciones/refunds e impuestos/IVA).
 - **Veredicto Implacable de Dirección**: Evaluación vinculante (`RECHAZADO: CEMENTERIO DE STEAM`, `PIVOTE OBLIGATORIO`, `LUZ VERDE`) para evitar el desarrollo de clones comerciales inviables.
+- **Análisis Financiero & Reglas del Productor (Commercial Governance)**:
+  - *Presupuesto Temporal Máximo*: Techo de desarrollo de 6–9 meses para 1 dev (o 4–6 meses en nichos altamente saturados) para no caer bajo la línea de rentabilidad comercial frente al retorno proyectado.
+  - *Umbral Crítico de Wishlists*: Meta indispensable de **7.000 a 10.000 wishlists** antes del lanzamiento para activar el algoritmo de *"Popular Upcoming"* en la portada global de Steam. Con conversión Day-1 del 10–15% (700–1.500 copias en semana 1) y multiplicador de Año 1 de 2–3x sobre el Día 1.
+  - *Veto de Scope Preventivo (Ruthless Descoping)*: Deber explícito del Productor de vetar multijugador online/coop no presupuestado, mapas procedurales infinitos, mundos abiertos desmedidos o árboles excesivos de mecánicas secundarias cuando el costo excede el retorno proyectado del mercado.
+  - *Compuertas de Steam Next Fest*: Exigencia de un vertical slice de 15–20 minutos hiper-pulido (cero bugs, game feel exquisito), broadcast loop continuo pregrabado y métricas de conversión a wishlist (>30%).
 - **Cero Filtro**: Crítica directa de tropos desgastados e identificación del gancho mecánico diferenciador (USP) indispensable para sobrevivir comercialmente en Steam.
 - **Próximos Pasos Ejecutables**: Relevo directo al pipeline ODD (`/concept`, `/spec`, `/arch`, `/studio`).
 

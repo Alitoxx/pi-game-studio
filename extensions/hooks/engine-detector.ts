@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 export interface EngineDetectionResult {
 	detected: boolean;
-	engine: "Bevy" | "Godot" | "Raylib" | "Unity" | "Unreal" | "Desconocido";
+	engine: "Bevy" | "Godot" | "Phaser" | "Raylib" | "Unity" | "Unreal" | "Desconocido";
 	version?: string;
 	language: string;
 	sourceFile: string;
@@ -182,10 +182,38 @@ export function detectProjectEngine(dir: string): EngineDetectionResult {
 		}
 	} catch {}
 
-	// 6. Fallback to configuredEngine if specified in project.yaml
+	// 6. Check for Phaser (package.json with phaser dependency)
+	const packageJsonPath = join(dir, "package.json");
+	if (existsSync(packageJsonPath)) {
+		try {
+			const pkg = JSON.parse(readFileSync(packageJsonPath, "utf8"));
+			const phaserVersion =
+				pkg?.dependencies?.phaser ||
+				pkg?.devDependencies?.phaser ||
+				pkg?.peerDependencies?.phaser;
+			if (phaserVersion) {
+				const cleanVersion = String(phaserVersion).replace(/[\^~>=<]/g, "").trim();
+				const isTs =
+					existsSync(join(dir, "tsconfig.json")) ||
+					pkg?.devDependencies?.typescript ||
+					pkg?.dependencies?.typescript;
+				return {
+					detected: true,
+					engine: "Phaser",
+					version: cleanVersion,
+					language: isTs ? "TypeScript" : "JavaScript",
+					sourceFile: "package.json",
+					details: `Phaser ${cleanVersion} (${isTs ? "TypeScript" : "JavaScript"})`,
+					isConfigured: !!configuredEngine,
+				};
+			}
+		} catch {}
+	}
+
+	// 7. Fallback to configuredEngine if specified in project.yaml
 	if (configuredEngine) {
 		const norm = configuredEngine.toLowerCase();
-		let engineName: "Bevy" | "Godot" | "Raylib" | "Unity" | "Unreal" = "Godot";
+		let engineName: "Bevy" | "Godot" | "Phaser" | "Raylib" | "Unity" | "Unreal" = "Godot";
 		let lang = "GDScript";
 
 		if (norm.includes("bevy")) {
@@ -194,6 +222,9 @@ export function detectProjectEngine(dir: string): EngineDetectionResult {
 		} else if (norm.includes("raylib")) {
 			engineName = "Raylib";
 			lang = "C++";
+		} else if (norm.includes("phaser")) {
+			engineName = "Phaser";
+			lang = "TypeScript";
 		} else if (norm.includes("unity")) {
 			engineName = "Unity";
 			lang = "C#";

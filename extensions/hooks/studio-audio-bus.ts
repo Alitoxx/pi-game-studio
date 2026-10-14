@@ -19,7 +19,7 @@ import {
 	padAnsi,
 } from "./studio-palette.ts";
 
-export type SupportedEngine = "Godot" | "Bevy" | "Raylib" | "Unity" | "Unreal";
+export type SupportedEngine = "Godot" | "Bevy" | "Raylib" | "Unity" | "Unreal" | "Phaser";
 
 export interface BusScaffoldResult {
 	engine: SupportedEngine;
@@ -32,6 +32,20 @@ export interface BusScaffoldResult {
 }
 
 /**
+ * Normalizes engine name string into SupportedEngine.
+ */
+export function resolveEngine(engineStr: string): SupportedEngine {
+	const normalized = (engineStr || "").trim().toLowerCase();
+	if (normalized.includes("godot")) return "Godot";
+	if (normalized.includes("bevy") || normalized.includes("rust")) return "Bevy";
+	if (normalized.includes("raylib") || normalized.includes("cpp") || normalized.includes("c++")) return "Raylib";
+	if (normalized.includes("unity")) return "Unity";
+	if (normalized.includes("unreal") || normalized.includes("ue5")) return "Unreal";
+	if (normalized.includes("phaser")) return "Phaser";
+	return "Godot";
+}
+
+/**
  * Resolves the target game engine based on user args or project inspection.
  */
 export function resolveEngineTarget(args: string, rootDir: string): SupportedEngine {
@@ -41,6 +55,7 @@ export function resolveEngineTarget(args: string, rootDir: string): SupportedEng
 	if (normalized.includes("raylib") || normalized.includes("cpp") || normalized.includes("c++")) return "Raylib";
 	if (normalized.includes("unity")) return "Unity";
 	if (normalized.includes("unreal") || normalized.includes("ue5")) return "Unreal";
+	if (normalized.includes("phaser")) return "Phaser";
 
 	const detected = detectProjectEngine(rootDir);
 	if (detected.detected && detected.engine !== "Desconocido") {
@@ -553,6 +568,177 @@ struct FAudioBusHierarchy
 	};
 }
 
+export function generatePhaserBusManager(rootDir: string): BusScaffoldResult {
+	const srcDir = existsSync(join(rootDir, "src", "audio"))
+		? join(rootDir, "src", "audio")
+		: existsSync(join(rootDir, "src"))
+		? join(rootDir, "src", "audio")
+		: join(rootDir, "audio");
+	const targetPath = join(srcDir, "AudioManager.ts");
+
+	const content = `/**
+ * Pi Game Studio — Audio Bus & Sidechain Ducking Manager for Phaser 3/4
+ *
+ * Jerarquía de buses sobre Phaser Web Audio API:
+ * Master (1.0)
+ *   ├── Music (0.75 / -2.5 dB) [Sidechain Ducking: atenuado por Voice]
+ *   ├── SFX (1.0)
+ *   ├── Voice (1.0) [Ducking Trigger: atenúa Music a 0.35]
+ *   ├── UI (0.9)
+ *   └── Ambient (0.65 / -4.0 dB)
+ */
+
+export type AudioBus = "master" | "music" | "sfx" | "voice" | "ui" | "ambient";
+
+export interface BusVolumeConfig {
+    master: number;
+    music: number;
+    sfx: number;
+    voice: number;
+    ui: number;
+    ambient: number;
+}
+
+export class AudioManager {
+    private static instance: AudioManager;
+    private scene!: Phaser.Scene;
+
+    private volumes: BusVolumeConfig = {
+        master: 1.0,
+        music: 0.75,
+        sfx: 1.0,
+        voice: 1.0,
+        ui: 0.9,
+        ambient: 0.65,
+    };
+
+    private mutes: Record<AudioBus, boolean> = {
+        master: false,
+        music: false,
+        sfx: false,
+        voice: false,
+        ui: false,
+        ambient: false,
+    };
+
+    // Sidechain Ducking (Web Audio Gain modulation)
+    private duckFactor = 0.35;    // ~ -9 dB al hablar Voice
+    private attackSpeed = 14.0;   // Velocidad de entrada de ducking
+    private releaseSpeed = 3.5;   // Velocidad de recuperación de volumen
+    private currentDucking = 1.0;
+    private voiceTimer = 0.0;
+
+    private currentMusic?: Phaser.Sound.BaseSound;
+    private currentAmbient?: Phaser.Sound.BaseSound;
+
+    public static getInstance(): AudioManager {
+        if (!AudioManager.instance) {
+            AudioManager.instance = new AudioManager();
+        }
+        return AudioManager.instance;
+    }
+
+    public init(scene: Phaser.Scene): void {
+        this.scene = scene;
+    }
+
+    public getEffectiveVolume(bus: AudioBus): number {
+        if (this.mutes.master || this.mutes[bus]) return 0.0;
+        let vol = this.volumes.master * this.volumes[bus];
+        if (bus === "music") {
+            vol *= this.currentDucking;
+        }
+        return Math.max(0.0, Math.min(1.0, vol));
+    }
+
+    public setBusVolume(bus: AudioBus, volume: number): void {
+        this.volumes[bus] = Phaser.Math.Clamp(volume, 0.0, 1.0);
+        if (bus === "music" && this.currentMusic && "setVolume" in this.currentMusic) {
+            (this.currentMusic as Phaser.Sound.WebAudioSound).setVolume(this.getEffectiveVolume("music"));
+        }
+    }
+
+    public playMusic(key: string, config: Phaser.Types.Sound.SoundConfig = { loop: true }): Phaser.Sound.BaseSound {
+        if (this.currentMusic) {
+            this.currentMusic.stop();
+        }
+        const sound = this.scene.sound.add(key, {
+            ...config,
+            volume: this.getEffectiveVolume("music"),
+        });
+        sound.play();
+        this.currentMusic = sound;
+        return sound;
+    }
+
+    public playSFX(key: string, config?: Phaser.Types.Sound.SoundConfig): Phaser.Sound.BaseSound {
+        const sound = this.scene.sound.add(key, {
+            ...config,
+            volume: this.getEffectiveVolume("sfx"),
+        });
+        sound.play();
+        return sound;
+    }
+
+    public playVoice(key: string, durationSeconds: number, config?: Phaser.Types.Sound.SoundConfig): Phaser.Sound.BaseSound {
+        this.voiceTimer = Math.max(this.voiceTimer, durationSeconds);
+        const sound = this.scene.sound.add(key, {
+            ...config,
+            volume: this.getEffectiveVolume("voice"),
+        });
+        sound.play();
+        return sound;
+    }
+
+    public playAudioSprite(spriteKey: string, soundKey: string, bus: AudioBus = "sfx"): void {
+        const vol = this.getEffectiveVolume(bus);
+        this.scene.sound.playAudioSprite(spriteKey, soundKey, { volume: vol });
+    }
+
+    public update(deltaSeconds: number): void {
+        if (this.voiceTimer > 0) {
+            this.voiceTimer -= deltaSeconds;
+            if (this.voiceTimer < 0) this.voiceTimer = 0;
+        }
+
+        const voiceActive = this.voiceTimer > 0;
+        const target = voiceActive ? this.duckFactor : 1.0;
+        const speed = voiceActive ? this.attackSpeed : this.releaseSpeed;
+        this.currentDucking += (target - this.currentDucking) * Math.min(speed * deltaSeconds, 1.0);
+
+        if (this.currentMusic && "setVolume" in this.currentMusic && this.currentMusic.isPlaying) {
+            (this.currentMusic as Phaser.Sound.WebAudioSound).setVolume(this.getEffectiveVolume("music"));
+        }
+    }
+}
+`;
+
+	const snippet = `// 1. Inicializar en tu Scene de Phaser (create):
+const audio = AudioManager.getInstance();
+audio.init(this);
+audio.playMusic("bgm_battle");
+
+// 2. Disparar diálogo con ducking automático sobre la música:
+audio.playVoice("voice_dialogue_01", 3.2); // 3.2s de voz atenúa Music a 0.35
+
+// 3. Efectos y audio sprites:
+audio.playSFX("hit_punch");
+audio.playAudioSprite("game_audio_sprite", "coin_pickup", "sfx");
+
+// 4. En el ciclo update(time, delta):
+audio.update(delta / 1000);`;
+
+	return {
+		engine: "Phaser",
+		targetFilePath: targetPath,
+		relPath: relative(rootDir, targetPath),
+		buses: ["Master", "Music (Ducked)", "SFX", "Voice (Ducking Trigger)", "UI", "Ambient"],
+		duckingConfig: "AudioManager en TypeScript con Web Audio Gain lerp (duckFactor: 0.35, attack: 14.0, release: 3.5)",
+		routingCodeSnippet: snippet,
+		content,
+	};
+}
+
 /**
  * Scaffolds the audio bus hierarchy for the selected engine.
  */
@@ -568,6 +754,8 @@ export function scaffoldAudioBus(engine: SupportedEngine, rootDir: string): BusS
 			return generateUnityBusController(rootDir);
 		case "Unreal":
 			return generateUnrealBusConfig(rootDir);
+		case "Phaser":
+			return generatePhaserBusManager(rootDir);
 	}
 }
 

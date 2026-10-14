@@ -54,6 +54,15 @@ export function getAvailableStarters(): StarterTemplate[] {
 			sourceDir: join(pkgRoot, "starters", "raylib-cpp-entt"),
 		},
 		{
+			id: "phaser-web-2d",
+			name: "Phaser 3/4 + Vite + TypeScript",
+			engine: "Phaser",
+			language: "TypeScript",
+			description: "Starter 2D web con Phaser, Vite HMR, TypeScript estricto y Arcade Physics",
+			runCommand: "npm install && npm run dev",
+			sourceDir: join(pkgRoot, "starters", "phaser-web-2d"),
+		},
+		{
 			id: "godot-2d-character",
 			name: "Godot 4 2D Character Controller",
 			engine: "Godot",

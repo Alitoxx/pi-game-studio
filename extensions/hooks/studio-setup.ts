@@ -100,6 +100,7 @@ export const ENGINE_AGENTS_MAP: Record<string, string[]> = {
 	Unreal: ["unreal-specialist"],
 	Bevy: ["bevy-specialist"],
 	Raylib: ["raylib-specialist"],
+	Phaser: ["phaser-specialist"],
 };
 
 export function getEngineAgents(engineName: string): string[] {
@@ -109,6 +110,7 @@ export function getEngineAgents(engineName: string): string[] {
 	if (norm.includes("unreal")) return ENGINE_AGENTS_MAP.Unreal;
 	if (norm.includes("bevy")) return ENGINE_AGENTS_MAP.Bevy;
 	if (norm.includes("raylib")) return ENGINE_AGENTS_MAP.Raylib;
+	if (norm.includes("phaser")) return ENGINE_AGENTS_MAP.Phaser;
 	return ENGINE_AGENTS_MAP.Godot;
 }
 
@@ -295,6 +297,7 @@ export async function runGuidedSetup(
 		"Unreal Engine 5 (C++, Blueprints, high-end)",
 		"Bevy (Rust ECS, moderno y ultra rápido)",
 		"Raylib (C++ / EnTT — puro código, cero editores pesados)",
+		"Phaser 3/4 (TypeScript / WebGL — web y mobile ligero)",
 	];
 
 	const engineChoice = await promptSelectSafe(
@@ -303,7 +306,7 @@ export async function runGuidedSetup(
 		engineOptions,
 	);
 	if (!engineChoice) return;
-	const selectedEngine = ["Godot", "Unity", "Unreal", "Bevy", "Raylib"][engineChoice.index] || "Godot";
+	const selectedEngine = ["Godot", "Unity", "Unreal", "Bevy", "Raylib", "Phaser"][engineChoice.index] || "Godot";
 
 	// Auditoría de Prerrequisitos del Motor
 	const audit = auditEnginePrerequisites(selectedEngine);

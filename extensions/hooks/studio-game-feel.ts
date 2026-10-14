@@ -37,7 +37,7 @@ export interface PillarStatus {
 export interface GameFeelAuditResult {
 	filePath: string;
 	relPath: string;
-	language: "GDScript" | "Rust" | "C++" | "C#" | "Unknown";
+	language: "GDScript" | "Rust" | "C++" | "C#" | "TypeScript" | "Unknown";
 	engine: string;
 	score: number;
 	total: number;
@@ -49,7 +49,7 @@ export interface GameFeelAuditResult {
 export interface ScriptCandidate {
 	path: string;
 	relPath: string;
-	language: "GDScript" | "Rust" | "C++" | "C#" | "Unknown";
+	language: "GDScript" | "Rust" | "C++" | "C#" | "TypeScript" | "Unknown";
 	score: number;
 	content: string;
 }
@@ -77,6 +77,7 @@ function detectLanguageFromExt(ext: string): ScriptCandidate["language"] {
 	if (ext === ".rs") return "Rust";
 	if (ext === ".cpp" || ext === ".c" || ext === ".hpp" || ext === ".h") return "C++";
 	if (ext === ".cs") return "C#";
+	if (ext === ".ts" || ext === ".js") return "TypeScript";
 	return "Unknown";
 }
 
@@ -97,6 +98,9 @@ function calculateMovementRelevance(content: string, filename: string): number {
 	if (/\bis_on_floor\b/i.test(content)) score += 20;
 	if (/\bgravity\b/i.test(content)) score += 15;
 	if (/ButtonInput<KeyCode>|Input\.is_/i.test(content)) score += 15;
+	if (/Phaser\.Scene|extends\s+Phaser/i.test(content)) score += 35;
+	if (/physics\.add\.sprite|setVelocity/i.test(content)) score += 30;
+	if (/cursors|KeyCodes/i.test(content)) score += 15;
 
 	return score;
 }
@@ -115,7 +119,7 @@ export function findMovementScripts(studioRoot: string): ScriptCandidate[] {
 					}
 				} else if (entry.isFile()) {
 					const ext = extname(entry.name).toLowerCase();
-					if ([".gd", ".rs", ".cpp", ".cs"].includes(ext)) {
+					if ([".gd", ".rs", ".cpp", ".cs", ".ts", ".js"].includes(ext)) {
 						const fullPath = join(dir, entry.name);
 						try {
 							const content = readFileSync(fullPath, "utf8");
@@ -462,6 +466,84 @@ if (justLanded && impactForce > 200.0f) {
     cameraTrauma = 0.4f; // Trigger screen shake
 }`;
 		}
+	} else if (language === "TypeScript" || engine.toLowerCase().includes("phaser")) {
+		switch (pillar) {
+			case "coyote_time":
+				return `// --- Coyote Time (Phaser 3/4 TypeScript) ---
+let coyoteTime = 120; // 120 ms de tolerancia
+let coyoteTimer = 0;
+
+// En update(time: number, delta: number):
+const onFloor = player.body.blocked.down || player.body.touching.down;
+if (onFloor) {
+    coyoteTimer = coyoteTime;
+} else {
+    coyoteTimer -= delta;
+}
+
+// Al pulsar salto, comprobar margen coyoteTimer > 0:
+if (jumpPressed && coyoteTimer > 0) {
+    player.setVelocityY(-450);
+    coyoteTimer = 0;
+}`;
+
+			case "jump_buffering":
+				return `// --- Jump Buffering (Phaser 3/4 TypeScript) ---
+let jumpBufferTime = 120; // 120 ms de margen
+let jumpBufferTimer = 0;
+
+// En update(time: number, delta: number):
+if (Phaser.Input.Keyboard.JustDown(jumpKey)) {
+    jumpBufferTimer = jumpBufferTime;
+} else if (jumpBufferTimer > 0) {
+    jumpBufferTimer -= delta;
+}
+
+if (jumpBufferTimer > 0 && (onFloor || coyoteTimer > 0)) {
+    player.setVelocityY(-450);
+    jumpBufferTimer = 0;
+    coyoteTimer = 0;
+}`;
+
+			case "variable_jump":
+				return `// --- Variable Jump Height (Phaser 3/4 TypeScript) ---
+// En update(time: number, delta: number):
+const jumpReleased = Phaser.Input.Keyboard.JustUp(jumpKey);
+if (jumpReleased && player.body.velocity.y < 0) {
+    player.setVelocityY(player.body.velocity.y * 0.5);
+}`;
+
+			case "acceleration_friction":
+				return `// --- Aceleración e Inercia (Phaser 3/4 TypeScript) ---
+const maxSpeed = 300;
+const accel = 1200; // px/s^2
+const friction = 1600; // px/s^2
+
+// En update(time: number, delta: number):
+const targetVx = direction * maxSpeed;
+const rate = direction !== 0 ? accel : friction;
+player.setVelocityX(Phaser.Math.Linear(player.body.velocity.x, targetVx, (rate * delta) / 1000));
+// Alternativa con Arcade Physics drag nativo:
+// player.setDragX(friction);
+// player.setAccelerationX(direction * accel);`;
+
+			case "game_juice":
+				return `// --- Game Juice & Impact Feedback (Phaser 3/4 TypeScript) ---
+// Al aterrizar con velocidad vertical alta:
+if (justLanded && Math.abs(impactVelocity) > 200) {
+    // 1. Shake de cámara
+    scene.cameras.main.shake(150, 0.008);
+    // 2. Squash & Stretch con tweens
+    scene.tweens.add({
+        targets: player,
+        scaleX: 1.25,
+        scaleY: 0.75,
+        duration: 80,
+        yoyo: true,
+        ease: "Quad.easeOut",
+    });
+}`;
+		}
 	} else {
 		// Generic C# / Unity fallback
 		switch (pillar) {
@@ -547,7 +629,7 @@ export async function handleStudioGameFeel(
 		if (candidates.length === 0) {
 			console.log(`${YELLOW}No se encontraron scripts de movimiento/controlador en el proyecto.${RESET}`);
 			console.log(`\n${GRAY}Sugerencia: Puedes generar un sandbox interactivo listo para auditar ejecutando:${RESET}`);
-			console.log(`  ${SECONDARY}${BOLD}/studio:scaffold${RESET}  o  ${SECONDARY}${BOLD}godot / bevy / raylib${RESET}\n`);
+			console.log(`  ${SECONDARY}${BOLD}/studio:scaffold${RESET}  o  ${SECONDARY}${BOLD}godot / bevy / raylib / phaser${RESET}\n`);
 			return;
 		}
 		targetFile = candidates[0];

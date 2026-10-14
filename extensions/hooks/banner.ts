@@ -118,7 +118,7 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 	if (!hasConfiguredEngine) {
 		engineInfo = "Sin motor";
 	} else if (!engineResult.detected) {
-		engineInfo = prodState?.engine || setup.currentEngine || "Godot · Unity · Unreal · Bevy · Raylib";
+		engineInfo = prodState?.engine || setup.currentEngine || "Godot · Unity · Unreal · Bevy · Raylib · Phaser";
 	}
 
 	const stage = prodState?.milestone || (setup.isConfigured ? "Entorno OK" : "Pendiente setup (/studio:setup)");

@@ -275,6 +275,49 @@ export function auditEnginePrerequisites(engine: string, dir = process.cwd()): E
 				"Descarga Epic Games Launcher para instalar Unreal Engine 5.4+ y asegúrate de tener Visual Studio 2022 o Xcode instalado.",
 			);
 		}
+	} else if (normalized.includes("phaser")) {
+		// 1. Node.js runtime
+		const nodeVersion = runCommandSilent("node --version");
+		const hasNode = !!nodeVersion;
+		const nodeMajor = nodeVersion ? parseInt(nodeVersion.replace(/^v/, "").split(".")[0], 10) : 0;
+		const nodeSatisfied = hasNode && nodeMajor >= 18;
+
+		checks.push({
+			name: "Node.js (>= 18)",
+			required: true,
+			satisfied: nodeSatisfied,
+			version: nodeVersion,
+			details: nodeSatisfied
+				? `Node.js ${nodeVersion}`
+				: (hasNode ? `Versión ${nodeVersion} detectada, se recomienda >= 18` : "Node.js no instalado"),
+			installHelp: {
+				macos: "brew install node",
+				linux: "sudo apt install nodejs npm o usa nvm/fnm",
+				windows: "winget install OpenJS.NodeJS.LTS",
+			},
+		});
+
+		// 2. npm / package manager
+		const npmVersion = runCommandSilent("npm --version");
+		const hasNpm = !!npmVersion;
+		checks.push({
+			name: "npm (Gestor de dependencias)",
+			required: true,
+			satisfied: hasNpm,
+			version: npmVersion,
+			details: hasNpm ? `npm ${npmVersion}` : "npm no detectado",
+			installHelp: {
+				macos: "brew install node",
+				linux: "sudo apt install npm",
+				windows: "Instala Node.js desde https://nodejs.org",
+			},
+		});
+
+		if (!nodeSatisfied) {
+			recommendations.push(
+				"Instala Node.js 18+ (LTS recomendado) para compilar y ejecutar proyectos Phaser con Vite.",
+			);
+		}
 	}
 
 	// ── Herramientas Multimedia FOSS (Media Pipeline) ──

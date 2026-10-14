@@ -21,6 +21,7 @@ export const AGENTS_WIDGET_KEY = "studio-subagents";
 export const SPECIALIST_ENGINE_TAGS: Record<string, string> = {
 	"bevy-specialist": "[Bevy]",
 	"godot-specialist": "[Godot]",
+	"phaser-specialist": "[Phaser]",
 	"raylib-specialist": "[Raylib]",
 	"unity-specialist": "[Unity]",
 	"unreal-specialist": "[Unreal]",
@@ -33,6 +34,7 @@ export function getAgentEngineTag(agent: string): string {
 	const lower = agent.toLowerCase();
 	if (lower.includes("bevy")) return "[Bevy]";
 	if (lower.includes("godot")) return "[Godot]";
+	if (lower.includes("phaser")) return "[Phaser]";
 	if (lower.includes("raylib")) return "[Raylib]";
 	if (lower.includes("unity")) return "[Unity]";
 	if (lower.includes("unreal")) return "[Unreal]";

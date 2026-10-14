@@ -20,7 +20,7 @@ import {
 } from "./studio-palette.ts";
 
 export interface ScaffoldOptions {
-	engine?: "Godot" | "Bevy" | "Raylib";
+	engine?: "Godot" | "Bevy" | "Raylib" | "Phaser";
 	dimension?: "2d" | "3d";
 	forceOverwrite?: boolean;
 	useSuffix?: boolean;
@@ -66,7 +66,7 @@ function getSuffixedPath(targetPath: string): string {
 export function resolveEngineAndDimension(
 	studioRoot: string,
 	argsString = "",
-): { engine: "Godot" | "Bevy" | "Raylib"; dimension: "2d" | "3d" } {
+): { engine: "Godot" | "Bevy" | "Raylib" | "Phaser"; dimension: "2d" | "3d" } {
 	const args = argsString.toLowerCase();
 
 	// 1. Check dimension from args
@@ -78,13 +78,15 @@ export function resolveEngineAndDimension(
 	}
 
 	// 2. Check engine from args
-	let engine: "Godot" | "Bevy" | "Raylib" | undefined;
+	let engine: "Godot" | "Bevy" | "Raylib" | "Phaser" | undefined;
 	if (args.includes("godot")) {
 		engine = "Godot";
 	} else if (args.includes("bevy")) {
 		engine = "Bevy";
 	} else if (args.includes("raylib")) {
 		engine = "Raylib";
+	} else if (args.includes("phaser")) {
+		engine = "Phaser";
 	}
 
 	// 3. Fallback to project.yaml
@@ -98,6 +100,7 @@ export function resolveEngineAndDimension(
 		if (raw.includes("bevy")) engine = "Bevy";
 		else if (raw.includes("raylib")) engine = "Raylib";
 		else if (raw.includes("godot")) engine = "Godot";
+		else if (raw.includes("phaser")) engine = "Phaser";
 	}
 
 	// 4. Fallback to filesystem detection
@@ -107,6 +110,7 @@ export function resolveEngineAndDimension(
 			if (detected.engine === "Bevy") engine = "Bevy";
 			else if (detected.engine === "Raylib") engine = "Raylib";
 			else if (detected.engine === "Godot") engine = "Godot";
+			else if (detected.engine === "Phaser") engine = "Phaser";
 		}
 	}
 
@@ -641,6 +645,120 @@ int main(void) {
 }
 
 // ──────────────────────────────────────────────
+// Phaser (TypeScript) Templates
+// ──────────────────────────────────────────────
+
+function getPhaserPlayground(): string {
+	return `import Phaser from "phaser";
+
+// Pi Game Studio — Phaser Playable Sandbox (Arcade Physics 2D)
+// Controles: [A/D] o Flechas para mover | [ESPACIO/W] para saltar
+
+export class PlaygroundScene extends Phaser.Scene {
+    private player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
+    private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+    private wasd!: {
+        up: Phaser.Input.Keyboard.Key;
+        left: Phaser.Input.Keyboard.Key;
+        down: Phaser.Input.Keyboard.Key;
+        right: Phaser.Input.Keyboard.Key;
+    };
+
+    constructor() {
+        super({ key: "PlaygroundScene" });
+    }
+
+    preload(): void {
+        const playerGfx = this.make.graphics({ x: 0, y: 0 });
+        playerGfx.fillStyle(0x67e8f9, 1);
+        playerGfx.fillRect(0, 0, 32, 64);
+        playerGfx.generateTexture("player_box", 32, 64);
+
+        const floorGfx = this.make.graphics({ x: 0, y: 0 });
+        floorGfx.fillStyle(0x3d4458, 1);
+        floorGfx.fillRect(0, 0, 1280, 48);
+        floorGfx.generateTexture("floor_box", 1280, 48);
+    }
+
+    create(): void {
+        const width = this.scale.width;
+        const height = this.scale.height;
+
+        const platforms = this.physics.add.staticGroup();
+        const floor = platforms.create(width / 2, height - 24, "floor_box") as Phaser.Physics.Arcade.Sprite;
+        floor.refreshBody();
+
+        this.player = this.physics.add.sprite(width / 2, height - 200, "player_box");
+        this.player.setBounce(0.0);
+        this.player.setCollideWorldBounds(true);
+        this.physics.add.collider(this.player, platforms);
+
+        if (this.input.keyboard) {
+            this.cursors = this.input.keyboard.createCursorKeys();
+            this.wasd = {
+                up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
+                left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
+                down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
+                right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
+            };
+        }
+
+        this.add.text(24, 24, "PI GAME STUDIO — PHASER 2D SANDBOX", {
+            fontSize: "20px",
+            color: "#a78bfa",
+            fontStyle: "bold",
+        });
+        this.add.text(24, 52, "Controles: [A/D] o Flechas mover | [ESPACIO/W] Saltar", {
+            fontSize: "14px",
+            color: "#9ca3af",
+        });
+    }
+
+    override update(): void {
+        const speed = 300;
+        const jumpVelocity = -450;
+        const onFloor = this.player.body.blocked.down || this.player.body.touching.down;
+
+        const leftPressed = this.cursors?.left.isDown || this.wasd?.left.isDown;
+        const rightPressed = this.cursors?.right.isDown || this.wasd?.right.isDown;
+        const jumpPressed =
+            Phaser.Input.Keyboard.JustDown(this.cursors?.up) ||
+            Phaser.Input.Keyboard.JustDown(this.wasd?.up) ||
+            Phaser.Input.Keyboard.JustDown(this.cursors?.space);
+
+        if (leftPressed) {
+            this.player.setVelocityX(-speed);
+        } else if (rightPressed) {
+            this.player.setVelocityX(speed);
+        } else {
+            this.player.setVelocityX(0);
+        }
+
+        if (jumpPressed && onFloor) {
+            this.player.setVelocityY(jumpVelocity);
+        }
+    }
+}
+
+export const gameConfig: Phaser.Types.Core.GameConfig = {
+    type: Phaser.AUTO,
+    width: 1280,
+    height: 720,
+    parent: "game-container",
+    backgroundColor: "#181a24",
+    physics: {
+        default: "arcade",
+        arcade: {
+            gravity: { x: 0, y: 980 },
+            debug: false,
+        },
+    },
+    scene: [PlaygroundScene],
+};
+`;
+}
+
+// ──────────────────────────────────────────────
 // Scaffold Engine Generator
 // ──────────────────────────────────────────────
 
@@ -708,6 +826,13 @@ export async function scaffoldPlayground(
 			targetPath,
 			content: getRaylibPlayground(),
 			description: "Game loop completo en Raylib (C++) con física de salto y piso",
+		});
+	} else if (engine === "Phaser") {
+		const targetPath = join(studioRoot, "src", "playground.ts");
+		filePlans.push({
+			targetPath,
+			content: getPhaserPlayground(),
+			description: "Playground 2D en Phaser (TypeScript) con Arcade Physics, movimiento y salto",
 		});
 	}
 
@@ -785,6 +910,9 @@ export async function scaffoldPlayground(
 	} else if (engine === "Raylib") {
 		runCommand = "g++ src/playground.cpp -lraylib -o playground && ./playground";
 		notes.push("Nota: Si usas CMake, añade src/playground.cpp como ejecutable en tu CMakeLists.txt.");
+	} else if (engine === "Phaser") {
+		runCommand = "npx vite || npm run dev";
+		notes.push("Nota: Ejecuta tu servidor web (Vite o npm run dev) para visualizar el sandbox en el navegador.");
 	}
 
 	return {

@@ -67,6 +67,9 @@ export function getEngineCompileCommand(
 	if (norm.includes("raylib") || existsSync(join(studioRoot, "CMakeLists.txt"))) {
 		return { command: "cmake --build build 2>/dev/null || make -j4 2>/dev/null || true", engine: "Raylib" };
 	}
+	if (norm.includes("phaser")) {
+		return { command: "npx vite build --emptyOutDir 2>/dev/null || npm run build 2>/dev/null || true", engine: "Phaser" };
+	}
 	if (norm.includes("unity")) {
 		return { command: "dotnet build --no-restore", engine: "Unity" };
 	}

@@ -82,8 +82,8 @@ export async function handleStudioAgents(
 		const objectiveOptions = [
 			"1. Directores (Visión, Arquitectura y Producción)",
 			"2. Desarrolladores Core (Diseño, Gameplay, Arte, Audio, QA)",
-			"3. Especialistas de Motor (Bevy, Godot, Raylib, Unity, Unreal)",
-			"4. Ver la dotación completa (13 agentes)",
+			"3. Especialistas de Motor (Bevy, Godot, Phaser, Raylib, Unity, Unreal)",
+			"4. Ver la dotación completa (14 agentes)",
 		];
 
 		const selected = await (ctx.ui as any).select(

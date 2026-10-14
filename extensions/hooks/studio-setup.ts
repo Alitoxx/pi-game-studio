@@ -624,7 +624,7 @@ export function installStudioFiles(
 		}
 	}
 
-	// 5b. Configure local project theme and tuiMode (fullscreen) by default
+	// 5b. Configure local project tuiMode (fullscreen) by default
 	const settingsJsonPath = join(ctx.cwd, ".pi", "settings.json");
 	try {
 		let currentSettings: any = {};
@@ -634,10 +634,6 @@ export function installStudioFiles(
 			} catch {}
 		}
 		let changed = false;
-		if (!currentSettings.theme) {
-			currentSettings.theme = "GameStudio-Gentle";
-			changed = true;
-		}
 		if (!currentSettings.tuiMode) {
 			currentSettings.tuiMode = "fullscreen";
 			changed = true;

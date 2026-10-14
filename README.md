@@ -26,17 +26,19 @@
 </p>
 
 ```text
-       ⢀⣀⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⠀    P I   G A M E   S T U D I O   v1.2.0
-  ⠀⢀⣴⠟⠋⠁⠀⠀⠀⠀⣀⣀⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠀    Compact AI Game Studio for Pi (8+1 Architecture)
- ⢠⡿⣡⡶⠾⠟⢿⡇⠀⣼⡏⣉⣍⠙⣷⠀⠀⣿⠛⠛⠛⠛⠛⠛⠀    ──────────────────────────────────────────────────────────
- ⢼⣿⠏⠀⠀⠀⢸⡇⠀⣿⡟⢻⡟⠃⣿⠀⠀⣿⠀⠀⠀⠀⠀⠀⠀    GIT:       On branch main
- ⠀⠀⠀⠀⢰⡾⠿⣿⠿⠿⠃⠈⠁⠀⠿⠾⢿⠿⢷⣆⠀⠀⠀⠀⠀    PATH:      ~/Developer/pi-game-studio
- ⠀⠀⠀⠀⢸⡇⢾⣿⠶⠆⠀⠀⠀⠀⠰⠶⢾⣷⢸⣿⠀⠀⠀⠀⠀    ENGINE:    Godot · Unity · Unreal · Bevy · Raylib
- ⠀⠀⠀⠀⠸⣧⣤⣭⣤⣤⡄⢀⡀⠀⣤⣤⣬⣥⣼⠟⠀⠀⠀⠀⠀    AGENTS:    9 activos (8 Core + 1 Motor)
- ⠀⠀⠀⠀⠀⠀⣼⠇⠀⣾⣧⣼⣧⡄⣿⠀⠀⣿⠀⠀⠀⢠⣶⣶⠀    STAGE:     Entorno OK
- ⠀⠀⣠⣤⣴⠾⠋⠀⠀⣿⣇⣙⣋⣠⣿⡀⠀⠻⣦⣤⣴⠟⢱⡟⠀    SKILLS:    6 ODD pipeline (/concept, /spec, /arch, /code, /test, /ship)
- ⠀⠀⣽⡇⠀⠀⠀⠀⢰⡟⠉⠉⠉⠉⠙⢷⣄⠀⠀⠀⢀⣴⠟⠁⠀    STORAGE:   Engram connected (Persistent Memory)
- ⠀⠀⠙⠛⠛⠛⠛⠛⠛⠁⠀⠀⠀⠀⠀⠀⠙⠛⠛⠛⠛⠁⠀⠀⠀    TIPS:      /concept · /spec · /code · /studio · /studio:setup
+         ⣤⡀      ⢠⡤⣤⢤⡄      ⢀⣤         P I   G A M E   S T U D I O   v1.8.1
+          ⠹⣆     ⢸⡇  ⢸⡇     ⣰⠏          Compact AI Game Studio for Pi (8+1 Architecture)
+       ⣀⣤⣴⡾⠛⠁   ⠈⠉⠉⠉⠁   ⠈⠛⢷⣦⣤⣀       ──────────────────────────────────────────────────────────
+     ⣰⡿⠋⣠⣴⠾⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠷⣦⣄⠙⢿⣆     GIT:       On branch main
+    ⢸⣿⠁⢸⡿⠁  ⢰⣶⣶    ⣶⣶⡆  ⠈⢿⡇⠈⣿⡇    PATH:      ~/Games/pi-game-studio
+    ⢸⣿⡄⢸⣇      ⠘⠛⠶⠶⠛⠃      ⣸⡇⢠⣿⡇    ENGINE:    Godot · Unity · Unreal · Bevy · Raylib
+     ⠹⣷⣈⠻⣦⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣠⣴⠟⣁⣾⠏     AGENTS:    9 activos (8 Core + 1 Motor)
+     ⢀⣴⠿⣷⣄⠉⠙⠛⠛⠿⠿⠿⠿⠛⠛⠋⠉⣠⣾⠿⣦⡀     STAGE:     Entorno OK
+    ⢠⣿⠃ ⢸⣿   ⢰⣤⡀    ⢀⣤⡆   ⣿⡇ ⠘⣿⡄    SKILLS:    6 ODD pipeline (/concept, /spec, /arch, /code, /test, /ship)
+    ⠘⣿⡀ ⢸⣿   ⠘⠿⠃  ⢀⡀ ⠈⠻⠃   ⣿⡇ ⢀⣿⠃    STORAGE:   Local storage (Persistent Memory)
+     ⠙⠷⣤⣼⣿⣀     ⠘⠷⠾⠃     ⣀⣿⣧⣤⠾⠋     TIPS:      /concept · /spec · /code · /studio · /studio:setup
+         ⣠⣤⣭⣝⡲⠶      ⠶⠖⣫⣭⣤⣄        
+         ⠉⠉⠉⠛⠛⠁      ⠈⠛⠛⠉⠉⠉        
 ```
 
 ---

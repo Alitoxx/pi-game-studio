@@ -20,7 +20,7 @@ Tier 2 — Department Leads & Core Devs
   qa-lead (Testing & Quality Gates)
 
 Tier 3 — Engine Specialist (+1 dedicado según motor del proyecto)
-  bevy-specialist | godot-specialist | raylib-specialist | unity-specialist | unreal-specialist
+  bevy-specialist | godot-specialist | phaser-specialist | raylib-specialist | unity-specialist | unreal-specialist
 ```
 
 ## Model Mapping y Reasoning Budget
@@ -42,6 +42,7 @@ El instalador (`/setup` o `/studio:setup`) despliega exactamente **9 agentes** e
 - **1 Especialista del motor activo** definido en `project.yaml`:
   - **Bevy (Rust)**: 8 + 1 = **9 agentes** (`bevy-specialist`).
   - **Godot 4**: 8 + 1 = **9 agentes** (`godot-specialist`).
+  - **Phaser (TypeScript)**: 8 + 1 = **9 agentes** (`phaser-specialist`).
   - **Raylib (C++ / EnTT)**: 8 + 1 = **9 agentes** (`raylib-specialist`).
   - **Unity**: 8 + 1 = **9 agentes** (`unity-specialist`).
   - **Unreal Engine 5**: 8 + 1 = **9 agentes** (`unreal-specialist`).
@@ -65,7 +66,7 @@ Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar 
 
 ---
 
-## Directorio Detallado de los 13 Agentes Oficiales (Arquitectura Compacta 8+1)
+## Directorio Detallado de los 14 Agentes Oficiales (Arquitectura Compacta 8+1)
 
 ### Tier 1: Directores
 
@@ -123,6 +124,11 @@ Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar 
 - **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent, ask_user_question`
 - **Misión y Alcance:** The Godot Specialist is the authority on all Godot-specific patterns, GDScript/C#, SceneTree, GDExtension, and canvas_item shaders.
 
+#### `phaser-specialist`
+- **Archivo:** [`agents/phaser-specialist.md`](file:///Users/alexis/Developer/pi-game-studio/agents/phaser-specialist.md)
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent, ask_user_question`
+- **Misión y Alcance:** The Phaser Specialist is the authority on Phaser 3 and 4 game development, modern TypeScript, HTML5 Canvas/WebGL pipelines, Arcade/Matter physics, scene lifecycles, and web game deployment.
+
 #### `raylib-specialist`
 - **Archivo:** [`agents/raylib-specialist.md`](file:///Users/alexis/Developer/pi-game-studio/agents/raylib-specialist.md)
 - **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent, ask_user_question`
@@ -142,6 +148,6 @@ Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar 
 
 ## Notas de Uso
 
-- Los agentes se distribuyen como plantillas de origen en `agents/*.md` (13 agentes oficiales: 8 Core + 5 Especialistas de motor).
+- Los agentes se distribuyen como plantillas de origen en `agents/*.md` (14 agentes oficiales: 8 Core + 6 Especialistas de motor).
 - `/setup` o `/studio:setup` copia y activa los 9 agentes correspondientes (8 Core + 1 Motor activo) en `.pi/agents/` en tu proyecto.
 - `/assign-models` o `/studio:models` permite cambiar qué modelo ejecuta cada agente o nivel.

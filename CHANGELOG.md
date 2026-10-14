@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.2] - 2026-10-14
+
+### Added
+- **Soporte Oficial de Phaser 3/4 y Especialista de Motor (`phaser-specialist`)**:
+  - **Nuevo Engine Specialist (`phaser-specialist`)**: Especialista dedicado para desarrollo moderno de videojuegos web con Phaser 3/4 (TypeScript, WebGL/Canvas, físicas Arcade y Matter.js, y empaquetado con Vite).
+  - **Starter Web 2D (`starters/phaser-web-2d`)**: Plantilla oficial lista para jugar con TypeScript estricto, Vite HMR, inicialización procedural en `BootScene` y control responsivo de Arcade Physics en `GameScene`.
+  - **6 Opciones de Motores en `/studio:setup` y `/studio:new`**: Integración completa de Phaser como 6º motor soportado (Bevy, Godot 4, Phaser, Raylib, Unity, Unreal Engine 5), manteniendo la arquitectura 8+1 (9 agentes activos por proyecto) y ampliando el catálogo a 14 plantillas en `agents/`.
+  - **Simetría Completa en Skills ODD y Herramientas CLI**:
+    - Skills del ciclo ODD (`arch`, `code`, `test`) con directivas y patrones idiomáticos para Phaser y Web Audio API.
+    - Soporte integrado en `/studio:scaffold` (generación de sandbox interactivo 2D para Phaser con Arcade Physics).
+    - Soporte en `/studio:watch` (compilación y recarga en caliente con Vite/TypeScript).
+    - Soporte en `/studio:game-feel` (snippets de coyote time, jump buffering, variable jump, inercia y feedback visual para Phaser/TypeScript).
+    - Soporte en `/studio:audio-bus` (scaffolding de `PhaserBusManager` con Web Audio API y ducking sidechain).
+    - Soporte en `/studio:doctor` (auditoría de runtime Node.js/npm para desarrollo web).
+    - Detección automática en tiempo de ejecución en `engine-detector.ts` ante proyectos con dependencia `phaser`.
+
+---
+
 ## [1.8.1] - 2026-10-14
 
 ### Added

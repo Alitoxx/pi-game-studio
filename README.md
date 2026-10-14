@@ -20,7 +20,7 @@
   <a href="skills"><img src="https://img.shields.io/badge/skills-6%20ODD-green" alt="6 ODD Skills"></a>
   <a href="prompts"><img src="https://img.shields.io/badge/templates-49-orange" alt="49 Templates"></a>
   <a href="chains"><img src="https://img.shields.io/badge/chains-7-yellow" alt="7 Chains"></a>
-  <a href="starters"><img src="https://img.shields.io/badge/starters-5-cyan" alt="5 Starters"></a>
+  <a href="starters"><img src="https://img.shields.io/badge/starters-6-cyan" alt="6 Starters"></a>
   <a href="extensions"><img src="https://img.shields.io/badge/hooks-4-red" alt="4 Hooks"></a>
   <img src="https://img.shields.io/badge/built%20for-Pi-8B5CF6?logo=pinokio" alt="Built for Pi">
 </p>
@@ -31,7 +31,7 @@
        ⣀⣤⣴⡾⠛⠁   ⠈⠉⠉⠉⠁   ⠈⠛⢷⣦⣤⣀       ──────────────────────────────────────────────────────────
      ⣰⡿⠋⣠⣴⠾⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠷⣦⣄⠙⢿⣆     GIT:       On branch main
     ⢸⣿⠁⢸⡿⠁  ⢰⣶⣶    ⣶⣶⡆  ⠈⢿⡇⠈⣿⡇    PATH:      ~/Games/pi-game-studio
-    ⢸⣿⡄⢸⣇      ⠘⠛⠶⠶⠛⠃      ⣸⡇⢠⣿⡇    ENGINE:    Godot · Unity · Unreal · Bevy · Raylib
+    ⢸⣿⡄⢸⣇      ⠘⠛⠶⠶⠛⠃      ⣸⡇⢠⣿⡇    ENGINE:    Godot · Unity · Unreal · Bevy · Raylib · Phaser
      ⠹⣷⣈⠻⣦⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣠⣴⠟⣁⣾⠏     AGENTS:    9 activos (8 Core + 1 Motor)
      ⢀⣴⠿⣷⣄⠉⠙⠛⠛⠿⠿⠿⠿⠛⠛⠋⠉⣠⣾⠿⣦⡀     STAGE:     Entorno OK
     ⢠⣿⠃ ⢸⣿   ⢰⣤⡀    ⢀⣤⡆   ⣿⡇ ⠘⣿⡄    SKILLS:    6 ODD pipeline (/concept, /spec, /arch, /code, /test, /ship)
@@ -81,7 +81,7 @@ The result: you still make every decision, but now you have a fast, coordinated 
 | **Skills**    | 6 ODD | Full lifecycle pipeline: `/concept`, `/spec`, `/arch`, `/code`, `/test`, `/ship`                                          |
 | **Templates** | 49    | Document templates for GDDs, UX specs, ADRs, sprint plans, vertical slice reports, game briefs, and more                  |
 | **Chains**    | 7     | Multi-agent execution pipelines via native isolated subagents (`subagent_run`)                                           |
-| **Starters**  | 5     | Starter Kits for 5 major engines (Bevy, Godot, Raylib, Unity, Unreal)                                                    |
+| **Starters**  | 6     | Starter Kits for 6 major engines (Bevy, Godot, Phaser, Raylib, Unity, Unreal)                                                    |
 | **Hooks**     | 4     | Automated validation on commits, pushes, skill changes, and session audit/gap detection                                  |
 | **Engram**    | 1     | Optional persistent memory — decisions auto-save across sessions when Engram is connected                                |
 | **Setup**     | 2     | `/setup` — install agents and model config; `/assign-models` — customize models per agent                                |
@@ -116,7 +116,7 @@ Tier 2 — Department Leads & Core Devs
   qa-lead (Testing & Quality Gates)
 
 Tier 3 — Engine Specialist (+1 per project)
-  bevy-specialist | godot-specialist | raylib-specialist | unity-specialist | unreal-specialist
+  bevy-specialist | godot-specialist | phaser-specialist | raylib-specialist | unity-specialist | unreal-specialist
 ```
 
 ### Engine Specialists (+1 por Proyecto)
@@ -125,6 +125,7 @@ Tier 3 — Engine Specialist (+1 per project)
 | ------------------- | -------------------- | ------------------ |
 | **Bevy (Rust)**     | `bevy-specialist`    | Idiomatic ECS, wgpu, WASM, cargo |
 | **Godot 4**         | `godot-specialist`   | Node trees, GDScript/C#, shaders, GDExtension |
+| **Phaser (TypeScript / WebGL)** | `phaser-specialist` | Arcade/Matter physics, Vite HMR, Canvas/WebGL, TypeScript |
 | **Raylib (C++)**    | `raylib-specialist`  | EnTT ECS, GLSL shaders, ImGui, CMake |
 | **Unity**           | `unity-specialist`   | MonoBehaviour/DOTS, Shader Graph, UI Toolkit |
 | **Unreal Engine 5** | `unreal-specialist`  | C++, GAS, Blueprints, Replication, UMG |
@@ -137,7 +138,7 @@ Tier 3 — Engine Specialist (+1 per project)
 > - **Única Fuente de Verdad (Single Source of Truth)**: `design/gdd/` y `design/art/` exclusivos para diseño y arte; `production/` exclusivo para roadmaps y sprints.
 > - **Diagnóstico y Salud de Entorno**: Detección automática al iniciar o decir *"hola"` (`Estado: ✔ Entorno OK`), con setup Automático o Manual sin preguntas redundantes.
 > - **Brújula de Producción del Producer**: Lectura y actualización automática de `production/roadmap.md` (`<!-- PRODUCER_STATE -->`) para saber en qué línea va el proyecto en todo momento.
-> - **Diagnóstico Multiplataforma y Salud ODD (`/studio:doctor`)**: Auditoría automática de compiladores, toolchains y SDKs locales para los 5 motores, integridad del árbol ODD y recuento de placeholders en `assets/manifest.yaml`.
+> - **Diagnóstico Multiplataforma y Salud ODD (`/studio:doctor`)**: Auditoría automática de compiladores, toolchains y SDKs locales para los 6 motores, integridad del árbol ODD y recuento de placeholders en `assets/manifest.yaml`.
 > - **Calidad Automatizada y Generadores Locales**: Runner de pruebas de estabilidad y fugas de memoria (`npm run test:soak`) y generador procedural de SFX (WAV) y texturas (BMP) sin dependencias (`npm run assets:placeholders`).
 
 ## Architecture & Flowcharts
@@ -232,7 +233,7 @@ Pi Game Studio opera con el pipeline de **6 Skills ODD (Organic Driven Developme
 ### Suite de Comandos del Estudio (`studio:*`)
 
 - **`/studio`** (o **`/studio:start`**) — Menú principal y auditoría de estado del proyecto.
-- **`/studio:new`** — Asistente de creación de nuevo juego a partir de 5 starters (Bevy, Godot, Raylib, Unity, Unreal).
+- **`/studio:new`** — Asistente de creación de nuevo juego a partir de 6 starters (Bevy, Godot, Phaser, Raylib, Unity, Unreal).
 - **`/studio:setup`** — Instalación del roster 8+1 (9 agentes) en el proyecto.
 - **`/studio:models`** — Configuración interactiva de modelos de IA por rol o nivel.
 - **`/studio:doctor`** — Diagnóstico integral de toolchains, compiladores y estructura ODD.
@@ -241,13 +242,13 @@ Pi Game Studio opera con el pipeline de **6 Skills ODD (Organic Driven Developme
 - **`/studio:chains`** — Ejecutor de cadenas multi-agente (`feature-implement`, `gdd-review`, `perf-audit`, `release-gate`, etc.).
 - **`/palette`** (o **`Alt+K`**) — Paleta de comandos difusa interactiva con categorías y búsqueda en tiempo real.
 - **`/market`** (o **`/studio:market`**) — Steam Reality Check & Financial Modeling: Auditoría de mercado en vivo, estimación de ventas e ingresos netos dev con multiplicador Boxleiter (`Reviews * 40x`), umbral de wishlists (`Popular Upcoming`) y gobernanza comercial del Producer (veto de scope y presupuesto temporal).
-- **`/scaffold`** (o **`/studio:scaffold`**) — Generador de sandbox jugable inmediato según motor activo (Godot 4, Bevy, Raylib) y dimensión (2D/3D).
+- **`/scaffold`** (o **`/studio:scaffold`**) — Generador de sandbox jugable inmediato según motor activo (Godot 4, Bevy, Raylib, Phaser) y dimensión (2D/3D).
 - **`/game-feel`** (o **`/studio:game-feel`**) — Auditor estático de Game Feel y respuesta de control (coyote time, jump buffer, inercia, salto variable, screen shake).
 - **`/capsule-check`** (o **`/studio:capsule`**) — Auditor de portadas y cápsulas de Steamworks (Header, Small 231x87 crítica para CTR, Main, Vertical) con ImageMagick.
 - **`/steam-page`** (o **`/studio:steam-page`**) — Generador de ficha oficial de Steamworks en BBCode (`[h2]`, `[b]`, `[list]`) a partir del GDD activo.
 - **`/audio-bus`** (o **`/studio:audio-bus`**) — Scaffolding de jerarquía de buses de audio profesionales con ducking (Master, Music, SFX, Voice, UI, Ambient).
 - **`/perf-guard`** (o **`/studio:perf-guard`**) — Auditor de allocations en bucles de frame (Rust, GDScript, C++, C#).
-- **`/watch`** (o **`/studio:watch`**) — Hot-reload y compilación en caliente para Bevy, Godot y Raylib.
+- **`/watch`** (o **`/studio:watch`**) — Hot-reload y compilación en caliente para Bevy, Godot, Raylib y Phaser.
 - **`/assets`** (o **`/studio:assets`**) — Auditoría de assets, compresión `oxipng` y manifiesto `assets/manifest.yaml`.
 - **`/changes`** (o **`/studio:changes`**) — Visor interactivo de cambios Git con estadísticas `+X -Y` y diffs.
 - **`/agents`** (o **`/studio:agents`**) — Visor interactivo split-screen del pipeline de subagentes en vivo.
@@ -311,7 +312,7 @@ The system asks where you are — no idea, vague concept, clear design, or exist
 
 Or jump directly to a specific skill or template:
 
-- `/studio:new` — instantiate a ready-to-run starter (Bevy 2D ARPG, Godot 4 2D Character, Raylib C++20 EnTT, Unity 2D Platformer, or Unreal Engine 5 Third Person)
+- `/studio:new` — instantiate a ready-to-run starter (Bevy 2D ARPG, Godot 4 2D Character, Phaser Web 2D, Raylib C++20 EnTT, Unity 2D Platformer, or Unreal Engine 5 Third Person)
 - `/brainstorm` — explore game ideas from scratch
 - `/setup-engine godot 4.3` — configure your engine
 - `/studio:doctor` — audit your local toolchain, compilers, and SDKs
@@ -323,6 +324,7 @@ Or jump directly to a specific skill or template:
 |---|---|---|---|---|
 | `bevy-2d-arpg` | Bevy 0.15 | Rust | ARPG 2D cenital con cámara ortográfica, aceleración/freno y ataque | `cargo run` |
 | `godot-2d-character` | Godot 4.3 | GDScript | Controlador de personaje 2D con CharacterBody2D y física suave | `godot project.godot` |
+| `phaser-web-2d` | Phaser 3/4 | TypeScript | Sandbox 2D web con Arcade Physics, Vite HMR y movimiento | `npm run dev` |
 | `raylib-cpp-entt` | Raylib 5.5 | C++20 | Mini-juego a 60 FPS con arquitectura ECS EnTT desacoplada | `cmake -B build && cmake --build build && ./build/game` |
 | `unity-2d-platformer` | Unity 2022.3+ | C# | Plataformas 2D con Rigidbody2D, salto, ground check y New Input System | Abrir en Unity Hub y presionar Play |
 | `ue5-third-person` | Unreal 5.4+ | C++ / Blueprints | Juego en 3ª persona con Spring Arm Camera y Enhanced Input | Abrir `Game.uproject` en Unreal Editor |
@@ -367,7 +369,7 @@ pi-game-studio/                     # Package root
 ├── LICENSE                         # MIT
 ├── AGENTS.md                       # Full agent roster
 ├── models.default.json             # Recommended 3-tier model mapping
-├── agents/                         # 13 source agents (8 Core + 5 Engine Specialists)
+├── agents/                         # 14 source agents (8 Core + 6 Engine Specialists)
 ├── skills/                         # 6 ODD lifecycle skills (SKILL.md per directory)
 ├── prompts/                        # 49 document templates
 ├── extensions/                     # Hooks extension

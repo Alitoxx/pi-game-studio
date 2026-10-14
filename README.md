@@ -230,7 +230,7 @@ Pi Game Studio opera con el pipeline de **6 Skills ODD (Organic Driven Developme
 - **`/studio:setup`** — Instalación del roster 8+1 (9 agentes) en el proyecto.
 - **`/studio:models`** — Configuración interactiva de modelos de IA por rol o nivel.
 - **`/studio:doctor`** — Diagnóstico integral de toolchains, compiladores y estructura ODD.
-- **`/studio:tools`** — Verificación e instalación de herramientas multimedia CLI (FFmpeg, ImageMagick, oxipng, wasm-opt, butler).
+- **`/studio:tools`** — Verificación e instalación de herramientas multimedia CLI (FFmpeg, ImageMagick, free-tex-packer-cli, gltf-transform, gltfpack, oxipng, pngquant, wasm-opt, butler).
 - **`/studio:mcp`** — Gestión del ecosistema de 10 servidores MCP.
 - **`/studio:chains`** — Ejecutor de cadenas multi-agente (`feature-implement`, `gdd-review`, `perf-audit`, `release-gate`, etc.).
 - **`/palette`** (o **`Alt+K`**) — Paleta de comandos difusa interactiva con categorías y búsqueda en tiempo real.

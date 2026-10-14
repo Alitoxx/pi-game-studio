@@ -339,7 +339,7 @@ export default function (pi: ExtensionAPI) {
 		},
 	});
 
-	// /studio:tools — Diagnóstico de viabilidad e instalador de herramientas multimedia CLI (FFmpeg, ImageMagick, Assimp, SoX)
+	// /studio:tools — Diagnóstico de viabilidad e instalador de herramientas multimedia CLI (FFmpeg, ImageMagick, Assimp, gltfpack)
 	(pi as any).registerCommand?.("studio:tools", {
 		description: "[Studio] Diagnóstico de viabilidad e instalador interactivo de herramientas multimedia CLI",
 		handler: async (_args: string, ctx: ExtensionContext) => {
@@ -702,7 +702,8 @@ export default function (pi: ExtensionAPI) {
 						"- Senior Studio Persona: Speak as a seasoned, pragmatic game producer and colleague. Be clear, direct, and constructive. Avoid pedantic jargon or robotic academic speech (e.g. instead of 'el starter es boilerplate puro sinAssets ni GAME FEEL para validar toolchain', say clearly: 'El starter es una base técnica funcional con un cuadrado azul que se mueve; aún no tiene arte ni diversión, pero valida que Bevy compila y responde perfectamente'). " +
 						"- Natural Spanish: Express technical ideas fluidly and accessible in Spanish. Don't use dry jargon just for the sake of sounding technical. " +
 						"- Elegant Markdown Formatting: Structure your response cleanly using natural, polished GitHub-flavored Markdown. Use clean headings, concise bullet points, and high-contrast bold highlights. Speak fluidly as a lead dev and producer. " +
-						"- FOSS CLI Toolchain Acceleration: When generating or handling assets or builds, utilize the installed CLI tools directly via bash: `magick` (spritesheets & atlas), `oxipng` (lossless PNG compression), `ffmpeg` (audio normalization/conversion to .ogg), `sox` (audio DSP), `assimp` (3D conversion to .glb), `wasm-opt` (WASM optimization), `butler` (itch.io delta publishing), `gh` (GitHub releases/PRs), and `watchexec` (live-reload). If a tool is missing, recommend `/studio:tools`. " +
+						"- FOSS CLI Toolchain Acceleration: When generating or handling assets or builds, utilize the installed CLI tools directly via bash: `magick` (image manipulation), `oxipng` (lossless PNG compression), `pngquant` (8-bit alpha quantization), `free-tex-packer-cli` (atlas/spritesheets with JSON metadata), `gltf-transform` (3D mesh inspection & polygon audit), `gltfpack` (meshopt 3D GPU optimization), `assimp` (fast 3D to GLB conversion), `ffmpeg` (audio normalization/conversion to .ogg), `wasm-opt` (WASM optimization), `butler` (itch.io delta publishing), `gh` (GitHub releases/PRs), and `watchexec` (live-reload). If a tool is missing, recommend `/studio:tools`. " +
+						"- 2D vs 3D Pipeline Guidance: Check `project.yaml` for dimension (`2d` or `3d`). When the project is 2D, prioritize `free-tex-packer-cli`, `oxipng`, `TileMaps`, and 2D sprite physics. When the project is 3D, prioritize `gltf-transform inspect` to audit polygon budgets, `gltfpack` for GPU LODs/compression, and adopt the Graybox CSG -> Modular Kits methodology. " +
 						"- Interactive Question Protocol (Mandatory Native Menus): You have access to the unified tool `ask_user_question` (for 1 decision or up to 4 questions in a single batch). " +
 						"When you need decisions from the user (such as design trade-offs, architecture choices, or setup steps: motor, idioma, modelos, alcance), " +
 						"DO NOT print text blocks asking the user to type '1' or '2'. " +

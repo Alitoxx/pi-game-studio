@@ -7,6 +7,7 @@ import { auditMediaTools, promptMediaToolsInstall } from "./studio-media-tools.t
 export interface ProducerState {
 	gameTitle?: string;
 	engine?: string;
+	dimension?: "2d" | "3d";
 	milestone?: string;
 	sprint?: string;
 	inProgress?: string;
@@ -28,14 +29,20 @@ export function recordFlowCompletion(cwd: string, receipt: FlowCompletionReceipt
 
 	const gameTitle = state?.gameTitle || "Mi Videojuego";
 	const engine = state?.engine || "Sin motor";
+	const dimension = state?.dimension;
 	const milestone = state?.milestone || "M0 — Concepto";
 	const sprint = state?.sprint || "Sprint 1";
 	const next = receipt.nextStep || state?.nextStep || "Siguiente tarea de desarrollo";
 
-	const newBlock = [
+	const stateLines = [
 		"<!-- PRODUCER_STATE -->",
 		`Juego: ${gameTitle}`,
 		`Motor: ${engine}`,
+	];
+	if (dimension) {
+		stateLines.push(`Dimensión: ${dimension}`);
+	}
+	stateLines.push(
 		`Hito Actual: ${milestone}`,
 		`Sprint Activo: ${sprint}`,
 		`Última Tarea Completada: ${receipt.task}`,
@@ -43,7 +50,9 @@ export function recordFlowCompletion(cwd: string, receipt: FlowCompletionReceipt
 		`Siguiente Paso: ${next}`,
 		`Actualizado: ${new Date().toISOString()}`,
 		"<!-- /PRODUCER_STATE -->",
-	].join("\n");
+	);
+
+	const newBlock = stateLines.join("\n");
 
 	if (hasRoadmap && existsSync(roadmapPath)) {
 		try {
@@ -89,6 +98,18 @@ export interface ProjectAudit {
 }
 
 export function readProducerState(cwd: string): { hasRoadmap: boolean; roadmapPath?: string; state?: ProducerState } {
+	let projectYamlDim: ("2d" | "3d") | undefined;
+	const projectYamlPath = join(cwd, "project.yaml");
+	if (existsSync(projectYamlPath)) {
+		try {
+			const yContent = readFileSync(projectYamlPath, "utf8");
+			const dimMatch = yContent.match(/^dimension:\s*["']?([^\n"']+)["']?/m);
+			if (dimMatch && (dimMatch[1].trim() === "2d" || dimMatch[1].trim() === "3d")) {
+				projectYamlDim = dimMatch[1].trim() as "2d" | "3d";
+			}
+		} catch {}
+	}
+
 	const possibleRoadmaps = [
 		join(cwd, "production", "roadmap.md"),
 		join(cwd, "roadmap.md"),
@@ -97,12 +118,14 @@ export function readProducerState(cwd: string): { hasRoadmap: boolean; roadmapPa
 
 	const roadmapPath = possibleRoadmaps.find((p) => existsSync(p));
 	if (!roadmapPath) {
-		return { hasRoadmap: false };
+		return { hasRoadmap: false, state: projectYamlDim ? { dimension: projectYamlDim } : undefined };
 	}
 	try {
 		const content = readFileSync(roadmapPath, "utf8");
 		const match = content.match(/<!--\s*PRODUCER_STATE\s*([\s\S]*?)<!--\s*\/PRODUCER_STATE\s*-->/i);
-		if (!match || !match[1]) return { hasRoadmap: true, roadmapPath };
+		if (!match || !match[1]) {
+			return { hasRoadmap: true, roadmapPath, state: projectYamlDim ? { dimension: projectYamlDim } : undefined };
+		}
 
 		const block = match[1];
 		const state: ProducerState = {};
@@ -112,6 +135,15 @@ export function readProducerState(cwd: string): { hasRoadmap: boolean; roadmapPa
 
 		const engine = block.match(/(?:Motor|Engine):\s*([^\n]+)/i);
 		if (engine) state.engine = engine[1].trim();
+
+		const dim = block.match(/(?:Dimensión|Dimension):\s*([^\n]+)/i);
+		if (dim) {
+			const dVal = dim[1].trim().toLowerCase();
+			if (dVal === "2d" || dVal === "3d") state.dimension = dVal;
+		}
+		if (!state.dimension && projectYamlDim) {
+			state.dimension = projectYamlDim;
+		}
 
 		const milestone = block.match(/(?:Hito Actual|Milestone|Current Milestone):\s*([^\n]+)/i);
 		if (milestone) state.milestone = milestone[1].trim();
@@ -127,7 +159,7 @@ export function readProducerState(cwd: string): { hasRoadmap: boolean; roadmapPa
 
 		return { hasRoadmap: true, roadmapPath, state };
 	} catch {
-		return { hasRoadmap: true, roadmapPath };
+		return { hasRoadmap: true, roadmapPath, state: projectYamlDim ? { dimension: projectYamlDim } : undefined };
 	}
 }
 
@@ -233,7 +265,7 @@ export async function handleStudioStart(
 			const setupOptions = [
 				`1. Instalación Automática (Recomendada: Agentes optimizados para ${audit.engineName || "Godot 4"} en modo 'inherit')`,
 				"2. Instalación Manual / Guiada (Tú eliges el motor de juego, tu idioma preferido y personalizas los modelos de IA por rol)",
-				"3. Diagnóstico de Viabilidad Multimedia (FFmpeg, ImageMagick, Assimp, Git-LFS, SoX)",
+				"3. Diagnóstico de Viabilidad Multimedia (FFmpeg, ImageMagick, Assimp, Git-LFS, gltfpack)",
 			];
 			const setupChoice = await (ctx.ui as any).select(
 				"PRODUCER: ¡Bienvenido al estudio! Tu entorno aún no está configurado. ¿Cómo prefieres inicializarlo?",

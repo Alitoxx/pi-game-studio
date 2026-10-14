@@ -44,8 +44,42 @@ export interface SetupStatus {
 export interface StudioInstallOptions {
 	engine?: string;
 	language?: string;
+	dimension?: "2d" | "3d";
 	modelsConfig?: Record<string, string>;
 	installAllAgents?: boolean;
+}
+
+export function detectDimensionFromText(text: string): "2d" | "3d" | null {
+	if (!text) return null;
+	const norm = text.toLowerCase();
+
+	const matches3d = (norm.match(/\b(3d|fps|tps|mesh|meshes|gltf|glb|low-poly|lowpoly|first-person|third-person|pbr|csg|modular\s+kit|modular\s+kits)\b/gi) || []).length;
+	const matches2d = (norm.match(/\b(2d|pixel\s*art|pixelart|sprite|sprites|spritesheet|spritesheets|tilemap|tilemaps|tileset|tilesets|top-down\s*2d|platformer|plataformero|metroidvania)\b/gi) || []).length;
+
+	if (matches3d > 0 && matches2d === 0) return "3d";
+	if (matches2d > 0 && matches3d === 0) return "2d";
+	if (matches3d > 0 && matches2d > 0) {
+		return matches3d >= matches2d ? "3d" : "2d";
+	}
+	return null;
+}
+
+export function readProjectYaml(cwd: string): { engine?: string; dimension?: "2d" | "3d"; [key: string]: any } {
+	const projectYamlPath = join(cwd, "project.yaml");
+	if (!existsSync(projectYamlPath)) return {};
+	try {
+		const content = readFileSync(projectYamlPath, "utf8");
+		const res: { engine?: string; dimension?: "2d" | "3d"; [key: string]: any } = {};
+		const engineMatch = content.match(/^engine:\s*["']?([^\n"']+)["']?/m);
+		if (engineMatch) res.engine = engineMatch[1].trim();
+		const dimMatch = content.match(/^dimension:\s*["']?([^\n"']+)["']?/m);
+		if (dimMatch && (dimMatch[1].trim() === "2d" || dimMatch[1].trim() === "3d")) {
+			res.dimension = dimMatch[1].trim() as "2d" | "3d";
+		}
+		return res;
+	} catch {
+		return {};
+	}
 }
 
 export const CORE_STUDIO_AGENTS: string[] = [
@@ -186,7 +220,7 @@ export async function handleStudioSetup(
 			`1. Instalación Automática (${status.expectedAgents} agentes recomendados para ${status.currentEngine} en modo 'inherit')`,
 			"2. Instalación Manual / Guiada (Elegir motor, idioma y modelos por nivel)",
 			"3. Configurar Modelos de IA (/studio:models)",
-			"4. Diagnóstico de Viabilidad Multimedia (FFmpeg, ImageMagick, Assimp, Git-LFS, SoX)",
+			"4. Diagnóstico de Viabilidad Multimedia (FFmpeg, ImageMagick, Assimp, Git-LFS, gltfpack)",
 			"5. Hub de Servidores MCP (/studio:mcp — REA, Playwright, Context7, etc.)",
 			"6. Ver diagnóstico del estudio (/studio:status)",
 			"7. Ver guía rápida de inicio",
@@ -265,7 +299,7 @@ export async function runGuidedSetup(
 
 	const engineChoice = await promptSelectSafe(
 		ctx,
-		"Paso 1/3 — Selecciona el Motor de Juego principal:",
+		"Paso 1/4 — Selecciona el Motor de Juego principal:",
 		engineOptions,
 	);
 	if (!engineChoice) return;
@@ -292,7 +326,21 @@ export async function runGuidedSetup(
 		}
 	}
 
-	// ── Paso 2: Idioma del Estudio ──
+	// ── Paso 2: Dimensión del Proyecto (2D vs 3D) ──
+	const dimensionOptions = [
+		"2D (Sprites, Spritesheets, Atlas, TileMaps, Pixel Art)",
+		"3D (Mallas glTF/GLB, Kits Modulares, Iluminación PBR, Colisiones)",
+	];
+
+	const dimensionChoice = await promptSelectSafe(
+		ctx,
+		"Paso 2/4 — Selecciona la dimensión y pipeline principal del juego:",
+		dimensionOptions,
+	);
+	if (!dimensionChoice) return;
+	const selectedDimension: "2d" | "3d" = dimensionChoice.index === 1 ? "3d" : "2d";
+
+	// ── Paso 3: Idioma del Estudio ──
 	const langOptions = [
 		"Español (es) — Documentación y respuestas en español",
 		"English (en) — Documentation and prompts in English",
@@ -300,14 +348,14 @@ export async function runGuidedSetup(
 
 	const langChoice = await promptSelectSafe(
 		ctx,
-		"Paso 2/3 — Selecciona el idioma preferido de trabajo:",
+		"Paso 3/4 — Selecciona el idioma preferido de trabajo:",
 		langOptions,
 	);
 	if (!langChoice) return;
 
 	const selectedLang = langChoice.index === 0 ? "es" : "en";
 
-	// ── Paso 3: Configuración de Modelos ──
+	// ── Paso 4: Configuración de Modelos ──
 	const modelStrategyOptions = [
 		"1. Perfil Recomendado (Directores: gpt-5.4-mini, Especialistas: 120b, Ligeros: 20b)",
 		"2. Modo 'inherit' (Todos los agentes usan el modelo activo en tu sesión Pi)",
@@ -317,7 +365,7 @@ export async function runGuidedSetup(
 
 	const modelStrategyChoice = await promptSelectSafe(
 		ctx,
-		"Paso 3/3 — ¿Cómo deseas configurar los modelos de los agentes?",
+		"Paso 4/4 — ¿Cómo deseas configurar los modelos de los agentes?",
 		modelStrategyOptions,
 	);
 	if (!modelStrategyChoice) return;
@@ -353,8 +401,9 @@ export async function runGuidedSetup(
 	const confirmSummary = [
 		"RESUMEN DE INSTALACION PERSONALIZADA:",
 		`• Motor de juego:      ${selectedEngine}`,
+		`• Dimensión del juego: ${selectedDimension.toUpperCase()} (${selectedDimension === "2d" ? "Sprites & TileMaps" : "glTF/GLB & PBR"})`,
 		`• Agentes a desplegar: ${targetCount} agentes (8 Core + ${targetCount - 8} especialista de ${selectedEngine})`,
-		`• Idioma preferido:  ${selectedLang === "es" ? "Español (es)" : "English (en)"}`,
+		`• Idioma preferido:    ${selectedLang === "es" ? "Español (es)" : "English (en)"}`,
 		`• Modelos Directores: ${customModels.director || "gpt-5.4-mini"}`,
 		`• Modelos Workhorse:  ${customModels.workhorse || "gpt-oss-120b:free"}`,
 		`• Modelos Ligeros:    ${customModels.lightweight || "gpt-oss-20b:free"}`,
@@ -384,6 +433,7 @@ export async function runGuidedSetup(
 	installStudioFiles(ctx, {
 		engine: selectedEngine,
 		language: selectedLang,
+		dimension: selectedDimension,
 		modelsConfig: customModels,
 	});
 }
@@ -523,12 +573,21 @@ export function installStudioFiles(
 		writeFileSync(modelsDest, readFileSync(modelsSrc));
 	}
 
-	// 4. Configure engine in project.yaml
+	// 4. Configure engine and dimension in project.yaml
+	const dimension = options.dimension || "2d";
 	let yamlContent = existsSync(projectYamlPath) ? readFileSync(projectYamlPath, "utf8") : "";
 	if (/^engine:\s*.*/m.test(yamlContent)) {
 		yamlContent = yamlContent.replace(/^engine:\s*.*/m, `engine: "${engine}"`);
 	} else {
 		yamlContent = `# Pi Game Studio project configuration\nschema_version: 1\nengine: "${engine}"\n` + yamlContent;
+	}
+	if (/^dimension:\s*.*/m.test(yamlContent)) {
+		yamlContent = yamlContent.replace(/^dimension:\s*.*/m, `dimension: "${dimension}"`);
+	} else {
+		yamlContent = yamlContent.replace(/(engine:\s*["'][^"']+["'])/, `$1\ndimension: "${dimension}"`);
+		if (!/^dimension:\s*.*/m.test(yamlContent)) {
+			yamlContent += `\ndimension: "${dimension}"\n`;
+		}
 	}
 	writeFileSync(projectYamlPath, yamlContent, "utf8");
 
@@ -595,7 +654,7 @@ export function installStudioFiles(
 
 	// 7. Install log
 	const logPath = join(studioDir, "install-log.md");
-	const logEntry = `\n## Setup: ${new Date().toISOString()}\n- Agents installed: ${copiedCount}\n- Engine: ${engine}\n- Language: ${options.language || "es"}\n- Source: ${pkgRoot}\n`;
+	const logEntry = `\n## Setup: ${new Date().toISOString()}\n- Agents installed: ${copiedCount}\n- Engine: ${engine}\n- Dimension: ${dimension}\n- Language: ${options.language || "es"}\n- Source: ${pkgRoot}\n`;
 	const currentLog = existsSync(logPath) ? readFileSync(logPath, "utf8") : "# Pi Game Studio Install Log\n";
 	writeFileSync(logPath, currentLog + logEntry, "utf8");
 
@@ -603,6 +662,7 @@ export function installStudioFiles(
 		`✔ ¡Pi Game Studio instalado con éxito!`,
 		`• Agentes: ${copiedCount} agentes en .pi/agents/`,
 		`• Motor: ${engine} (en project.yaml)`,
+		`• Dimensión: ${dimension.toUpperCase()} (en project.yaml)`,
 		`• Modelos: .pi/gentle-ai/models.json`,
 		`• Registro: .pi/game-studio/install-log.md`,
 		``,
@@ -616,6 +676,7 @@ export function installStudioFiles(
 		console.log("\x1b[1m\x1b[38;2;52;211;153m✔ ¡Pi Game Studio instalado con éxito!\x1b[0m");
 		console.log(`  \x1b[38;2;167;139;250m• Agentes:\x1b[0m    ${copiedCount} agentes en \x1b[38;2;243;244;246m.pi/agents/\x1b[0m`);
 		console.log(`  \x1b[38;2;167;139;250m• Motor:\x1b[0m      ${engine} en \x1b[38;2;243;244;246mproject.yaml\x1b[0m`);
+		console.log(`  \x1b[38;2;167;139;250m• Dimensión:\x1b[0m  ${dimension.toUpperCase()} en \x1b[38;2;243;244;246mproject.yaml\x1b[0m`);
 		console.log(`  \x1b[38;2;167;139;250m• Modelos:\x1b[0m    \x1b[38;2;243;244;246m.pi/gentle-ai/models.json\x1b[0m`);
 		console.log(`  \x1b[38;2;167;139;250m• Registro:\x1b[0m   \x1b[38;2;243;244;246m.pi/game-studio/install-log.md\x1b[0m`);
 		console.log("");
@@ -666,7 +727,7 @@ export function formatGettingStartedGuide(): string {
 	].join("\n");
 }
 
-async function promptSelectSafe(
+export async function promptSelectSafe(
 	ctx: ExtensionContext,
 	prompt: string,
 	options: string[],
@@ -679,7 +740,7 @@ async function promptSelectSafe(
 	return { index: idx, label: options[idx] };
 }
 
-async function promptInputSafe(
+export async function promptInputSafe(
 	ctx: ExtensionContext,
 	prompt: string,
 	defaultValue: string,

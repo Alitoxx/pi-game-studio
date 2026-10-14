@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.7.0] - 2026-10-14
+
+### Added
+- **Detección y Especialización Dinámica de Pipelines 2D y 3D**:
+  - Función heurística `detectDimensionFromText` para inferir automáticamente la dimensión del juego (`2d` vs `3d`) a partir de la intención del usuario en lenguaje natural.
+  - Nuevo paso interactivo de selección de dimensión en `/studio:setup` (`Paso 2/4: 2D vs 3D`).
+  - Persistencia formal del campo `dimension: "2d" | "3d"` en `project.yaml` y en los metadatos de producción `<!-- PRODUCER_STATE -->` de `production/roadmap.md`.
+  - Directivas especializadas en los prompts de sistema de los 9 agentes del estudio (`studio-agents-runner.ts` e `index.ts`):
+    - **Pipeline 2D**: prioriza `free-tex-packer-cli`, `oxipng`, `pngquant`, `TileMaps` y física de sprites.
+    - **Pipeline 3D**: prioriza `gltf-transform inspect` para auditar presupuestos de polígonos/draw calls, `gltfpack` para compresión GPU y metodología de arquitectura **Graybox CSG -> Kits Modulares en Grilla**.
+- **Modernización y Poda del Toolchain FOSS CLI (`MEDIA_TOOLS_REGISTRY`)**:
+  - Incorporado **`gltf-transform`** (`@gltf-transform/cli`): Diagnóstico e inspección de modelos 3D directamente en terminal (`gltf-transform inspect`), dando a los agentes "ojos 3D" en modo headless.
+  - Incorporado **`gltfpack`** (`meshoptimizer`): Optimización extrema de mallas glTF/GLB para GPU, generación de LODs y compresión de vertex cache (`meshopt`).
+  - Incorporado **`free-tex-packer-cli`**: Empaquetado algorítmico MaxRects de spritesheets 2D con recorte de transparencias y exportación de metadatos de coordenadas para Godot, Raylib y JSON genérico.
+  - Incorporado **`pngquant`**: Cuantización lossy a 8-bit con canal alfa para texturas PBR y UI, reduciendo hasta un 70% de VRAM antes del pase lossless de `oxipng`.
+  - Documentada la matriz y guía de herramientas en `docs/architecture/mcp-ecosystem.md`.
+
+### Removed
+- **Eliminación de Herramientas Obsoletas y Sobredimensionadas**:
+  - Removido `blender` (headless) del registro obligatorio de herramientas CLI, eliminando más de 1 GB de peso en disco y reduciendo tiempos de setup.
+  - Removido `sox` en favor de la normalización por `ffmpeg` y los buses de audio DSP nativos en runtime del motor.
+  - Purgadas referencias residuales a SoX en `/studio:start`, `/studio:setup` y `/studio:tools`.
+
+---
+
 ## [1.6.0] - 2026-10-13
 
 ### Added

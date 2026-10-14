@@ -27,10 +27,11 @@ Ejecutar el juego en modo headless, timeout acotado o verificación rápida para
 - **Unreal**: `UnrealEditor-Cmd.exe`
 - **Bevy**: `cargo check` (validación estática instantánea) o `cargo test -p <crate>` para lógica pura. Para smoke de runtime con ventana: `cargo run` sólo con el usuario presente o mediante flag de timeout/headless para no bloquear procesos automatizados.
 - **Raylib**: `./build/game` (o compilación previa con `cmake --build build`)
+- **Phaser**: `npm test` / `vitest run` / `npx vite build`
 Comprobar que los sistemas esenciales (player loop, render básico, inputs) responden.
 
 ### 2. Suites de Regresión y Pruebas Unitarias
-- Ejecutar la suite de pruebas automatizadas del motor.
+- Ejecutar la suite de pruebas automatizadas del motor (e.g. GUT para Godot, `cargo test` para Bevy, CTest para Raylib, `npm test` / `vitest run` para Phaser).
 - Confirmar que ningún cambio reciente rompió mecánicas previamente validadas.
 
 ### 3. Evaluación de Game Feel, Rendimiento y Fugas de Memoria (Soak Test)

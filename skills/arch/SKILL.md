@@ -30,12 +30,21 @@ Para cada decisión no trivial (patrón ECS, librería de audio, integración de
 - Secciones: Contexto, Alternativas evaluadas, Decisión fundamentada y Consecuencias.
 
 ### 3. Integración con el Motor, Pipeline de Shaders y Subsistemas Base
-Soporte simétrico para los 5 motores oficiales con su arquitectura de shaders, audio, input y persistencia:
+Soporte simétrico para los 6 motores oficiales con su arquitectura de shaders, audio, input y persistencia:
 - **Godot**: `project.godot`, GDScript, C#, GDExtension, shaders `canvas_item` / `spatial` (`.gdshader`) (`Appendix A — Godot`). Audio Buses en `default_bus_layout.tres` (Master/BGM/SFX/UI). InputMap nativo desacoplado. Serialización con `ConfigFile` o `ResourceFormatSaver`.
 - **Bevy**: `Cargo.toml`, Rust ECS idiomático, `wgpu`, shaders WGSL (`.wgsl`) integrados con `Material2d` / `MaterialPlugin` (`Appendix B — Bevy`). Audio reactivo con `bevy_kira_audio` o `bevy_audio` con canales aislados. Input con `leafwing-input-manager` o mapeo `ActionState`. Serialización RON / Serde.
 - **Raylib**: `CMakeLists.txt`, Modern C++, EnTT ECS, fragment/vertex shaders en GLSL (`.fs` / `.vs`) con `LoadShader()` y `BeginShaderMode()` (`Appendix C — Raylib`). Audio con miniaudio/raudio por canales. Mapeo de gamepad con `IsGamepadButtonDown()`. Serialización binaria o JSON.
 - **Unity**: MonoBehaviour / DOTS, Burst, URP/HDRP, Shader Graph y custom HLSL (`.shader`). AudioMixer con Snapshots y ducking. Input System (Actions). Serialización JSON/Binary.
 - **Unreal**: C++, GAS, Enhanced Input, Blueprints, Material Editor y Niagara. Sound Cues y MetaSounds con Submixes. SaveGame nativo.
+- **Phaser**: `package.json`, TypeScript, Vite, WebGL/Canvas pipelines, shaders GLSL personalizados vía `PostFXPipeline` (`Appendix D — Phaser`). Audio reactivo con Web Audio API / `Phaser.Sound` (canales Master/BGM/SFX desacoplados). Input con `Phaser.Input` (Keyboard, Pointer, Gamepad). Motor de física Arcade Physics o Matter.js. Serialización con `localStorage` / IndexedDB o JSON.
+
+#### Guided Mode, Stack Templates & Engine Routing
+- **Godot**: `godot-specialist` — Stack: GDScript / C#, SceneTree (`Appendix A — Godot`).
+- **Bevy**: `bevy-specialist` — Stack: Rust ECS, `wgpu`, WGSL (`Appendix B — Bevy`).
+- **Raylib**: `raylib-specialist` — Stack: Modern C++, EnTT ECS, GLSL (`Appendix C — Raylib`).
+- **Unity**: `unity-specialist` — Stack: C#, MonoBehaviour / DOTS, Shader Graph.
+- **Unreal**: `unreal-specialist` — Stack: C++, GAS, Enhanced Input, Niagara.
+- **Phaser**: `phaser-specialist` — Stack: TypeScript, Vite, WebGL / Arcade Physics (`Appendix D — Phaser`).
 
 ### 4. Ecosistema de Servidores MCP ("Files First, MCP Accelerated")
 Cuando se ejecuta `/arch mcp` o `/studio:mcp`:

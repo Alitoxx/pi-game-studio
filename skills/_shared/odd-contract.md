@@ -17,7 +17,7 @@ Este archivo define los contratos y estándares compartidos para las **6 Skills 
 - **Cero Diálogos Intermedios en Ejecución**: Las tareas delegadas ya están autorizadas por el usuario/productor. El especialista no debe formular preguntas conversacionales ni pedir confirmaciones intermedias; ejecuta directamente sobre disco.
 
 ## 4. Scoped Engine Validation (Protección contra Monolitos de Build)
-- En motores compilados (Rust/Bevy, C++/Raylib, C++/Unreal):
+- En motores compilados o web (Rust/Bevy, C++/Raylib, C++/Unreal, TypeScript/Phaser, Godot):
   - Tareas de lógica pura o crates desacoplados (e.g. `crates/radio-core`) **deben** validarse exclusivamente con comandos acotados (`cargo test -p radio-core`, `cargo check -p radio-core`).
   - **Prohibido** ejecutar builds globales del workspace o suites completas que fuercen recompilaciones del motor (como Bevy en modo test) dentro de un subagente con timeout acotado.
   - La compilación del juego completo o smoke test visual se reserva para el paso de integración del orquestador o la skill `/test`.
@@ -31,7 +31,7 @@ summary: "Qué se implementó en una oración precisa"
 files_changed:
   - "ruta/al/archivo.ext"
 validation:
-  command: "cargo check / cargo test -p <crate> / godot --headless"
+  command: "cargo check / cargo test -p <crate> / godot --headless / npm test"
   result: "0 errors, target FPS preserved"
 gameplay_impact: "Efecto observable en el juego"
 next_step: "Siguiente acción recomendada en el pipeline ODD"
@@ -52,6 +52,6 @@ Los agentes y especialistas con herramienta `bash` ejecutan tareas de transforma
   - `butler`: Despliegue delta a itch.io (`butler push dist/ user/game:web`).
   - `gh`: Releases y versionado de binarios (`gh release create <tag> ./dist/*`).
 - **Live-Reload & Watcher**:
-  - `watchexec`: Monitoreo y pruebas continuas ante cambios (`watchexec -e rs,gd,cpp,fs -- <test-command>`).
+  - `watchexec`: Monitoreo y pruebas continuas ante cambios (`watchexec -e rs,gd,cpp,ts,fs -- <test-command>`).
 
 

@@ -37,15 +37,16 @@ Cuando se invoca `/code <feature>` (o `/code review`):
   - Si la tarea importa modelos 3D: convertir formatos propietarios o `.obj` a `.glb` optimizados con `assimp`.
   - Durante desarrollo iterativo: utilizar `watchexec` para relanzar validaciones en caliente ante cambios de código.
 - Mantener la edición en paquetes pequeños (~400 líneas) para garantizar legibilidad, bajo consumo de tokens y verificación controlada.
-- Aplicar los estándares idiomáticos del motor activo (Rust/Bevy, GDScript/Godot, C++/Raylib, C#/Unity, C++/Unreal).
+- Aplicar los estándares idiomáticos del motor activo (Rust/Bevy, GDScript/Godot, C++/Raylib, C#/Unity, C++/Unreal, TypeScript/Phaser).
 
 ### 3. Verificación de Compilación y Test por Motor
-Routing de validación según el motor activo (priorizar validación rápida y acotada):
-- **Godot**: `godot --headless --check-only`
-- **Unity**: `Unity -batchmode -runTests` o análisis C# Roslyn
-- **Unreal**: `Build.bat` / `UnrealEditor-Cmd`
-- **Bevy**: `cargo check` para el proyecto, o `cargo test -p <crate>` para crates desacoplados de lógica (e.g. `radio-core`). Evitar `cargo test` del root completo si recompila Bevy con perfiles pesados de debug.
-- **Raylib**: `cmake --build build && ./build/game`
+Routing de validación y especialista según el motor activo (priorizar validación rápida y acotada):
+- **Godot** (`godot-specialist`): `godot --headless --check-only`
+- **Unity** (`unity-specialist`): `Unity -batchmode -runTests` o análisis C# Roslyn
+- **Unreal** (`unreal-specialist`): `Build.bat` / `UnrealEditor-Cmd`
+- **Bevy** (`bevy-specialist`): `cargo check` para el proyecto, o `cargo test -p <crate>` para crates desacoplados de lógica (e.g. `radio-core`). Evitar `cargo test` del root completo si recompila Bevy con perfiles pesados de debug.
+- **Raylib** (`raylib-specialist`): `cmake --build build && ./build/game`
+- **Phaser** (`phaser-specialist`): `npm test` o `npx vitest run` / `npx vite build`
 Asegurar que la compilación sea limpia (0 errores).
 
 ### 4. Cierre Automático de Tarea & Producer Handoff

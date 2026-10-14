@@ -86,7 +86,12 @@ export interface StudioCommandItem {
 }
 
 export const STUDIO_COMMAND_REGISTRY: StudioCommandItem[] = [
-	// ODD Pipeline (6 Skills)
+	// ODD Pipeline (6 Skills + Market)
+	{
+		name: "/market",
+		description: "[Mercado] Steam Reality Check, saturación del género y viabilidad comercial",
+		category: "ODD Pipeline",
+	},
 	{
 		name: "/concept",
 		description: "[Fase 1] Visión, pilares de diseño, anti-pilares y ancla visual",
@@ -115,6 +120,11 @@ export const STUDIO_COMMAND_REGISTRY: StudioCommandItem[] = [
 	{
 		name: "/ship",
 		description: "[Fase 6] Empaquetado final, changelog de release y publicación de builds",
+		category: "ODD Pipeline",
+	},
+	{
+		name: "/steam-page",
+		description: "Generador de ficha de Steamworks en BBCode oficial desde el GDD",
 		category: "ODD Pipeline",
 	},
 
@@ -152,6 +162,21 @@ export const STUDIO_COMMAND_REGISTRY: StudioCommandItem[] = [
 	{
 		name: "/changes",
 		description: "Resumen de cambios no commiteados y detección de drift de diseño",
+		category: "Engine & Dev Tools",
+	},
+	{
+		name: "/scaffold",
+		description: "Sandbox jugable inmediato según motor activo (Godot/Bevy/Raylib en 2D/3D)",
+		category: "Engine & Dev Tools",
+	},
+	{
+		name: "/game-feel",
+		description: "Auditor estático de Game Feel y respuesta de control (5 pilares)",
+		category: "Engine & Dev Tools",
+	},
+	{
+		name: "/audio-bus",
+		description: "Jerarquía de buses de audio profesionales con ducking (Master, Music, SFX)",
 		category: "Engine & Dev Tools",
 	},
 
@@ -246,6 +271,11 @@ export const STUDIO_COMMAND_REGISTRY: StudioCommandItem[] = [
 	{
 		name: "/studio:palettes",
 		description: "Generador de paletas de color retro y cuantizadores para Godot y Raylib",
+		category: "Media & MCP",
+	},
+	{
+		name: "/capsule-check",
+		description: "Auditor de portadas y cápsulas de Steamworks (231x87, 460x215) con ImageMagick",
 		category: "Media & MCP",
 	},
 ];

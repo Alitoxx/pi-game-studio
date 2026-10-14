@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.0] - 2026-10-14
+
+### Added
+- **Suite de Inteligencia de Mercado y Validación Implacable en Steam (`/market`)**:
+  - Comando `/market` (alias `/studio:market`) conectado directamente a la API oficial de búsqueda y catálogo de Steam (`storesearch`, `appdetails` y `appreviews`).
+  - Métrica de saturación del género en vivo con volumen real de competencia indexada (>1.000+ juegos en géneros saturados).
+  - Matriz comparativa de competidores directos con AppID, precio en USD, recuento de reseñas, rating de la comunidad y enlaces directos a la tienda de Steam.
+  - Veredicto de producción sin rodeos (`RECHAZADO: CEMENTERIO DE STEAM`, `PIVOTE OBLIGATORIO`, `LUZ VERDE`).
+  - Diagnóstico "Cero Filtro" del Creative Director y Producer: crítica despiadada de tropos gastados y gancho mecánico diferenciador (USP) indispensable para la viabilidad comercial.
+- **Suite Pro de Herramientas de Desarrollo y Calidad Comercial**:
+  - **`/scaffold` (o `/studio:scaffold`)**: Generador instantáneo de sandbox jugable según motor activo (Godot 4, Bevy, Raylib) y dimensión (`2D` o `3D`), con protección contra sobreescritura accidental.
+  - **`/game-feel` (o `/studio:game-feel`)**: Auditor estático de código para los 5 pilares de respuesta de control (*Coyote Time*, *Jump Buffering*, *Salto Variable/Jump Cut*, *Aceleración/Inercia* y *Game Juice/Screen Shake*), con generadores de snippets listos para copiar adaptados al lenguaje del motor (GDScript, Rust, C++, C#).
+  - **`/capsule-check` (o `/studio:capsule`)**: Validador de portadas y assets de marketing contra las 5 resoluciones oficiales de Steamworks (Header 460x215, Small Capsule 231x87 crítica para CTR, Main 616x353, Vertical 374x448, Hero 1920x620) con simulación de reducción de escala y contraste vía ImageMagick.
+  - **`/steam-page` (o `/studio:steam-page`)**: Generador de ficha oficial de Steamworks en BBCode (`[h2]`, `[b]`, `[list]`) a partir de `design/gdd/concept.md`, con Short Description (<300 chars) y lista de features de alta conversión exportada a `production/steam_store_page.md`.
+  - **`/audio-bus` (o `/studio:audio-bus`)**: Scaffolding de jerarquía de audio profesional con buses Master, Music (-3dB con ducking), SFX, Voice (disparador del sidechain), UI y Ambient (-4dB), con formatos nativos para Godot 4 (`default_bus_layout.tres` con compresor sidechain), Bevy y Raylib.
+- **Integración con la Paleta Interactiva**:
+  - Todos los nuevos comandos agregados a `STUDIO_COMMAND_REGISTRY` en `extensions/hooks/studio-palette.ts`, accesibles mediante búsqueda difusa en `Alt+K` o `/palette`.
+
+---
+
 ## [1.7.0] - 2026-10-14
 
 ### Added

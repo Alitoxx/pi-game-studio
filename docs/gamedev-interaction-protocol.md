@@ -183,3 +183,65 @@ Para mantener el ritmo de desarrollo sin fricciones ni preguntas redundantes:
    - Declara la siguiente tarea del sprint y pasa el control al siguiente especialista de forma directa, sin preguntar al usuario *"¿qué hacemos ahora?"*.
 3. **Persistencia en `production/roadmap.md`**: El bloque `<!-- PRODUCER_STATE -->` se mantiene como la única fuente de verdad (Single Source of Truth) para la sesión actual y futuras sesiones.
 
+---
+
+## 9. Comandos del Estudio y Validación de Mercado (Studio Commands)
+
+Pi Game Studio integra herramientas de terminal para gobernar la producción y auditar la viabilidad comercial:
+
+### `/market` (o `/studio:market`) — Steam Reality Check & Idea Viability Validator
+
+Audita el pitch o género de tu juego contra los datos en vivo de la tienda de Steam antes de escribir una sola línea de código:
+
+- **Saturación en vivo**: Conexión directa a la API de Steam (`storesearch`) para medir la cantidad de competidores indexados y su nivel de saturación (`Baja`, `Moderada`, `Alta`, `Saturación Extrema`).
+- **Top Competidores**: Métricas reales de precio en USD (`appdetails`), volumen de reviews (`appreviews`), rating porcentual y estado de lanzamiento (`Lanzado` vs `Próximo`).
+- **Veredicto Implacable de Dirección**: Evaluación vinculante (`RECHAZADO: CEMENTERIO DE STEAM`, `PIVOTE OBLIGATORIO`, `LUZ VERDE`) para evitar el desarrollo de clones comerciales inviables.
+- **Cero Filtro**: Crítica directa de tropos desgastados e identificación del gancho mecánico diferenciador (USP) indispensable para sobrevivir comercialmente en Steam.
+- **Próximos Pasos Ejecutables**: Relevo directo al pipeline ODD (`/concept`, `/spec`, `/arch`, `/studio`).
+
+### `/scaffold` (o `/studio:scaffold`) — Playable Sandbox Generator
+
+Genera en 5 segundos una escena mínima de prueba jugable según el motor activo y la dimensión configurada (`2D` o `3D`):
+
+- **Godot 4**: Escena `.tscn` y script GDScript con `CharacterBody2D`/`CharacterBody3D`, movimiento WASD/flechas, gravedad, salto, cámara y suelo con colisión.
+- **Bevy (Rust)**: Controlador mínimo en `src/playground.rs` con sprites 2D o meshes PBR 3D y sistema de movimiento ECS.
+- **Raylib (C++)**: Bucle de juego en `src/playground.cpp` con físicas de salto y renderizado inmediato.
+- **Seguridad**: Detección de colisiones de archivos para no sobreescribir código existente sin autorización.
+
+### `/game-feel` (o `/studio:game-feel`) — Game Feel & Input Responsiveness Auditor
+
+Auditor estático de los scripts de control del jugador para garantizar una respuesta jugable de calidad comercial:
+
+- **Los 5 Pilares de Oro**:
+  1. *Coyote Time*: Ventana de tolerancia (50–100ms) para saltar tras caer de una plataforma.
+  2. *Jump Buffering*: Registro anticipado del botón de salto antes de tocar el suelo.
+  3. *Variable Jump Height*: Corte dinámico de la velocidad ascendente al soltar el botón.
+  4. *Aceleración y Fricción*: Curvas de inercia suaves en lugar de cambios bruscos de velocidad.
+  5. *Game Juice & Screen Shake*: Puntos de anclaje para retroalimentación visual, partículas o temblor.
+- **Diagnóstico y Snippets**: Puntuación del 1 al 5 y generación de código listo para copiar adaptado al lenguaje del motor (GDScript, Rust, C++, C#).
+
+### `/capsule-check` (o `/studio:capsule`) — Steam Capsule & Cover Art Auditor
+
+Valida las imágenes de portada y marketing contra las especificaciones oficiales de Steamworks:
+
+- **Resoluciones Oficiales**: *Small Capsule* (231x87 px, crítica para la tasa de clics en la tienda y ofertas), *Header Capsule* (460x215 px), *Main Capsule* (616x353 px), *Vertical Capsule* (374x448 px) y *Page Hero* (1920x620 px).
+- **Simulación de Legibilidad y Contraste**: Uso de `magick` para redimensionar y auditar si el título o logo se vuelve ilegible al escalar a tamaño miniatura.
+
+### `/steam-page` (o `/studio:steam-page`) — Steam Store Copy & BBCode Generator
+
+Convierte el diseño conceptual de `design/gdd/concept.md` en una ficha de producto lista para publicar en Steamworks:
+
+- **Descripción Corta (<300 caracteres)**: Gancho comercial de alta conversión para la parte superior de la página de la tienda.
+- **Descripción Detallada ("About This Game")**: Formato en BBCode oficial de Steam (`[h2]`, `[b]`, `[list]`, `[*]`, `[img]`).
+- **Lista de Características Clave**: Bullets orientados a verbos de acción mecánica.
+- **Exportación Automática**: Guardado en `production/steam_store_page.md`.
+
+### `/audio-bus` (o `/studio:audio-bus`) — Audio Bus Hierarchy & Ducking Scaffolder
+
+Genera la estructura de ruteo de audio profesional para el motor del proyecto:
+
+- **Buses Preconfigurados**: `Master`, `Music` (-3dB), `SFX`, `Voice` (trigger de atenuación), `UI` y `Ambient` (-4dB).
+- **Compresión Sidechain / Ducking**: Atenuación automática de la música cuando se activan efectos de voz o diálogos.
+- **Formatos Nativos**: Generación de `default_bus_layout.tres` para Godot 4 y gestores de canales para Bevy y Raylib.
+
+

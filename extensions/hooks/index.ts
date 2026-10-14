@@ -49,6 +49,12 @@ import { boundedSurfacesGuard } from "./studio-surfaces-guard.ts";
 import { handleStudioJam, isJamModeActive } from "./studio-jam.ts";
 import { handleStudioBudget, recordTokenUsage } from "./studio-budget.ts";
 import { handleStudioTimeline } from "./studio-timeline.ts";
+import { handleStudioMarket } from "./studio-market.ts";
+import { handleStudioScaffold } from "./studio-scaffold.ts";
+import { handleStudioGameFeel } from "./studio-game-feel.ts";
+import { handleStudioCapsule } from "./studio-capsule.ts";
+import { handleStudioSteamPage } from "./studio-steam-page.ts";
+import { handleStudioAudioBus } from "./studio-audio-bus.ts";
 
 export default function (pi: ExtensionAPI) {
 	// ──────────────────────────────────────────────
@@ -456,6 +462,102 @@ export default function (pi: ExtensionAPI) {
 		description: "[Studio] Alias de línea de tiempo de producción",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioTimeline(args, ctx);
+		},
+	});
+
+	// /studio:market — Steam Reality Check y validación de viabilidad comercial
+	(pi as any).registerCommand?.("studio:market", {
+		description: "[Studio] Steam Reality Check y validación de viabilidad comercial en Steam",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioMarket(args, ctx);
+		},
+	});
+
+	// /market — Alias de studio:market
+	(pi as any).registerCommand?.("market", {
+		description: "[Studio] Alias de Steam Reality Check y auditoría de mercado",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioMarket(args, ctx);
+		},
+	});
+
+	// /studio:scaffold — Generador de sandbox jugable según motor activo (2D/3D)
+	(pi as any).registerCommand?.("studio:scaffold", {
+		description: "[Studio] Generador de sandbox jugable según motor activo (2D/3D)",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioScaffold(args, ctx);
+		},
+	});
+
+	// /scaffold — Alias de studio:scaffold
+	(pi as any).registerCommand?.("scaffold", {
+		description: "[Studio] Alias de sandbox jugable según motor activo",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioScaffold(args, ctx);
+		},
+	});
+
+	// /studio:game-feel — Auditor estático de Game Feel y respuesta de control
+	(pi as any).registerCommand?.("studio:game-feel", {
+		description: "[Studio] Auditor estático de Game Feel y respuesta de control (5 pilares)",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioGameFeel(args, ctx);
+		},
+	});
+
+	// /game-feel — Alias de studio:game-feel
+	(pi as any).registerCommand?.("game-feel", {
+		description: "[Studio] Alias de auditoría de Game Feel y respuesta de control",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioGameFeel(args, ctx);
+		},
+	});
+
+	// /studio:capsule — Auditor de portadas y cápsulas de Steamworks (231x87, 460x215, etc.)
+	(pi as any).registerCommand?.("studio:capsule", {
+		description: "[Studio] Auditor de portadas y cápsulas de Steamworks (231x87, 460x215, etc.)",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioCapsule(args, ctx);
+		},
+	});
+
+	// /capsule-check — Alias de studio:capsule
+	(pi as any).registerCommand?.("capsule-check", {
+		description: "[Studio] Alias de auditoría de cápsulas de Steamworks",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioCapsule(args, ctx);
+		},
+	});
+
+	// /studio:steam-page — Generador de ficha de Steamworks en BBCode oficial
+	(pi as any).registerCommand?.("studio:steam-page", {
+		description: "[Studio] Generador de ficha de Steamworks en BBCode oficial",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioSteamPage(args, ctx);
+		},
+	});
+
+	// /steam-page — Alias de studio:steam-page
+	(pi as any).registerCommand?.("steam-page", {
+		description: "[Studio] Alias de generador de ficha de Steamworks",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioSteamPage(args, ctx);
+		},
+	});
+
+	// /studio:audio-bus — Scaffolding de jerarquía de buses de audio profesionales con ducking
+	(pi as any).registerCommand?.("studio:audio-bus", {
+		description: "[Studio] Scaffolding de jerarquía de buses de audio profesionales con ducking",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioAudioBus(args, ctx);
+		},
+	});
+
+	// /audio-bus — Alias de studio:audio-bus
+	(pi as any).registerCommand?.("audio-bus", {
+		description: "[Studio] Alias de scaffolding de buses de audio profesionales",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioAudioBus(args, ctx);
 		},
 	});
 

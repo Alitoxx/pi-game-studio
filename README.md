@@ -234,6 +234,12 @@ Pi Game Studio opera con el pipeline de **6 Skills ODD (Organic Driven Developme
 - **`/studio:mcp`** — Gestión del ecosistema de 10 servidores MCP.
 - **`/studio:chains`** — Ejecutor de cadenas multi-agente (`feature-implement`, `gdd-review`, `perf-audit`, `release-gate`, etc.).
 - **`/palette`** (o **`Alt+K`**) — Paleta de comandos difusa interactiva con categorías y búsqueda en tiempo real.
+- **`/market`** (o **`/studio:market`**) — Steam Reality Check: Auditoría de saturación de mercado en vivo, competidores top, ratings y viabilidad comercial del pitch.
+- **`/scaffold`** (o **`/studio:scaffold`**) — Generador de sandbox jugable inmediato según motor activo (Godot 4, Bevy, Raylib) y dimensión (2D/3D).
+- **`/game-feel`** (o **`/studio:game-feel`**) — Auditor estático de Game Feel y respuesta de control (coyote time, jump buffer, inercia, salto variable, screen shake).
+- **`/capsule-check`** (o **`/studio:capsule`**) — Auditor de portadas y cápsulas de Steamworks (Header, Small 231x87 crítica para CTR, Main, Vertical) con ImageMagick.
+- **`/steam-page`** (o **`/studio:steam-page`**) — Generador de ficha oficial de Steamworks en BBCode (`[h2]`, `[b]`, `[list]`) a partir del GDD activo.
+- **`/audio-bus`** (o **`/studio:audio-bus`**) — Scaffolding de jerarquía de buses de audio profesionales con ducking (Master, Music, SFX, Voice, UI, Ambient).
 - **`/perf-guard`** (o **`/studio:perf-guard`**) — Auditor de allocations en bucles de frame (Rust, GDScript, C++, C#).
 - **`/watch`** (o **`/studio:watch`**) — Hot-reload y compilación en caliente para Bevy, Godot y Raylib.
 - **`/assets`** (o **`/studio:assets`**) — Auditoría de assets, compresión `oxipng` y manifiesto `assets/manifest.yaml`.

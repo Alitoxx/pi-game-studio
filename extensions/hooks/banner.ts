@@ -125,9 +125,9 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 
 	lines.push("");
 
-	const showArt = isArtEnabled(root) && width >= 90;
+	const artOn = isArtEnabled(root);
 
-	if (showArt) {
+	if (artOn && width >= 104) {
 		const rightLines: string[] = [
 			`${STUDIO_ACCENT}${BOLD}P I   G A M E   S T U D I O${RESET}   ${STUDIO_HIGHLIGHT}v${version}${RESET}`,
 			`${STUDIO_DIM}Autonomous Game Development Studio for Pi${RESET}`,
@@ -149,6 +149,35 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 		for (let i = 0; i < ART_RAW.length; i++) {
 			lines.push(`${padStr}${getGradientArtLine(ART_RAW[i], i, ART_RAW.length)}    ${rightLines[i] || ""}`);
 		}
+	} else if (artOn && width >= 55) {
+		// Stacked layout: Centered Braille art on top, clean status table below (for standard 80-col terminals)
+		const artW = 32;
+		const artPad = Math.max(0, Math.floor((width - artW) / 2));
+		const artPadStr = " ".repeat(artPad);
+		for (let i = 0; i < ART_RAW.length; i++) {
+			lines.push(`${artPadStr}${getGradientArtLine(ART_RAW[i], i, ART_RAW.length)}`);
+		}
+		lines.push("");
+
+		const titleRaw = `PI GAME STUDIO · v${version} · 8+1 agents / 6 ODD skills`;
+		const titlePad = Math.max(0, Math.floor((width - titleRaw.length) / 2));
+		lines.push(" ".repeat(titlePad) + `${STUDIO_ACCENT}${BOLD}PI GAME STUDIO${RESET} ${STUDIO_DIM}·${RESET} ${STUDIO_HIGHLIGHT}v${version}${RESET} ${STUDIO_DIM}· 8+1 agents / 6 ODD skills${RESET}`);
+		lines.push("");
+
+		const lW = 10;
+		const vW = Math.max(20, Math.min(width - lW - 6, 60));
+		const narrowPad = Math.max(0, Math.floor((width - (lW + vW + 1)) / 2));
+		const padStr = " ".repeat(narrowPad);
+		const addNarrow = (label: string, value: string) => {
+			lines.push(`${padStr}${STUDIO_LABEL}${fit(label, lW)}${RESET} ${STUDIO_VALUE}${fit(value, vW)}${RESET}`);
+		};
+		addNarrow("GIT:", `On branch ${gitBranch}`);
+		addNarrow("PATH:", shortPath);
+		addNarrow("ENGINE:", engineInfo);
+		addNarrow("AGENTS:", `${setup.agentsInstalled} activos (8 Core + 1 Motor)`);
+		addNarrow("STAGE:", stage);
+		addNarrow("STORAGE:", engramStatus);
+		lines.push(`${padStr}${STUDIO_GOLD}${fit("TIPS:", lW)}${RESET} ${STUDIO_DIM}/concept · /spec · /code · /studio · /studio:setup${RESET}`);
 	} else {
 		// Clean centered compact table
 		const titleRaw = `PI GAME STUDIO · v${version} · 8+1 agents / 6 ODD skills`;

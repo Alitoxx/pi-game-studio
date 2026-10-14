@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.1] - 2026-10-14
 
 ### Added
+- **Mascota Oficial del Estudio ("Pibot") y Banner Panorámico de Consola**:
+  - Incorporada la mascota oficial **Pibot**: el droide asistente de cabina gamedev con chasis cerámico/grafito, corona $\pi$ luminosa, D-pad en el pecho y gamepad holográfico (`docs/assets/mascot.png`).
+  - Nuevo banner panorámico oficial para la consola de desarrollo y vista previa social (`docs/assets/pibot-banner.png` y `docs/assets/social-preview.png`) con puente de mando gamedev, wireframes holográficos 3D y telemetría de motor.
+  - Actualizado el campo `image` del paquete en `package.json` hacia la nueva mascota oficial.
+- **Banner TUI Adaptativo para Terminales Estándar (80 columnas)**:
+  - Soporte de renderizado centrado y apilado del isotipo nórdico/Braille en terminales de 55 a 103 columnas, garantizando que el logo nunca se oculte en terminales estándar de 80 columnas o paneles divididos.
 - **Inteligencia Comercial y Gobernanza Financiera del Productor**:
   - Incorporada la sección `Market Intelligence & Commercial Governance (Steam Strategy)` en las directivas de sistema de `producer.md`.
   - Integrado el **Método Multiplicador de Boxleiter** en `/market` para estimar automáticamente copias vendidas y facturación neta de los competidores (`Reviews * 30-50x`, comisiones de Valve -30%, retenciones fiscales -20%, reembolsos -10% y precios regionales -8%).

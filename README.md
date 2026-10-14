@@ -1,7 +1,11 @@
 # Pi Game Studio
 
 <p align="center">
-  <img src="docs/assets/icon.png" alt="Pi Game Studio Icon" width="160" height="160" />
+  <img src="docs/assets/pibot-banner.png" alt="Pi Game Studio Console — Pibot Mascot" width="100%" />
+</p>
+
+<p align="center">
+  <img src="docs/assets/mascot.png" alt="Pibot — Pi Game Studio Mascot" width="160" height="160" />
 </p>
 
 <p align="center">

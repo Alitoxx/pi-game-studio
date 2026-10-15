@@ -71,76 +71,76 @@ Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar 
 ### Tier 1: Directores
 
 #### `producer`
-- **Archivo:** [`agents/producer.md`](file:///Users/alexis/Developer/pi-game-studio/agents/producer.md)
+- **Archivo:** [`agents/producer.md`](agents/producer.md)
 - **Presupuesto de Razonamiento:** `high` | **Herramientas:** `read, glob, grep, write, edit, bash, web_search, subagent, ask_user_question`
 - **Misión y Alcance:** The Producer manages all production concerns: sprint planning, milestone tracking, risk management, scope negotiation, and cross-department coordination. This is the primary coordination agent.
 
 #### `creative-director`
-- **Archivo:** [`agents/creative-director.md`](file:///Users/alexis/Developer/pi-game-studio/agents/creative-director.md)
+- **Archivo:** [`agents/creative-director.md`](agents/creative-director.md)
 - **Presupuesto de Razonamiento:** `high` | **Herramientas:** `read, glob, grep, write, edit, web_search, subagent, ask_user_question`
 - **Misión y Alcance:** The Creative Director is the highest-level creative authority for the project. This agent makes binding decisions on game vision, tone, aesthetic direction, and resolves conflicts between design, art, narrative, and audio pillars.
 
 #### `technical-director`
-- **Archivo:** [`agents/technical-director.md`](file:///Users/alexis/Developer/pi-game-studio/agents/technical-director.md)
+- **Archivo:** [`agents/technical-director.md`](agents/technical-director.md)
 - **Presupuesto de Razonamiento:** `high` | **Herramientas:** `read, glob, grep, write, edit, bash, web_search, subagent, ask_user_question`
 - **Misión y Alcance:** The Technical Director owns all high-level technical decisions including engine architecture, technology choices, performance strategy, and technical risk management.
 
 ### Tier 2: Leads & Core Devs
 
 #### `game-designer`
-- **Archivo:** [`agents/game-designer.md`](file:///Users/alexis/Developer/pi-game-studio/agents/game-designer.md)
+- **Archivo:** [`agents/game-designer.md`](agents/game-designer.md)
 - **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, web_search, ask_user_question`
 - **Misión y Alcance:** The Game Designer owns the mechanical and systems design of the game. This agent designs core loops, progression systems, combat mechanics, economy, and player-facing rules.
 
 #### `gameplay-programmer`
-- **Archivo:** [`agents/gameplay-programmer.md`](file:///Users/alexis/Developer/pi-game-studio/agents/gameplay-programmer.md)
+- **Archivo:** [`agents/gameplay-programmer.md`](agents/gameplay-programmer.md)
 - **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, ask_user_question`
 - **Misión y Alcance:** The Gameplay Programmer implements player controls, movement feel, mechanics, interactions, combat logic, and camera systems cleanly and performantly.
 
 #### `art-director`
-- **Archivo:** [`agents/art-director.md`](file:///Users/alexis/Developer/pi-game-studio/agents/art-director.md)
+- **Archivo:** [`agents/art-director.md`](agents/art-director.md)
 - **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, web_search, ask_user_question`
 - **Misión y Alcance:** The Art Director owns the visual identity of the game: style guides, art bible, asset standards, color palettes, UI/UX visual design, and shader aesthetic specs.
 
 #### `audio-director`
-- **Archivo:** [`agents/audio-director.md`](file:///Users/alexis/Developer/pi-game-studio/agents/audio-director.md)
+- **Archivo:** [`agents/audio-director.md`](agents/audio-director.md)
 - **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, web_search, ask_user_question`
 - **Misión y Alcance:** The Audio Director owns the sonic identity of the game: music direction, sound design philosophy, audio implementation strategy, audio buses, and mix balance.
 
 #### `qa-lead`
-- **Archivo:** [`agents/qa-lead.md`](file:///Users/alexis/Developer/pi-game-studio/agents/qa-lead.md)
+- **Archivo:** [`agents/qa-lead.md`](agents/qa-lead.md)
 - **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, ask_user_question`
 - **Misión y Alcance:** The QA Lead owns test strategy, bug triage, release quality gates, regression test planning, and release readiness evaluation.
 
 ### Tier 3: Especialistas de Motor
 
 #### `bevy-specialist`
-- **Archivo:** [`agents/bevy-specialist.md`](file:///Users/alexis/Developer/pi-game-studio/agents/bevy-specialist.md)
+- **Archivo:** [`agents/bevy-specialist.md`](agents/bevy-specialist.md)
 - **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent, ask_user_question`
 - **Misión y Alcance:** The Bevy Specialist is the authority on all Bevy-specific patterns, APIs, Rust ECS, wgpu shaders, Cargo builds, and WASM web deployment.
 
 #### `godot-specialist`
-- **Archivo:** [`agents/godot-specialist.md`](file:///Users/alexis/Developer/pi-game-studio/agents/godot-specialist.md)
+- **Archivo:** [`agents/godot-specialist.md`](agents/godot-specialist.md)
 - **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent, ask_user_question`
 - **Misión y Alcance:** The Godot Specialist is the authority on all Godot-specific patterns, GDScript/C#, SceneTree, GDExtension, and canvas_item shaders.
 
 #### `phaser-specialist`
-- **Archivo:** [`agents/phaser-specialist.md`](file:///Users/alexis/Developer/pi-game-studio/agents/phaser-specialist.md)
+- **Archivo:** [`agents/phaser-specialist.md`](agents/phaser-specialist.md)
 - **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent, ask_user_question`
 - **Misión y Alcance:** The Phaser Specialist is the authority on Phaser 3 and 4 game development, modern TypeScript, HTML5 Canvas/WebGL pipelines, Arcade/Matter physics, scene lifecycles, and web game deployment.
 
 #### `raylib-specialist`
-- **Archivo:** [`agents/raylib-specialist.md`](file:///Users/alexis/Developer/pi-game-studio/agents/raylib-specialist.md)
+- **Archivo:** [`agents/raylib-specialist.md`](agents/raylib-specialist.md)
 - **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent, ask_user_question`
 - **Misión y Alcance:** The Raylib Specialist is the authority on Raylib, modern C++ (C++17/20), EnTT ECS, GLSL shaders, CMake build pipelines, and game loops.
 
 #### `unity-specialist`
-- **Archivo:** [`agents/unity-specialist.md`](file:///Users/alexis/Developer/pi-game-studio/agents/unity-specialist.md)
+- **Archivo:** [`agents/unity-specialist.md`](agents/unity-specialist.md)
 - **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent, ask_user_question`
 - **Misión y Alcance:** The Unity Specialist is the authority on all Unity-specific patterns, MonoBehaviour, DOTS/ECS, C# APIs, Shader Graph, and UI Toolkit.
 
 #### `unreal-specialist`
-- **Archivo:** [`agents/unreal-specialist.md`](file:///Users/alexis/Developer/pi-game-studio/agents/unreal-specialist.md)
+- **Archivo:** [`agents/unreal-specialist.md`](agents/unreal-specialist.md)
 - **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent, ask_user_question`
 - **Misión y Alcance:** The Unreal Specialist is the authority on all Unreal-specific patterns, C++, Blueprints, Gameplay Ability System (GAS), Enhanced Input, and Niagara.
 

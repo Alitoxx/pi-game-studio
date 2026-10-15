@@ -1,7 +1,7 @@
 # Accessibility Audit — Menú (Contraste + Remapeo de Botones)
 
 **Fecha:** 2026-10-01
-**Rol:** accessibility-specialist
+**Rol:** qa-lead (Accessibility Focus)
 **Objetivo:** contraste de color y accesibilidad motriz (remapeo) del menú
 **Alcance:** motor Bevy, proyecto `Mi Videojuego`, M1 — Prototipo Jugable
 **Target de cumplimiento:** WCAG 2.1 Nivel AA
@@ -10,7 +10,7 @@
 
 ## 1. Veredicto
 
-> **VERDICT accessibility-specialist: FAIL (bloqueante por ausencia de objetivo).**
+> **VERDICT qa-lead: FAIL (bloqueante por ausencia de objetivo).**
 
 **No existe menú que auditar.** El único código de juego del repositorio es
 `starters/bevy-2d-arpg/src/main.rs` (85 líneas): una cámara, un quad azul, y lectura
@@ -249,6 +249,6 @@ del menú, separador 9.69:1 contra el botón de acento. Inalterado por la correc
 - Oscurecer `bg.hover` invierte la intuición habitual hover-más-claro. Documentar en el style
   guide para que un Technical Artist no lo "corrija" sin conocer esta tabla.
 
-> **VERDICT accessibility-specialist: PASS AA / PASS AAA sobre la paleta propuesta.**
+> **VERDICT qa-lead: PASS AA / PASS AAA sobre la paleta propuesta.**
 > El menú aún no existe, así que esto es un contrato normativo verificado, no una
 > certificación de implementación. Se mantiene el bloqueo de F1–F4 hasta que haya `src/ui/`.

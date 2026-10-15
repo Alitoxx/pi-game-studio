@@ -1,6 +1,10 @@
 # Pi Game Studio v0.9.0 — Cinco motores, un mismo estudio
 
-Esta versión es el salto de "un asistente que sabe de juegos" a "un estudio que conoce tu motor". La instalación ya no despliega los 55 agentes indiscriminadamente: elige tu línea de trabajo y el estudio se rearma a medida, sin especialistas peleándose por el mismo problema.
+> **ARCHIVED HISTORICAL NOTES** — Este documento es un registro histórico de la versión preliminar v0.9.0. A partir de la versión v1.8.0+, Pi Game Studio opera bajo la **Arquitectura Compacta 8+1** (8 roles Core + 1 Especialista dedicado del motor activo = 9 agentes activos por proyecto). Ver [`README.md`](../../../README.md) y [`CHANGELOG.md`](../../../CHANGELOG.md) para las especificaciones vigentes.
+
+---
+
+Esta versión fue el salto histórico de "un asistente que sabe de juegos" a "un estudio que conoce tu motor".
 
 
 ---

@@ -1,4 +1,4 @@
-# Pi Game Studio — Arquitectura y Diagramas de Flujo (v1.4.0)
+# Pi Game Studio — Arquitectura y Diagramas de Flujo
 
 Este documento detalla los flujos de ejecución y las interacciones entre los componentes y herramientas de **Pi Game Studio**.
 
@@ -43,7 +43,7 @@ flowchart TD
     end
 
     subgraph EngineSpecialist ["Tier 3: Especialista de Motor (+1 Activo)"]
-        Spec["bevy-specialist / godot-specialist<br/>raylib-specialist / unity-specialist / unreal-specialist"]
+        Spec["bevy-specialist / godot-specialist / phaser-specialist<br/>raylib-specialist / unity-specialist / unreal-specialist"]
     end
 
     Producer --> CD & TD
@@ -93,8 +93,9 @@ flowchart TD
     Detect -->|Bevy| BevyBuild["cargo build (wasm32) + wasm-bindgen"]
     Detect -->|Raylib| RaylibBuild["emcc C++ con GLFW3 y ASYNCIFY"]
     Detect -->|Godot 4| GodotBuild["godot --headless --export-release Web"]
+    Detect -->|Phaser| PhaserBuild["npm run build (Vite / TypeScript)"]
 
-    BevyBuild & RaylibBuild & GodotBuild --> Dist["Generar artefacto en dist/web/index.html"]
+    BevyBuild & RaylibBuild & GodotBuild & PhaserBuild --> Dist["Generar artefacto en dist/web/index.html"]
     
     Dist --> Server["Lanzar scripts/serve-web.js (Puerto 8080)"]
     Server --> Headers["Inyectar Headers:<br/>COOP: same-origin<br/>COEP: require-corp"]

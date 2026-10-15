@@ -7,7 +7,7 @@ description: End-to-end game feature pipeline from design specification to engin
 
 ## game-designer
 
-reads: docs/features/{feature}.md
+reads: design/gdd/{feature}.md
 output: design/gdd/{feature}.md
 outputMode: file-only
 progress: true
@@ -17,7 +17,7 @@ Create a detailed technical design specification for `{feature}`. Define player 
 ## technical-director
 
 reads: design/gdd/{feature}.md
-output: docs/features/specs/{feature}-architecture.md
+output: design/gdd/{feature}.md
 outputMode: file-only
 progress: true
 
@@ -25,17 +25,17 @@ Architect the code structure for `{feature}` following best practices for the ac
 
 ## gameplay-programmer
 
-reads: design/gdd/{feature}.md+docs/features/specs/{feature}-architecture.md
-output: docs/features/reports/{feature}-implementation-report.md
-outputMode: file-only
+reads: design/gdd/{feature}.md
+output: src/
+outputMode: interactive
 progress: true
 
-Implement `{feature}` cleanly and performantly according to the architecture specification. Write data-driven code, decouple presentation from logic, and produce the implementation report documenting created files, key functions, and integration steps.
+Implement `{feature}` cleanly and performantly according to the architecture specification. Write data-driven code, decouple presentation from logic, and implement ~400-line verifiable units.
 
 ## qa-lead
 
-reads: design/gdd/{feature}.md+docs/features/reports/{feature}-implementation-report.md
-output: docs/features/reports/{feature}-qa-plan.md
+reads: design/gdd/{feature}.md+src/
+output: production/qa/bugs.md
 outputMode: file-only
 progress: true
 

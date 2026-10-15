@@ -7,8 +7,8 @@ description: Comprehensive Game Design Document review pipeline across vision, s
 
 ## creative-director
 
-reads: docs/gdd/{doc}.md
-output: docs/gdd/reviews/{doc}-creative-audit.md
+reads: design/gdd/{doc}.md
+output: design/gdd/{doc}.md
 outputMode: file-only
 progress: true
 
@@ -16,8 +16,8 @@ Audit the Game Design Document for `{doc}` against project core pillars, emotion
 
 ## game-designer
 
-reads: docs/gdd/{doc}.md+docs/gdd/reviews/{doc}-creative-audit.md
-output: docs/gdd/reviews/{doc}-systems-audit.md
+reads: design/gdd/{doc}.md
+output: design/gdd/{doc}.md
 outputMode: file-only
 progress: true
 
@@ -25,17 +25,17 @@ Analyze the gameplay mechanics, progression loops, economy levers, player agency
 
 ## technical-director
 
-reads: docs/gdd/{doc}.md+docs/gdd/reviews/{doc}-systems-audit.md
-output: docs/gdd/reviews/{doc}-technical-audit.md
+reads: design/gdd/{doc}.md
+output: design/gdd/{doc}.md
 outputMode: file-only
 progress: true
 
-Evaluate the technical feasibility of `{doc}` in the active engine (Godot, Unity, Unreal, or Bevy). Identify architectural requirements, state machine complexity, networking constraints, asset pipeline requirements, and performance risk. Provide technical recommendations and define data contract structures.
+Evaluate the technical feasibility of `{doc}` in the active engine (Godot, Unity, Unreal, Phaser, Raylib, or Bevy). Identify architectural requirements, state machine complexity, networking constraints, asset pipeline requirements, and performance risk. Provide technical recommendations and define data contract structures.
 
 ## producer
 
-reads: docs/gdd/reviews/{doc}-creative-audit.md+docs/gdd/reviews/{doc}-systems-audit.md+docs/gdd/reviews/{doc}-technical-audit.md
-output: docs/gdd/reviews/{doc}-final-signoff.md
+reads: design/gdd/{doc}.md
+output: production/roadmap.md
 outputMode: file-only
 progress: true
 

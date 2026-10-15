@@ -1,7 +1,7 @@
 # Organic Driven Development para Videojuegos (ODD Gamedev Protocol)
 
 > **Flujo de Trabajo Oficial y Único de Pi Game Studio.**
-> Inspirado en la agilidad y precisión de ODD (Gentle Shell), adaptado a la naturaleza iterativa de motores, código de gameplay y diseño de videojuegos.
+> **Metodología y Créditos:** Creada originalmente por **[Gentle AI / Gentle Programming](https://github.com/gentleprogramming/gentle-ai)** como estándar de rigor, gobernanza y desarrollo orgánico para agentes de código. Este documento adapta la disciplina formal de ODD a la realidad iterativa de motores de videojuegos, compiladores y *Game Feel*.
 
 ---
 

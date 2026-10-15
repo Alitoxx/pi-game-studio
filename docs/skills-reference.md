@@ -59,7 +59,7 @@ Pi Game Studio opera bajo el flujo **Organic Driven Development (ODD)**:
 - **Contrato:**
   - Redacta ADRs concisos en `docs/architecture/adr-<num>-<titulo>.md`.
   - Define presupuestos estrictos de memoria y framerate por plataforma.
-  - Configura pipelines simétricos para los 5 motores oficiales (Godot, Bevy, Raylib, Unity, Unreal).
+  - Configura pipelines simétricos para los 6 motores oficiales (Bevy, Godot, Phaser, Raylib, Unity, Unreal).
   - Audita el estado de los 10 servidores MCP disponibles en `/studio:mcp`.
 
 ### `/code` — Idiomatic Implementation (Fase 4)
@@ -95,11 +95,11 @@ Comandos integrados en la terminal para administración del estudio, configuraci
 | Comando | Descripción |
 |---|---|
 | **`/studio`** o **`/studio:start`** | Panel principal e inicio guiado con auditoría de estado del proyecto. |
-| **`/studio:new`** | Asistente interactivo para crear un nuevo juego a partir de 5 starters (Bevy, Godot, Raylib, Unity, Unreal). |
+| **`/studio:new`** | Asistente interactivo para crear un nuevo juego a partir de 6 starters (Bevy, Godot, Phaser, Raylib, Unity, Unreal). |
 | **`/studio:setup`** | Instalación y despliegue del roster 8+1 (9 agentes) en el proyecto. |
 | **`/studio:models`** | Configuración interactiva de proveedores y modelos de IA por rol o nivel. |
 | **`/studio:doctor`** | Diagnóstico técnico integral del entorno, herramientas CLI y estructura del proyecto. |
-| **`/studio:tools`** | Verificación e instalación de herramientas multimedia FOSS (ImageMagick, oxipng, FFmpeg, SoX, Assimp, wasm-opt, butler). |
+| **`/studio:tools`** | Verificación e instalación de herramientas multimedia FOSS (ImageMagick, oxipng, pngquant, FFmpeg, Assimp, wasm-opt, gltf-transform, gltfpack, butler). |
 | **`/studio:mcp`** | Inspección y gestión de servidores MCP del ecosistema. |
 | **`/studio:chains`** | Ejecutor de cadenas multi-agente (`feature-implement`, `gdd-review`, `perf-audit`, etc.). |
 | **`/studio:subagents`** | Visor en vivo de tareas ejecutadas por especialistas en subprocesos aislados. |

@@ -88,7 +88,7 @@ I moved it to assets/data/combat_config.json as 'critical_damage_multiplier': 2.
 File is ready. Would you like me to:
  A) Write tests now (recommended)
  B) Let you review the code first
- C) Run /code-review for architecture validation"
+ C) Run /code review for architecture validation"
 
 User: "A, write tests"
 
@@ -96,9 +96,9 @@ You: [creates tests/combat/test_damage_calculator.gd]
      "Created test file with 6 test cases covering the acceptance criteria from the design doc.
       All tests passing.
 
-      Running /story-done to verify acceptance criteria and close out the story."
+      Updating design/gdd/combat.md live spec checklist to mark task completed and emit delivery receipt."
 
-[/story-done runs — verifies criteria, checks deviations, prompts code review, updates story status]
+[Live spec checklist updated, validation evidence attached, and task completed under ODD workflow]
 ```
 
 #### Collaborative Mindset
@@ -109,20 +109,20 @@ You: [creates tests/combat/test_damage_calculator.gd]
 - Flag deviations from design docs explicitly — designer should know if implementation differs
 - Rules are your friend — when they flag issues, they're usually right
 - Tests prove it works — offer to write them proactively
-- Story completion is explicit — use `/story-done` to close every story, never assume done because code is written
+- Task completion is explicit — update the live spec task checklist and verify in-engine, never assume done because code is written
 
 #### Structured Decision UI
 
-Use the `AskUserQuestion` tool for architecture decisions and next-step choices.
+Use the `ask_user_question` tool for architecture decisions and next-step choices.
 Follow the **Explain → Capture** pattern:
 
 1. **Explain first** — Describe the architectural options and trade-offs in
    conversation text.
-2. **Capture the decision** — Call `AskUserQuestion` with concise option labels.
+2. **Capture the decision** — Call `ask_user_question` with concise option labels.
 
 **When to use it:**
 - Architecture questions with constrained answers (step 2)
-- Next-step choices ("Write tests, review code, or run code-review?")
+- Next-step choices ("Write tests, review code, or run code review?")
 - Batch up to 4 independent architecture questions in one call
 
 **When NOT to use it:**
@@ -132,7 +132,7 @@ Follow the **Explain → Capture** pattern:
 
 **Example — architecture questions (batch):**
 
-  AskUserQuestion with questions:
+  ask_user_question with questions:
     1. question: "Where should DamageCalculator live?"
        header: "Architecture"
        options: "Static Utility (Recommended)", "Autoload Singleton", "Scene Node"

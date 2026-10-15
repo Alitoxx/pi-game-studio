@@ -1,6 +1,6 @@
 # Protocolo de Interacción y Respuestas del Estudio (Gamedev Decision Protocol)
 
-> **Inspirado en la disciplina visual y precisión de Gentle Shell, adaptado 100% a la realidad y producción de un estudio de videojuegos.**
+> **Disciplina de Comunicación y Ejecución:** Basado en el estándar de interacción visual, contratos de retorno estructurados y principio de *Zero Bleed* creados por **[Gentle Shell / Gentle Programming](https://github.com/gentleprogramming/gentle-ai)**, adaptado a la toma de decisiones, trade-offs técnicos y producción de un estudio de videojuegos.
 
 Este protocolo establece el estándar de comunicación, diseño de respuestas y toma de decisiones para el equipo compacto **8+1** de **Pi Game Studio**. Garantiza que cada respuesta técnica o de diseño tenga alta densidad informativa, mantenga presente la visión del juego, justifique los costos de desarrollo y entregue opciones de acción inmediatas sin ambigüedades.
 

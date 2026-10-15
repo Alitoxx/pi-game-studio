@@ -7,8 +7,8 @@ description: Pre-release verification gate auditing build stability, performance
 
 ## qa-lead
 
-reads: docs/release/{build}-test-log.md
-output: docs/release/{build}-qa-verdict.md
+reads: production/qa/bugs.md
+output: production/qa/bugs.md
 outputMode: file-only
 progress: true
 
@@ -16,8 +16,8 @@ Execute comprehensive test regression triage for `{build}`. Audit open bug count
 
 ## technical-director
 
-reads: docs/release/{build}-qa-verdict.md
-output: docs/release/{build}-technical-gate.md
+reads: production/qa/bugs.md
+output: production/qa/bugs.md
 outputMode: file-only
 progress: true
 
@@ -25,8 +25,8 @@ Audit framerate stability (1% and 0.1% lows), frame-time consistency, memory lea
 
 ## producer
 
-reads: docs/release/{build}-qa-verdict.md+docs/release/{build}-technical-gate.md
-output: docs/release/{build}-release-package.md
+reads: production/qa/bugs.md
+output: production/roadmap.md
 outputMode: file-only
 progress: true
 

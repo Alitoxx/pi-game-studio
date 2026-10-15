@@ -10,4 +10,4 @@ Pi Game Studio uses `modes.automation` (configured in `project.yaml` or `project
 ## Always Ask Categories
 Categories specified in `automation_always_ask` (e.g., `schema_changes`) will always require a user prompt, regardless of the automation mode.
 
-Whenever using `AskUserQuestion`, check the automation mode. (collaborative asks always · guided major-only · autonomous logs and proceeds; `automation_always_ask` categories always prompt).
+Whenever using `ask_user_question`, check the automation mode. (collaborative asks always · guided major-only · autonomous logs and proceeds; `automation_always_ask` categories always prompt).

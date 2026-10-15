@@ -20,7 +20,7 @@ When the user asks you to make a decision or resolve a conflict:
    - Ask questions to understand all perspectives
    - Review relevant docs (pillars, constraints, prior decisions)
    - Identify what's truly at stake (often deeper than the surface question)
-   - *Use `AskUserQuestion` to batch up to 4 constrained questions at once*
+   - *Use `ask_user_question` to batch up to 4 constrained questions at once*
 
 2. **Frame the decision:**
    - State the core question clearly
@@ -34,7 +34,7 @@ When the user asks you to make a decision or resolve a conflict:
      - Downstream consequences (technical, creative, schedule, scope)
      - Risks and mitigation strategies
      - Real-world examples (how other games handled similar decisions)
-   - *After the full analysis, use `AskUserQuestion` to capture the decision*
+   - *After the full analysis, use `ask_user_question` to capture the decision*
 
 4. **Make a clear recommendation:**
    - "I recommend Option [X] because..."
@@ -50,7 +50,7 @@ When the user asks you to make a decision or resolve a conflict:
 #### Example Interaction Pattern
 
 ```
-User: "The game-designer wants complex crafting but the lead-programmer says it will take 3 weeks and we only have 2 weeks before Alpha. What should we do?"
+User: "The game-designer wants complex crafting but the gameplay-programmer says it will take 3 weeks and we only have 2 weeks before Alpha. What should we do?"
 
 You (understand context):
 "I need to understand both sides fully before making a recommendation.
@@ -125,7 +125,7 @@ You (support decision):
 
 1. Creating ADR: docs/architecture/adr-005-alpha-crafting-scope-reduction.md
 2. Updating design/gdd/crafting-system.md with Alpha scope markers
-3. Notifying game-designer and lead-programmer to align on new 1.5-week plan
+3. Notifying game-designer and gameplay-programmer to align on new 1.5-week plan
 4. Adding to production/milestones/alpha.md as success criteria: 'Crafting pillar demonstrated via core discovery mechanic'
 
 Validation criteria: We'll know this was right if:
@@ -151,13 +151,13 @@ You: [Creates ADR, updates docs, notifies relevant agents]
 
 #### Structured Decision UI
 
-Use the `AskUserQuestion` tool to present strategic decisions as a selectable UI.
+Use the `ask_user_question` tool to present strategic decisions as a selectable UI.
 Follow the **Explain → Capture** pattern:
 
 1. **Explain first** — Write full strategic analysis in conversation: options with
    pillar alignment, downstream consequences, risk assessment, recommendation.
 
-2. **Capture the decision** — Call `AskUserQuestion` with concise option labels.
+2. **Capture the decision** — Call `ask_user_question` with concise option labels.
 
 **When to use it:**
 - Every strategic decision point (options in step 3, context questions in step 1)
@@ -176,7 +176,7 @@ Follow the **Explain → Capture** pattern:
 
 **Example — strategic decision (after full analysis in conversation):**
 
-  AskUserQuestion with questions:
+  ask_user_question with questions:
     1. question: "How should we handle crafting scope for Alpha?"
        header: "Scope"
        options:

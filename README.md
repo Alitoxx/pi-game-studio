@@ -18,8 +18,8 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
   <a href="agents"><img src="https://img.shields.io/badge/architecture-8%2B1%20Compact-blueviolet" alt="8+1 Compact Studio"></a>
   <a href="skills"><img src="https://img.shields.io/badge/skills-6%20ODD-green" alt="6 ODD Skills"></a>
-  <a href="prompts"><img src="https://img.shields.io/badge/templates-49-orange" alt="49 Templates"></a>
-  <a href="chains"><img src="https://img.shields.io/badge/chains-7-yellow" alt="7 Chains"></a>
+  <a href="prompts"><img src="https://img.shields.io/badge/templates-10-orange" alt="10 Templates"></a>
+  <a href="chains"><img src="https://img.shields.io/badge/chains-3-yellow" alt="3 Chains"></a>
   <a href="starters"><img src="https://img.shields.io/badge/starters-6-cyan" alt="6 Starters"></a>
   <a href="extensions"><img src="https://img.shields.io/badge/hooks-4-red" alt="4 Hooks"></a>
   <img src="https://img.shields.io/badge/built%20for-Pi-8B5CF6?logo=pinokio" alt="Built for Pi">
@@ -79,8 +79,8 @@ The result: you still make every decision, but now you have a fast, coordinated 
 | **Subagents** | Native| Isolated child process execution via `subagent_run`, `subagent_list`, `subagent_status` & `subagent_result`              |
 | **Interactive**| Native| Interactive terminal menus & batch questionnaires via `ask_user_question` (arrow keys & Enter)             |
 | **Skills**    | 6 ODD | Full lifecycle pipeline: `/concept`, `/spec`, `/arch`, `/code`, `/test`, `/ship`                                          |
-| **Templates** | 49    | Document templates for GDDs, UX specs, ADRs, sprint plans, vertical slice reports, game briefs, and more                  |
-| **Chains**    | 7     | Multi-agent execution pipelines via native isolated subagents (`subagent_run`)                                           |
+| **Templates** | 10    | Master templates for GDDs, ADRs, art/sound bibles, game concepts, and release checklists |
+| **Chains**    | 3     | Multi-agent execution pipelines via native isolated subagents (`subagent_run`)                                           |
 | **Starters**  | 6     | Starter Kits for 6 major engines (Bevy, Godot, Phaser, Raylib, Unity, Unreal)                                                    |
 | **Hooks**     | 4     | Automated validation on commits, pushes, skill changes, and session audit/gap detection                                  |
 | **Engram**    | 1     | Optional persistent memory — decisions auto-save across sessions when Engram is connected                                |
@@ -239,7 +239,7 @@ Pi Game Studio opera con el pipeline de **6 Skills ODD (Organic Driven Developme
 - **`/studio:doctor`** — Diagnóstico integral de toolchains, compiladores y estructura ODD.
 - **`/studio:tools`** — Verificación e instalación de herramientas multimedia CLI (FFmpeg, ImageMagick, free-tex-packer-cli, gltf-transform, gltfpack, oxipng, pngquant, wasm-opt, butler).
 - **`/studio:mcp`** — Gestión del ecosistema de 10 servidores MCP.
-- **`/studio:chains`** — Ejecutor de cadenas multi-agente (`feature-implement`, `gdd-review`, `perf-audit`, `release-gate`, etc.).
+- **`/studio:chains`** — Ejecutor de cadenas multi-agente (`feature-implement`, `gdd-review`, `release-gate`).
 - **`/palette`** (o **`Alt+K`**) — Paleta de comandos difusa interactiva con categorías y búsqueda en tiempo real.
 - **`/market`** (o **`/studio:market`**) — Steam Reality Check & Financial Modeling: Auditoría de mercado en vivo, estimación de ventas e ingresos netos dev con multiplicador Boxleiter (`Reviews * 40x`), umbral de wishlists (`Popular Upcoming`) y gobernanza comercial del Producer (veto de scope y presupuesto temporal).
 - **`/scaffold`** (o **`/studio:scaffold`**) — Generador de sandbox jugable inmediato según motor activo (Godot 4, Bevy, Raylib, Phaser) y dimensión (2D/3D).
@@ -371,7 +371,7 @@ pi-game-studio/                     # Package root
 ├── models.default.json             # Recommended 3-tier model mapping
 ├── agents/                         # 14 source agents (8 Core + 6 Engine Specialists)
 ├── skills/                         # 6 ODD lifecycle skills (SKILL.md per directory)
-├── prompts/                        # 49 document templates
+├── prompts/                        # 10 master templates
 ├── extensions/                     # Hooks extension
 │   └── hooks/
 │       ├── index.ts                # 4 ported hooks
@@ -605,7 +605,7 @@ This project is a migration of **Claude Code Game Studios** to run natively on P
 
 - **[striderZA](https://github.com/striderZA)** — creador de [OpenCode Game Studios](https://github.com/striderZA/OpenCodeGameStudios) (OCGS), el port a OpenCode que pioneeró los patrones de migración cross-platform, el utility de model assignment (`assign-models.js`), y el formato de documentación de port status.
 
-- **[Gentle Programming](https://github.com/gentleprogramming)** — creador de [Gentle AI](https://github.com/gentleprogramming/gentle-ai) y del sistema **Engram**, la memoria persistente para agentes que permite el seguimiento de decisiones cross-session. La integración con Engram en este package sigue el modelo iniciado por Gentle AI.
+- **[Gentle Programming](https://github.com/gentleprogramming)** — creador de [Gentle AI](https://github.com/gentleprogramming/gentle-ai), del sistema de memoria persistente **Engram**, y autor intelectual de la metodología **ODD (Organic Driven Development)** y de la disciplina de ejecución **Gentle Shell**. ODD es la espina dorsal metodológica de todo este proyecto: autorizar antes de escribir, explorar primero, clasificar el tamaño de la tarea, Live Specs vivas sin burocracia de papel, código en bloques atómicos de ~400 líneas, validación continua en motor (*Game Feel* y FPS) y contratos de retorno estructurados sin sangrado interno (*Zero Bleed*). Todo el crédito, reconocimiento y agradecimiento por esta filosofía de desarrollo y gobernanza de agentes pertenece a Gentle Programming.
 
 - **[AlterLab GameForge](https://github.com/AlterLab)** — inspiración para el pack ágil de desarrollo y game design formal: modo Game Jam (`/jam`), análisis competitivo de mercado (`/market-research`), ingeniería inversa de repositorios existentes (`/reverse-document`) y formalización de frameworks de diseño (MDA, Flow Theory, SDT, Bartle).
 
@@ -623,7 +623,7 @@ This project is a migration of **Claude Code Game Studios** to run natively on P
 
 ### Homologation note
 
-- Imported counts were normalized to the current Pi tree: 13 agents, 6 skills, 49 templates, 4 runtime hooks.
+- Imported counts were normalized to the current Pi tree: 14 agents, 6 skills, 10 templates, 4 runtime hooks.
 - `extensions/hooks/index.ts` remains the single hook entrypoint; hook behavior is split across four handlers.
 
 Este port no existiría sin el trabajo fundacional de Donchitos y striderZA. Gracias.

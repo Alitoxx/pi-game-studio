@@ -49,7 +49,7 @@ El instalador (`/setup` o `/studio:setup`) despliega exactamente **9 agentes** e
 
 ## Protocolo de Interacción y Decisiones (Gamedev Decision Protocol)
 
-Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar de alta fidelidad inspirado en **Gentle Shell** adaptado a videojuegos ([`docs/gamedev-interaction-protocol.md`](docs/gamedev-interaction-protocol.md)):
+Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar de alta fidelidad, contratos de retorno estructurados y disciplina de ejecución creados por **[Gentle Shell / Gentle Programming](https://github.com/gentleprogramming/gentle-ai)** adaptados a videojuegos ([`docs/gamedev-interaction-protocol.md`](docs/gamedev-interaction-protocol.md)):
 1. **Organic Driven Development (ODD) como Flujo Oficial Único**: El desarrollo sigue estrictamente [`docs/odd-gamedev-workflow.md`](docs/odd-gamedev-workflow.md). Cero burocracia documental ni especificaciones muertas; diseño vivo en `design/gdd/<feature>.md`, tareas atómicas de ~400 líneas y validación directa en motor (*Game Feel*, FPS estables, cero allocs innecesarias).
 2. **Executive Delivery & Zero Bleed**: Prohibido volcar monólogos internos, tablas raw de 20+ filas o trazas de ejecución en el chat. Los datos exhaustivos viven en disco (`design/gdd/`); el chat es para síntesis ejecutiva (10-15 líneas) y decisiones.
 3. **Zero Emojis in CLI & Sober TUI**: Prohibidos los emojis decorativos en encabezados y menús. Bloques estándar limpios en mayúsculas (`STUDIO CONTEXT:`, `TRADE-OFF MATRIX:`, `CHOICE REQUIRED:`, `DELIVERY RECEIPT:`).

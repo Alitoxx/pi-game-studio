@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/earendil-works/pi-mono/main/packages/coding-agent/src/modes/interactive/theme/theme-schema.json",
-  "name": "GameStudio-Gentle",
+  "name": "GameStudio",
   "vars": {
     "bg": "#090A10",
     "bgPanel": "#090A10",

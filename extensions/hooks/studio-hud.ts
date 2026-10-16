@@ -295,6 +295,9 @@ export function renderStudioFooterBar(
 	const setup = inspectSetup(studioRoot);
 	const { state: prodState } = readProducerState(studioRoot);
 	const usage = extractContextUsage(ctx);
+	const model = (ctx as any)?.model;
+	const thinking = (ctx as any)?.pi?.getThinkingLevel?.() || (pi as any)?.getThinkingLevel?.();
+	const modelStr = formatModelDisplayName(model, thinking);
 
 	const rawEngine = prodState?.engine || setup.currentEngine || "Sin configurar";
 	const isEngineUnconfigured = rawEngine === "Sin configurar" || !rawEngine || rawEngine.toLowerCase() === "sin motor";
@@ -315,6 +318,7 @@ export function renderStudioFooterBar(
 	parts.push(`Hito: ${WHITE}${milestone}${RESET}`);
 	parts.push(`Sprint: ${WHITE}${sprint}${RESET}`);
 	parts.push(`${BLUE}${phaseChip}${RESET}`);
+	parts.push(`Modelo: ${BLUE}${modelStr}${RESET}`);
 	parts.push(`Context: ${contextDisplay}`);
 
 	// Live Performance & Budget Tracker
@@ -397,9 +401,10 @@ export function updateStudioHUD(ctx: ExtensionContext, pi?: ExtensionAPI): void 
 		const { state: prodState } = readProducerState(studioRoot);
 		const usage = extractContextUsage(ctx);
 		const model = (ctx as any).model;
-		const thinking = pi && typeof (pi as any).getThinkingLevel === "function"
-			? (pi as any).getThinkingLevel()
+		const thinking = typeof (ctx as any).pi?.getThinkingLevel === "function"
+			? (ctx as any).pi.getThinkingLevel()
 			: undefined;
+		const modelStr = formatModelDisplayName(model, thinking);
 
 		const rawEngine = prodState?.engine || setup.currentEngine || "Sin configurar";
 		const isEngineUnconfigured = rawEngine === "Sin configurar" || !rawEngine || rawEngine.toLowerCase() === "sin motor";
@@ -411,7 +416,7 @@ export function updateStudioHUD(ctx: ExtensionContext, pi?: ExtensionAPI): void 
 
 		(ctx.ui as any).setStatus(
 			"studio",
-			`▎ Motor: ${engineDisplay} · Hito: ${milestone} · Sprint: ${sprint} · ${phaseChip} · Context: ${contextDisplay}`,
+			`▎ Motor: ${engineDisplay} · Hito: ${milestone} · Sprint: ${sprint} · ${phaseChip} · Modelo: ${modelStr} · Context: ${contextDisplay}`,
 		);
 	}
 }

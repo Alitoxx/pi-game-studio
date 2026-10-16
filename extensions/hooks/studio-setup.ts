@@ -141,9 +141,9 @@ export function inspectSetup(cwd: string): SetupStatus {
 		}
 	} catch {}
 
-	const hasModelsConfig = existsSync(
-		join(cwd, ".pi", "gentle-ai", "models.json"),
-	);
+	const studioModelsPath = join(cwd, ".pi", "game-studio", "models.json");
+	const legacyModelsPath = join(cwd, ".pi", "gentle-ai", "models.json");
+	const hasModelsConfig = existsSync(studioModelsPath) || existsSync(legacyModelsPath);
 	const hasGameStudioDir = existsSync(join(cwd, ".pi", "game-studio"));
 
 	let engramEnabled: boolean | null = null;
@@ -540,13 +540,12 @@ export function installStudioFiles(
 	const agentsSrc = join(pkgRoot, "agents");
 	const destDir = join(ctx.cwd, ".pi", "agents");
 	const studioDir = join(ctx.cwd, ".pi", "game-studio");
-	const modelsDest = join(ctx.cwd, ".pi", "gentle-ai", "models.json");
+	const modelsDest = join(ctx.cwd, ".pi", "game-studio", "models.json");
 	const modelsSrc = join(pkgRoot, "models.default.json");
 	const projectYamlPath = join(ctx.cwd, "project.yaml");
 
 	mkdirSync(destDir, { recursive: true });
 	mkdirSync(studioDir, { recursive: true });
-	mkdirSync(join(ctx.cwd, ".pi", "gentle-ai"), { recursive: true });
 
 	// 1. Determine engine and allowed agents
 	const engine = options.engine || "Godot";
@@ -662,7 +661,7 @@ export function installStudioFiles(
 		`• Agentes: ${copiedCount} agentes en .pi/agents/`,
 		`• Motor: ${engine} (en project.yaml)`,
 		`• Dimensión: ${dimension.toUpperCase()} (en project.yaml)`,
-		`• Modelos: .pi/gentle-ai/models.json`,
+		`• Modelos: .pi/game-studio/models.json`,
 		`• Registro: .pi/game-studio/install-log.md`,
 		``,
 		`💡 Siguiente paso: usa /studio:start para iniciar tu juego o /studio para ver comandos.`,
@@ -676,7 +675,7 @@ export function installStudioFiles(
 		console.log(`  \x1b[38;2;167;139;250m• Agentes:\x1b[0m    ${copiedCount} agentes en \x1b[38;2;243;244;246m.pi/agents/\x1b[0m`);
 		console.log(`  \x1b[38;2;167;139;250m• Motor:\x1b[0m      ${engine} en \x1b[38;2;243;244;246mproject.yaml\x1b[0m`);
 		console.log(`  \x1b[38;2;167;139;250m• Dimensión:\x1b[0m  ${dimension.toUpperCase()} en \x1b[38;2;243;244;246mproject.yaml\x1b[0m`);
-		console.log(`  \x1b[38;2;167;139;250m• Modelos:\x1b[0m    \x1b[38;2;243;244;246m.pi/gentle-ai/models.json\x1b[0m`);
+		console.log(`  \x1b[38;2;167;139;250m• Modelos:\x1b[0m    \x1b[38;2;243;244;246m.pi/game-studio/models.json\x1b[0m`);
 		console.log(`  \x1b[38;2;167;139;250m• Registro:\x1b[0m   \x1b[38;2;243;244;246m.pi/game-studio/install-log.md\x1b[0m`);
 		console.log("");
 		console.log("\x1b[38;2;251;191;36m💡 Siguiente paso sugerido:\x1b[0m");
@@ -688,14 +687,14 @@ export function installStudioFiles(
 
 export function installModelsConfig(ctx: ExtensionContext): void {
 	const pkgRoot = resolvePackageRoot();
-	const modelsDest = join(ctx.cwd, ".pi", "gentle-ai", "models.json");
+	const modelsDest = join(ctx.cwd, ".pi", "game-studio", "models.json");
 	const modelsSrc = join(pkgRoot, "models.default.json");
 
-	mkdirSync(join(ctx.cwd, ".pi", "gentle-ai"), { recursive: true });
+	mkdirSync(join(ctx.cwd, ".pi", "game-studio"), { recursive: true });
 
 	if (existsSync(modelsSrc)) {
 		writeFileSync(modelsDest, readFileSync(modelsSrc));
-		const msg = "✔ Modelos recomendados aplicados en .pi/gentle-ai/models.json";
+		const msg = "✔ Modelos recomendados aplicados en .pi/game-studio/models.json";
 		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			ctx.ui.notify(msg, "info");
 		} else {
@@ -709,7 +708,7 @@ export function formatSetupDiagnostic(s: SetupStatus): string {
 		"PI GAME STUDIO — ESTADO DE INSTALACION",
 		`• Agentes instalados:  ${s.agentsInstalled}/${s.expectedAgents} para ${s.currentEngine} (.pi/agents/)`,
 		`• Motor actual:        ${s.currentEngine}`,
-		`• Config de modelos:   ${s.hasModelsConfig ? "Presente (.pi/gentle-ai/models.json)" : "No encontrada"}`,
+		`• Config de modelos:   ${s.hasModelsConfig ? "Presente (.pi/game-studio/models.json)" : "No encontrada"}`,
 		`• Directorio estudio:  ${s.hasGameStudioDir ? "Activo (.pi/game-studio/)" : "No creado aún"}`,
 		`• Memoria Engram:      ${s.engramEnabled === true ? "Conectado" : "Almacenamiento local Markdown"}`,
 		`• project.yaml:        ${s.hasProjectYaml ? "Presente" : "No creado (se creará con /start o setup)"}`,

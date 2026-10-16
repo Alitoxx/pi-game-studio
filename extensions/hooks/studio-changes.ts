@@ -244,7 +244,7 @@ function formatFileChangeRow(c: FileChange): string {
 export function formatChangesOutput(summary: ChangesSummary): string[] {
 	const lines: string[] = [];
 
-	lines.push("┌── CAMBIOS DEL ESTUDIO (GENTLE CHANGES) ──────────────────────────┐");
+	lines.push("┌── CAMBIOS DEL ESTUDIO (STUDIO CHANGES) ──────────────────────────┐");
 	lines.push("│ Clasificación rigurosa de modificaciones por naturaleza de juego │");
 	lines.push("└──────────────────────────────────────────────────────────────────┘");
 	lines.push("");

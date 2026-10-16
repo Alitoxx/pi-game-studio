@@ -86,15 +86,27 @@ export function renderBanner(width = 80, cwd = process.cwd()): string[] {
 	const lines: string[] = [];
 	const root = findStudioRoot(cwd) || cwd;
 
-	// Version
-	let version = "1.2.0";
+// Version: resolve dynamically; never hardcode a release number.
+// Order: studio repo root package.json (dev checkout), then the stamped
+// marker .pi/game-studio/studio.json written when hooks are copied into a
+// game project, then a neutral fallback.
+let version = "dev";
+try {
+	const pkgUrl = new URL("../../package.json", import.meta.url);
+	if (existsSync(pkgUrl)) {
+		const pkg = JSON.parse(readFileSync(pkgUrl, "utf8"));
+		if (pkg.version) version = pkg.version;
+	}
+} catch {}
+if (version === "dev") {
 	try {
-		const pkgUrl = new URL("../../package.json", import.meta.url);
-		if (existsSync(pkgUrl)) {
-			const pkg = JSON.parse(readFileSync(pkgUrl, "utf8"));
-			if (pkg.version) version = pkg.version;
+		const stampPath = join(root, ".pi", "game-studio", "studio.json");
+		if (existsSync(stampPath)) {
+			const stamp = JSON.parse(readFileSync(stampPath, "utf8"));
+			if (stamp.studioVersion) version = stamp.studioVersion;
 		}
 	} catch {}
+}
 
 	// Storage / Engram
 	let engramStatus = "Local storage";

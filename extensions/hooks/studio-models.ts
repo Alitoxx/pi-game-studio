@@ -24,7 +24,13 @@ export async function handleStudioModels(
 	ctx: ExtensionContext,
 ): Promise<void> {
 	const query = args?.trim().toLowerCase() || "";
-	const modelsPath = join(ctx.cwd, ".pi", "gentle-ai", "models.json");
+	const studioModelsPath = join(ctx.cwd, ".pi", "game-studio", "models.json");
+	const legacyModelsPath = join(ctx.cwd, ".pi", "gentle-ai", "models.json");
+	const modelsPath = existsSync(studioModelsPath)
+		? studioModelsPath
+		: existsSync(legacyModelsPath)
+			? legacyModelsPath
+			: studioModelsPath;
 	const pkgRoot = resolvePackageRoot();
 	const defaultsPath = join(pkgRoot, "models.default.json");
 
@@ -123,14 +129,14 @@ export async function handleStudioModels(
 function applyDefaultConfig(ctx: ExtensionContext): void {
 	const pkgRoot = resolvePackageRoot();
 	const defaultsPath = join(pkgRoot, "models.default.json");
-	const destDir = join(ctx.cwd, ".pi", "gentle-ai");
+	const destDir = join(ctx.cwd, ".pi", "game-studio");
 	const destFile = join(destDir, "models.json");
 
 	mkdirSync(destDir, { recursive: true });
 
 	if (existsSync(defaultsPath)) {
 		writeFileSync(destFile, readFileSync(defaultsPath));
-		const msg = "✔ Perfil recomendado guardado en .pi/gentle-ai/models.json";
+		const msg = "✔ Perfil recomendado guardado en .pi/game-studio/models.json";
 		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			ctx.ui.notify(msg, "info");
 		} else {
@@ -143,7 +149,7 @@ function applyInheritConfig(
 	ctx: ExtensionContext,
 	_current: Record<string, string>,
 ): void {
-	const destDir = join(ctx.cwd, ".pi", "gentle-ai");
+	const destDir = join(ctx.cwd, ".pi", "game-studio");
 	const destFile = join(destDir, "models.json");
 	mkdirSync(destDir, { recursive: true });
 
@@ -164,11 +170,11 @@ function applyInheritConfig(
 }
 
 function saveModelsConfig(ctx: ExtensionContext, cfg: Record<string, string>): void {
-	const destDir = join(ctx.cwd, ".pi", "gentle-ai");
+	const destDir = join(ctx.cwd, ".pi", "game-studio");
 	const destFile = join(destDir, "models.json");
 	mkdirSync(destDir, { recursive: true });
 	writeFileSync(destFile, JSON.stringify(cfg, null, 2), "utf8");
-	const msg = "✔ Configuración de modelos guardada en .pi/gentle-ai/models.json";
+	const msg = "✔ Configuración de modelos guardada en .pi/game-studio/models.json";
 	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 		ctx.ui.notify(msg, "info");
 	} else {
@@ -311,7 +317,7 @@ function formatModelsList(cfg: Record<string, string>): string {
 		lines.push("\nAsignaciones específicas por agente:\n" + overrides.slice(0, 15).join("\n"));
 	}
 
-	lines.push("\nConfiguración persistida en .pi/gentle-ai/models.json");
+	lines.push("\nConfiguración persistida en .pi/game-studio/models.json");
 	return lines.join("\n");
 }
 

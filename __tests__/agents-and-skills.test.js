@@ -150,6 +150,63 @@ describe("Exhaustive Agent Validation (Compact 8+1 Studio Architecture: 14 Agent
 		expect(tdContent).toContain("PR-SCOPE");
 	});
 
+	test("Tier 2 Department Lead & Core Dev agents (game-designer, gameplay-programmer, art-director, audio-director, qa-lead) are symmetric, bounded, and free of legacy patterns", () => {
+		const tier2Agents = [
+			"game-designer.md",
+			"gameplay-programmer.md",
+			"art-director.md",
+			"audio-director.md",
+			"qa-lead.md",
+		];
+		const engineSpecialists = [
+			"bevy-specialist",
+			"godot-specialist",
+			"phaser-specialist",
+			"raylib-specialist",
+			"unity-specialist",
+			"unreal-specialist",
+		];
+
+		for (const filename of tier2Agents) {
+			const content = fs.readFileSync(path.join(agentsDir, filename), "utf8");
+
+			// All 5 Tier 2 agents use `when delegated via \`subagent_run\`` in `Token Economy & Return Contract` (no legacy `via \`subagent\``)
+			expect(content).toContain("### Token Economy & Return Contract");
+			expect(content).toMatch(/when delegated via `subagent_run`/);
+			expect(content).not.toMatch(/when delegated via `subagent`(?!_)/);
+
+			// All 5 Tier 2 agents enforce `Structured Decision Capture (\`ask_user_question\`)` and `in user dialogue.` in `Communication & Decision Protocol`, and do not contain legacy `Lossless Choice Envelope` or spanglish `subagent aislado`
+			expect(content).toContain("Structured Decision Capture (`ask_user_question`)");
+			expect(content).toContain("in user dialogue.");
+			expect(content).not.toContain("Lossless Choice Envelope");
+			expect(content).not.toContain("subagent aislado");
+
+			// All 5 Tier 2 agents include `Bounded Edit Surfaces` (`## Allowed edit surfaces`) in their `Organic Driven Development (ODD) Workflow` section
+			expect(content).toContain("Bounded Edit Surfaces");
+			expect(content).toContain("## Allowed edit surfaces");
+
+			// All 5 Tier 2 agents include `#### Example Interaction Pattern (Compact)` and do not contain legacy paths (`design/pillars.md`, `audio/audio-design.md`, `Wait for "yes" before using Write/Edit tools`)
+			expect(content).toContain("#### Example Interaction Pattern (Compact)");
+			expect(content).not.toContain("design/pillars.md");
+			expect(content).not.toContain("audio/audio-design.md");
+			expect(content).not.toContain('Wait for "yes" before using Write/Edit tools');
+
+			// All 5 Tier 2 agents enumerate all 6 engine specialists in their `Delegation Map`
+			const delegationSection = content.split("### Delegation Map")[1]?.split("###")[0] || "";
+			for (const specialist of engineSpecialists) {
+				expect(delegationSection).toContain(specialist);
+			}
+		}
+
+		// `gameplay-programmer.md` has clean English engineering standards without untranslated Spanish
+		const gpContent = fs.readFileSync(path.join(agentsDir, "gameplay-programmer.md"), "utf8");
+		expect(gpContent).toContain("Mandatory Debug Overlay (`F3`)");
+		expect(gpContent).toContain("Decoupled Action Mapping");
+		expect(gpContent).toContain("Game Feel & Micro-feedback");
+		expect(gpContent).not.toContain("Debug Overlay Obligatorio");
+		expect(gpContent).not.toContain("Action Mapping Desacoplado");
+	});
+
 	test("AGENTS.md does not contain legacy tool names (glob, subagent) and uses find, subagent_run", () => {
 		const agentsReadme = fs.readFileSync(path.join(__dirname, "..", "AGENTS.md"), "utf8");
 		expect(agentsReadme).not.toMatch(/\bglob\b/);

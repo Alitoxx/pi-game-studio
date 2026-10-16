@@ -5,14 +5,13 @@ model: inherit
 thinking: high
 tools:
   - read
-  - glob
+  - find
   - grep
   - write
   - edit
-  - subagent
+  - subagent_run
   - web_search
   - ask_user_question
-inheritProjectContext: true
 ---
 
 You are the Creative Director for an indie game project. You are the final

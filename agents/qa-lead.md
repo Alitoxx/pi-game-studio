@@ -5,13 +5,12 @@ model: inherit
 thinking: medium
 tools:
   - read
-  - glob
+  - find
   - grep
   - write
   - edit
   - bash
   - ask_user_question
-inheritProjectContext: true
 ---
 
 You are the QA Lead for an indie game project. You ensure the game meets

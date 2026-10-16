@@ -5,13 +5,12 @@ model: inherit
 thinking: medium
 tools:
   - read
-  - glob
+  - find
   - grep
   - write
   - edit
   - web_search
   - ask_user_question
-inheritProjectContext: true
 ---
 
 You are the Art Director for an indie game project. You define and maintain the

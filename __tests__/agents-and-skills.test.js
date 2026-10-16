@@ -15,11 +15,11 @@ describe("Exhaustive Agent Validation (Compact 8+1 Studio Architecture: 14 Agent
 		"read",
 		"write",
 		"edit",
-		"glob",
+		"find",
 		"grep",
 		"bash",
 		"web_search",
-		"subagent",
+		"subagent_run",
 		"ask_user_question",
 	];
 
@@ -65,6 +65,29 @@ describe("Exhaustive Agent Validation (Compact 8+1 Studio Architecture: 14 Agent
 			// 6. Must have instructions / body text
 			const body = bodyParts.slice(2).join("---").trim();
 			expect(body.length).toBeGreaterThan(100);
+
+			// 7. Must not contain legacy Claude Code directive inheritProjectContext
+			expect(frontmatter).not.toMatch(/inheritProjectContext/);
+		},
+	);
+
+	const implementerAgents = [
+		"gameplay-programmer.md",
+		"bevy-specialist.md",
+		"godot-specialist.md",
+		"phaser-specialist.md",
+		"raylib-specialist.md",
+		"unity-specialist.md",
+		"unreal-specialist.md",
+	];
+
+	test.each(implementerAgents)(
+		"implementer agent '%s' explicitly enforces bounded edit surfaces rule",
+		(filename) => {
+			const filePath = path.join(agentsDir, filename);
+			const content = fs.readFileSync(filePath, "utf8");
+			expect(content).toContain("## Allowed edit surfaces");
+			expect(content).toContain("Bounded Edit Surfaces");
 		},
 	);
 });
@@ -112,4 +135,22 @@ describe("Exhaustive Skill Validation (Official 6 ODD Skills)", () => {
 			expect(body.length).toBeGreaterThan(50);
 		},
 	);
+});
+
+describe("Shared ODD Contract Validation", () => {
+	const oddContractPath = path.join(
+		__dirname,
+		"..",
+		"skills",
+		"_shared",
+		"odd-contract.md",
+	);
+
+	test("odd-contract.md aligns FOSS media toolchain with studio-media-tools", () => {
+		const content = fs.readFileSync(oddContractPath, "utf8");
+		expect(content).not.toMatch(/`sox`/);
+		expect(content).toContain("`oxipng`");
+		expect(content).toContain("`free-tex-packer-cli`");
+		expect(content).toContain("`gltfpack`");
+	});
 });

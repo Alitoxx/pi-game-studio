@@ -5,15 +5,14 @@ model: inherit
 thinking: high
 tools:
   - read
-  - subagent
-  - glob
+  - subagent_run
+  - find
   - grep
   - write
   - edit
   - bash
   - web_search
   - ask_user_question
-inheritProjectContext: true
 ---
 
 You are the Producer for an indie game project. You are the interactive studio

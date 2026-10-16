@@ -214,6 +214,97 @@ describe("Exhaustive Agent Validation (Compact 8+1 Studio Architecture: 14 Agent
 		expect(agentsReadme).toContain("find");
 		expect(agentsReadme).toContain("subagent_run");
 	});
+
+	test("Tier 3 Engine Specialist agents (bevy-specialist, godot-specialist, phaser-specialist, raylib-specialist, unity-specialist, unreal-specialist) are symmetric, bounded leaf implementers, and free of legacy patterns", () => {
+		const tier3Agents = [
+			"bevy-specialist.md",
+			"godot-specialist.md",
+			"phaser-specialist.md",
+			"raylib-specialist.md",
+			"unity-specialist.md",
+			"unreal-specialist.md",
+		];
+		const removedLegacyRoles = [
+			"lead-programmer",
+			"technical-artist",
+			"performance-analyst",
+			"devops-engineer",
+			"engine-programmer",
+			"systems-designer",
+		];
+
+		for (const filename of tier3Agents) {
+			const filePath = path.join(agentsDir, filename);
+			const content = fs.readFileSync(filePath, "utf8");
+			const bodyParts = content.split("---");
+			const frontmatter = bodyParts[1];
+
+			// 1. None of the 6 engine specialists include subagent_run in frontmatter tools (leaf implementers)
+			const toolsSection = frontmatter.match(/^tools:\n((?:\s+-\s+[a-z_]+\n?)+)/m);
+			expect(toolsSection).not.toBeNull();
+			const toolLines = [
+				...toolsSection[1].matchAll(/^\s+-\s+([a-z_]+)/gm),
+			].map((m) => m[1]);
+			expect(toolLines).not.toContain("subagent_run");
+			expect(toolLines).toEqual([
+				"read",
+				"find",
+				"grep",
+				"write",
+				"edit",
+				"bash",
+				"ask_user_question",
+			]);
+
+			// 2. All 6 engine specialists use `when delegated via \`subagent_run\`` in `Token Economy & Return Contract` (no legacy `via \`subagent\``)
+			expect(content).toContain("### Token Economy & Return Contract");
+			expect(content).toMatch(/when delegated via `subagent_run`/);
+			expect(content).not.toMatch(/when delegated via `subagent`(?!_)/);
+
+			// 3. All 6 engine specialists enforce `Structured Decision Capture (\`ask_user_question\`)` (item 7) and `in user dialogue.` (item 1) in `Communication & Decision Protocol (Gentle Shell for Games)`
+			expect(content).toContain("### Communication & Decision Protocol (Gentle Shell for Games)");
+			expect(content).toContain("Structured Decision Capture (`ask_user_question`)");
+			expect(content).toContain("in user dialogue.");
+			expect(content).not.toContain("Lossless Choice Envelope");
+			expect(content).not.toContain("subagent aislado");
+
+			// 4. All 6 engine specialists include `#### Example Interaction Pattern (Compact)`
+			expect(content).toContain("#### Example Interaction Pattern (Compact)");
+			expect(content).not.toContain('Wait for "yes" before using Write/Edit tools');
+			expect(content).not.toMatch(/May I write (?:this to|this system into|`scripts\/core\/state_machine\.gd`|the Addressables loading manager|the `UAbilitySystemComponent`)/i);
+
+			// 5. All 6 engine specialists include `### Delegation Map` and `### What This Agent Must NOT Do`, referencing only valid 8+1 studio roles and zero removed legacy roles
+			expect(content).toContain("### Delegation Map");
+			expect(content).toContain("### What This Agent Must NOT Do");
+
+			for (const legacyRole of removedLegacyRoles) {
+				expect(content).not.toContain(legacyRole);
+			}
+
+			const delegationSection = content.split("### Delegation Map")[1]?.split("###")[0] || "";
+			expect(delegationSection).toContain("technical-director");
+			expect(delegationSection).toContain("gameplay-programmer");
+			expect(delegationSection).toContain("art-director");
+			expect(delegationSection).toContain("audio-director");
+			expect(delegationSection).toContain("qa-lead");
+			expect(delegationSection).toContain("game-designer");
+			expect(delegationSection).toContain("producer");
+			expect(delegationSection).toContain("TD-FEASIBILITY");
+			expect(delegationSection).toContain("PR-SCOPE");
+
+			// 6. All 6 engine specialists include `Bounded Edit Surfaces` (`## Allowed edit surfaces`) in `Organic Driven Development (ODD) Workflow`
+			expect(content).toContain("Bounded Edit Surfaces");
+			expect(content).toContain("## Allowed edit surfaces");
+		}
+	});
+
+	test("AGENTS.md Tier 3 specialists declare exact leaf implementer tools without subagent_run", () => {
+		const agentsReadme = fs.readFileSync(path.join(__dirname, "..", "AGENTS.md"), "utf8");
+		const tier3Section = agentsReadme.split("### Tier 3: Especialistas de Motor")[1];
+		expect(tier3Section).toBeDefined();
+		expect(tier3Section).not.toContain("subagent_run");
+		expect(tier3Section).toContain("read, find, grep, write, edit, bash, ask_user_question");
+	});
 });
 
 describe("Exhaustive Skill Validation (Official 6 ODD Skills)", () => {

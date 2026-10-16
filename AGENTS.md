@@ -117,32 +117,32 @@ Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar 
 
 #### `bevy-specialist`
 - **Archivo:** [`agents/bevy-specialist.md`](agents/bevy-specialist.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, subagent_run, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, ask_user_question`
 - **Misión y Alcance:** The Bevy Specialist is the authority on all Bevy-specific patterns, APIs, Rust ECS, wgpu shaders, Cargo builds, and WASM web deployment.
 
 #### `godot-specialist`
 - **Archivo:** [`agents/godot-specialist.md`](agents/godot-specialist.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, subagent_run, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, ask_user_question`
 - **Misión y Alcance:** The Godot Specialist is the authority on all Godot-specific patterns, GDScript/C#, SceneTree, GDExtension, and canvas_item shaders.
 
 #### `phaser-specialist`
 - **Archivo:** [`agents/phaser-specialist.md`](agents/phaser-specialist.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, subagent_run, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, ask_user_question`
 - **Misión y Alcance:** The Phaser Specialist is the authority on Phaser 3 and 4 game development, modern TypeScript, HTML5 Canvas/WebGL pipelines, Arcade/Matter physics, scene lifecycles, and web game deployment.
 
 #### `raylib-specialist`
 - **Archivo:** [`agents/raylib-specialist.md`](agents/raylib-specialist.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, subagent_run, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, ask_user_question`
 - **Misión y Alcance:** The Raylib Specialist is the authority on Raylib, modern C++ (C++17/20), EnTT ECS, GLSL shaders, CMake build pipelines, and game loops.
 
 #### `unity-specialist`
 - **Archivo:** [`agents/unity-specialist.md`](agents/unity-specialist.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, subagent_run, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, ask_user_question`
 - **Misión y Alcance:** The Unity Specialist is the authority on all Unity-specific patterns, MonoBehaviour, DOTS/ECS, C# APIs, Shader Graph, and UI Toolkit.
 
 #### `unreal-specialist`
 - **Archivo:** [`agents/unreal-specialist.md`](agents/unreal-specialist.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, subagent_run, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, ask_user_question`
 - **Misión y Alcance:** The Unreal Specialist is the authority on all Unreal-specific patterns, C++, Blueprints, Gameplay Ability System (GAS), Enhanced Input, and Niagara.
 
 ---

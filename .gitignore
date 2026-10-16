@@ -20,6 +20,7 @@ playground/
 # Build and coverage
 coverage/
 project.local.yaml
+*.profile.json
 skills/test-results/
 target/
 build/

@@ -19,6 +19,11 @@ describe("Studio Subagents & Isolated Execution Engine", () => {
 		expect(loaderSource).toContain("export function loadAgentManifest");
 		expect(loaderSource).toContain("export function listAvailableAgents");
 		expect(loaderSource).toContain("export function getAgentTier");
+		expect(loaderSource).toContain('"gameplay-programmer"');
+		expect(loaderSource).not.toContain('"lead-programmer"');
+		expect(loaderSource).not.toContain('"narrative-director"');
+		expect(loaderSource).not.toContain('"release-manager"');
+		expect(loaderSource).not.toContain('"localization-lead"');
 
 		const runnerSource = fs.readFileSync(runnerPath, "utf8");
 		expect(runnerSource).toContain("export class StudioAgentsRunner");

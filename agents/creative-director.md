@@ -115,9 +115,11 @@ Follow the **Explain → Capture** pattern:
    game has a clear identity and differentiators. Maintain a **positioning map**
    that plots the game against comparable titles on 2-3 key axes.
 5. **Scope Arbitration**: When creative ambition exceeds production capacity,
-   you decide what to cut, what to simplify, and what to protect. Use the
-   **pillar proximity test**: features closest to core pillars survive, features
-   furthest from pillars are cut first.
+   formalize the scope arbitration handshake with `producer`. Upon receiving a
+   `PR-SCOPE` capacity envelope, apply the **pillar proximity test** (`CD-PILLARS`)
+   and 20/80 simplification rule (20% scope delivering 80% pillar value) to
+   determine what to cut, what to simplify, and what to protect: features closest
+   to core pillars survive, features furthest from pillars are cut first.
 6. **Reference Curation**: Maintain a reference library of games, films, music,
    and art that inform the project's direction. Great games pull inspiration
    from outside the medium.

@@ -27,7 +27,8 @@ Tier 3 — Engine Specialist (+1 dedicado según motor del proyecto)
 
 | Tier | Default model | Thinking Budget | Rol Principal |
 |---|---|---|---|
-| **Directors & Leads** (Core) | `openai-codex/gpt-5.4-mini` | `medium` | Visión de juego, arquitectura base, diseño y coordinación |
+| **Directors** (Core) | `openai-codex/gpt-5.4-mini` | `high` | Visión de juego, arquitectura base, producción y coordinación |
+| **Leads** (Core) | `openai-codex/gpt-5.4-mini` | `medium` | Diseño de sistemas, arte, audio, gameplay y QA |
 | **Specialist** (Motor) | `openrouter/openai/gpt-oss-120b:free` | `medium` | Implementación idiomática en motor, build y shaders |
 
 ## Language Policy
@@ -59,7 +60,7 @@ Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar 
 7. **Director Gate / Technical Verdict**: Recomendación vinculante fundamentada del Lead/Director responsable.
 8. **Lossless Choice Envelope**: Menú cerrado, numerado y sin opciones ambiguas ([1], [2], [3]).
 9. **Radar de Próximos Pasos & Recibos de Entrega**: Acciones siguientes claras con sus comandos ejecutables.
-10. **Return Contract de Especialistas**: En delegaciones `subagent`, los especialistas devuelven exclusivamente un bloque YAML compacto (`status`, `summary`, `files_changed`, `validation`, `gameplay_impact`) eliminando prosa conversacional redundante.
+10. **Return Contract de Especialistas**: En delegaciones `subagent_run`, los especialistas devuelven exclusivamente un bloque YAML compacto (`status`, `summary`, `files_changed`, `validation`, `gameplay_impact`) eliminando prosa conversacional redundante.
 11. **Flow Completion & Producer Auto-Handoff Protocol**: Cierre automático de tareas con actualización instantánea de `production/roadmap.md` (`<!-- PRODUCER_STATE -->`) y relevo directo al siguiente especialista sin preguntas especulativas.
 12. **Native Isolated Subagents (`subagent_run`)**: Ejecución de especialistas mediante procesos hijos de Pi en modo no interactivo (`pi --print`). La sesión padre mantiene el rol de orquestador/productor sin contaminación de contexto ni ejecución de código inline.
 13. **Menús Nativos, Preguntas en Lote y Respuestas Personalizadas (`ask_user_question`)**: Todas las decisiones, dilemas de diseño y configuraciones se presentan mediante la herramienta unificada `ask_user_question` con modales interactivos en la terminal (`ctx.ui.select`), permitiendo navegación con flechas (`↑`/`↓`) y selección con `Enter`. Soporta tanto decisiones individuales como cuestionarios en lote (hasta 4 preguntas secuenciales en un solo turno). Asimismo, se incluye por defecto la opción `"Otro (escribir respuesta personalizada)..."` que abre un prompt de texto (`ctx.ui.input`) para que el usuario pueda escribir su propia alternativa libremente.
@@ -72,76 +73,76 @@ Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar 
 
 #### `producer`
 - **Archivo:** [`agents/producer.md`](agents/producer.md)
-- **Presupuesto de Razonamiento:** `high` | **Herramientas:** `read, glob, grep, write, edit, bash, web_search, subagent, ask_user_question`
+- **Presupuesto de Razonamiento:** `high` | **Herramientas:** `read, find, grep, write, edit, bash, web_search, subagent_run, ask_user_question`
 - **Misión y Alcance:** The Producer manages all production concerns: sprint planning, milestone tracking, risk management, scope negotiation, and cross-department coordination. This is the primary coordination agent.
 
 #### `creative-director`
 - **Archivo:** [`agents/creative-director.md`](agents/creative-director.md)
-- **Presupuesto de Razonamiento:** `high` | **Herramientas:** `read, glob, grep, write, edit, web_search, subagent, ask_user_question`
+- **Presupuesto de Razonamiento:** `high` | **Herramientas:** `read, find, grep, write, edit, web_search, subagent_run, ask_user_question`
 - **Misión y Alcance:** The Creative Director is the highest-level creative authority for the project. This agent makes binding decisions on game vision, tone, aesthetic direction, and resolves conflicts between design, art, narrative, and audio pillars.
 
 #### `technical-director`
 - **Archivo:** [`agents/technical-director.md`](agents/technical-director.md)
-- **Presupuesto de Razonamiento:** `high` | **Herramientas:** `read, glob, grep, write, edit, bash, web_search, subagent, ask_user_question`
+- **Presupuesto de Razonamiento:** `high` | **Herramientas:** `read, find, grep, write, edit, bash, web_search, subagent_run, ask_user_question`
 - **Misión y Alcance:** The Technical Director owns all high-level technical decisions including engine architecture, technology choices, performance strategy, and technical risk management.
 
 ### Tier 2: Leads & Core Devs
 
 #### `game-designer`
 - **Archivo:** [`agents/game-designer.md`](agents/game-designer.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, web_search, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, web_search, ask_user_question`
 - **Misión y Alcance:** The Game Designer owns the mechanical and systems design of the game. This agent designs core loops, progression systems, combat mechanics, economy, and player-facing rules.
 
 #### `gameplay-programmer`
 - **Archivo:** [`agents/gameplay-programmer.md`](agents/gameplay-programmer.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, ask_user_question`
 - **Misión y Alcance:** The Gameplay Programmer implements player controls, movement feel, mechanics, interactions, combat logic, and camera systems cleanly and performantly.
 
 #### `art-director`
 - **Archivo:** [`agents/art-director.md`](agents/art-director.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, web_search, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, web_search, ask_user_question`
 - **Misión y Alcance:** The Art Director owns the visual identity of the game: style guides, art bible, asset standards, color palettes, UI/UX visual design, and shader aesthetic specs.
 
 #### `audio-director`
 - **Archivo:** [`agents/audio-director.md`](agents/audio-director.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, web_search, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, web_search, ask_user_question`
 - **Misión y Alcance:** The Audio Director owns the sonic identity of the game: music direction, sound design philosophy, audio implementation strategy, audio buses, and mix balance.
 
 #### `qa-lead`
 - **Archivo:** [`agents/qa-lead.md`](agents/qa-lead.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, ask_user_question`
 - **Misión y Alcance:** The QA Lead owns test strategy, bug triage, release quality gates, regression test planning, and release readiness evaluation.
 
 ### Tier 3: Especialistas de Motor
 
 #### `bevy-specialist`
 - **Archivo:** [`agents/bevy-specialist.md`](agents/bevy-specialist.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, subagent_run, ask_user_question`
 - **Misión y Alcance:** The Bevy Specialist is the authority on all Bevy-specific patterns, APIs, Rust ECS, wgpu shaders, Cargo builds, and WASM web deployment.
 
 #### `godot-specialist`
 - **Archivo:** [`agents/godot-specialist.md`](agents/godot-specialist.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, subagent_run, ask_user_question`
 - **Misión y Alcance:** The Godot Specialist is the authority on all Godot-specific patterns, GDScript/C#, SceneTree, GDExtension, and canvas_item shaders.
 
 #### `phaser-specialist`
 - **Archivo:** [`agents/phaser-specialist.md`](agents/phaser-specialist.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, subagent_run, ask_user_question`
 - **Misión y Alcance:** The Phaser Specialist is the authority on Phaser 3 and 4 game development, modern TypeScript, HTML5 Canvas/WebGL pipelines, Arcade/Matter physics, scene lifecycles, and web game deployment.
 
 #### `raylib-specialist`
 - **Archivo:** [`agents/raylib-specialist.md`](agents/raylib-specialist.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, subagent_run, ask_user_question`
 - **Misión y Alcance:** The Raylib Specialist is the authority on Raylib, modern C++ (C++17/20), EnTT ECS, GLSL shaders, CMake build pipelines, and game loops.
 
 #### `unity-specialist`
 - **Archivo:** [`agents/unity-specialist.md`](agents/unity-specialist.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, subagent_run, ask_user_question`
 - **Misión y Alcance:** The Unity Specialist is the authority on all Unity-specific patterns, MonoBehaviour, DOTS/ECS, C# APIs, Shader Graph, and UI Toolkit.
 
 #### `unreal-specialist`
 - **Archivo:** [`agents/unreal-specialist.md`](agents/unreal-specialist.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, glob, grep, write, edit, bash, subagent, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, subagent_run, ask_user_question`
 - **Misión y Alcance:** The Unreal Specialist is the authority on all Unreal-specific patterns, C++, Blueprints, Gameplay Ability System (GAS), Enhanced Input, and Niagara.
 
 ---

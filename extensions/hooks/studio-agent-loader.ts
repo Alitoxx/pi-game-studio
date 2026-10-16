@@ -36,13 +36,10 @@ export function getAgentTier(name: string): "director" | "lead" | "specialist" {
 	if (
 		[
 			"game-designer",
-			"lead-programmer",
+			"gameplay-programmer",
 			"art-director",
 			"audio-director",
-			"narrative-director",
 			"qa-lead",
-			"release-manager",
-			"localization-lead",
 		].includes(name)
 	) {
 		return "lead";

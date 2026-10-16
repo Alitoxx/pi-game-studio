@@ -90,6 +90,35 @@ describe("Exhaustive Agent Validation (Compact 8+1 Studio Architecture: 14 Agent
 			expect(content).toContain("Bounded Edit Surfaces");
 		},
 	);
+
+	test("producer.md specifies subagent dispatch contract, PRODUCER_STATE grammar, and clean roadmap paths", () => {
+		const producerContent = fs.readFileSync(path.join(agentsDir, "producer.md"), "utf8");
+		expect(producerContent).toContain("## Allowed edit surfaces");
+		expect(producerContent).toContain("<!-- PRODUCER_STATE -->");
+		expect(producerContent).toContain("<!-- /PRODUCER_STATE -->");
+		expect(producerContent).toContain("production/roadmap.md");
+		expect(producerContent).toContain("PR-SCOPE");
+		expect(producerContent).not.toContain("production/sprints/sprint-current.md");
+		expect(producerContent).not.toContain("design/pillars.md");
+	});
+
+	test("producer.md and creative-director.md formalize scope arbitration handshake", () => {
+		const producerContent = fs.readFileSync(path.join(agentsDir, "producer.md"), "utf8");
+		const cdContent = fs.readFileSync(path.join(agentsDir, "creative-director.md"), "utf8");
+		expect(producerContent).toContain("Scope Arbitration");
+		expect(producerContent).toContain("creative-director");
+		expect(cdContent).toContain("Scope Arbitration");
+		expect(cdContent).toContain("producer");
+		expect(cdContent).toContain("PR-SCOPE");
+	});
+
+	test("AGENTS.md does not contain legacy tool names (glob, subagent) and uses find, subagent_run", () => {
+		const agentsReadme = fs.readFileSync(path.join(__dirname, "..", "AGENTS.md"), "utf8");
+		expect(agentsReadme).not.toMatch(/\bglob\b/);
+		expect(agentsReadme).not.toMatch(/\bsubagent\b(?!_)/);
+		expect(agentsReadme).toContain("find");
+		expect(agentsReadme).toContain("subagent_run");
+	});
 });
 
 describe("Exhaustive Skill Validation (Official 6 ODD Skills)", () => {

@@ -112,6 +112,44 @@ describe("Exhaustive Agent Validation (Compact 8+1 Studio Architecture: 14 Agent
 		expect(cdContent).toContain("PR-SCOPE");
 	});
 
+	test("Tier 1 Director agents (producer, creative-director, technical-director) are symmetric and free of legacy patterns", () => {
+		const tier1Directors = [
+			"producer.md",
+			"creative-director.md",
+			"technical-director.md",
+		];
+
+		for (const filename of tier1Directors) {
+			const content = fs.readFileSync(path.join(agentsDir, filename), "utf8");
+
+			// All 3 Tier 1 directors use subagent_run in Token Economy & Return Contract (no legacy via `subagent`)
+			expect(content).toContain("### Token Economy & Return Contract");
+			expect(content).toMatch(/when delegated via `subagent_run`/);
+			expect(content).not.toMatch(/when delegated via `subagent`/);
+
+			// All 3 Tier 1 directors enforce Structured Decision Capture (`ask_user_question`) and do not contain legacy Lossless Choice Envelope or spanglish subagent aislado
+			expect(content).toContain("Structured Decision Capture (`ask_user_question`)");
+			expect(content).not.toContain("Lossless Choice Envelope");
+			expect(content).not.toContain("subagent aislado");
+		}
+
+		// technical-director.md includes all 6 engine specialists (including phaser-specialist) in its Delegation Map and references TD-FEASIBILITY and PR-SCOPE
+		const tdContent = fs.readFileSync(path.join(agentsDir, "technical-director.md"), "utf8");
+		const engineSpecialists = [
+			"bevy-specialist",
+			"godot-specialist",
+			"phaser-specialist",
+			"raylib-specialist",
+			"unity-specialist",
+			"unreal-specialist",
+		];
+		for (const specialist of engineSpecialists) {
+			expect(tdContent).toContain(specialist);
+		}
+		expect(tdContent).toContain("TD-FEASIBILITY");
+		expect(tdContent).toContain("PR-SCOPE");
+	});
+
 	test("AGENTS.md does not contain legacy tool names (glob, subagent) and uses find, subagent_run", () => {
 		const agentsReadme = fs.readFileSync(path.join(__dirname, "..", "AGENTS.md"), "utf8");
 		expect(agentsReadme).not.toMatch(/\bglob\b/);

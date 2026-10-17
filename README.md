@@ -26,7 +26,7 @@
 </p>
 
 ```text
-         ⣤⡀      ⢠⡤⣤⢤⡄      ⢀⣤         P I   G A M E   S T U D I O   v1.8.2
+         ⣤⡀      ⢠⡤⣤⢤⡄      ⢀⣤         P I   G A M E   S T U D I O   v1.9.0
           ⠹⣆     ⢸⡇  ⢸⡇     ⣰⠏          Compact AI Game Studio for Pi (8+1 Architecture)
        ⣀⣤⣴⡾⠛⠁   ⠈⠉⠉⠉⠁   ⠈⠛⢷⣦⣤⣀       ──────────────────────────────────────────────────────────
      ⣰⡿⠋⣠⣴⠾⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠷⣦⣄⠙⢿⣆     GIT:       On branch main

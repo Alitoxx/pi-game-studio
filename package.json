@@ -18,7 +18,11 @@
     "game-studio",
     "gamedev"
   ],
+  "bin": {
+    "pi-studio": "bin/pi-studio.mjs"
+  },
   "files": [
+    "bin/",
     "agents/",
     "skills/",
     "prompts/",

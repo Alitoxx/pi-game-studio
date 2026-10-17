@@ -5,7 +5,13 @@ import {
 	writeFileSync,
 	mkdirSync,
 	readdirSync,
+	symlinkSync,
+	copyFileSync,
+	chmodSync,
+	unlinkSync,
+	lstatSync,
 } from "node:fs";
+import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { promptModelForRole } from "./provider-resolver.ts";
 import { auditEnginePrerequisites, formatAuditReport } from "./studio-doctor.ts";
@@ -650,9 +656,12 @@ export function installStudioFiles(
 		writeFileSync(join(studioDir, "language"), options.language, "utf8");
 	}
 
-	// 7. Install log
+	// 7. Ensure isolated pi-studio CLI launcher is installed
+	const launcherInstalled = ensureStudioLauncherInstalled(pkgRoot);
+
+	// 8. Install log
 	const logPath = join(studioDir, "install-log.md");
-	const logEntry = `\n## Setup: ${new Date().toISOString()}\n- Agents installed: ${copiedCount}\n- Engine: ${engine}\n- Dimension: ${dimension}\n- Language: ${options.language || "es"}\n- Source: ${pkgRoot}\n`;
+	const logEntry = `\n## Setup: ${new Date().toISOString()}\n- Agents installed: ${copiedCount}\n- Engine: ${engine}\n- Dimension: ${dimension}\n- Language: ${options.language || "es"}\n- Source: ${pkgRoot}\n- Launcher installed: ${launcherInstalled}\n`;
 	const currentLog = existsSync(logPath) ? readFileSync(logPath, "utf8") : "# Pi Game Studio Install Log\n";
 	writeFileSync(logPath, currentLog + logEntry, "utf8");
 
@@ -662,9 +671,10 @@ export function installStudioFiles(
 		`• Motor: ${engine} (en project.yaml)`,
 		`• Dimensión: ${dimension.toUpperCase()} (en project.yaml)`,
 		`• Modelos: .pi/game-studio/models.json`,
+		`• Launcher: ${launcherInstalled ? "pi-studio (en ~/.local/bin/pi-studio)" : "bin/pi-studio.mjs"}`,
 		`• Registro: .pi/game-studio/install-log.md`,
 		``,
-		`💡 Siguiente paso: usa /studio:start para iniciar tu juego o /studio para ver comandos.`,
+		`💡 Siguiente paso: ejecuta pi-studio en tu juego y usa /studio:start.`,
 	].join("\n");
 
 	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
@@ -676,13 +686,42 @@ export function installStudioFiles(
 		console.log(`  \x1b[38;2;167;139;250m• Motor:\x1b[0m      ${engine} en \x1b[38;2;243;244;246mproject.yaml\x1b[0m`);
 		console.log(`  \x1b[38;2;167;139;250m• Dimensión:\x1b[0m  ${dimension.toUpperCase()} en \x1b[38;2;243;244;246mproject.yaml\x1b[0m`);
 		console.log(`  \x1b[38;2;167;139;250m• Modelos:\x1b[0m    \x1b[38;2;243;244;246m.pi/game-studio/models.json\x1b[0m`);
+		if (launcherInstalled) {
+			console.log(`  \x1b[38;2;167;139;250m• Launcher:\x1b[0m   \x1b[1m\x1b[38;2;56;189;248mpi-studio\x1b[0m (disponible globalmente en ~/.local/bin/pi-studio)`);
+		}
 		console.log(`  \x1b[38;2;167;139;250m• Registro:\x1b[0m   \x1b[38;2;243;244;246m.pi/game-studio/install-log.md\x1b[0m`);
 		console.log("");
 		console.log("\x1b[38;2;251;191;36m💡 Siguiente paso sugerido:\x1b[0m");
-		console.log("  Escribe \x1b[1m\x1b[38;2;56;189;248m/studio:start\x1b[0m (o \x1b[38;2;56;189;248m/start\x1b[0m) para dar inicio al onboarding de tu juego.");
-		console.log("  O escribe \x1b[1m\x1b[38;2;56;189;248m/studio\x1b[0m para explorar los comandos disponibles.");
+		console.log("  Abre tu juego con \x1b[1m\x1b[38;2;56;189;248mpi-studio\x1b[0m para un entorno 100% aislado sin agentes externos.");
+		console.log("  Luego escribe \x1b[1m\x1b[38;2;56;189;248m/studio:start\x1b[0m para dar inicio al onboarding de tu juego.");
 		console.log("");
 	}
+}
+
+export function ensureStudioLauncherInstalled(pkgRoot: string): boolean {
+	try {
+		const home = homedir();
+		const localBin = join(home, ".local", "bin");
+		mkdirSync(localBin, { recursive: true });
+		const target = join(localBin, "pi-studio");
+		const source = join(pkgRoot, "bin", "pi-studio.mjs");
+		if (existsSync(source)) {
+			try {
+				if (existsSync(target)) {
+					const stat = lstatSync(target);
+					if (stat.isSymbolicLink() || stat.isFile()) {
+						unlinkSync(target);
+					}
+				}
+				symlinkSync(source, target);
+			} catch {
+				copyFileSync(source, target);
+			}
+			chmodSync(target, 0o755);
+			return true;
+		}
+	} catch {}
+	return false;
 }
 
 export function installModelsConfig(ctx: ExtensionContext): void {

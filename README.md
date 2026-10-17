@@ -267,40 +267,36 @@ Pi Game Studio opera con el pipeline de **6 Skills ODD (Organic Driven Developme
 - [Pi](https://pi.dev) (`npm install -g @earendil-works/pi-coding-agent`)
 - [Git](https://git-scm.com/)
 
-### Install (Isolated to your game project — Recommended)
+### Install & Launch (Isolated to your game project — Recommended)
 
-To keep your game studio tools completely isolated to your game folder and avoid polluting other projects (like Gentle Shell or web apps), always install locally using the `-l` flag:
+Pi Game Studio includes a dedicated launcher **`pi-studio`** that runs in an isolated profile (`~/.pi/game-studio/agent`), guaranteeing zero pollution from external web/general coding agents (like Gentle Shell) while seamlessly sharing your authenticated API credentials:
 
 ```bash
-# 1. Create and enter your game project folder
+# 1. Install or link Pi Game Studio
+npm install -g git+https://github.com/AlexisSan/pi-game-studio.git
+# (Or if cloned locally: npm link inside the pi-game-studio repo)
+
+# 2. Create and enter your game project folder
 mkdir my-game
 cd my-game
 
-# 2. Install Pi Game Studio locally in this project
-pi install git:github.com/AlexisSan/pi-game-studio -l
+# 3. Launch with the isolated pi-studio command
+pi-studio
 ```
 
-> 💡 **Development mode**: If you cloned the repo locally, link it with:
-> ```bash
-> pi install /path/to/pi-game-studio -l
-> ```
+> 💡 **Dedicated CLI Launcher (`pi-studio`)**:
+> Using `pi-studio` guarantees that only your 9 gamedev agents (8 Core + 1 Engine Specialist) are loaded. Your standard `pi` command remains untouched for all your normal development projects.
 
 ### Setup & Onboarding
 
-Start `pi` inside your game folder:
-
-```bash
-pi
-```
-
-The violet **Pi Game Studio** dashboard will welcome you automatically. Then run the setup assistant:
+Inside `pi-studio` in your game folder, run the setup assistant:
 
 ```bash
 /studio:setup auto
 ```
 *(Or `/studio:setup manual` to interactively choose your engine, language, and AI models).*
 
-This deploys the 9 active agents to `.pi/agents/` (8 Core + 1 Motor activo), configures `.pi/gentle-ai/models.json`, and sets up `project.yaml`.
+This deploys the 9 active agents to `.pi/agents/` (8 Core + 1 Motor activo), configures `.pi/game-studio/models.json`, and sets up `project.yaml`.
 
 ### Start Developing
 

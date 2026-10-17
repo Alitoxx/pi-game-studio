@@ -119,8 +119,24 @@ export default function (pi: ExtensionAPI) {
 		},
 	});
 
+	// /start — Alias directo de inicio y onboarding
+	(pi as any).registerCommand?.("start", {
+		description: "[Studio] Asistente interactivo de inicio y onboarding de tu juego",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioStart(args, ctx);
+		},
+	});
+
 	// /studio:setup — Asistente interactivo de instalación y actualización
 	(pi as any).registerCommand?.("studio:setup", {
+		description: "[Studio] Asistente interactivo de instalación, verificación y actualización del estudio",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioSetup(args, ctx);
+		},
+	});
+
+	// /setup — Alias directo de instalación y actualización
+	(pi as any).registerCommand?.("setup", {
 		description: "[Studio] Asistente interactivo de instalación, verificación y actualización del estudio",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioSetup(args, ctx);
@@ -145,6 +161,14 @@ export default function (pi: ExtensionAPI) {
 
 	// /studio:status — Dashboard y diagnóstico en vivo
 	(pi as any).registerCommand?.("studio:status", {
+		description: "[Studio] Dashboard en vivo de estado, agentes y métricas del estudio",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioStatus(args, ctx);
+		},
+	});
+
+	// /status — Alias directo del dashboard de estado del estudio
+	(pi as any).registerCommand?.("status", {
 		description: "[Studio] Dashboard en vivo de estado, agentes y métricas del estudio",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioStatus(args, ctx);
@@ -185,6 +209,14 @@ export default function (pi: ExtensionAPI) {
 
 	// /studio:tasks — Gestión de tareas y radar de obsolescencia (Gentle Todo)
 	(pi as any).registerCommand?.("studio:tasks", {
+		description: "[Studio] Gestión de tareas del sprint, Live Specs y radar de tareas obsoletas (Stale)",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioTasks(args, ctx);
+		},
+	});
+
+	// /tasks — Alias directo de gestión de tareas y radar de obsolescencia
+	(pi as any).registerCommand?.("tasks", {
 		description: "[Studio] Gestión de tareas del sprint, Live Specs y radar de tareas obsoletas (Stale)",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioTasks(args, ctx);

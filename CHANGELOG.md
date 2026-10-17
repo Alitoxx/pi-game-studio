@@ -12,9 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Launcher Oficial CLI Aislado (`pi-studio`)**:
   - Nuevo comando ejecutable `pi-studio` (`bin/pi-studio.mjs` registrado en `bin` de `package.json`), diseñado para iniciar sesiones de Pi en un entorno completamente aislado (`~/.pi/game-studio/agent`).
-  - **Aislamiento Total respecto a Gentle Shell y Agentes Externos**: Al correr `pi-studio`, se limpian variables de entorno conflictivas (`GENTLE_PI_CONFIG_HOME`, `GENTLE_PI_AGENT_HOME`, etc.), garantizando que la sesión cargue exclusivamente los 9 agentes gamedev del estudio (8 Core + 1 Motor activo).
+  - **Aislamiento Total respecto a Gentle Shell**: Filtro estricto en el launcher que excluye `gentle-pi`, `gentle-engram` y variables de entorno conflictivas (`GENTLE_PI_CONFIG_HOME`, `GENTLE_PI_AGENT_HOME`, etc.), garantizando que la sesión cargue exclusivamente los 9 agentes gamedev del estudio (8 Core + 1 Motor activo).
+  - **Auto-Aprovisionamiento de Paquetes Auxiliares Limpios**: Configuración automática de herramientas libres de agentes ajenos: `pi-web-access` (búsqueda web de documentación y APIs para directores y especialistas), `pi-antigravity` (soporte de proveedores Google Antigravity y Gemini) y `pi-btw` (atajos de teclado y ayuda en UI).
   - **Compartición Automática de Credenciales y Confianza**: Enlaza dinámicamente `auth.json`, `models-store.json`, `trust.json` y `keybindings.json` desde el perfil principal de Pi, evitando que el desarrollador deba re-autenticar proveedores o volver a aprobar directorios de confianza.
-  - **Auto-Aprovisionamiento en Setup**: Integración en `extensions/hooks/studio-setup.ts` (`/studio:setup` y `/setup`) para verificar e instalar automáticamente el enlace a `~/.local/bin/pi-studio` durante la configuración del proyecto.
+  - **Auto-Limpieza de Skills Redundantes**: Rutina en `extensions/hooks/studio-setup.ts` (`/studio:setup` y `/setup`) que purga copias locales heredadas en `.pi/skills/` para evitar colisiones y advertencias en Pi, sirviendo las skills ODD directamente desde el manifiesto del paquete.
   - **Soporte de Aislamiento Automático por Carpeta**: Configuración documentada para `mise` (`mise.toml`) que activa el perfil de forma transparente al entrar a carpetas de juegos.
 
 ---

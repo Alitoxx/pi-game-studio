@@ -286,6 +286,14 @@ pi-studio
 
 > 💡 **Dedicated CLI Launcher (`pi-studio`)**:
 > Using `pi-studio` guarantees that only your 9 gamedev agents (8 Core + 1 Engine Specialist) are loaded. Your standard `pi` command remains untouched for all your normal development projects.
+>
+> **What runs inside `pi-studio`**:
+> - **Zero Gentle Shell pollution**: Excludes `gentle-pi` and any foreign coding subagents (`gentle-ai-worker`, `gentle-ai-explore`, etc.).
+> - **Essential Gamedev Utilities**: Auto-provisions clean, agent-free tools:
+>   - `pi-web-access`: Enables live web documentation lookups for engine APIs (Bevy, Godot, Raylib) and shader references.
+>   - `pi-antigravity`: Enables Google Antigravity & Gemini model provider integration.
+>   - `pi-btw`: Handy keyboard shortcuts and contextual guidance.
+> - **Auto-cleaning Setup**: Running `/studio:setup` cleans up any legacy local `.pi/skills/` to prevent Pi skill collision warnings, serving skills directly from the package manifest.
 
 ### Setup & Onboarding
 

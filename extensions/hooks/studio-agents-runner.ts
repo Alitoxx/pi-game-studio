@@ -267,6 +267,9 @@ export class StudioAgentsRunner {
 			let rpcBuffer = "";
 			let promptSent = false;
 			let agentSettled = false; // true tras agent_settled: un SIGTERM de gracia posterior no es un fallo
+			let thinkingBuffer = "";
+			let textBuffer = "";
+			const activeToolCalls = new Map<string, { toolName: string; detail: string; startedAt: number }>();
 
 			const sendRpc = (payload: Record<string, unknown>) => {
 				try {
@@ -309,25 +312,137 @@ export class StudioAgentsRunner {
 
 						// 1. Detección de inicio de herramientas (TOOL_START)
 						if (event.type === "tool_execution_start" || event.type === "tool_start") {
+							const toolCallId = event.toolCallId || event.id || `call_${Date.now()}_${Math.random()}`;
 							const toolName = event.toolName || event.name || "tool";
 							const args = event.args || {};
 							let detail = toolName;
+							let logLine = "";
+
 							if (toolName === "bash" && typeof args.command === "string") {
-								detail = `bash: ${args.command.slice(0, 30)}`;
-							} else if ((toolName === "edit" || toolName === "write" || toolName === "read") && typeof args.path === "string") {
-								const shortPath = args.path.split("/").pop() || args.path;
-								detail = `${toolName}: ${shortPath}`;
+								detail = `bash: ${args.command}`;
+								logLine = `[${new Date().toLocaleTimeString()}] ❯ bash: ${args.command}`;
+							} else if (toolName === "read" && typeof args.path === "string") {
+								detail = `read: ${args.path}`;
+								logLine = `[${new Date().toLocaleTimeString()}] 📖 read: ${args.path}`;
+							} else if (toolName === "write" && typeof args.path === "string") {
+								detail = `write: ${args.path}`;
+								logLine = `[${new Date().toLocaleTimeString()}] ✎ write: ${args.path}`;
+							} else if (toolName === "edit" && typeof args.path === "string") {
+								detail = `edit: ${args.path}`;
+								logLine = `[${new Date().toLocaleTimeString()}] ✎ edit: ${args.path}`;
+							} else if (toolName === "find") {
+								const query = args.pattern || args.path || "";
+								detail = `find: ${query}`;
+								logLine = `[${new Date().toLocaleTimeString()}] 🔍 find: ${query}`;
+							} else if (toolName === "grep") {
+								detail = `grep: "${args.pattern || ""}" in ${args.path || "."}`;
+								logLine = `[${new Date().toLocaleTimeString()}] 🔍 grep: "${args.pattern || ""}" in ${args.path || "."}`;
+							} else {
+								const argStr = JSON.stringify(args);
+								detail = `${toolName}`;
+								logLine = `[${new Date().toLocaleTimeString()}] ⚙ ${toolName}${argStr && argStr !== "{}" ? `: ${argStr.slice(0, 100)}` : ""}`;
 							}
-							record.latestActivity = detail;
-							record.logs.push(`[${new Date().toLocaleTimeString()}] Herramienta: ${detail}`);
+
+							activeToolCalls.set(toolCallId, { toolName, detail, startedAt: Date.now() });
+							record.latestActivity = detail.slice(0, 45);
+							record.logs.push(logLine);
 							this.notifyListeners(record);
 						}
 
-						// 2. Acumulación de texto del asistente
+						// 2. Finalización de herramienta con salida real (TOOL_END)
+						if (event.type === "tool_execution_end") {
+							const toolCallId = event.toolCallId || event.id;
+							const tracked = toolCallId ? activeToolCalls.get(toolCallId) : undefined;
+							const toolName = event.toolName || tracked?.toolName || "tool";
+							const durationMs = event.durationMs ?? (tracked ? Date.now() - tracked.startedAt : undefined);
+							const durationStr = durationMs !== undefined ? `${durationMs}ms` : "";
+
+							let outputText = "";
+							if (typeof event.result === "string") {
+								outputText = event.result;
+							} else if (event.result && Array.isArray(event.result.content)) {
+								outputText = event.result.content
+									.filter((c: any) => c?.type === "text" && typeof c.text === "string")
+									.map((c: any) => c.text)
+									.join("\n");
+							} else if (event.result?.text) {
+								outputText = event.result.text;
+							}
+
+							if (event.isError) {
+								const errLine = (outputText.trim().split("\n")[0] || "error en ejecución").slice(0, 120);
+								record.logs.push(`       ✗ [error ${durationStr}]: ${errLine}`);
+							} else if (toolName === "bash") {
+								const outLines = outputText.trim().split("\n").filter((l: string) => l.trim().length > 0);
+								if (outLines.length > 0) {
+									record.logs.push(`       ↳ [salida ${durationStr}]:`);
+									const previewCount = Math.min(outLines.length, 6);
+									for (let i = 0; i < previewCount; i++) {
+										record.logs.push(`         ${outLines[i]}`);
+									}
+									if (outLines.length > 6) {
+										record.logs.push(`         ... (${outLines.length - 6} líneas más)`);
+									}
+								} else {
+									record.logs.push(`       ↳ [salida ${durationStr}]: (ok, sin salida)`);
+								}
+							} else if (toolName === "read") {
+								const lineCount = outputText.split("\n").length;
+								record.logs.push(`       ↳ [leído ${durationStr}]: ${lineCount} líneas`);
+							} else if (toolName === "write" || toolName === "edit") {
+								record.logs.push(`       ↳ [guardado ${durationStr}]: cambios aplicados en disco`);
+							} else if (toolName === "find" || toolName === "grep") {
+								const matchLines = outputText.trim().split("\n").filter((l: string) => l.trim().length > 0);
+								record.logs.push(`       ↳ [resultado ${durationStr}]: ${matchLines.length} coincidencia(s)`);
+							} else if (outputText.trim()) {
+								const firstLine = outputText.trim().split("\n")[0].slice(0, 100);
+								record.logs.push(`       ↳ [${durationStr}]: ${firstLine}`);
+							}
+
+							if (toolCallId) {
+								activeToolCalls.delete(toolCallId);
+							}
+							this.notifyListeners(record);
+						}
+
+						// 3. Streaming de pensamiento y texto del asistente
 						if (event.type === "message_update") {
 							const inner = event.assistantMessageEvent;
+							if (inner?.type === "thinking_delta" && typeof inner.delta === "string") {
+								thinkingBuffer += inner.delta;
+								if (thinkingBuffer.includes("\n") || thinkingBuffer.length > 140) {
+									const chunks = thinkingBuffer.split("\n");
+									thinkingBuffer = chunks.pop() ?? "";
+									for (const chunk of chunks) {
+										const clean = chunk.trim();
+										if (clean) {
+											record.logs.push(`[${new Date().toLocaleTimeString()}] 💭 ${clean}`);
+										}
+									}
+									this.notifyListeners(record);
+								}
+							}
+							if (inner?.type === "thinking_end") {
+								if (thinkingBuffer.trim()) {
+									record.logs.push(`[${new Date().toLocaleTimeString()}] 💭 ${thinkingBuffer.trim()}`);
+									thinkingBuffer = "";
+									this.notifyListeners(record);
+								}
+							}
 							if (inner?.type === "text_delta" && typeof inner.delta === "string") {
 								resultText += inner.delta;
+								textBuffer += inner.delta;
+								if (textBuffer.includes("\n")) {
+									const chunks = textBuffer.split("\n");
+									textBuffer = chunks.pop() ?? "";
+									for (const chunk of chunks) {
+										const clean = chunk.trim();
+										if (clean) {
+											record.logs.push(`[${new Date().toLocaleTimeString()}] 💬 ${clean}`);
+										}
+									}
+									this.notifyListeners(record);
+								}
 							}
 						}
 
@@ -360,6 +475,14 @@ export class StudioAgentsRunner {
 						// 5. Finalización natural en agent_settled
 						if (event.type === "agent_settled") {
 							agentSettled = true;
+							if (thinkingBuffer.trim()) {
+								record.logs.push(`[${new Date().toLocaleTimeString()}] 💭 ${thinkingBuffer.trim()}`);
+								thinkingBuffer = "";
+							}
+							if (textBuffer.trim()) {
+								record.logs.push(`[${new Date().toLocaleTimeString()}] 💬 ${textBuffer.trim()}`);
+								textBuffer = "";
+							}
 							record.latestActivity = "Sintetizando entrega...";
 							this.notifyListeners(record);
 							// Cerrar stdin para que el hijo termine solo

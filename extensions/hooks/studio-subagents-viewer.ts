@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { studioAgentsRunner, type TaskRecord } from "./studio-agents-runner.ts";
 import { formatElapsed } from "./studio-subagents-widget.ts";
+import { setStudioSidebarSuppressed } from "./studio-sidebar.ts";
 import {
 	RESET,
 	BOLD,
@@ -14,6 +15,7 @@ import {
 	GRAY,
 	ACCENT as BLUE,
 	HEADING as LAVENDER,
+	SECONDARY,
 	WHITE,
 	BORDER,
 	RED,
@@ -53,6 +55,14 @@ function isKeyMatch(data: string, name: string): boolean {
 			data === "\x1b[27;5;27~"
 		);
 	}
+	if (name === "tab") {
+		return (
+			data === "\t" ||
+			matchesKeySafe(data, "tab") ||
+			data === "v" ||
+			data === "V"
+		);
+	}
 	if (name === "up") {
 		return (
 			matchesKeySafe(data, "up") ||
@@ -70,6 +80,36 @@ function isKeyMatch(data: string, name: string): boolean {
 			data === "j" ||
 			data === "J"
 		);
+	}
+	if (name === "left") {
+		return (
+			matchesKeySafe(data, "left") ||
+			data === "\x1b[D" ||
+			data === "\x1bOD" ||
+			data === "h" ||
+			data === "H"
+		);
+	}
+	if (name === "right") {
+		return (
+			matchesKeySafe(data, "right") ||
+			data === "\x1b[C" ||
+			data === "\x1bOC" ||
+			data === "l" ||
+			data === "L"
+		);
+	}
+	if (name === "pageup") {
+		return matchesKeySafe(data, "pageup") || data === "\x1b[5~";
+	}
+	if (name === "pagedown") {
+		return matchesKeySafe(data, "pagedown") || data === "\x1b[6~";
+	}
+	if (name === "home") {
+		return matchesKeySafe(data, "home") || data === "\x1b[H" || data === "\x1b[1~";
+	}
+	if (name === "end") {
+		return matchesKeySafe(data, "end") || data === "\x1b[F" || data === "\x1b[4~";
 	}
 	if (name === "ctrl+c") {
 		return matchesKeySafe(data, "ctrl+c") || data === "\x03";
@@ -172,6 +212,103 @@ export function openTaskInEditor(tui: any, task: TaskRecord): boolean {
 }
 
 /**
+ * Renders an expansive, full-screen Live Stream Console of agent execution.
+ * Dedicated 100% to displaying real-time tool calls, bash outputs, thinking stream,
+ * test results, code changes and errors with interactive scrolling.
+ */
+export function renderSubagentLiveConsoleView(
+	targetTask: TaskRecord,
+	width: number = 80,
+	height?: number,
+	scrollOffset: number = 0,
+): string[] {
+	const cardWidth = Math.max(48, width);
+	const innerWidth = cardWidth - 4;
+	const lines: string[] = [];
+
+	const now = Date.now();
+	const elapsedMs = targetTask.startedAt
+		? (targetTask.endedAt ? targetTask.endedAt - targetTask.startedAt : now - targetTask.startedAt)
+		: 0;
+	const elapsedStr = formatElapsed(elapsedMs);
+
+	let statusBadge = `${YELLOW}◐ EN EJECUCIÓN${RESET}`;
+	if (targetTask.status === "completed") statusBadge = `${GREEN}✓ COMPLETADO${RESET}`;
+	if (targetTask.status === "failed") statusBadge = `${RED}✗ FALLIDO${RESET}`;
+	if (targetTask.status === "cancelled") statusBadge = `${GRAY}○ CANCELADO${RESET}`;
+	if (targetTask.status === "queued") statusBadge = `${GRAY}○ EN COLA${RESET}`;
+
+	const headerTitle = `◈ CONSOLA EN VIVO · ${(targetTask.title || targetTask.agent).toUpperCase()}`;
+	const ruleLen = Math.max(0, cardWidth - headerTitle.length - 5);
+
+	lines.push(`${BORDER}╭─${RESET} ${BLUE}${headerTitle}${RESET} ${BORDER}${"─".repeat(ruleLen)}╮${RESET}`);
+
+	// Compact 2-line header bar
+	const statusLine = `  ${statusBadge} ${GRAY}·${RESET} ${GRAY}Modelo:${RESET} ${BLUE}${targetTask.model || "inherit"}${RESET} ${GRAY}·${RESET} ${GRAY}Tiempo:${RESET} ${WHITE}${elapsedStr}${RESET} ${GRAY}·${RESET} ${GRAY}Task:${RESET} ${DIM}${targetTask.id}${RESET}`;
+	lines.push(`${BORDER}│${RESET} ${padAnsi(statusLine, innerWidth)} ${BORDER}│${RESET}`);
+
+	const firstTaskLine = targetTask.task.split("\n")[0]?.trim() || "";
+	const instructionLine = `  ${GRAY}Instrucción:${RESET} ${WHITE}${truncateAnsi(firstTaskLine, innerWidth - 17)}${RESET}`;
+	lines.push(`${BORDER}│${RESET} ${padAnsi(instructionLine, innerWidth)} ${BORDER}│${RESET}`);
+
+	lines.push(`${BORDER}├${"─".repeat(cardWidth - 2)}┤${RESET}`);
+
+	// Chrome count: 4 top lines + 2 bottom lines = 6
+	const requestedHeight = height ? Math.max(16, height) : 24;
+	const availableRows = Math.max(4, requestedHeight - 6);
+
+	const allLogs = targetTask.logs && targetTask.logs.length > 0
+		? targetTask.logs
+		: [`${DIM}(esperando primeros eventos de ejecución en tiempo real...)${RESET}`];
+
+	const totalLogs = allLogs.length;
+	const maxOffset = Math.max(0, totalLogs - availableRows);
+	const clampedOffset = Math.max(0, Math.min(scrollOffset, maxOffset));
+
+	const endIdx = totalLogs - clampedOffset;
+	const startIdx = Math.max(0, endIdx - availableRows);
+	const visibleLogs = allLogs.slice(startIdx, endIdx);
+
+	for (const rawLog of visibleLogs) {
+		let styledLog = rawLog;
+		if (rawLog.includes("❯ bash:")) {
+			styledLog = `${SECONDARY}${BOLD}${rawLog}${RESET}`;
+		} else if (rawLog.includes("📖 read:")) {
+			styledLog = `${LAVENDER}${rawLog}${RESET}`;
+		} else if (rawLog.includes("✎ write:") || rawLog.includes("✎ edit:")) {
+			styledLog = `${GREEN}${rawLog}${RESET}`;
+		} else if (rawLog.includes("🔍 find:") || rawLog.includes("🔍 grep:")) {
+			styledLog = `${BLUE}${rawLog}${RESET}`;
+		} else if (rawLog.includes("💭")) {
+			styledLog = `${LAVENDER}${DIM}${rawLog}${RESET}`;
+		} else if (rawLog.includes("💬")) {
+			styledLog = `${WHITE}${rawLog}${RESET}`;
+		} else if (rawLog.includes("✗ [error") || rawLog.includes("[stderr]")) {
+			styledLog = `${RED}${rawLog}${RESET}`;
+		} else if (rawLog.includes("↳ [salida") || rawLog.includes("↳ [leído") || rawLog.includes("↳ [guardado")) {
+			styledLog = `${GRAY}${rawLog}${RESET}`;
+		} else if (rawLog.startsWith("         ")) {
+			styledLog = `${WHITE}${rawLog}${RESET}`;
+		}
+
+		lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${truncateAnsi(styledLog, innerWidth - 4)}`, innerWidth)} ${BORDER}│${RESET}`);
+	}
+
+	// Pad remaining vertical rows if log stream has fewer lines than terminal height
+	const padCount = availableRows - visibleLogs.length;
+	for (let p = 0; p < padCount; p++) {
+		lines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
+	}
+
+	lines.push(`${BORDER}╰${"─".repeat(cardWidth - 2)}╯${RESET}`);
+
+	const scrollIndicator = clampedOffset > 0 ? ` [Scroll: -${clampedOffset}]` : "";
+	lines.push(`  ${GRAY}Tab/v: Alternar Resumen • ↑/↓/PgUp/PgDn: Scroll • o: Editor • c: Cancelar • Esc: Salir${scrollIndicator}${RESET}`);
+
+	return lines;
+}
+
+/**
  * Renders the clean modal view for a single subagent task, adapting dynamically
  * to full terminal height when provided.
  */
@@ -269,7 +406,7 @@ export function renderSubagentModalView(
 	}
 
 	lines.push(`${BORDER}╰${"─".repeat(cardWidth - 2)}╯${RESET}`);
-	lines.push(`  ${GRAY}↑/↓: Seleccionar agente • Esc: Salir • c: Cancelar • o: Abrir en editor externo${RESET}`);
+	lines.push(`  ${GRAY}Tab/v: Consola en Vivo • ↑/↓: Seleccionar agente • Esc: Salir • c: Cancelar • o: Abrir en editor externo${RESET}`);
 
 	return lines;
 }
@@ -401,7 +538,7 @@ export function renderSubagentSplitView(
 		lines.push(`${BORDER}│${RESET}${l}${BORDER}│${RESET} ${rPadded} ${BORDER}│${RESET}`);
 	}
 	lines.push(`${BORDER}╰${"─".repeat(leftWidth)}┴${"─".repeat(rightWidth)}╯${RESET}`);
-	lines.push(`  ${GRAY}↑/↓: Seleccionar agente • Esc: Salir • c: Cancelar • o: Abrir en editor externo${RESET}`);
+	lines.push(`  ${GRAY}Tab/v: Consola en Vivo • ↑/↓: Seleccionar agente • Esc: Salir • c: Cancelar • o: Abrir en editor externo${RESET}`);
 
 	return lines;
 }
@@ -416,6 +553,8 @@ export class SubagentsViewerComponent {
 	private onClose: () => void;
 	private selectedIndex: number;
 	private unsub?: () => void;
+	private viewMode: "stream" | "card";
+	private scrollOffset: number = 0;
 	private cachedWidth?: number;
 	private cachedHeight?: number;
 	private cachedLines?: string[];
@@ -426,12 +565,18 @@ export class SubagentsViewerComponent {
 		theme: any,
 		onClose: () => void,
 		initialIndex: number = 0,
+		preferredMode?: "stream" | "card",
 	) {
 		this.tasks = tasks;
 		this.tui = tui;
 		this.theme = theme;
 		this.onClose = onClose;
 		this.selectedIndex = Math.max(0, Math.min(initialIndex, tasks.length - 1));
+		const currentTask = this.tasks[this.selectedIndex] || this.tasks[0];
+		this.viewMode = preferredMode || (currentTask?.status === "running" ? "stream" : "card");
+
+		// Suppress right sidebar so the inspector occupies 100% full screen without side cards
+		setStudioSidebarSuppressed(true, tui);
 
 		// Real-time live listener for tool calls and streaming logs
 		this.unsub = studioAgentsRunner.subscribe(() => {
@@ -457,6 +602,7 @@ export class SubagentsViewerComponent {
 			isKeyMatch(data, "ctrl+c") ||
 			isKeyMatch(data, "q")
 		) {
+			setStudioSidebarSuppressed(false, this.tui);
 			if (this.unsub) {
 				try {
 					this.unsub();
@@ -467,8 +613,20 @@ export class SubagentsViewerComponent {
 			return;
 		}
 
+		if (isKeyMatch(data, "tab")) {
+			this.viewMode = this.viewMode === "stream" ? "card" : "stream";
+			this.scrollOffset = 0;
+			this.invalidate();
+			this.tui?.requestRender?.();
+			return;
+		}
+
 		if (isKeyMatch(data, "up")) {
-			if (this.selectedIndex > 0) {
+			if (this.viewMode === "stream") {
+				this.scrollOffset++;
+				this.invalidate();
+				this.tui?.requestRender?.();
+			} else if (this.selectedIndex > 0) {
 				this.selectedIndex--;
 				this.invalidate();
 				this.tui?.requestRender?.();
@@ -477,11 +635,63 @@ export class SubagentsViewerComponent {
 		}
 
 		if (isKeyMatch(data, "down")) {
-			if (this.selectedIndex < this.tasks.length - 1) {
+			if (this.viewMode === "stream") {
+				this.scrollOffset = Math.max(0, this.scrollOffset - 1);
+				this.invalidate();
+				this.tui?.requestRender?.();
+			} else if (this.selectedIndex < this.tasks.length - 1) {
 				this.selectedIndex++;
 				this.invalidate();
 				this.tui?.requestRender?.();
 			}
+			return;
+		}
+
+		if (isKeyMatch(data, "left")) {
+			if (this.selectedIndex > 0) {
+				this.selectedIndex--;
+				this.scrollOffset = 0;
+				this.invalidate();
+				this.tui?.requestRender?.();
+			}
+			return;
+		}
+
+		if (isKeyMatch(data, "right")) {
+			if (this.selectedIndex < this.tasks.length - 1) {
+				this.selectedIndex++;
+				this.scrollOffset = 0;
+				this.invalidate();
+				this.tui?.requestRender?.();
+			}
+			return;
+		}
+
+		if (isKeyMatch(data, "pageup")) {
+			this.scrollOffset += 10;
+			this.invalidate();
+			this.tui?.requestRender?.();
+			return;
+		}
+
+		if (isKeyMatch(data, "pagedown")) {
+			this.scrollOffset = Math.max(0, this.scrollOffset - 10);
+			this.invalidate();
+			this.tui?.requestRender?.();
+			return;
+		}
+
+		if (isKeyMatch(data, "home")) {
+			this.scrollOffset = 999999;
+			this.invalidate();
+			this.tui?.requestRender?.();
+			return;
+		}
+
+		if (isKeyMatch(data, "end")) {
+			this.scrollOffset = 0;
+			this.invalidate();
+			this.tui?.requestRender?.();
 			return;
 		}
 
@@ -522,13 +732,20 @@ export class SubagentsViewerComponent {
 			return this.cachedLines;
 		}
 
-		const lines = (width >= 76 && this.tasks.length > 1)
-			? renderSubagentSplitView(this.tasks, this.selectedIndex, width, height)
-			: renderSubagentModalView(this.tasks[this.selectedIndex] || this.tasks[0], width, {
-				selectedIndex: this.selectedIndex,
-				totalTasks: this.tasks.length,
-				height,
-			});
+		let lines: string[];
+		const targetTask = this.tasks[this.selectedIndex] || this.tasks[0];
+
+		if (this.viewMode === "stream") {
+			lines = renderSubagentLiveConsoleView(targetTask, width, height, this.scrollOffset);
+		} else {
+			lines = (width >= 76 && this.tasks.length > 1)
+				? renderSubagentSplitView(this.tasks, this.selectedIndex, width, height)
+				: renderSubagentModalView(targetTask, width, {
+					selectedIndex: this.selectedIndex,
+					totalTasks: this.tasks.length,
+					height,
+				});
+		}
 
 		this.cachedWidth = width;
 		this.cachedHeight = height;
@@ -559,8 +776,11 @@ export async function handleStudioSubagentsViewer(
 
 	const trimmedArg = args.trim();
 	let initialIndex = 0;
+	let preferredMode: "stream" | "card" | undefined;
 
-	if (trimmedArg) {
+	if (trimmedArg === "logs" || trimmedArg === "stream" || trimmedArg === "console") {
+		preferredMode = "stream";
+	} else if (trimmedArg) {
 		const foundIdx = tasks.findIndex(
 			(t) => t.id === trimmedArg || t.agent.toLowerCase() === trimmedArg.toLowerCase(),
 		);
@@ -569,21 +789,29 @@ export async function handleStudioSubagentsViewer(
 
 	// Interactive TUI full-screen / custom modal overlay (idéntico a Gentle Shell)
 	if (ctx.hasUI && typeof (ctx.ui as any)?.custom === "function") {
-		await (ctx.ui as any).custom(
-			(tui: any, theme: any, _kb: any, done: () => void) => {
-				const close = withOverlayRepaint(tui, done);
-				return new SubagentsViewerComponent(tasks, tui, theme, close, initialIndex);
-			},
-			{
-				overlay: true,
-				overlayOptions: {
-					width: "100%",
-					maxHeight: "100%",
-					margin: 0,
-					anchor: "center",
+		setStudioSidebarSuppressed(true);
+		try {
+			await (ctx.ui as any).custom(
+				(tui: any, theme: any, _kb: any, done: () => void) => {
+					const close = withOverlayRepaint(tui, (res?: any) => {
+						setStudioSidebarSuppressed(false, tui);
+						done(res);
+					});
+					return new SubagentsViewerComponent(tasks, tui, theme, close, initialIndex, preferredMode);
 				},
-			},
-		);
+				{
+					overlay: true,
+					overlayOptions: {
+						width: "100%",
+						maxHeight: "100%",
+						margin: 0,
+						anchor: "center",
+					},
+				},
+			);
+		} finally {
+			setStudioSidebarSuppressed(false);
+		}
 		return;
 	}
 
@@ -606,12 +834,14 @@ export async function handleStudioSubagentsViewer(
 		targetTask = tasks[initialIndex] || tasks[0];
 	}
 
-	const modalLines = (tasks.length > 1)
-		? renderSubagentSplitView(tasks, initialIndex, 80)
-		: renderSubagentModalView(targetTask, 80, {
-			selectedIndex: initialIndex,
-			totalTasks: tasks.length,
-		});
+	const modalLines = (preferredMode === "stream" || targetTask.status === "running")
+		? renderSubagentLiveConsoleView(targetTask, 80, 24)
+		: (tasks.length > 1
+			? renderSubagentSplitView(tasks, initialIndex, 80)
+			: renderSubagentModalView(targetTask, 80, {
+				selectedIndex: initialIndex,
+				totalTasks: tasks.length,
+			}));
 
 	const screenText = modalLines.join("\n");
 

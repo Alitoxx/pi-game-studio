@@ -61,11 +61,22 @@ export function invalidateStudioSidebar(tui?: TUI): void {
 	}
 }
 
+let sidebarSuppressed = false;
+
+export function setStudioSidebarSuppressed(suppressed: boolean, tui?: TUI): void {
+	sidebarSuppressed = suppressed;
+	invalidateStudioSidebar(tui);
+}
+
+export function isStudioSidebarSuppressed(): boolean {
+	return sidebarSuppressed;
+}
+
 /**
  * Checks if the studio sidebar is currently active and owns the fullscreen host layout.
  */
 export function isStudioSidebarActive(tui?: TUI): boolean {
-	if (!tui?.terminal) return false;
+	if (!tui?.terminal || sidebarSuppressed) return false;
 	const state = getStudioSidebarState(tui);
 	return state.active && (state.ownsHost ? state.ownsHost() : false);
 }
@@ -94,6 +105,7 @@ export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => voi
 
 	state.ownsHost = () =>
 		!stopped &&
+		!sidebarSuppressed &&
 		host.mode === "fullscreen" &&
 		!!host.layoutRoot &&
 		roots.has(host.layoutRoot);
@@ -173,7 +185,7 @@ export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => voi
 
 	const prepare = (width: number): boolean => {
 		state.active = false;
-		if (stopped || failed || host.mode !== "fullscreen" || width < SIDEBAR_BREAKPOINT) {
+		if (stopped || failed || sidebarSuppressed || host.mode !== "fullscreen" || width < SIDEBAR_BREAKPOINT) {
 			return false;
 		}
 

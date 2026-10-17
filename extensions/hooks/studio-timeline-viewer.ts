@@ -69,7 +69,7 @@ export function renderTimelineSplitView(
 		return isAct ? `${CYAN}${BOLD}[● ${name}]${RESET}` : `${GRAY}[○ ${name}]${RESET}`;
 	}).join("  ");
 
-	lines.push(`${BORDER}╭─${RESET} ${PURPLE}${BOLD}✿ TIMELINE DE PRODUCCIÓN Y DECISIONES (ODD)${RESET} ${BORDER}${"─".repeat(Math.max(0, totalWidth - 48))}╮${RESET}`);
+	lines.push(`${BORDER}╭─${RESET} ${PURPLE}${BOLD}◈ TIMELINE DE PRODUCCIÓN Y DECISIONES (ODD)${RESET} ${BORDER}${"─".repeat(Math.max(0, totalWidth - 48))}╮${RESET}`);
 	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${GRAY}Filtro:${RESET} ${tabLabels}  ${DIM}(Tab para cambiar)${RESET}`, totalWidth - 4)} ${BORDER}│${RESET}`);
 	lines.push(`${BORDER}├${"─".repeat(leftWidth)}┬${"─".repeat(rightWidth)}┤${RESET}`);
 

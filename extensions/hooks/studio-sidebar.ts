@@ -90,6 +90,7 @@ export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => voi
 	let lastWidth = -1;
 	let statusHeaderRange: [number, number] | undefined;
 	let tasksHeaderRange: [number, number] | undefined;
+	let lastToggleTime = 0;
 
 	state.ownsHost = () =>
 		!stopped &&
@@ -128,6 +129,11 @@ export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => voi
 		}
 
 		if (event.type === "click" || event.type === "press") {
+			const now = Date.now();
+			if (now - lastToggleTime < 250) {
+				return { handled: true };
+			}
+
 			const lineY = (scroll.scrollTop ?? 0) + event.y;
 			const studioRoot = findStudioRoot(ctx.cwd) || ctx.cwd;
 
@@ -136,6 +142,7 @@ export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => voi
 				lineY >= statusHeaderRange[0] &&
 				lineY <= statusHeaderRange[1]
 			) {
+				lastToggleTime = now;
 				const current = isStatusCardCollapsed(studioRoot);
 				setStatusCardCollapsed(studioRoot, !current);
 				invalidateStudioSidebar(tui);
@@ -150,6 +157,7 @@ export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => voi
 				lineY >= tasksHeaderRange[0] &&
 				lineY <= tasksHeaderRange[1]
 			) {
+				lastToggleTime = now;
 				const current = isTasksCardCollapsed(studioRoot);
 				setTasksCardCollapsed(studioRoot, !current);
 				invalidateStudioSidebar(tui);
@@ -184,13 +192,11 @@ export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => voi
 			const statusLines = renderStudioStatusCard(ctx, studioRoot, cardInnerWidth, statusCollapsed);
 
 			const tasksCollapsed = isTasksCardCollapsed(studioRoot);
-			// Render Tasks Card (if enabled and tasks exist)
+			// Render Tasks Card (if enabled)
 			let taskLines: string[] = [];
 			if (isTasksWidgetEnabled(studioRoot)) {
 				const summary = inspectStudioTasks(studioRoot);
-				if (summary.totalCount > 0 && summary.tasks.length > 0) {
-					taskLines = renderTasksWidgetCard(summary.tasks, cardInnerWidth, tasksCollapsed, studioRoot);
-				}
+				taskLines = renderTasksWidgetCard(summary.tasks || [], cardInnerWidth, tasksCollapsed, studioRoot);
 			}
 
 			// Render Subagents Card (if active subagent tasks exist)

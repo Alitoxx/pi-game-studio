@@ -3,7 +3,8 @@ import { existsSync, writeFileSync, unlinkSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
 import { inspectStudioTasks, type StudioTask } from "./studio-tasks.ts";
-import { renderStudioStatusCard } from "./studio-hud.ts";
+import { renderStudioStatusCard, inferOddPhase } from "./studio-hud.ts";
+import { readProducerState } from "./studio-start.ts";
 
 import {
 	RESET,
@@ -64,13 +65,11 @@ export function setTasksWidgetEnabled(studioRoot: string, enabled: boolean): voi
 }
 
 export function renderTasksWidgetCard(
-	tasks: StudioTask[],
+	tasks: StudioTask[] = [],
 	width: number = 74,
 	collapsed?: boolean,
 	studioRoot?: string,
 ): string[] {
-	if (!tasks || tasks.length === 0) return [];
-
 	const isCollapsed = collapsed !== undefined
 		? collapsed
 		: (studioRoot ? isTasksCardCollapsed(studioRoot) : false);
@@ -79,11 +78,25 @@ export function renderTasksWidgetCard(
 	const innerWidth = cardWidth - 4;
 
 	const completedCount = tasks.filter((t) => t.status === "completed").length;
-	const countSummary = `${completedCount} of ${tasks.length}`;
+	const countSummary = tasks.length > 0 ? `${completedCount} of ${tasks.length}` : "0 tareas";
+
+	let phaseChip = "";
+	let nextStep = "";
+	if (studioRoot) {
+		try {
+			const { state: prodState } = readProducerState(studioRoot);
+			if (prodState) {
+				phaseChip = inferOddPhase(prodState);
+				nextStep = prodState.nextStep || "";
+			}
+		} catch {}
+	}
+
+	const titleBase = phaseChip ? `▶ Tasks ${phaseChip} · ${countSummary}` : `▶ Tasks · ${countSummary}`;
 
 	const lines: string[] = [];
 	if (isCollapsed) {
-		const rawTitle = `❀ Tasks · ${countSummary} [collapsed]`;
+		const rawTitle = `${titleBase} [collapsed]`;
 		const maxTitleLen = Math.max(10, cardWidth - 7);
 		const displayTitle = rawTitle.length > maxTitleLen ? truncateAnsi(rawTitle, maxTitleLen) : rawTitle;
 		const titleStyled = `${BLUE}${displayTitle}${RESET}`;
@@ -94,10 +107,21 @@ export function renderTasksWidgetCard(
 		return lines;
 	}
 
-	const titleText = `❀ Tasks · ${countSummary}`;
+	const titleText = titleBase;
 	const titleStyled = `${BLUE}${titleText}${RESET}`;
-	const ruleLen = Math.max(0, cardWidth - titleText.length - 7);
+	const ruleLen = Math.max(0, cardWidth - titleText.length - 5);
 	lines.push(`  ${BORDER}╭─${RESET} ${titleStyled} ${BORDER}${"─".repeat(ruleLen)}╮${RESET}`);
+
+	if (tasks.length === 0) {
+		lines.push(`  ${BORDER}│${RESET} ${padAnsi(`  ${GRAY}○${RESET} ${DIM}Sin tareas activas (/concept o /tasks)${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+		if (nextStep) {
+			lines.push(`  ${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
+			const nextLine = truncateAnsi(`  ${GREEN}→${RESET} ${GRAY}${nextStep}${RESET}`, innerWidth);
+			lines.push(`  ${BORDER}│${RESET} ${padAnsi(nextLine, innerWidth)} ${BORDER}│${RESET}`);
+		}
+		lines.push(`  ${BORDER}╰${"─".repeat(cardWidth - 2)}╯${RESET}`);
+		return lines;
+	}
 
 	// Prioritize: in_progress first, then pending (up to 4 items), then completed (up to 3 items)
 	const inProg = tasks.filter((t) => t.status === "in_progress");
@@ -135,6 +159,12 @@ export function renderTasksWidgetCard(
 	if (remaining > 0) {
 		const more = `${DIM}... y ${remaining} tarea(s) más (/studio:tasks)${RESET}`;
 		lines.push(`  ${BORDER}│${RESET} ${padAnsi(more, innerWidth)} ${BORDER}│${RESET}`);
+	}
+
+	if (nextStep) {
+		lines.push(`  ${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
+		const nextLine = truncateAnsi(`  ${GREEN}→${RESET} ${GRAY}${nextStep}${RESET}`, innerWidth);
+		lines.push(`  ${BORDER}│${RESET} ${padAnsi(nextLine, innerWidth)} ${BORDER}│${RESET}`);
 	}
 
 	lines.push(`  ${BORDER}╰${"─".repeat(cardWidth - 2)}╯${RESET}`);

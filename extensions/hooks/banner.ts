@@ -39,19 +39,17 @@ export function setArtEnabled(root: string, enabled: boolean): void {
 }
 
 const ART_RAW = [
-	"         ⣤⡀      ⢠⡤⣤⢤⡄      ⢀⣤     ",
-	"          ⠹⣆     ⢸⡇  ⢸⡇     ⣰⠏      ",
-	"       ⣀⣤⣴⡾⠛⠁   ⠈⠉⠉⠉⠁   ⠈⠛⢷⣦⣤⣀   ",
-	"     ⣰⡿⠋⣠⣴⠾⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠷⣦⣄⠙⢿⣆ ",
-	"    ⢸⣿⠁⢸⡿⠁  ⢰⣶⣶    ⣶⣶⡆  ⠈⢿⡇⠈⣿⡇",
-	"    ⢸⣿⡄⢸⣇      ⠘⠛⠶⠶⠛⠃      ⣸⡇⢠⣿⡇",
-	"     ⠹⣷⣈⠻⣦⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣠⣴⠟⣁⣾⠏ ",
-	"     ⢀⣴⠿⣷⣄⠉⠙⠛⠛⠿⠿⠿⠿⠛⠛⠋⠉⣠⣾⠿⣦⡀ ",
-	"    ⢠⣿⠃ ⢸⣿   ⢰⣤⡀    ⢀⣤⡆   ⣿⡇ ⠘⣿⡄",
-	"    ⠘⣿⡀ ⢸⣿   ⠘⠿⠃  ⢀⡀ ⠈⠻⠃   ⣿⡇ ⢀⣿⠃",
-	"     ⠙⠷⣤⣼⣿⣀     ⠘⠷⠾⠃     ⣀⣿⣧⣤⠾⠋ ",
-	"         ⣠⣤⣭⣝⡲⠶      ⠶⠖⣫⣭⣤⣄    ",
-	"         ⠉⠉⠉⠛⠛⠁      ⠈⠛⠛⠉⠉⠉    ",
+	"               ⠐⢿⡿⠂               ",
+	"           ⢀⣤⣶⣶⣶⣾⣷⣶⣶⣶⣤⡀           ",
+	"           ⣿⡇⢸⡏⢩⡍⢩⡍⢹⡇⢸⣿           ",
+	"           ⣿⡇⢸⣇⣐⣒⣒⣂⣸⡇⢸⣿           ",
+	"           ⠈⠛⠛⣛⣿⣿⣿⣿⣛⠛⠛⠁           ",
+	"            ⣴⡟⠩⣿⠍⢉⣭⡉⢻⣦            ",
+	"            ⠙⢷⣤⣴⣶⣶⣯⣤⡾⠋            ",
+	"              ⣿⠉⣭⣭⠉⣿              ",
+	"             ⣿⣶    ⣶⣿             ",
+	"           ⢾⣿⣿⡷  ⠸⣿⣿⣷⠆            ",
+	"           ⠐⠶⠶⠶⠶  ⠶⠶⠶⠶⠂           ",
 ];
 
 function getGradientArtLine(line: string, index: number, total: number): string {
@@ -141,7 +139,7 @@ if (version === "dev") {
 
 	const artOn = isArtEnabled(root);
 
-	if (artOn && width >= 104) {
+	if (artOn && width >= 98) {
 		const rightLines: string[] = [
 			`${STUDIO_ACCENT}${BOLD}P I   G A M E   S T U D I O${RESET}   ${STUDIO_HIGHLIGHT}v${version}${RESET}`,
 			`${STUDIO_DIM}Autonomous Game Development Studio for Pi${RESET}`,
@@ -156,16 +154,14 @@ if (version === "dev") {
 			`${STUDIO_GOLD}${fit("TIPS:", 11)}${RESET}${STUDIO_DIM}/concept · /spec · /code · /studio · /studio:setup${RESET}`,
 		];
 
-		const totalBlockW = 104;
-		const pad = Math.max(0, Math.floor((width - totalBlockW) / 2));
-		const padStr = " ".repeat(pad);
+		const padStr = "  "; // Clean 2-space left margin, aligned with CLI
 
 		for (let i = 0; i < ART_RAW.length; i++) {
 			lines.push(`${padStr}${getGradientArtLine(ART_RAW[i], i, ART_RAW.length)}    ${rightLines[i] || ""}`);
 		}
 	} else if (artOn && width >= 55) {
 		// Stacked layout: Centered Braille art on top, clean status table below (for standard 80-col terminals)
-		const artW = 32;
+		const artW = 34;
 		const artPad = Math.max(0, Math.floor((width - artW) / 2));
 		const artPadStr = " ".repeat(artPad);
 		for (let i = 0; i < ART_RAW.length; i++) {

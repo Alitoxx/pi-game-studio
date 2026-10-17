@@ -54,7 +54,7 @@ export function renderSubagentModalView(
 	if (targetTask.status === "cancelled") statusBadge = `${GRAY}○ CANCELADO${RESET}`;
 	if (targetTask.status === "queued") statusBadge = `${GRAY}○ EN COLA${RESET}`;
 
-	const headerTitle = `✿ INSPECTOR DE ESPECIALISTA · ${(targetTask.title || targetTask.agent).toUpperCase()}`;
+	const headerTitle = `◈ INSPECTOR DE ESPECIALISTA · ${(targetTask.title || targetTask.agent).toUpperCase()}`;
 	const ruleLen = Math.max(0, cardWidth - headerTitle.length - 5);
 
 	lines.push(`${BORDER}╭─${RESET} ${BLUE}${headerTitle}${RESET} ${BORDER}${"─".repeat(ruleLen)}╮${RESET}`);
@@ -161,7 +161,7 @@ export function renderSubagentSplitView(
 	if (targetTask.status === "queued") statusBadge = `${GRAY}○ EN COLA${RESET}`;
 
 	const rightLines: string[] = [];
-	const headerTitle = `✿ INSPECTOR DE ESPECIALISTA · ${(targetTask.title || targetTask.agent).toUpperCase()}`;
+	const headerTitle = `◈ INSPECTOR DE ESPECIALISTA · ${(targetTask.title || targetTask.agent).toUpperCase()}`;
 	rightLines.push(`${BLUE}${BOLD}${truncateAnsi(headerTitle, rightWidth - 2)}${RESET}`);
 	rightLines.push(`  ${GRAY}Modelo:${RESET} ${BLUE}${targetTask.model || "inherit"}${RESET}  ${GRAY}·${RESET}  ${statusBadge}  ${GRAY}·${RESET}  ${WHITE}${elapsedStr}${RESET}`);
 	rightLines.push(`  ${GRAY}Task ID:${RESET} ${DIM}${targetTask.id}${RESET}`);

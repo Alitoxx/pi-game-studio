@@ -370,7 +370,7 @@ export function renderBudgetCard(report: BudgetReport, width: number = 74): stri
 	const innerWidth = cardWidth - 4;
 	const lines: string[] = [];
 
-	lines.push(`${BORDER}╭─${RESET} ${PURPLE}${BOLD}✿ ESTIMATED STUDIO BUDGET & TOKENS${RESET} ${BORDER}${"─".repeat(Math.max(0, cardWidth - 38))}╮${RESET}`);
+	lines.push(`${BORDER}╭─${RESET} ${PURPLE}${BOLD}◈ ESTIMATED STUDIO BUDGET & TOKENS${RESET} ${BORDER}${"─".repeat(Math.max(0, cardWidth - 38))}╮${RESET}`);
 	lines.push(`${BORDER}│${RESET} ${padAnsi(`${LAVENDER}${BOLD}Resumen de Sesión Activa${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 
 	// Total tokens row

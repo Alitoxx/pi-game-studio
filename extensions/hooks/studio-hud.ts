@@ -207,27 +207,19 @@ export function renderStudioStatusCard(
 ): string[] {
 	const setup = inspectSetup(studioRoot);
 	const { state: prodState } = readProducerState(studioRoot);
-	const usage = extractContextUsage(ctx);
-	const model = (ctx as any).model;
-	const thinking = typeof (ctx as any).pi?.getThinkingLevel === "function"
-		? (ctx as any).pi.getThinkingLevel()
-		: undefined;
 
 	const gameTitle = prodState?.gameTitle || "Sin título";
 	const rawEngine = prodState?.engine || setup.currentEngine || "Sin configurar";
 	const isEngineUnconfigured = rawEngine === "Sin configurar" || !rawEngine || rawEngine.toLowerCase() === "sin motor";
 	const engine = isEngineUnconfigured ? "Sin motor (/studio:setup)" : rawEngine;
 	const milestone = prodState?.milestone || "Pendiente (/concept)";
-	const sprint = prodState?.sprint || "Sprint Activo";
-	const modelStr = formatModelDisplayName(model, thinking);
-	const phaseChip = inferOddPhase(prodState);
 
 	const cardWidth = Math.min(Math.max(width - 4, 46), 56);
 	const innerWidth = cardWidth - 4;
 
 	const isCollapsed = collapsed !== undefined ? collapsed : isStatusCardCollapsed(studioRoot);
 	if (isCollapsed) {
-		const rawTitle = `✿ Status · ${gameTitle} (${engine}) [collapsed]`;
+		const rawTitle = `◈ System · ${gameTitle} (${engine}) [collapsed]`;
 		const maxTitleLen = Math.max(10, cardWidth - 7);
 		const displayTitle = rawTitle.length > maxTitleLen ? truncateAnsi(rawTitle, maxTitleLen) : rawTitle;
 		const titleStyled = `${BLUE}${displayTitle}${RESET}`;
@@ -239,47 +231,24 @@ export function renderStudioStatusCard(
 		return lines;
 	}
 
-	const gaugeStr = usage
-		? `${renderContextGauge(usage.percent, 8)} ${getGaugeColor(usage.percent)}${usage.percent}%${RESET} (${formatTokens(usage.tokens)}/${formatTokens(usage.contextWindow)})`
-		: `${DIM}No telemetría${RESET}`;
-
 	const engramStr = setup.engramEnabled === true
 		? `${GREEN}✓ conectado${RESET}`
 		: `${GRAY}local Git${RESET}`;
 
 	const lines: string[] = [];
-	const titleText = `✿ Status`;
+	const titleText = `◈ System`;
 	const titleStyled = `${BLUE}${titleText}${RESET}`;
-	const ruleLen = Math.max(0, cardWidth - 12);
+	const ruleLen = Math.max(0, cardWidth - titleText.length - 5);
 	lines.push(`  ${BORDER}╭─${RESET} ${titleStyled} ${BORDER}${"─".repeat(ruleLen)}╮${RESET}`);
 
-	// Section: Project
-	lines.push(`  ${BORDER}│${RESET} ${padAnsi(`${LAVENDER}${BOLD}Project${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	// Direct Project & Engine rows
 	const shortRoot = studioRoot.replace(process.env.HOME || "", "~");
-	const projectLine = truncateAnsi(`  ${WHITE}${gameTitle}${RESET} ${GRAY}(${shortRoot})${RESET}`, innerWidth);
+	const projectLine = truncateAnsi(`  ${WHITE}${BOLD}${gameTitle}${RESET} ${GRAY}(${shortRoot})${RESET}`, innerWidth);
 	lines.push(`  ${BORDER}│${RESET} ${padAnsi(projectLine, innerWidth)} ${BORDER}│${RESET}`);
 	const engineLine = truncateAnsi(`  ${GRAY}Engine${RESET} ${BLUE}${engine}${RESET} ${GRAY}·${RESET} ${GRAY}Hito${RESET} ${WHITE}${milestone}${RESET}`, innerWidth);
 	lines.push(`  ${BORDER}│${RESET} ${padAnsi(engineLine, innerWidth)} ${BORDER}│${RESET}`);
-
-	// Section: Integrations
-	lines.push(`  ${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`  ${BORDER}│${RESET} ${padAnsi(`${LAVENDER}${BOLD}Integrations${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`  ${BORDER}│${RESET} ${padAnsi(`  ${GRAY}Memory${RESET}  · ${engramStr}`, innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`  ${BORDER}│${RESET} ${padAnsi(`  ${GRAY}Model${RESET}   · ${BLUE}${modelStr}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`  ${BORDER}│${RESET} ${padAnsi(`  ${GRAY}Context${RESET} · ${gaugeStr}`, innerWidth)} ${BORDER}│${RESET}`);
-
-	if (prodState?.inProgress || prodState?.nextStep) {
-		lines.push(`  ${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
-		lines.push(`  ${BORDER}│${RESET} ${padAnsi(`${LAVENDER}${BOLD}Progress (ODD)${RESET} ${BLUE}${phaseChip}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-		if (prodState.inProgress) {
-			const progLine = truncateAnsi(`  ${YELLOW}◐${RESET} ${WHITE}${prodState.inProgress}${RESET}`, innerWidth);
-			lines.push(`  ${BORDER}│${RESET} ${padAnsi(progLine, innerWidth)} ${BORDER}│${RESET}`);
-		}
-		if (prodState.nextStep) {
-			const nextLine = truncateAnsi(`  ${GREEN}→${RESET} ${GRAY}${prodState.nextStep}${RESET}`, innerWidth);
-			lines.push(`  ${BORDER}│${RESET} ${padAnsi(nextLine, innerWidth)} ${BORDER}│${RESET}`);
-		}
-	}
+	const memLine = truncateAnsi(`  ${GRAY}Memory${RESET} · ${engramStr}`, innerWidth);
+	lines.push(`  ${BORDER}│${RESET} ${padAnsi(memLine, innerWidth)} ${BORDER}│${RESET}`);
 
 	lines.push(`  ${BORDER}╰${"─".repeat(cardWidth - 2)}╯${RESET}`);
 	return lines;
@@ -288,7 +257,7 @@ export function renderStudioStatusCard(
 export function renderStudioFooterBar(
 	pi: any,
 	ctx: ExtensionContext,
-	_width: number,
+	width: number = 80,
 	footerData?: any,
 ): string {
 	const studioRoot = (ctx && ctx.cwd) ? (findStudioRoot(ctx.cwd) || ctx.cwd) : process.cwd();
@@ -301,33 +270,27 @@ export function renderStudioFooterBar(
 
 	const rawEngine = prodState?.engine || setup.currentEngine || "Sin configurar";
 	const isEngineUnconfigured = rawEngine === "Sin configurar" || !rawEngine || rawEngine.toLowerCase() === "sin motor";
-	const engineDisplay = isEngineUnconfigured ? "Sin configurar" : rawEngine;
-	const milestone = prodState?.milestone || "Pendiente (/concept)";
-	const sprint = prodState?.sprint || "Sprint Activo";
-	const phaseChip = inferOddPhase(prodState);
+	const engineDisplay = isEngineUnconfigured ? "Sin motor" : rawEngine;
 
+	const gaugeLen = width < 60 ? 4 : 5;
 	const contextDisplay = usage
-		? `${renderContextGauge(usage.percent, 6)} ${getGaugeColor(usage.percent)}${usage.percent}%${RESET} (${formatTokens(usage.tokens)}/${formatTokens(usage.contextWindow)})`
+		? `${renderContextGauge(usage.percent, gaugeLen)} ${getGaugeColor(usage.percent)}${usage.percent}%${RESET}`
 		: `${GREEN}100%${RESET}`;
 
 	const parts: string[] = [];
+	parts.push(`▎ ${BLUE}${engineDisplay}${RESET}`);
+	if (width >= 50) {
+		parts.push(`${WHITE}${modelStr}${RESET}`);
+	}
+	parts.push(contextDisplay);
 
-	// Feature 3: Gamedev Status Bar Telemetry
-	// Format: ▎ Motor: <Engine> · Hito: <Milestone> · Sprint: <Sprint> · Context: <ActiveContext>
-	parts.push(`▎ Motor: ${BLUE}${engineDisplay}${RESET}`);
-	parts.push(`Hito: ${WHITE}${milestone}${RESET}`);
-	parts.push(`Sprint: ${WHITE}${sprint}${RESET}`);
-	parts.push(`${BLUE}${phaseChip}${RESET}`);
-	parts.push(`Modelo: ${BLUE}${modelStr}${RESET}`);
-	parts.push(`Context: ${contextDisplay}`);
-
-	// Live Performance & Budget Tracker
+	// Live Performance Tracker (only if active metrics exist and screen fits)
 	try {
 		const { getActivePerfMetrics } = require("./studio-profile.ts");
 		const perf = getActivePerfMetrics?.();
-		if (perf) {
+		if (perf && width >= 70) {
 			const perfCol = perf.status === "OK" ? GREEN : YELLOW;
-			parts.push(`${perfCol}⚡ ${perf.fps}fps (${perf.memoryMb}MB)${RESET}`);
+			parts.push(`${perfCol}⚡ ${perf.fps}fps${RESET}`);
 		}
 	} catch {}
 

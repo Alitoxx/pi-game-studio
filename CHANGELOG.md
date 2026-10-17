@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.9.1] - 2026-10-17
+
+### Changed & Improved
+- **Riel Lateral TUI Desacoplado y Libre de Duplicación (Opción B)**:
+  - Tarjeta `◈ System` ultra compacta (5 líneas), especializada exclusivamente en Proyecto (Título y ruta), Motor e Hito, y estado de Memoria (`Memory · ✓ conectado`).
+  - Eliminada la duplicación de `Model` y `Context Gauge` en la tarjeta lateral, manteniéndolos en su posición canónica en la barra inferior.
+  - Tarjeta `▶ Tasks [fase] · X of Y` con el chip de fase ODD en su cabecera y el siguiente paso sugerido (`→ Siguiente: ...`) al pie.
+  - Incorporado soporte de estado inicial (*empty state*) elegante cuando no hay tareas activas (`0 tareas`), mostrando `○ Sin tareas activas (/concept o /spec)` en lugar de desaparecer.
+- **Erradicación de Íconos de Gentle Shell**:
+  - Reemplazados los íconos florales heredados (`✿`, `❀`) por glifos sobrios de ingeniería y desarrollo de videojuegos (`◈ System`, `▶ Tasks`, `◈ INSPECTOR`, `◈ TIMELINE`, `◈ ESTIMATED BUDGET`).
+- **Corrección de Rebote de Colapso por Mouse (`press` + `click`)**:
+  - Incorporado guard de debounce de 250ms en `studio-sidebar.ts` para evitar la re-apertura inmediata en un solo clic físico.
+- **Barra Inferior Minimalista y Responsive**:
+  - Rediseñada la telemetría del footer (`renderStudioFooterBar`), eliminando texto repetitivo burocrático (`Motor:`, `Hito:`, `Sprint: Sprint Activo`, `Modelo:`, `Context:`) y reduciendo el ancho de 155 caracteres a ~38 caracteres (`▎ <Engine> · <Model> · [<Gauge>] <Percent>%`).
+- **Banner de Bienvenida y Mascota GameBot**:
+  - Rediseñado el arte Braille de `banner.ts` con la mascota **GameBot** de 11 líneas simétricas emparejadas 1 a 1 con la tabla de metadatos.
+  - Alineado el banner al margen izquierdo con 2 espacios fijos (`padStr = "  "`), eliminando la sangría de 80+ columnas en pantallas anchas.
+
+---
+
 ## [1.9.0] - 2026-10-17
 
 ### Added

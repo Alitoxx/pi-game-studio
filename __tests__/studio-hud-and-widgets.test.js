@@ -171,7 +171,7 @@ describe("Studio HUD and Live Tasks Widget", () => {
 		function renderStatusCard(gameTitle, engine, collapsed, width = 50) {
 			const cardWidth = Math.min(Math.max(width - 4, 46), 56);
 			if (collapsed) {
-				const rawTitle = `✿ Status · ${gameTitle} (${engine}) [collapsed]`;
+				const rawTitle = `◈ System · ${gameTitle} (${engine}) [collapsed]`;
 				const maxTitleLen = Math.max(10, cardWidth - 7);
 				const displayTitle = rawTitle.length > maxTitleLen ? rawTitle.slice(0, maxTitleLen - 1) + "…" : rawTitle;
 				const ruleLen = Math.max(0, cardWidth - displayTitle.length - 5);
@@ -181,7 +181,7 @@ describe("Studio HUD and Live Tasks Widget", () => {
 				];
 			}
 			return [
-				`  ╭─ ✿ Status ${"─".repeat(cardWidth - 12)}╮`,
+				`  ╭─ ◈ System ${"─".repeat(cardWidth - 13)}╮`,
 				`  │ Project: ${gameTitle} │`,
 				`  ╰${"─".repeat(cardWidth - 2)}╯`,
 			];
@@ -189,7 +189,7 @@ describe("Studio HUD and Live Tasks Widget", () => {
 
 		const collapsedOutput = renderStatusCard("Super Game", "Godot 4", true, 74);
 		expect(collapsedOutput.length).toBe(2);
-		expect(collapsedOutput[0]).toContain("✿ Status · Super Game (Godot 4) [collapsed]");
+		expect(collapsedOutput[0]).toContain("◈ System · Super Game (Godot 4) [collapsed]");
 		expect(collapsedOutput[0].startsWith("  ╭─")).toBe(true);
 		expect(collapsedOutput[0].endsWith("╮")).toBe(true);
 		expect(collapsedOutput[1].startsWith("  ╰")).toBe(true);
@@ -208,7 +208,7 @@ describe("Studio HUD and Live Tasks Widget", () => {
 			const countSummary = `${completedCount} of ${tasks.length}`;
 
 			if (collapsed) {
-				const rawTitle = `❀ Tasks · ${countSummary} [collapsed]`;
+				const rawTitle = `▶ Tasks · ${countSummary} [collapsed]`;
 				const maxTitleLen = Math.max(10, cardWidth - 7);
 				const displayTitle = rawTitle.length > maxTitleLen ? rawTitle.slice(0, maxTitleLen - 1) + "…" : rawTitle;
 				const ruleLen = Math.max(0, cardWidth - displayTitle.length - 5);
@@ -218,7 +218,7 @@ describe("Studio HUD and Live Tasks Widget", () => {
 				];
 			}
 			return [
-				`  ╭─ ❀ Tasks · ${countSummary} ${"─".repeat(cardWidth - 20)}╮`,
+				`  ╭─ ▶ Tasks · ${countSummary} ${"─".repeat(cardWidth - 20)}╮`,
 				...tasks.map((t) => `  │ [${t.status === "completed" ? "x" : " "}] ${t.title} │`),
 				`  ╰${"─".repeat(cardWidth - 2)}╯`,
 			];
@@ -232,7 +232,7 @@ describe("Studio HUD and Live Tasks Widget", () => {
 
 		const collapsedLines = renderTasksCard(mockTasks, true);
 		expect(collapsedLines.length).toBe(2);
-		expect(collapsedLines[0]).toContain("❀ Tasks · 1 of 3 [collapsed]");
+		expect(collapsedLines[0]).toContain("▶ Tasks · 1 of 3 [collapsed]");
 		expect(collapsedLines[0].startsWith("  ╭─")).toBe(true);
 		expect(collapsedLines[0].endsWith("╮")).toBe(true);
 		expect(collapsedLines[1].startsWith("  ╰")).toBe(true);

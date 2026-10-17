@@ -80,13 +80,26 @@ function provisionStudioProfile() {
 	);
 
 	if (!hasStudioPkg) {
-		packages.push(packageRoot);
+		packages.unshift(packageRoot);
 	}
+
+	const defaultAuxPackages = ["npm:pi-web-access", "npm:pi-antigravity", "npm:pi-btw"];
+	for (const aux of defaultAuxPackages) {
+		if (!packages.includes(aux)) {
+			packages.push(aux);
+		}
+	}
+
+	// Strictly filter out any gentle packages if they ever leaked in
+	const cleanPackages = packages.filter((p) => {
+		if (typeof p !== "string") return false;
+		return !p.toLowerCase().includes("gentle");
+	});
 
 	const updatedSettings = {
 		tuiMode: "fullscreen",
 		...currentSettings,
-		packages,
+		packages: cleanPackages,
 	};
 
 	try {

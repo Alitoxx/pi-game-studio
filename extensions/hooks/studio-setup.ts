@@ -10,6 +10,7 @@ import {
 	chmodSync,
 	unlinkSync,
 	lstatSync,
+	rmSync,
 } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
@@ -572,6 +573,27 @@ export function installStudioFiles(
 			writeFileSync(destPath, readFileSync(srcPath));
 			copiedCount++;
 		}
+	}
+
+	// 2b. Clean up legacy redundant skills if present in .pi/skills.
+	// Pi Game Studio serves its 6 ODD skills directly through the package manifest.
+	// Having duplicate skills in .pi/skills/ causes Pi to warn about skill collisions.
+	const localSkillsDir = join(ctx.cwd, ".pi", "skills");
+	if (existsSync(localSkillsDir)) {
+		const standardStudioSkills = ["arch", "code", "concept", "ship", "spec", "test", "_shared"];
+		for (const skillName of standardStudioSkills) {
+			const skillPath = join(localSkillsDir, skillName);
+			if (existsSync(skillPath)) {
+				try {
+					rmSync(skillPath, { recursive: true, force: true });
+				} catch {}
+			}
+		}
+		try {
+			if (readdirSync(localSkillsDir).length === 0) {
+				rmSync(localSkillsDir, { recursive: true, force: true });
+			}
+		} catch {}
 	}
 
 	// 3. Deploy models configuration

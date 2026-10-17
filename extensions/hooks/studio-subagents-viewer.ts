@@ -1,4 +1,8 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { spawnSync } from "node:child_process";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { studioAgentsRunner, type TaskRecord } from "./studio-agents-runner.ts";
 import { formatElapsed } from "./studio-subagents-widget.ts";
 import {
@@ -17,26 +21,164 @@ import {
 	padAnsi,
 } from "./studio-palette.ts";
 
-/**
- * Checks for terminal input keys safely with fallback for headless/test environments.
- */
-function isKeyMatch(data: string, name: string): boolean {
-	if (name === "escape") return data === "\x1b" || data === "\x1b\x1b";
-	if (name === "up") return data === "\x1b[A" || data === "k" || data === "K";
-	if (name === "down") return data === "\x1b[B" || data === "j" || data === "J";
-	if (name === "ctrl+c") return data === "\x03";
-	if (name === "c") return data === "c" || data === "C";
-	if (name === "q") return data === "q" || data === "Q";
+let piTuiMatchesKey: ((data: string, keyId: string) => boolean) | undefined;
+try {
+	// Dynamically resolve matchesKey if running under Pi runtime
+	const tuiMod = require("@earendil-works/pi-tui");
+	if (typeof tuiMod?.matchesKey === "function") {
+		piTuiMatchesKey = tuiMod.matchesKey;
+	}
+} catch {}
+
+function matchesKeySafe(data: string, keyId: string): boolean {
+	if (piTuiMatchesKey) {
+		try {
+			return piTuiMatchesKey(data, keyId);
+		} catch {}
+	}
 	return false;
 }
 
 /**
- * Renders the clean modal view for a single subagent task.
+ * Checks for terminal input keys safely with fallback for headless/test environments.
+ */
+function isKeyMatch(data: string, name: string): boolean {
+	if (name === "escape") {
+		return (
+			matchesKeySafe(data, "escape") ||
+			matchesKeySafe(data, "esc") ||
+			data === "\x1b" ||
+			data === "\x1b\x1b" ||
+			data === "\x1b[27;1;27~" ||
+			data === "\x1b[27;5;27~"
+		);
+	}
+	if (name === "up") {
+		return (
+			matchesKeySafe(data, "up") ||
+			data === "\x1b[A" ||
+			data === "\x1bOA" ||
+			data === "k" ||
+			data === "K"
+		);
+	}
+	if (name === "down") {
+		return (
+			matchesKeySafe(data, "down") ||
+			data === "\x1b[B" ||
+			data === "\x1bOB" ||
+			data === "j" ||
+			data === "J"
+		);
+	}
+	if (name === "ctrl+c") {
+		return matchesKeySafe(data, "ctrl+c") || data === "\x03";
+	}
+	if (name === "c") {
+		return data === "c" || data === "C";
+	}
+	if (name === "q") {
+		return data === "q" || data === "Q";
+	}
+	if (name === "open") {
+		return (
+			data === "o" ||
+			data === "O" ||
+			matchesKeySafe(data, "enter") ||
+			matchesKeySafe(data, "return") ||
+			data === "\r" ||
+			data === "\n"
+		);
+	}
+	return false;
+}
+
+/**
+ * Wraps done callback to ensure terminal cell buffer is completely repainted
+ * with requestRender(true) when the fullscreen overlay closes (Gentle Shell pattern).
+ */
+export function withOverlayRepaint<T>(tui: any, done: (result?: T) => void): (result?: T) => void {
+	return (result?: T): void => {
+		try {
+			done(result);
+		} catch {}
+		try {
+			if (typeof tui?.requestRender === "function") {
+				tui.requestRender(true);
+			}
+		} catch {}
+	};
+}
+
+/**
+ * Opens task details and live event transcript in external editor or pager ($VISUAL / $EDITOR),
+ * suspending TUI cleanly like Gentle Shell.
+ */
+export function openTaskInEditor(tui: any, task: TaskRecord): boolean {
+	const editorCmd = process.env.VISUAL || process.env.EDITOR || (process.platform === "win32" ? "notepad" : "nano");
+	if (!editorCmd) return false;
+
+	const dir = join(tmpdir(), "pi-studio-transcripts");
+	try {
+		mkdirSync(dir, { recursive: true });
+	} catch {}
+
+	const transcriptContent = [
+		`# Inspector de Especialista: ${task.agent} (${task.title || task.agent})`,
+		`- Estado: ${task.status.toUpperCase()}`,
+		`- Modelo: ${task.model || "inherit"}`,
+		`- Task ID: ${task.id}`,
+		`- Directorio: ${task.cwd}`,
+		`- Inicio: ${task.startedAt ? new Date(task.startedAt).toLocaleString() : "N/D"}`,
+		`- Fin: ${task.endedAt ? new Date(task.endedAt).toLocaleString() : "N/D"}`,
+		"",
+		"---",
+		"## Instrucción Asignada",
+		"```",
+		task.task,
+		"```",
+		"",
+		"---",
+		"## Eventos y Llamadas de Herramientas (En Vivo)",
+		...(task.logs.length > 0 ? task.logs.map((l) => `- ${l}`) : ["*(sin eventos registrados)*"]),
+		"",
+		"---",
+		"## Resultado / Entrega Final",
+		task.result ? task.result : (task.error ? `**Error Registrado:** ${task.error}` : "*(ejecución en curso en segundo plano...)*"),
+	].join("\n");
+
+	const transcriptPath = join(dir, `${task.id}.md`);
+	try {
+		writeFileSync(transcriptPath, transcriptContent, "utf8");
+	} catch {
+		return false;
+	}
+
+	const [cmd, ...args] = editorCmd.split(" ");
+	if (typeof tui?.stop === "function") tui.stop();
+	try {
+		spawnSync(cmd, [...args, transcriptPath], {
+			cwd: task.cwd || process.cwd(),
+			stdio: "inherit",
+			shell: process.platform === "win32",
+		});
+	} catch {
+		return false;
+	} finally {
+		if (typeof tui?.start === "function") tui.start();
+		if (typeof tui?.requestRender === "function") tui.requestRender(true);
+	}
+	return true;
+}
+
+/**
+ * Renders the clean modal view for a single subagent task, adapting dynamically
+ * to full terminal height when provided.
  */
 export function renderSubagentModalView(
 	targetTask: TaskRecord,
 	width: number = 80,
-	options?: { selectedIndex?: number; totalTasks?: number },
+	options?: { selectedIndex?: number; totalTasks?: number; height?: number },
 ): string[] {
 	const cardWidth = Math.max(48, width);
 	const innerWidth = cardWidth - 4;
@@ -72,40 +214,62 @@ export function renderSubagentModalView(
 
 	// Panel 1: Instruction / Prompt
 	lines.push(`${BORDER}│${RESET} ${padAnsi(`${LAVENDER}${BOLD}Instrucción Asignada${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-	const taskLines = targetTask.task.split("\n").slice(0, 4);
+	const taskLines = targetTask.task.split("\n").slice(0, 3);
 	for (const tl of taskLines) {
 		lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${WHITE}${truncateAnsi(tl.trim(), innerWidth - 4)}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 	}
 	lines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
 
+	// Prepare results or error lines
+	const resultLines: string[] = [];
+	if (targetTask.result) {
+		resultLines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
+		resultLines.push(`${BORDER}│${RESET} ${padAnsi(`${LAVENDER}${BOLD}Resultado / Entrega Final${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+		const resultPreview = targetTask.result.split("\n").slice(0, 6);
+		for (const rl of resultPreview) {
+			resultLines.push(`${BORDER}│${RESET} ${padAnsi(`  ${GREEN}${truncateAnsi(rl, innerWidth - 4)}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+		}
+	} else if (targetTask.error) {
+		resultLines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
+		resultLines.push(`${BORDER}│${RESET} ${padAnsi(`${RED}${BOLD}Error Registrado:${RESET} ${truncateAnsi(targetTask.error, innerWidth - 20)}`, innerWidth)} ${BORDER}│${RESET}`);
+	} else if (targetTask.status === "running") {
+		resultLines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
+		resultLines.push(`${BORDER}│${RESET} ${padAnsi(`  ${YELLOW}◐ Especialista ejecutando en segundo plano...${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	}
+
 	// Panel 2: Live Tool Call Events & Logs
 	lines.push(`${BORDER}│${RESET} ${padAnsi(`${LAVENDER}${BOLD}Eventos y Llamadas de Herramientas (En Vivo)${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-	const eventLogs = targetTask.logs && targetTask.logs.length > 0
-		? targetTask.logs.slice(-12)
+
+	const footerChrome = 2; // bottom border + shortcuts footer
+	const fixedCount = lines.length + resultLines.length + footerChrome;
+	const requestedHeight = options?.height ? Math.max(16, options.height) : undefined;
+	const availableLogRows = requestedHeight ? Math.max(3, requestedHeight - fixedCount) : 12;
+
+	const allLogs = targetTask.logs && targetTask.logs.length > 0
+		? targetTask.logs
 		: [`  ${DIM}(esperando primeros eventos de ejecución...)${RESET}`];
 
+	const eventLogs = allLogs.slice(-availableLogRows);
 	for (const log of eventLogs) {
 		lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${WHITE}${truncateAnsi(log, innerWidth - 4)}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 	}
 
-	// Panel 3: Final Result / Delivery or Error
-	if (targetTask.result) {
-		lines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
-		lines.push(`${BORDER}│${RESET} ${padAnsi(`${LAVENDER}${BOLD}Resultado / Entrega Final${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-		const resultPreview = targetTask.result.split("\n").slice(0, 8);
-		for (const rl of resultPreview) {
-			lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${GREEN}${truncateAnsi(rl, innerWidth - 4)}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	// Fill remaining vertical space to achieve 100% full screen
+	if (requestedHeight) {
+		const currentTotal = lines.length + resultLines.length + footerChrome;
+		const paddingNeeded = requestedHeight - currentTotal;
+		for (let p = 0; p < paddingNeeded; p++) {
+			lines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
 		}
-	} else if (targetTask.error) {
-		lines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
-		lines.push(`${BORDER}│${RESET} ${padAnsi(`${RED}${BOLD}Error Registrado:${RESET} ${truncateAnsi(targetTask.error, innerWidth - 20)}`, innerWidth)} ${BORDER}│${RESET}`);
-	} else if (targetTask.status === "running") {
-		lines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
-		lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${YELLOW}◐ Especialista ejecutando en segundo plano...${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	}
+
+	// Append results panel
+	for (const rl of resultLines) {
+		lines.push(rl);
 	}
 
 	lines.push(`${BORDER}╰${"─".repeat(cardWidth - 2)}╯${RESET}`);
-	lines.push(`  ${GRAY}↑/↓: Seleccionar agente • Esc: Salir • c: Cancelar${RESET}`);
+	lines.push(`  ${GRAY}↑/↓: Seleccionar agente • Esc: Salir • c: Cancelar • o: Abrir en editor externo${RESET}`);
 
 	return lines;
 }
@@ -114,37 +278,51 @@ export function renderSubagentModalView(
  * Renders an interactive split-screen style presentation:
  * Left panel: List of subagents with selection indicator.
  * Right panel: Detailed live events, transcript, and output.
+ * Adapts dynamically to 100% terminal height and width.
  */
 export function renderSubagentSplitView(
 	tasks: TaskRecord[],
 	selectedIndex: number,
 	width: number = 84,
+	height?: number,
 ): string[] {
 	const totalWidth = Math.max(76, width);
-	const leftWidth = Math.min(26, Math.max(22, Math.floor(totalWidth * 0.28)));
+	const leftWidth = Math.min(28, Math.max(22, Math.floor(totalWidth * 0.28)));
 	const rightWidth = totalWidth - leftWidth - 1;
 
 	const targetTask = tasks[selectedIndex] || tasks[0];
 
-	// Generate left column lines (subagents list)
-	const leftLines: string[] = [];
-	leftLines.push(` ${BLUE}${BOLD}Agentes (${tasks.length})${RESET}`);
-	leftLines.push(`${BORDER}${"─".repeat(leftWidth - 1)}${RESET}`);
+	// Target body height to fill 100% terminal screen
+	const requestedHeight = height ? Math.max(16, height) : undefined;
+	const targetBodyRows = requestedHeight ? requestedHeight - 3 : undefined; // 1 top, 1 bottom, 1 footer
 
-	for (let i = 0; i < tasks.length; i++) {
-		const t = tasks[i];
+	// Generate left column lines (subagents list)
+	const leftContent: string[] = [];
+	leftContent.push(` ${BLUE}${BOLD}Agentes (${tasks.length})${RESET}`);
+	leftContent.push(`${BORDER}${"─".repeat(leftWidth - 1)}${RESET}`);
+
+	const maxVisibleLeftTasks = targetBodyRows ? Math.max(2, targetBodyRows - 2) : tasks.length;
+	let leftScroll = 0;
+	if (tasks.length > maxVisibleLeftTasks) {
+		leftScroll = Math.max(0, Math.min(tasks.length - maxVisibleLeftTasks, selectedIndex - Math.floor(maxVisibleLeftTasks / 2)));
+	}
+	const visibleTasks = tasks.slice(leftScroll, leftScroll + maxVisibleLeftTasks);
+
+	for (let i = 0; i < visibleTasks.length; i++) {
+		const actualIdx = leftScroll + i;
+		const t = visibleTasks[i];
 		let icon = `${GRAY}○${RESET}`;
 		if (t.status === "completed") icon = `${GREEN}✓${RESET}`;
 		else if (t.status === "running") icon = `${YELLOW}◐${RESET}`;
 		else if (t.status === "failed") icon = `${RED}✗${RESET}`;
 
-		const isSelected = i === selectedIndex;
+		const isSelected = actualIdx === selectedIndex;
 		const marker = isSelected ? `${BLUE}▸${RESET} ` : "  ";
 		const agentColor = isSelected ? `${BOLD}${WHITE}` : `${GRAY}`;
 		const maxNameLen = leftWidth - 7;
 		const nameDisplay = truncateAnsi(t.agent, maxNameLen);
 
-		leftLines.push(`${marker}${icon} ${agentColor}${nameDisplay}${RESET}`);
+		leftContent.push(`${marker}${icon} ${agentColor}${nameDisplay}${RESET}`);
 	}
 
 	// Generate right column lines (detailed task inspector)
@@ -160,60 +338,70 @@ export function renderSubagentSplitView(
 	if (targetTask.status === "cancelled") statusBadge = `${GRAY}○ CANCELADO${RESET}`;
 	if (targetTask.status === "queued") statusBadge = `${GRAY}○ EN COLA${RESET}`;
 
-	const rightLines: string[] = [];
+	const headerLines: string[] = [];
 	const headerTitle = `◈ INSPECTOR DE ESPECIALISTA · ${(targetTask.title || targetTask.agent).toUpperCase()}`;
-	rightLines.push(`${BLUE}${BOLD}${truncateAnsi(headerTitle, rightWidth - 2)}${RESET}`);
-	rightLines.push(`  ${GRAY}Modelo:${RESET} ${BLUE}${targetTask.model || "inherit"}${RESET}  ${GRAY}·${RESET}  ${statusBadge}  ${GRAY}·${RESET}  ${WHITE}${elapsedStr}${RESET}`);
-	rightLines.push(`  ${GRAY}Task ID:${RESET} ${DIM}${targetTask.id}${RESET}`);
-	rightLines.push("");
+	headerLines.push(`${BLUE}${BOLD}${truncateAnsi(headerTitle, rightWidth - 2)}${RESET}`);
+	headerLines.push(`  ${GRAY}Modelo:${RESET} ${BLUE}${targetTask.model || "inherit"}${RESET}  ${GRAY}·${RESET}  ${statusBadge}  ${GRAY}·${RESET}  ${WHITE}${elapsedStr}${RESET}`);
+	headerLines.push(`  ${GRAY}Task ID:${RESET} ${DIM}${targetTask.id}${RESET}`);
+	headerLines.push("");
 
 	// Panel: Instruction
-	rightLines.push(`${LAVENDER}${BOLD}Instrucción Asignada${RESET}`);
+	headerLines.push(`${LAVENDER}${BOLD}Instrucción Asignada${RESET}`);
 	const taskLines = targetTask.task.split("\n").slice(0, 3);
 	for (const tl of taskLines) {
-		rightLines.push(`  ${WHITE}${truncateAnsi(tl.trim(), rightWidth - 4)}${RESET}`);
+		headerLines.push(`  ${WHITE}${truncateAnsi(tl.trim(), rightWidth - 4)}${RESET}`);
 	}
-	rightLines.push("");
-
-	// Panel: Live Events & Logs
-	rightLines.push(`${LAVENDER}${BOLD}Eventos y Llamadas de Herramientas (En Vivo)${RESET}`);
-	const eventLogs = targetTask.logs && targetTask.logs.length > 0
-		? targetTask.logs.slice(-10)
-		: [`  ${DIM}(esperando primeros eventos de ejecución...)${RESET}`];
-
-	for (const log of eventLogs) {
-		rightLines.push(`  ${WHITE}${truncateAnsi(log, rightWidth - 4)}${RESET}`);
-	}
+	headerLines.push("");
 
 	// Panel: Result / Error
+	const footerRightLines: string[] = [];
 	if (targetTask.result) {
-		rightLines.push("");
-		rightLines.push(`${LAVENDER}${BOLD}Resultado / Entrega Final${RESET}`);
+		footerRightLines.push("");
+		footerRightLines.push(`${LAVENDER}${BOLD}Resultado / Entrega Final${RESET}`);
 		const resultPreview = targetTask.result.split("\n").slice(0, 5);
 		for (const rl of resultPreview) {
-			rightLines.push(`  ${GREEN}${truncateAnsi(rl, rightWidth - 4)}${RESET}`);
+			footerRightLines.push(`  ${GREEN}${truncateAnsi(rl, rightWidth - 4)}${RESET}`);
 		}
 	} else if (targetTask.error) {
-		rightLines.push("");
-		rightLines.push(`${RED}${BOLD}Error Registrado:${RESET} ${truncateAnsi(targetTask.error, rightWidth - 20)}`);
+		footerRightLines.push("");
+		footerRightLines.push(`${RED}${BOLD}Error Registrado:${RESET} ${truncateAnsi(targetTask.error, rightWidth - 20)}`);
 	} else if (targetTask.status === "running") {
-		rightLines.push("");
-		rightLines.push(`  ${YELLOW}◐ Ejecución activa en segundo plano...${RESET}`);
+		footerRightLines.push("");
+		footerRightLines.push(`  ${YELLOW}◐ Ejecución activa en segundo plano...${RESET}`);
 	}
 
-	// Combine left and right columns
-	const maxRows = Math.max(leftLines.length, rightLines.length);
+	const logHeader = `${LAVENDER}${BOLD}Eventos y Llamadas de Herramientas (En Vivo)${RESET}`;
+	const fixedRightCount = headerLines.length + 1 /* logHeader */ + footerRightLines.length;
+
+	const rightBodyTarget = targetBodyRows || Math.max(leftContent.length, fixedRightCount + 10);
+	const availableLogRows = Math.max(3, rightBodyTarget - fixedRightCount);
+
+	const allLogs = targetTask.logs && targetTask.logs.length > 0
+		? targetTask.logs
+		: [`  ${DIM}(esperando primeros eventos de ejecución...)${RESET}`];
+	const eventLogs = allLogs.slice(-availableLogRows);
+
+	const rightContent: string[] = [...headerLines, logHeader];
+	for (const log of eventLogs) {
+		rightContent.push(`  ${WHITE}${truncateAnsi(log, rightWidth - 4)}${RESET}`);
+	}
+	for (const fr of footerRightLines) {
+		rightContent.push(fr);
+	}
+
+	// Combine left and right columns filling exactly targetBodyRows
+	const maxRows = targetBodyRows || Math.max(leftContent.length, rightContent.length);
 	const lines: string[] = [];
 
 	lines.push(`${BORDER}╭${"─".repeat(leftWidth)}┬${"─".repeat(rightWidth)}╮${RESET}`);
 	for (let r = 0; r < maxRows; r++) {
-		const l = padAnsi(leftLines[r] || "", leftWidth);
-		const rContent = rightLines[r] || "";
+		const l = padAnsi(leftContent[r] || "", leftWidth);
+		const rContent = rightContent[r] || "";
 		const rPadded = padAnsi(truncateAnsi(rContent, rightWidth - 2), rightWidth - 2);
 		lines.push(`${BORDER}│${RESET}${l}${BORDER}│${RESET} ${rPadded} ${BORDER}│${RESET}`);
 	}
 	lines.push(`${BORDER}╰${"─".repeat(leftWidth)}┴${"─".repeat(rightWidth)}╯${RESET}`);
-	lines.push(`  ${GRAY}↑/↓: Seleccionar agente • Esc: Salir • c: Cancelar${RESET}`);
+	lines.push(`  ${GRAY}↑/↓: Seleccionar agente • Esc: Salir • c: Cancelar • o: Abrir en editor externo${RESET}`);
 
 	return lines;
 }
@@ -229,6 +417,7 @@ export class SubagentsViewerComponent {
 	private selectedIndex: number;
 	private unsub?: () => void;
 	private cachedWidth?: number;
+	private cachedHeight?: number;
 	private cachedLines?: string[];
 
 	constructor(
@@ -258,6 +447,7 @@ export class SubagentsViewerComponent {
 
 	invalidate(): void {
 		this.cachedWidth = undefined;
+		this.cachedHeight = undefined;
 		this.cachedLines = undefined;
 	}
 
@@ -267,7 +457,12 @@ export class SubagentsViewerComponent {
 			isKeyMatch(data, "ctrl+c") ||
 			isKeyMatch(data, "q")
 		) {
-			if (this.unsub) this.unsub();
+			if (this.unsub) {
+				try {
+					this.unsub();
+				} catch {}
+				this.unsub = undefined;
+			}
 			this.onClose();
 			return;
 		}
@@ -290,10 +485,24 @@ export class SubagentsViewerComponent {
 			return;
 		}
 
+		if (isKeyMatch(data, "open")) {
+			const current = this.tasks[this.selectedIndex] || this.tasks[0];
+			if (current) {
+				openTaskInEditor(this.tui, current);
+				this.invalidate();
+				this.tui?.requestRender?.(true);
+			}
+			return;
+		}
+
 		if (isKeyMatch(data, "c")) {
 			const current = this.tasks[this.selectedIndex];
 			if (current && (current.status === "running" || current.status === "queued")) {
-				studioAgentsRunner.cancelTask(current.id);
+				if (typeof (studioAgentsRunner as any).cancelTask === "function") {
+					(studioAgentsRunner as any).cancelTask(current.id);
+				} else if (typeof (studioAgentsRunner as any).cancel === "function") {
+					(studioAgentsRunner as any).cancel(current.id);
+				}
 				this.invalidate();
 				this.tui?.requestRender?.();
 			}
@@ -302,18 +511,27 @@ export class SubagentsViewerComponent {
 	}
 
 	render(width: number): string[] {
-		if (this.cachedLines && this.cachedWidth === width) {
+		const height = Math.max(
+			12,
+			this.tui?.terminal?.rows ||
+			(typeof process !== "undefined" && process.stdout?.rows) ||
+			24,
+		);
+
+		if (this.cachedLines && this.cachedWidth === width && this.cachedHeight === height) {
 			return this.cachedLines;
 		}
 
 		const lines = (width >= 76 && this.tasks.length > 1)
-			? renderSubagentSplitView(this.tasks, this.selectedIndex, width)
+			? renderSubagentSplitView(this.tasks, this.selectedIndex, width, height)
 			: renderSubagentModalView(this.tasks[this.selectedIndex] || this.tasks[0], width, {
 				selectedIndex: this.selectedIndex,
 				totalTasks: this.tasks.length,
+				height,
 			});
 
 		this.cachedWidth = width;
+		this.cachedHeight = height;
 		this.cachedLines = lines;
 		return lines;
 	}
@@ -349,11 +567,23 @@ export async function handleStudioSubagentsViewer(
 		if (foundIdx !== -1) initialIndex = foundIdx;
 	}
 
-	// Interactive TUI full-screen / custom view support
+	// Interactive TUI full-screen / custom modal overlay (idéntico a Gentle Shell)
 	if (ctx.hasUI && typeof (ctx.ui as any)?.custom === "function") {
-		await (ctx.ui as any).custom((tui: any, theme: any, _kb: any, done: () => void) => {
-			return new SubagentsViewerComponent(tasks, tui, theme, done, initialIndex);
-		});
+		await (ctx.ui as any).custom(
+			(tui: any, theme: any, _kb: any, done: () => void) => {
+				const close = withOverlayRepaint(tui, done);
+				return new SubagentsViewerComponent(tasks, tui, theme, close, initialIndex);
+			},
+			{
+				overlay: true,
+				overlayOptions: {
+					width: "100%",
+					maxHeight: "100%",
+					margin: 0,
+					anchor: "center",
+				},
+			},
+		);
 		return;
 	}
 

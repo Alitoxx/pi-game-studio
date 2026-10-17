@@ -959,6 +959,14 @@ Next: Level Design
 
 		// Navigation hints in footer
 		expect(viewerSource).toContain("↑/↓: Seleccionar agente • Esc: Salir • c: Cancelar");
+		expect(viewerSource).toContain("• o: Abrir en editor externo");
+
+		// Modal overlay configuration (Gentle Shell pattern)
+		expect(viewerSource).toContain("withOverlayRepaint");
+		expect(viewerSource).toContain("openTaskInEditor");
+		expect(viewerSource).toContain("overlay: true");
+		expect(viewerSource).toContain('width: "100%"');
+		expect(viewerSource).toContain('maxHeight: "100%"');
 	});
 
 	test("Feature 1: studio-hud infers ODD phase chips [concept 1/6] through [ship 6/6]", () => {

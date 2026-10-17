@@ -80,6 +80,8 @@ describe("Studio Subagents & Isolated Execution Engine", () => {
 
 	test("subagent runner and index support immediate abort on Escape / interrupt", () => {
 		const runnerSource = fs.readFileSync(runnerPath, "utf8");
+		expect(runnerSource).toContain("cancel(");
+		expect(runnerSource).toContain("cancelTask(");
 		expect(runnerSource).toContain("cancelAll(");
 		expect(runnerSource).toContain("abortHandler");
 

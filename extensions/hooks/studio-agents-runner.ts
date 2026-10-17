@@ -85,6 +85,10 @@ export class StudioAgentsRunner {
 		return false;
 	}
 
+	cancelTask(id: string, reason = "cancelled by user"): boolean {
+		return this.cancel(id, reason);
+	}
+
 	cancelAll(reason = "cancelled by user"): number {
 		let count = 0;
 		for (const [id, child] of this.liveProcesses.entries()) {

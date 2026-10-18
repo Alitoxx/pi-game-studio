@@ -55,6 +55,10 @@ import { handleStudioGameFeel } from "./studio-game-feel.ts";
 import { handleStudioCapsule } from "./studio-capsule.ts";
 import { handleStudioSteamPage } from "./studio-steam-page.ts";
 import { handleStudioAudioBus } from "./studio-audio-bus.ts";
+import { handleStudioContinuity } from "./studio-continuity.ts";
+import { handleStudioTuning } from "./studio-tuning.ts";
+import { handleStudioPlay } from "./studio-play.ts";
+import { handleStudioFeature } from "./studio-feature.ts";
 
 export default function (pi: ExtensionAPI) {
 	// ──────────────────────────────────────────────
@@ -590,6 +594,78 @@ export default function (pi: ExtensionAPI) {
 		description: "[Studio] Alias de scaffolding de buses de audio profesionales",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioAudioBus(args, ctx);
+		},
+	});
+
+	// /studio:continuity — Fast-forward pipeline de continuidad entre tareas atómicas
+	(pi as any).registerCommand?.("studio:continuity", {
+		description: "[Studio] Fast-forward pipeline de continuidad entre tareas atómicas ODD",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioContinuity(args, ctx);
+		},
+	});
+
+	// /studio:next — Alias de studio:continuity
+	(pi as any).registerCommand?.("studio:next", {
+		description: "[Studio] Ejecutar o inspeccionar la siguiente tarea atómica en cola ODD",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioContinuity(args, ctx);
+		},
+	});
+
+	// /next — Alias directo de studio:next
+	(pi as any).registerCommand?.("next", {
+		description: "[Studio] Alias para avanzar a la siguiente tarea atómica en cola",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioContinuity(args, ctx);
+		},
+	});
+
+	// /studio:tuning — Inspector y calibrador interactivo de variables de balance y Game Feel
+	(pi as any).registerCommand?.("studio:tuning", {
+		description: "[Studio] Inspector y calibrador de variables de balance y Game Feel en YAML",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioTuning(args, ctx);
+		},
+	});
+
+	// /tuning — Alias de studio:tuning
+	(pi as any).registerCommand?.("tuning", {
+		description: "[Studio] Alias de calibrador de balance de gameplay",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioTuning(args, ctx);
+		},
+	});
+
+	// /studio:play — Runner unificado de ejecución y previsualización del juego
+	(pi as any).registerCommand?.("studio:play", {
+		description: "[Studio] Runner de ejecución supervisada y previsualización del motor",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioPlay(args, ctx);
+		},
+	});
+
+	// /play — Alias de studio:play
+	(pi as any).registerCommand?.("play", {
+		description: "[Studio] Alias para ejecutar el juego en runtime o preview",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioPlay(args, ctx);
+		},
+	});
+
+	// /studio:feature — Generador guiado de Live Specs ODD en design/gdd/ con tareas T1-TN
+	(pi as any).registerCommand?.("studio:feature", {
+		description: "[Studio] Generador guiado de Live Specs ODD en design/gdd/ con tareas T1-TN",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioFeature(args, ctx);
+		},
+	});
+
+	// /feature — Alias de studio:feature
+	(pi as any).registerCommand?.("feature", {
+		description: "[Studio] Alias para crear un Live Spec ODD",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioFeature(args, ctx);
 		},
 	});
 

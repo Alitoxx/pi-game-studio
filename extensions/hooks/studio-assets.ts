@@ -1,4 +1,5 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join, extname, relative } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
@@ -306,15 +307,130 @@ export function auditAssets(studioRoot: string, modelBudgetBytes: number = DEFAU
 	};
 }
 
+export interface OptimizedItemDetail {
+	file: string;
+	beforeBytes: number;
+	afterBytes: number;
+	savedBytes: number;
+}
+
+export interface AssetOptimizationReport {
+	studioRoot: string;
+	optimizedCount: number;
+	totalInitialBytes: number;
+	totalFinalBytes: number;
+	totalSavedBytes: number;
+	savingsPercent: number;
+	toolUsed: string;
+	details: OptimizedItemDetail[];
+	errors: string[];
+}
+
+/**
+ * Optimizes project textures and assets using available FOSS tools (oxipng).
+ */
+export function optimizeProjectAssets(studioRoot: string): AssetOptimizationReport {
+	const report = auditAssets(studioRoot);
+	const details: OptimizedItemDetail[] = [];
+	const errors: string[] = [];
+
+	let oxipngPath: string | null = null;
+	try {
+		oxipngPath = execFileSync("which", ["oxipng"], { encoding: "utf8" }).trim();
+	} catch {}
+
+	if (!oxipngPath) {
+		return {
+			studioRoot,
+			optimizedCount: 0,
+			totalInitialBytes: 0,
+			totalFinalBytes: 0,
+			totalSavedBytes: 0,
+			savingsPercent: 0,
+			toolUsed: "none (oxipng not found in PATH)",
+			details: [],
+			errors: ["oxipng no está instalado o no se encuentra en PATH. Instálalo para optimización de sprites."],
+		};
+	}
+
+	let totalInitial = 0;
+	let totalFinal = 0;
+
+	for (const img of report.images) {
+		const beforeSize = statSync(img.path).size;
+		try {
+			execFileSync(oxipngPath, ["-o", "2", "--strip", "safe", img.path], {
+				stdio: "pipe",
+			});
+			const afterSize = statSync(img.path).size;
+			const saved = Math.max(0, beforeSize - afterSize);
+
+			totalInitial += beforeSize;
+			totalFinal += afterSize;
+
+			details.push({
+				file: img.relPath,
+				beforeBytes: beforeSize,
+				afterBytes: afterSize,
+				savedBytes: saved,
+			});
+		} catch (err: any) {
+			errors.push(`Error al optimizar ${img.relPath}: ${err.message || String(err)}`);
+		}
+	}
+
+	const totalSaved = Math.max(0, totalInitial - totalFinal);
+	const savingsPercent = totalInitial > 0 ? Number(((totalSaved / totalInitial) * 100).toFixed(1)) : 0;
+
+	return {
+		studioRoot,
+		optimizedCount: details.length,
+		totalInitialBytes: totalInitial,
+		totalFinalBytes: totalFinal,
+		totalSavedBytes: totalSaved,
+		savingsPercent,
+		toolUsed: "oxipng -o 2 --strip safe",
+		details,
+		errors,
+	};
+}
+
 /**
  * CLI command handler for /studio:assets (or /assets)
  */
 export async function handleStudioAssets(
-	_args: string,
+	args: string,
 	ctx: ExtensionContext,
-): Promise<AssetAuditReport> {
+): Promise<AssetAuditReport | AssetOptimizationReport> {
 	const cwd = ctx.cwd || process.cwd();
 	const studioRoot = findStudioRoot(cwd) || cwd;
+	const isOptimize = (args || "").trim().toLowerCase().includes("optimize");
+
+	if (isOptimize) {
+		console.log(`\n${BLUE}▌ ◈ ASSET OPTIMIZER (/studio:assets optimize)${RESET}`);
+		console.log(`${DIM}Optimizando imágenes PNG mediante herramientas FOSS auditadas...${RESET}\n`);
+
+		const optReport = optimizeProjectAssets(studioRoot);
+		if (optReport.errors.length > 0 && optReport.optimizedCount === 0) {
+			console.log(`  ${YELLOW}⚠ ${optReport.errors[0]}${RESET}`);
+			console.log(`  ${DIM}Puedes instalarlo en macOS con: brew install oxipng${RESET}\n`);
+			return optReport;
+		}
+
+		console.log(`${BOLD}${WHITE}Imágenes optimizadas:${RESET} ${optReport.optimizedCount}`);
+		console.log(`  • Tamaño inicial:  ${formatBytes(optReport.totalInitialBytes)}`);
+		console.log(`  • Tamaño final:    ${formatBytes(optReport.totalFinalBytes)}`);
+		console.log(`  • Espacio ahorrado: ${GREEN}${formatBytes(optReport.totalSavedBytes)} (${optReport.savingsPercent}% reducción)${RESET}\n`);
+
+		for (const d of optReport.details.slice(0, 5)) {
+			console.log(`    - ${d.file}: ${formatBytes(d.beforeBytes)} → ${formatBytes(d.afterBytes)} (${DIM}-${formatBytes(d.savedBytes)}${RESET})`);
+		}
+		if (optReport.details.length > 5) {
+			console.log(`    ${DIM}...y ${optReport.details.length - 5} más.${RESET}`);
+		}
+		console.log("");
+		return optReport;
+	}
 
 	console.log(`\n${BLUE}▌ ◈ ASSET PIPELINE & MANIFEST INSPECTOR${RESET}`);
 	console.log(`${DIM}Inspeccionando imágenes .png, modelos 3D y assets/manifest.yaml...${RESET}\n`);

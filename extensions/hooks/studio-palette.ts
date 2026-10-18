@@ -8,6 +8,7 @@ export const DIM = "\x1b[2m";
 // Primary Accents
 export const ACCENT = "\x1b[38;2;167;139;250m";     // #A78BFA — Soft Amethyst / Violet (Brand core)
 export const SECONDARY = "\x1b[38;2;103;232;249m";  // #67E8F9 — Glacial Cyan / Tech Blue
+export const CYAN = SECONDARY;
 export const HEADING = "\x1b[38;2;196;181;253m";    // #C4B5FD — Light Lavender heading
 
 // Status & Semantic Colors (Soft, desaturated pastel tones)
@@ -127,6 +128,16 @@ export const STUDIO_COMMAND_REGISTRY: StudioCommandItem[] = [
 		description: "Generador de ficha de Steamworks en BBCode oficial desde el GDD",
 		category: "ODD Pipeline",
 	},
+	{
+		name: "/feature",
+		description: "Generador guiado de Live Specs ODD en design/gdd/ con desglose T1-TN",
+		category: "ODD Pipeline",
+	},
+	{
+		name: "/next",
+		description: "Continuidad fluida y handoff de la siguiente tarea atómica en cola ODD",
+		category: "ODD Pipeline",
+	},
 
 	// Engine & Dev Tools
 	{
@@ -177,6 +188,16 @@ export const STUDIO_COMMAND_REGISTRY: StudioCommandItem[] = [
 	{
 		name: "/audio-bus",
 		description: "Jerarquía de buses de audio profesionales con ducking (Master, Music, SFX)",
+		category: "Engine & Dev Tools",
+	},
+	{
+		name: "/tuning",
+		description: "Calibrador interactivo de variables de balance y Game Feel en YAML",
+		category: "Engine & Dev Tools",
+	},
+	{
+		name: "/play",
+		description: "Runner unificado de ejecución supervisada y previsualización del motor",
 		category: "Engine & Dev Tools",
 	},
 

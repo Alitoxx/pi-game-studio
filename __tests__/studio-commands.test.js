@@ -1420,12 +1420,12 @@ Next: Level Design
 			expect(ovSource).toContain("export async function showCommandPalette");
 		});
 
-		test("STUDIO_COMMAND_REGISTRY covers all 4 categories and all 37 required commands", () => {
+		test("STUDIO_COMMAND_REGISTRY covers all 4 categories and all 41 required commands", () => {
 			const palSource = fs.readFileSync(palettePath, "utf8");
 
 			// Parse command items from source
 			const cmdMatches = [...palSource.matchAll(/name:\s*["']([^"']+)["']\s*,\s*description:\s*["']([^"']+)["']\s*,\s*category:\s*["']([^"']+)["']/g)];
-			expect(cmdMatches.length).toBe(37);
+			expect(cmdMatches.length).toBe(41);
 
 			const commandNames = cmdMatches.map((m) => m[1]);
 			const categories = Array.from(new Set(cmdMatches.map((m) => m[3])));
@@ -1435,16 +1435,16 @@ Next: Level Design
 			expect(categories).toContain("Studio & Models");
 			expect(categories).toContain("Media & MCP");
 
-			// ODD Pipeline (8)
-			const oddCommands = ["/market", "/concept", "/spec", "/arch", "/code", "/test", "/ship", "/steam-page"];
+			// ODD Pipeline (10)
+			const oddCommands = ["/market", "/concept", "/spec", "/arch", "/code", "/test", "/ship", "/steam-page", "/feature", "/next"];
 			for (const cmd of oddCommands) {
 				expect(commandNames).toContain(cmd);
 				const match = cmdMatches.find((m) => m[1] === cmd);
 				expect(match[3]).toBe("ODD Pipeline");
 			}
 
-			// Engine & Dev Tools (10)
-			const engineCommands = ["/doctor", "/watch", "/profile", "/perf-guard", "/web", "/tasks", "/changes", "/scaffold", "/game-feel", "/audio-bus"];
+			// Engine & Dev Tools (12)
+			const engineCommands = ["/doctor", "/watch", "/profile", "/perf-guard", "/web", "/tasks", "/changes", "/scaffold", "/game-feel", "/audio-bus", "/tuning", "/play"];
 			for (const cmd of engineCommands) {
 				expect(commandNames).toContain(cmd);
 				const match = cmdMatches.find((m) => m[1] === cmd);
@@ -1627,7 +1627,7 @@ Next: Level Design
 			const script = `
 				const { STUDIO_COMMAND_REGISTRY, fuzzyMatch, filterCommands } = await import("./extensions/hooks/studio-palette.ts");
 				const { CommandPaletteOverlayComponent, showCommandPalette } = await import("./extensions/hooks/studio-palette-overlay.ts");
-				if (STUDIO_COMMAND_REGISTRY.length !== 37) throw new Error("Registry length mismatch: " + STUDIO_COMMAND_REGISTRY.length);
+				if (STUDIO_COMMAND_REGISTRY.length !== 41) throw new Error("Registry length mismatch: " + STUDIO_COMMAND_REGISTRY.length);
 				const match = fuzzyMatch("start", "/studio:start");
 				if (!match.matches) throw new Error("Fuzzy match failed");
 				const filtered = filterCommands("spec", "ODD Pipeline");
@@ -2683,6 +2683,120 @@ Implement fuzzy command palette.
 				}
 				if (!resComp.text.includes("Bevy")) {
 					throw new Error("renderResult missing answer: " + resComp?.text);
+				}
+			`;
+			expect(() => {
+				execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+					cwd: path.join(__dirname, ".."),
+				});
+			}).not.toThrow();
+		});
+	});
+
+	// ──────────────────────────────────────────────
+	// Block 7: Studio Suite Expansion (Continuity, Tuning, Play, Feature & Assets)
+	// ──────────────────────────────────────────────
+	describe("Block 7: Studio Suite Expansion (Continuity, Tuning, Play, Feature & Assets)", () => {
+		const { execFileSync } = require("child_process");
+
+		test("studio-continuity.ts exports findNextPendingTask and formatContinuityPrompt", () => {
+			const source = fs.readFileSync(
+				path.join(__dirname, "..", "extensions", "hooks", "studio-continuity.ts"),
+				"utf8",
+			);
+			expect(source).toContain("export function findNextPendingTask");
+			expect(source).toContain("export function formatContinuityPrompt");
+			expect(source).toContain("export async function handleStudioContinuity");
+		});
+
+		test("studio-tuning.ts exports findTuningFiles, parseTuningVariables, and updateTuningVariable", () => {
+			const source = fs.readFileSync(
+				path.join(__dirname, "..", "extensions", "hooks", "studio-tuning.ts"),
+				"utf8",
+			);
+			expect(source).toContain("export function findTuningFiles");
+			expect(source).toContain("export function parseTuningVariables");
+			expect(source).toContain("export function updateTuningVariable");
+			expect(source).toContain("export async function handleStudioTuning");
+		});
+
+		test("studio-play.ts exports resolveEnginePlayCommand, isPlayProcessRunning, and stopPlayProcess", () => {
+			const source = fs.readFileSync(
+				path.join(__dirname, "..", "extensions", "hooks", "studio-play.ts"),
+				"utf8",
+			);
+			expect(source).toContain("export function resolveEnginePlayCommand");
+			expect(source).toContain("export function isPlayProcessRunning");
+			expect(source).toContain("export function stopPlayProcess");
+			expect(source).toContain("export async function handleStudioPlay");
+		});
+
+		test("studio-feature.ts exports slugify, generateLiveSpecTemplate, and createLiveSpec", () => {
+			const source = fs.readFileSync(
+				path.join(__dirname, "..", "extensions", "hooks", "studio-feature.ts"),
+				"utf8",
+			);
+			expect(source).toContain("export function slugify");
+			expect(source).toContain("export function generateLiveSpecTemplate");
+			expect(source).toContain("export function createLiveSpec");
+			expect(source).toContain("export async function handleStudioFeature");
+		});
+
+		test("studio-assets.ts exports optimizeProjectAssets with AssetOptimizationReport contract", () => {
+			const source = fs.readFileSync(
+				path.join(__dirname, "..", "extensions", "hooks", "studio-assets.ts"),
+				"utf8",
+			);
+			expect(source).toContain("export function optimizeProjectAssets");
+			expect(source).toContain("export interface AssetOptimizationReport");
+			expect(source).toContain("oxipng");
+		});
+
+		test("TypeScript runtime execution of Block 7 contracts in Node", () => {
+			const script = `
+				import os from "node:os";
+				import path from "node:path";
+				import fs from "node:fs";
+
+				const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "studio-block7-"));
+
+				try {
+					// 1. Test Feature Generator
+					const { slugify, generateLiveSpecTemplate, createLiveSpec } = await import("./extensions/hooks/studio-feature.ts");
+					if (slugify("Combate Mágico 2D!") !== "combate-magico-2d") throw new Error("slugify mismatch");
+					const template = generateLiveSpecTemplate("dash-aereo");
+					if (!template.includes("# Live Spec — Dash Aereo")) throw new Error("template title missing");
+					if (!template.includes("T1 — Esquema de Datos")) throw new Error("T1 missing in template");
+
+					const created = createLiveSpec(tempDir, "dash-aereo");
+					if (!created.success || !fs.existsSync(created.filePath)) throw new Error("createLiveSpec failed");
+
+					// 2. Test Tuning Parser and Updater
+					const { parseTuningVariables, updateTuningVariable } = await import("./extensions/hooks/studio-tuning.ts");
+					const sampleYaml = "santuario:\\n  tick_segundos: 5.0\\n  radio_pickup: 64\\n";
+					const samplePath = path.join(tempDir, "balance.yaml");
+					fs.writeFileSync(samplePath, sampleYaml, "utf8");
+
+					const vars = parseTuningVariables(sampleYaml, samplePath, tempDir);
+					if (vars.length !== 2) throw new Error("parseTuningVariables count mismatch: " + vars.length);
+					if (vars[0].key !== "santuario.tick_segundos" || vars[0].value !== 5.0) throw new Error("tuning var parsing failed");
+
+					const updated = updateTuningVariable(samplePath, "santuario.tick_segundos", 2.5);
+					if (!updated) throw new Error("updateTuningVariable failed");
+					const updatedContent = fs.readFileSync(samplePath, "utf8");
+					if (!updatedContent.includes("tick_segundos: 2.5")) throw new Error("updated content mismatch: " + updatedContent);
+
+					// 3. Test Play Runner Command Resolver
+					const { resolveEnginePlayCommand } = await import("./extensions/hooks/studio-play.ts");
+					const playCfg = resolveEnginePlayCommand(tempDir);
+					if (!playCfg || !playCfg.command) throw new Error("resolveEnginePlayCommand returned empty config");
+
+					// 4. Test Continuity Finder
+					const { findNextPendingTask } = await import("./extensions/hooks/studio-continuity.ts");
+					const nextTask = findNextPendingTask(tempDir);
+					if (!nextTask || !nextTask.title.includes("T1")) throw new Error("findNextPendingTask did not find T1 from created Live Spec");
+				} finally {
+					fs.rmSync(tempDir, { recursive: true, force: true });
 				}
 			`;
 			expect(() => {

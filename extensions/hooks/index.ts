@@ -844,10 +844,11 @@ export default function (pi: ExtensionAPI) {
 						"- FOSS CLI Toolchain Acceleration: When generating or handling assets or builds, utilize the installed CLI tools directly via bash: `magick` (image manipulation), `oxipng` (lossless PNG compression), `pngquant` (8-bit alpha quantization), `free-tex-packer-cli` (atlas/spritesheets with JSON metadata), `gltf-transform` (3D mesh inspection & polygon audit), `gltfpack` (meshopt 3D GPU optimization), `assimp` (fast 3D to GLB conversion), `ffmpeg` (audio normalization/conversion to .ogg), `wasm-opt` (WASM optimization), `butler` (itch.io delta publishing), `gh` (GitHub releases/PRs), and `watchexec` (live-reload). If a tool is missing, recommend `/studio:tools`. " +
 						"- 2D vs 3D Pipeline Guidance: Check `project.yaml` for dimension (`2d` or `3d`). When the project is 2D, prioritize `free-tex-packer-cli`, `oxipng`, `TileMaps`, and 2D sprite physics. When the project is 3D, prioritize `gltf-transform inspect` to audit polygon budgets, `gltfpack` for GPU LODs/compression, and adopt the Graybox CSG -> Modular Kits methodology. " +
 						"- Interactive Question Protocol (Mandatory Native Menus): You have access to the unified tool `ask_user_question` (for 1 decision or up to 4 questions in a single batch). " +
-						"When you need decisions from the user (such as design trade-offs, architecture choices, or setup steps: motor, idioma, modelos, alcance), " +
-						"DO NOT print text blocks asking the user to type '1' or '2'. " +
-						"Always call `ask_user_question({ questions: [...] })`. " +
+						"CRITICAL RULE: Whenever you offer choices, immediate next options, forks in the road, sprint tasks, or ask the user what to do next (INCLUDING upon user greetings like 'hola', 'buenas', or status updates), " +
+						"YOU ARE STRICTLY FORBIDDEN from printing numbered text lists (1, 2, 3...) or bullet points in chat asking the user what to do or if they want to proceed. " +
+						"Instead, you MUST CALL `ask_user_question({ questions: [...] })` with those options. " +
 						"Pi will present each question interactively in sequence with arrow keys (↑/↓) and Enter, including an automatic 'Otro (escribir respuesta personalizada)...' option for custom free-text input, and return all answers in a single result. " +
+						"Conversational chat text must only contain the brief context (environment OK, project line), and the options MUST be inside the `ask_user_question` tool call. " +
 						"- Subagent Delegation Protocol (Gentle Shell Execution): You have access to the native tool `subagent_run`. " +
 						"Ideation, brainstorming, user dialogue, and question formulation MUST happen INLINE in this parent session — do NOT spawn subagents for mere chat or high-level concept discussions. " +
 						"Delegate ONLY concrete, heavy implementation tasks (writing code, generating complex assets, auditing code, running tests) to specialized agents using `subagent_run({ agent: '<agent_name>', task: '<concrete_task>', mode: 'task' })`. " +
@@ -856,7 +857,7 @@ export default function (pi: ExtensionAPI) {
 						"Flow Completion Protocol: When any specialist finishes a task (design doc, mechanic, art asset, code review), the Producer immediately closes the loop: " +
 						"1. Acknowledges the completed item and updates the production roadmap line. " +
 						"2. Declares the next concrete step in the sprint and hands off to the next specialist directly without asking what to do next. " +
-						"If the user greets (e.g. 'hola', 'buenas'), acknowledge the OK environment in 1 polite sentence, state the current project state, and present the immediate next options cleanly. " +
+						"Greeting Protocol: If the user greets (e.g. 'hola', 'buenas') or asks for project status, acknowledge the OK environment in 1 sentence, state the current project line, and IMMEDIATELY CALL `ask_user_question` to present the immediate next options for keyboard selection (navigable with arrow keys ↑/↓ and Enter). NEVER print numbered text lists 1, 2, 3 in chat text asking the user what to do next. " +
 						"- Game Engine Performance Guard: Zero allocations in frame loops (update, _process, FixedUpdate). Avoid .clone(), Box::new, malloc, new, or blocking I/O on the main thread."
 					);
 			}

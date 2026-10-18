@@ -521,7 +521,6 @@ export function registerAskUserQuestion(pi: ExtensionAPI): void {
 
 			const isInteractiveTui =
 				Boolean(ctx?.hasUI) &&
-				(ctx as any)?.mode === "tui" &&
 				typeof (ctx.ui as any)?.custom === "function";
 
 			if (isInteractiveTui) {

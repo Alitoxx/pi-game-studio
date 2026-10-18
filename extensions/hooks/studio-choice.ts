@@ -708,6 +708,82 @@ export function registerAskUserQuestion(pi: ExtensionAPI): void {
 				playAlertChime();
 			} catch {}
 
+			// 1. Primary native UI: Pi's built-in select dialog (guaranteed arrow key & enter navigation)
+			if (Boolean(ctx?.hasUI) && typeof (ctx.ui as any)?.select === "function") {
+				const committedAnswers: CommittedAnswer[] = [];
+
+				for (let i = 0; i < questions.length; i++) {
+					const q = questions[i];
+					const title = formatQuestionPrompt(i, questions);
+
+					const labels = (q.options || []).map((opt, optIdx) => {
+						const desc = opt.description ? ` — ${opt.description}` : "";
+						return `${optIdx + 1}. ${opt.label}${desc}`;
+					});
+
+					const allowCustom = q.allowCustomResponse !== false;
+					if (allowCustom) {
+						labels.push(OTHER_LABEL);
+					}
+
+					const picked = await (ctx.ui as any).select(title, labels);
+
+					if (picked === undefined || picked === null) {
+						return {
+							content: [
+								{
+									type: "text",
+									text: `User cancelled the questionnaire at step ${i + 1}.`,
+								},
+							],
+							details: { cancelled: true, completedCount: i },
+						};
+					}
+
+					if (allowCustom && picked === OTHER_LABEL) {
+						let customText = "";
+						if (typeof (ctx.ui as any)?.input === "function") {
+							customText = await (ctx.ui as any).input(title, "");
+						}
+						committedAnswers.push({
+							questionIndex: i + 1,
+							question: q.question,
+							header: q.header,
+							answer: customText || "Otro",
+							custom: true,
+						});
+					} else {
+						const idx = typeof picked === "number" ? picked : labels.indexOf(picked);
+						const chosenOpt = q.options[idx] || q.options[0];
+
+						committedAnswers.push({
+							questionIndex: i + 1,
+							question: q.question,
+							header: q.header,
+							answer: chosenOpt?.label || String(picked),
+						});
+					}
+				}
+
+				const summaryLines = committedAnswers.map(
+					(a) => `${a.questionIndex}. ${a.question} -> ${a.answer}`,
+				);
+
+				return {
+					content: [
+						{
+							type: "text",
+							text: `The user answered the question(s):\n${summaryLines.join("\n")}`,
+						},
+					],
+					details: {
+						answers: committedAnswers,
+						selection: committedAnswers[0] || null,
+					},
+				};
+			}
+
+			// 2. Custom TUI component (for environments/tests where custom is provided)
 			const isInteractiveTui =
 				Boolean(ctx?.hasUI) &&
 				(ctx as any)?.mode === "tui" &&
@@ -756,84 +832,10 @@ export function registerAskUserQuestion(pi: ExtensionAPI): void {
 				};
 			}
 
-			// Fallback: Headless / Tests / CLI / Non-TUI mode
-			if (!ctx?.hasUI || typeof (ctx.ui as any)?.select !== "function") {
-				return {
-					content: [{ type: "text", text: "Error: Interactive UI unavailable for questions." }],
-					details: { fallback: true },
-				};
-			}
-
-			const committedAnswers: CommittedAnswer[] = [];
-
-			for (let i = 0; i < questions.length; i++) {
-				const q = questions[i];
-				const title = formatQuestionPrompt(i, questions);
-
-				const labels = (q.options || []).map((opt, optIdx) => {
-					const desc = opt.description ? ` — ${opt.description}` : "";
-					return `${optIdx + 1}. ${opt.label}${desc}`;
-				});
-
-				const allowCustom = q.allowCustomResponse !== false;
-				if (allowCustom) {
-					labels.push(OTHER_LABEL);
-				}
-
-				const picked = await (ctx.ui as any).select(title, labels);
-
-				if (picked === undefined || picked === null) {
-					return {
-						content: [
-							{
-								type: "text",
-								text: `User cancelled the questionnaire at step ${i + 1}.`,
-							},
-						],
-						details: { cancelled: true, completedCount: i },
-					};
-				}
-
-				if (allowCustom && picked === OTHER_LABEL) {
-					let customText = "";
-					if (typeof (ctx.ui as any)?.input === "function") {
-						customText = await (ctx.ui as any).input(title, "");
-					}
-					committedAnswers.push({
-						questionIndex: i + 1,
-						question: q.question,
-						header: q.header,
-						answer: customText || "Otro",
-						custom: true,
-					});
-				} else {
-					const idx = typeof picked === "number" ? picked : labels.indexOf(picked);
-					const chosenOpt = q.options[idx] || q.options[0];
-
-					committedAnswers.push({
-						questionIndex: i + 1,
-						question: q.question,
-						header: q.header,
-						answer: chosenOpt?.label || String(picked),
-					});
-				}
-			}
-
-			const summaryLines = committedAnswers.map(
-				(a) => `${a.questionIndex}. ${a.question} -> ${a.answer}`,
-			);
-
+			// Fallback: Headless / Tests / Non-UI mode
 			return {
-				content: [
-					{
-						type: "text",
-						text: `The user answered the question(s):\n${summaryLines.join("\n")}`,
-					},
-				],
-				details: {
-					answers: committedAnswers,
-					selection: committedAnswers[0] || null,
-				},
+				content: [{ type: "text", text: "Error: Interactive UI unavailable for questions." }],
+				details: { fallback: true },
 			};
 		},
 	});

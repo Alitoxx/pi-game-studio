@@ -29,6 +29,12 @@ export interface RunnerOptions {
 	timeoutMs?: number;
 }
 
+export function formatRel(startedAt?: number | null): string {
+	if (!startedAt) return "+0.0s";
+	const sec = Math.max(0, (Date.now() - startedAt) / 1000);
+	return `+${sec.toFixed(1)}s`.padStart(6, " ");
+}
+
 export class StudioAgentsRunner {
 	private tasks = new Map<string, TaskRecord>();
 	private liveProcesses = new Map<string, ChildProcess>();
@@ -270,6 +276,7 @@ export class StudioAgentsRunner {
 			let thinkingBuffer = "";
 			let textBuffer = "";
 			const activeToolCalls = new Map<string, { toolName: string; detail: string; startedAt: number }>();
+			const lastLoggedThinking = new Set<string>();
 
 			const sendRpc = (payload: Record<string, unknown>) => {
 				try {
@@ -306,7 +313,7 @@ export class StudioAgentsRunner {
 							clearTimeout(initTimer);
 							sendRpc({ type: "prompt", message: executivePrompt });
 							record.latestActivity = "Especialista conectado";
-							record.logs.push(`[${new Date().toLocaleTimeString()}] Conexión RPC establecida`);
+							record.logs.push(`${formatRel(record.startedAt)}  rpc   conexión establecida`);
 							this.notifyListeners(record);
 						}
 
@@ -317,30 +324,31 @@ export class StudioAgentsRunner {
 							const args = event.args || {};
 							let detail = toolName;
 							let logLine = "";
+							const rel = formatRel(record.startedAt);
 
 							if (toolName === "bash" && typeof args.command === "string") {
 								detail = `bash: ${args.command}`;
-								logLine = `[${new Date().toLocaleTimeString()}] ❯ bash: ${args.command}`;
+								logLine = `${rel}  bash  ${args.command}`;
 							} else if (toolName === "read" && typeof args.path === "string") {
 								detail = `read: ${args.path}`;
-								logLine = `[${new Date().toLocaleTimeString()}] 📖 read: ${args.path}`;
+								logLine = `${rel}  read  ${args.path}`;
 							} else if (toolName === "write" && typeof args.path === "string") {
 								detail = `write: ${args.path}`;
-								logLine = `[${new Date().toLocaleTimeString()}] ✎ write: ${args.path}`;
+								logLine = `${rel}  write ${args.path}`;
 							} else if (toolName === "edit" && typeof args.path === "string") {
 								detail = `edit: ${args.path}`;
-								logLine = `[${new Date().toLocaleTimeString()}] ✎ edit: ${args.path}`;
+								logLine = `${rel}  edit  ${args.path}`;
 							} else if (toolName === "find") {
 								const query = args.pattern || args.path || "";
 								detail = `find: ${query}`;
-								logLine = `[${new Date().toLocaleTimeString()}] 🔍 find: ${query}`;
+								logLine = `${rel}  find  ${query}`;
 							} else if (toolName === "grep") {
 								detail = `grep: "${args.pattern || ""}" in ${args.path || "."}`;
-								logLine = `[${new Date().toLocaleTimeString()}] 🔍 grep: "${args.pattern || ""}" in ${args.path || "."}`;
+								logLine = `${rel}  grep  "${args.pattern || ""}" in ${args.path || "."}`;
 							} else {
 								const argStr = JSON.stringify(args);
 								detail = `${toolName}`;
-								logLine = `[${new Date().toLocaleTimeString()}] ⚙ ${toolName}${argStr && argStr !== "{}" ? `: ${argStr.slice(0, 100)}` : ""}`;
+								logLine = `${rel}  call  ${toolName}${argStr && argStr !== "{}" ? `: ${argStr.slice(0, 80)}` : ""}`;
 							}
 
 							activeToolCalls.set(toolCallId, { toolName, detail, startedAt: Date.now() });
@@ -370,33 +378,33 @@ export class StudioAgentsRunner {
 							}
 
 							if (event.isError) {
-								const errLine = (outputText.trim().split("\n")[0] || "error en ejecución").slice(0, 120);
-								record.logs.push(`       ✗ [error ${durationStr}]: ${errLine}`);
+								const errLine = (outputText.trim().split("\n")[0] || "error en ejecución").slice(0, 100);
+								record.logs.push(`        err (${durationStr}): ${errLine}`);
 							} else if (toolName === "bash") {
 								const outLines = outputText.trim().split("\n").filter((l: string) => l.trim().length > 0);
 								if (outLines.length > 0) {
-									record.logs.push(`       ↳ [salida ${durationStr}]:`);
-									const previewCount = Math.min(outLines.length, 6);
+									record.logs.push(`        out (${durationStr}):`);
+									const previewCount = Math.min(outLines.length, 5);
 									for (let i = 0; i < previewCount; i++) {
-										record.logs.push(`         ${outLines[i]}`);
+										record.logs.push(`          ${outLines[i]}`);
 									}
-									if (outLines.length > 6) {
-										record.logs.push(`         ... (${outLines.length - 6} líneas más)`);
+									if (outLines.length > 5) {
+										record.logs.push(`          ... (${outLines.length - 5} líneas más)`);
 									}
 								} else {
-									record.logs.push(`       ↳ [salida ${durationStr}]: (ok, sin salida)`);
+									record.logs.push(`        ok (${durationStr})`);
 								}
 							} else if (toolName === "read") {
 								const lineCount = outputText.split("\n").length;
-								record.logs.push(`       ↳ [leído ${durationStr}]: ${lineCount} líneas`);
+								record.logs.push(`        ok (${durationStr}): ${lineCount} líneas`);
 							} else if (toolName === "write" || toolName === "edit") {
-								record.logs.push(`       ↳ [guardado ${durationStr}]: cambios aplicados en disco`);
+								record.logs.push(`        ok (${durationStr}): cambios guardados`);
 							} else if (toolName === "find" || toolName === "grep") {
 								const matchLines = outputText.trim().split("\n").filter((l: string) => l.trim().length > 0);
-								record.logs.push(`       ↳ [resultado ${durationStr}]: ${matchLines.length} coincidencia(s)`);
+								record.logs.push(`        ok (${durationStr}): ${matchLines.length} coincidencia(s)`);
 							} else if (outputText.trim()) {
-								const firstLine = outputText.trim().split("\n")[0].slice(0, 100);
-								record.logs.push(`       ↳ [${durationStr}]: ${firstLine}`);
+								const firstLine = outputText.trim().split("\n")[0].slice(0, 80);
+								record.logs.push(`        ok (${durationStr}): ${firstLine}`);
 							}
 
 							if (toolCallId) {
@@ -410,21 +418,29 @@ export class StudioAgentsRunner {
 							const inner = event.assistantMessageEvent;
 							if (inner?.type === "thinking_delta" && typeof inner.delta === "string") {
 								thinkingBuffer += inner.delta;
-								if (thinkingBuffer.includes("\n") || thinkingBuffer.length > 140) {
-									const chunks = thinkingBuffer.split("\n");
-									thinkingBuffer = chunks.pop() ?? "";
-									for (const chunk of chunks) {
-										const clean = chunk.trim();
-										if (clean) {
-											record.logs.push(`[${new Date().toLocaleTimeString()}] 💭 ${clean}`);
-										}
+								const firstIntention = thinkingBuffer.trim().split("\n")[0]?.trim();
+								if (firstIntention) {
+									record.latestActivity = `pensando: ${firstIntention}`.slice(0, 45);
+								}
+								// Colapsar monólogo interno en hitos ejecutivos (máx 1 línea por bloque)
+								if (thinkingBuffer.length > 200 && thinkingBuffer.includes("\n")) {
+									const lines = thinkingBuffer.split("\n").map((l: string) => l.trim()).filter((l: string) => l.length > 0);
+									const headline = lines.find((l: string) => l.length > 10 && !l.startsWith("-") && !l.startsWith("*")) || lines[0];
+									if (headline && !lastLoggedThinking.has(headline)) {
+										lastLoggedThinking.add(headline);
+										record.logs.push(`${formatRel(record.startedAt)}  think ${headline.slice(0, 90)}`);
+										this.notifyListeners(record);
 									}
-									this.notifyListeners(record);
+									thinkingBuffer = "";
 								}
 							}
 							if (inner?.type === "thinking_end") {
 								if (thinkingBuffer.trim()) {
-									record.logs.push(`[${new Date().toLocaleTimeString()}] 💭 ${thinkingBuffer.trim()}`);
+									const headline = thinkingBuffer.trim().split("\n")[0]?.trim();
+									if (headline && !lastLoggedThinking.has(headline)) {
+										lastLoggedThinking.add(headline);
+										record.logs.push(`${formatRel(record.startedAt)}  think ${headline.slice(0, 90)}`);
+									}
 									thinkingBuffer = "";
 									this.notifyListeners(record);
 								}
@@ -437,8 +453,8 @@ export class StudioAgentsRunner {
 									textBuffer = chunks.pop() ?? "";
 									for (const chunk of chunks) {
 										const clean = chunk.trim();
-										if (clean) {
-											record.logs.push(`[${new Date().toLocaleTimeString()}] 💬 ${clean}`);
+										if (clean && !clean.startsWith("{") && !clean.startsWith("```")) {
+											record.logs.push(`${formatRel(record.startedAt)}  text  ${clean.slice(0, 90)}`);
 										}
 									}
 									this.notifyListeners(record);
@@ -476,14 +492,14 @@ export class StudioAgentsRunner {
 						if (event.type === "agent_settled") {
 							agentSettled = true;
 							if (thinkingBuffer.trim()) {
-								record.logs.push(`[${new Date().toLocaleTimeString()}] 💭 ${thinkingBuffer.trim()}`);
+								const headline = thinkingBuffer.trim().split("\n")[0]?.trim();
+								if (headline && !lastLoggedThinking.has(headline)) {
+									record.logs.push(`${formatRel(record.startedAt)}  think ${headline.slice(0, 90)}`);
+								}
 								thinkingBuffer = "";
 							}
-							if (textBuffer.trim()) {
-								record.logs.push(`[${new Date().toLocaleTimeString()}] 💬 ${textBuffer.trim()}`);
-								textBuffer = "";
-							}
 							record.latestActivity = "Sintetizando entrega...";
+							record.logs.push(`${formatRel(record.startedAt)}  done  entrega completada`);
 							this.notifyListeners(record);
 							// Cerrar stdin para que el hijo termine solo
 							try {
@@ -503,7 +519,7 @@ export class StudioAgentsRunner {
 						// Si la línea no es JSON puro, podría ser log estándar
 						if (line.length > 0 && !line.startsWith("{")) {
 							record.latestActivity = line.slice(0, 35);
-							record.logs.push(`[${new Date().toLocaleTimeString()}] ${line.slice(0, 100)}`);
+							record.logs.push(`${formatRel(record.startedAt)}  raw   ${line.slice(0, 90)}`);
 							this.notifyListeners(record);
 						}
 					}
@@ -515,7 +531,7 @@ export class StudioAgentsRunner {
 				stderr += chunk;
 				const clean = chunk.trim();
 				if (clean) {
-					record.logs.push(`[stderr] ${clean.slice(0, 120)}`);
+					record.logs.push(`        stderr: ${clean.slice(0, 100)}`);
 				}
 			});
 

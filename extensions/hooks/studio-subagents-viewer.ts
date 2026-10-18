@@ -271,23 +271,25 @@ export function renderSubagentLiveConsoleView(
 
 	for (const rawLog of visibleLogs) {
 		let styledLog = rawLog;
-		if (rawLog.includes("❯ bash:")) {
+		if (rawLog.includes("  bash ") || rawLog.includes("❯ bash:")) {
 			styledLog = `${SECONDARY}${BOLD}${rawLog}${RESET}`;
-		} else if (rawLog.includes("📖 read:")) {
+		} else if (rawLog.includes("  read ") || rawLog.includes("📖 read:")) {
 			styledLog = `${LAVENDER}${rawLog}${RESET}`;
-		} else if (rawLog.includes("✎ write:") || rawLog.includes("✎ edit:")) {
+		} else if (rawLog.includes("  write ") || rawLog.includes("  edit ") || rawLog.includes("✎ write:") || rawLog.includes("✎ edit:")) {
 			styledLog = `${GREEN}${rawLog}${RESET}`;
-		} else if (rawLog.includes("🔍 find:") || rawLog.includes("🔍 grep:")) {
+		} else if (rawLog.includes("  find ") || rawLog.includes("  grep ") || rawLog.includes("🔍 find:") || rawLog.includes("🔍 grep:")) {
 			styledLog = `${BLUE}${rawLog}${RESET}`;
-		} else if (rawLog.includes("💭")) {
+		} else if (rawLog.includes("  think ") || rawLog.includes("💭")) {
 			styledLog = `${LAVENDER}${DIM}${rawLog}${RESET}`;
-		} else if (rawLog.includes("💬")) {
+		} else if (rawLog.includes("  text ") || rawLog.includes("💬")) {
 			styledLog = `${WHITE}${rawLog}${RESET}`;
-		} else if (rawLog.includes("✗ [error") || rawLog.includes("[stderr]")) {
+		} else if (rawLog.includes("  done ")) {
+			styledLog = `${GREEN}${BOLD}${rawLog}${RESET}`;
+		} else if (rawLog.includes("err (") || rawLog.includes("✗ [error") || rawLog.includes("stderr:")) {
 			styledLog = `${RED}${rawLog}${RESET}`;
-		} else if (rawLog.includes("↳ [salida") || rawLog.includes("↳ [leído") || rawLog.includes("↳ [guardado")) {
+		} else if (rawLog.includes("ok (") || rawLog.includes("out (") || rawLog.includes("↳ [")) {
 			styledLog = `${GRAY}${rawLog}${RESET}`;
-		} else if (rawLog.startsWith("         ")) {
+		} else if (rawLog.startsWith("          ") || rawLog.startsWith("         ")) {
 			styledLog = `${WHITE}${rawLog}${RESET}`;
 		}
 

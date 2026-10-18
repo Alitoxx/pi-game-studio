@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.10.0] - 2026-10-18
+
+### Added & Expanded (Gamedev Pro Suite)
+- **Fast-Forward Continuity Pipeline (`/studio:next`, `/studio:continuity`, `/next`)**:
+  - Handoff automático entre tareas atómicas ODD al verificar el Return Contract con tests limpios.
+  - Selector interactivo nativo para avanzar de inmediato a la siguiente tarea sin fricción de tipeo ni pérdida de contexto.
+- **Inspector de Balance & Game Feel (`/studio:tuning`, `/tuning`)**:
+  - Visor interactivo y calibrador de variables de gameplay en YAML (`assets/data/*.yaml`, `assets/roles.yaml`, etc.).
+  - Modificación en caliente de valores numéricos y booleanos con persistencia atómica en disco preservando comentarios y formato.
+- **Optimización Automatizada de Assets FOSS (`/studio:assets optimize`)**:
+  - Integración nativa de `oxipng` para reducción sin pérdida de texturas y sprites PNG con reporte de porcentaje y bytes ahorrados.
+- **Runner Unificado de Runtime y Live Preview (`/studio:play`, `/play`)**:
+  - Lanzamiento y supervisión en background del juego según el motor activo (`cargo run`, `pnpm run dev`, `godot`, `raylib`) con registro de PID y captura de logs en `.pi/game-studio/play-output.log`.
+  - Subcomandos `/studio:play status` y `/studio:play stop`.
+- **Generador Guiado de Live Specs ODD (`/studio:feature`, `/feature`)**:
+  - Creación interactiva de documentos Live Spec en `design/gdd/<feature>.md` con estructura formal de 6 tareas atómicas T1-T6 (~400 líneas c/u) y sincronización con el roadmap.
+- **Foco en Feature Activo y Protocolo Anti-Bloat de Tareas**:
+  - Tarjeta de tareas TUI enfocada en el Live Spec en progreso, erradicando la sobrecarga cognitiva de checklists históricos.
+  - Filtro inteligente de notas técnicas y sub-bullets en `studio-tasks.ts`.
+- **Purificación de Tooling Node/pnpm**:
+  - Eliminado el lockfile residual `package-lock.json`.
+  - Declarado `"packageManager": "pnpm@11.28.5"` en `package.json` para máxima reproducibilidad.
+
 ## [1.9.1] - 2026-10-17
 
 ### Added & Improved

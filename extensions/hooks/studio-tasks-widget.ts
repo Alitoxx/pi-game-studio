@@ -77,8 +77,19 @@ export function renderTasksWidgetCard(
 	const cardWidth = Math.min(Math.max(width - 4, 46), 56);
 	const innerWidth = cardWidth - 4;
 
-	const completedCount = tasks.filter((t) => t.status === "completed").length;
-	const countSummary = tasks.length > 0 ? `${completedCount} of ${tasks.length}` : "0 tareas";
+	// Si hay tareas de un Live Spec en design/gdd/, ese es el foco activo de implementación ODD.
+	// Priorizamos el Live Spec activo para evitar sobrecarga cognitiva con sprints históricos del roadmap.
+	const gddTasks = tasks.filter((t) => t.sourceFile.startsWith("design/gdd/"));
+	const targetTasks = gddTasks.length > 0 ? gddTasks : tasks;
+
+	const completedCount = targetTasks.filter((t) => t.status === "completed").length;
+	const activeFeature = gddTasks.length > 0
+		? (gddTasks[0].sourceFile.split("/").pop()?.replace(".md", "") || "")
+		: "";
+
+	const countSummary = targetTasks.length > 0
+		? (activeFeature ? `${activeFeature}: ${completedCount} of ${targetTasks.length}` : `${completedCount} of ${targetTasks.length}`)
+		: "0 tareas";
 
 	let phaseChip = "";
 	let nextStep = "";
@@ -124,9 +135,9 @@ export function renderTasksWidgetCard(
 	}
 
 	// Prioritize: in_progress first, then pending (up to 4 items), then completed (up to 3 items)
-	const inProg = tasks.filter((t) => t.status === "in_progress");
-	const pending = tasks.filter((t) => t.status === "pending");
-	const completed = tasks.filter((t) => t.status === "completed");
+	const inProg = targetTasks.filter((t) => t.status === "in_progress");
+	const pending = targetTasks.filter((t) => t.status === "pending");
+	const completed = targetTasks.filter((t) => t.status === "completed");
 
 	const displayTasks: StudioTask[] = [
 		...inProg,
@@ -155,7 +166,7 @@ export function renderTasksWidgetCard(
 		lines.push(`  ${BORDER}│${RESET} ${padAnsi(truncatedRow, innerWidth)} ${BORDER}│${RESET}`);
 	}
 
-	const remaining = tasks.length - displayTasks.length;
+	const remaining = targetTasks.length - displayTasks.length;
 	if (remaining > 0) {
 		const more = `${DIM}... y ${remaining} tarea(s) más (/studio:tasks)${RESET}`;
 		lines.push(`  ${BORDER}│${RESET} ${padAnsi(more, innerWidth)} ${BORDER}│${RESET}`);

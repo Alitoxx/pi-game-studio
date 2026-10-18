@@ -108,20 +108,43 @@ El agente responsable de la disciplina debe emitir un veredicto claro y argument
 
 ---
 
-## 5. Choice Envelope (Menú de Elección Cerrado)
+## 5. Choice Envelope & Menú Interactivo (`ask_user_question`)
 
-Las preguntas nunca quedan flotando en el aire. Se presentan en un marco delimitado (*Choice Envelope*) con opciones auto-contenidas y numeradas para que el usuario responda con un solo número o frase corta:
+Las preguntas y bifurcaciones de producción nunca quedan flotando en el aire ni se presentan como un menú críptico despojado de contexto. Se rigen bajo el **Contrato de Rationale Previo Obligatorio**:
+
+### Contrato de Rationale Previo (Prohibido el menú en seco)
+Está **estrictamente prohibido** invocar `ask_user_question` en un mensaje vacío o con un texto telegráfico de una sola línea (e.g. `¿Por dónde seguimos?`). Antes de disparar el selector interactivo, el agente **debe emitir obligatoriamente en el chat**:
+
+1. **`SITUACIÓN ACTUAL:`** 2 a 3 líneas claras indicando qué tarea u objetivo se acaba de cerrar o en qué punto exacto del ODD nos encontramos.
+2. **`ANÁLISIS DEL DILEMA:`** Explicación concreta de los caminos disponibles y su impacto directo en *Game Feel*, arquitectura de código o alcance (*Scope*).
+3. **`RECOMENDACIÓN DEL DIRECTOR / LEAD:`** Veredicto argumentado explicando cuál opción se recomienda como prioritaria y por qué técnico/creativo (e.g. estabilidad de dependencias, reducción de refactors, o validación temprana de feel).
+
+### Reglas de Diseño de Opciones en `ask_user_question`:
+- **Cero Redundancia:** Prohibido repetir el título dentro de la descripción (e.g. evitar `"T1 del santuario — Recomendado: T1 del santuario..."`).
+- **`label` conciso:** Título de 3 a 5 palabras representativo de la acción.
+- **`description` con impacto de juego:** Explicar qué aporta al juego o al desarrollo, no un volcado de nombres crudos de archivos `.yaml` o comandos sueltos.
+- **Opción Personalizada por defecto:** `allowCustomResponse: true` (por defecto) para que el usuario siempre pueda tipear una alternativa propia mediante *"Otro..."*.
+
+### Ejemplo de Turno Completo:
 
 ```text
-┌── CHOICE REQUIRED: Selección de Arquitectura ──────────────────────┐
-│ [1] Implementar ECS con EnTT (Recomendado)                         │
-│     -> Arquitectura escalable y preparada para miles de enemigos.   │
-│ [2] Prototipo Rápido en POO tradicional                            │
-│     -> Entrega funcional inmediata con límite de 200 entidades.     │
-│ [3] Explorar variante híbrida o solicitar más detalles             │
-└────────────────────────────────────────────────────────────────────┘
-Responde con [1], [2] o [3]:
+SITUACIÓN ACTUAL:
+Cerramos la fase de concepción técnica del proyecto. Tenemos el motor 
+inicializado y la estructura base de directorios lista.
+
+ANÁLISIS DEL DILEMA:
+Llegamos a la bifurcación entre estructurar datos o ajustar el movimiento:
+- Si arrancamos por el Santuario (T1), dejamos listo el modelo de datos 
+  y los roles para que el juego tenga persistencia y tipos limpios.
+- Si arrancamos por el Movimiento, priorizamos el Game Feel del Guardian 
+  antes de estructurar la progresión.
+
+RECOMENDACIÓN DEL LEAD:
+Te sugiero arrancar por el Santuario (Opción 1): validar `cargo check` con 
+los datos de roles nos asegura que el ECS no sufra refactors cuando metamos 
+la física del jugador.
 ```
+*(Y como cierre de turno, se invoca `ask_user_question` con las opciones limpias y navegables).*
 
 ---
 

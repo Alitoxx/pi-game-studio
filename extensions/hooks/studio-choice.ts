@@ -1,5 +1,21 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { playAlertChime } from "./studio-sound.ts";
+
+let Text: any;
+try {
+	Text = (await import("@earendil-works/pi-tui")).Text;
+} catch {
+	Text = class Text {
+		text: string;
+		x: number;
+		y: number;
+		constructor(text = "", x = 0, y = 0) {
+			this.text = text;
+			this.x = x;
+			this.y = y;
+		}
+	};
+}
 import {
 	ACCENT,
 	SECONDARY,
@@ -614,10 +630,15 @@ export class StudioQuestionnaireComponent {
 }
 
 export function registerAskUserQuestion(pi: ExtensionAPI): void {
-	// If tool is already registered globally (e.g. by gentle-pi), don't register duplicate
+	// If tool is already registered globally (e.g. by gentle-pi or host), don't register duplicate
 	const hasTool = (name: string) => {
 		try {
-			return typeof (pi as any).hasTool === "function" ? (pi as any).hasTool(name) : false;
+			if (typeof (pi as any).hasTool === "function") return (pi as any).hasTool(name);
+			if (typeof (pi as any).getAllTools === "function") {
+				const tools = (pi as any).getAllTools();
+				return Array.isArray(tools) && tools.some((t: any) => t?.name === name);
+			}
+			return false;
 		} catch {
 			return false;
 		}
@@ -630,11 +651,47 @@ export function registerAskUserQuestion(pi: ExtensionAPI): void {
 	// ──────────────────────────────────────────────
 	// Unified Tool: ask_user_question (Single & Batch Questions)
 	// ──────────────────────────────────────────────
-	(pi as any).registerTool?.({
+	try {
+		(pi as any).registerTool?.({
 		name: "ask_user_question",
 		label: "Ask User Question",
 		description:
 			"Presents interactive questions to the user in the TUI (1 to 4 questions). The user navigates options using arrow keys (↑/↓) and selects with Enter, with an automatic option to type custom free-text responses ('Otro...'). Use this whenever asking the user for decisions, choices, design directions, or multi-step questionnaires.",
+		renderCall(args: any, theme: any, _context?: any) {
+			const fg = (slot: string, text: string) => (theme?.fg ? theme.fg(slot as any, text) : text);
+			const bold = (text: string) => (theme?.bold ? theme.bold(text) : text);
+
+			const questions = (args?.questions || []) as any[];
+			const count = questions.length;
+			const firstHeader = questions[0]?.header ? ` · ${questions[0].header}` : "";
+			const label = count > 1 ? `DECISIONES (${count})${firstHeader}` : `DECISIÓN${firstHeader}`;
+
+			const badge = fg("accent", "▌ ◈ STUDIO CHOICE");
+			const line = `${badge} · ${bold(label)}`;
+			return new Text(line, 0, 0);
+		},
+		renderResult(result: any, options: { expanded?: boolean; isPartial?: boolean } = {}, theme: any, _context?: any) {
+			const fg = (slot: string, text: string) => (theme?.fg ? theme.fg(slot as any, text) : text);
+			const bold = (text: string) => (theme?.bold ? theme.bold(text) : text);
+
+			if (options?.isPartial) {
+				return new Text(fg("accent", "▌ ◈ ESPERANDO RESPUESTA..."), 0, 0);
+			}
+
+			const answers = (result?.details as any)?.answers || [];
+			if (answers.length === 0) {
+				if (result?.details?.cancelled) {
+					return new Text(fg("muted", "▌ ◈ Cuestionario cancelado por el usuario"), 0, 0);
+				}
+				return new Text(fg("muted", "▌ ◈ Sin respuesta registrada"), 0, 0);
+			}
+
+			const badge = fg("success", "▌ ◈ RESPUESTA CONFIRMADA");
+			const answerLines = answers
+				.map((a: any) => `  ${fg("dim", `${a.question}`)}\n  → ${bold(a.answer)}`)
+				.join("\n");
+			return new Text(`${badge}\n${answerLines}`, 0, 0);
+		},
 		parameters: {
 			type: "object",
 			additionalProperties: false,
@@ -839,4 +896,5 @@ export function registerAskUserQuestion(pi: ExtensionAPI): void {
 			};
 		},
 	});
+	} catch {}
 }

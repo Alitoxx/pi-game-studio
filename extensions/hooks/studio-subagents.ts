@@ -6,24 +6,34 @@ import { loadAgentManifest, listAvailableAgents } from "./studio-agent-loader.ts
 import { studioAgentsRunner } from "./studio-agents-runner.ts";
 
 export function registerStudioSubagentTools(pi: ExtensionAPI): void {
-	// If tools are already provided globally (e.g. by gentle-pi / gentle-agents), don't register duplicates
+	// If tools are already provided globally (e.g. by host or another extension), don't register duplicates
 	const hasTool = (name: string) => {
 		try {
-			return typeof (pi as any).hasTool === "function" ? (pi as any).hasTool(name) : false;
+			if (typeof (pi as any).hasTool === "function") return (pi as any).hasTool(name);
+			if (typeof (pi as any).getAllTools === "function") {
+				const tools = (pi as any).getAllTools();
+				return Array.isArray(tools) && tools.some((t: any) => t?.name === name);
+			}
+			return false;
 		} catch {
 			return false;
 		}
 	};
 
-	if (hasTool("subagent_run")) {
-		return;
-	}
+	const safeRegisterTool = (toolDef: any) => {
+		if (hasTool(toolDef.name)) {
+			return;
+		}
+		try {
+			(pi as any).registerTool?.(toolDef);
+		} catch {}
+	};
 
 	// ──────────────────────────────────────────────
 	// Tool: subagent_run
 	// Ejecuta un especialista aislado en un proceso hijo de Pi
 	// ──────────────────────────────────────────────
-	(pi as any).registerTool?.({
+	safeRegisterTool({
 		name: "subagent_run",
 		label: "Studio Subagent Run",
 		description:
@@ -369,7 +379,7 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 	// Tool: subagent_list
 	// Lista los especialistas disponibles
 	// ──────────────────────────────────────────────
-	(pi as any).registerTool?.({
+	safeRegisterTool({
 		name: "subagent_list",
 		label: "Studio Subagent List",
 		description: "Lists all available specialized game studio agents with their roles and descriptions.",
@@ -401,7 +411,7 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 	// Tool: subagent_status
 	// Consulta el estado de una tarea
 	// ──────────────────────────────────────────────
-	(pi as any).registerTool?.({
+	safeRegisterTool({
 		name: "subagent_status",
 		label: "Studio Subagent Status",
 		description: "Checks the execution status of a subagent task running in background mode.",
@@ -449,7 +459,7 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 	// Tool: subagent_result
 	// Obtiene el resultado final de una tarea
 	// ──────────────────────────────────────────────
-	(pi as any).registerTool?.({
+	safeRegisterTool({
 		name: "subagent_result",
 		label: "Studio Subagent Result",
 		description: "Retrieves the final output and completion receipt of a finished subagent task.",

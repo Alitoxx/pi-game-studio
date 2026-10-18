@@ -2,6 +2,48 @@ const fs = require("fs");
 const path = require("path");
 
 describe("Pi Game Studio Extension Commands (studio:*)", () => {
+	// Helper to ensure @earendil-works/pi-tui is resolvable in child process scripts
+	const tuiResolverHook = `
+		import { register } from "node:module";
+		import { pathToFileURL } from "node:url";
+		import { existsSync, readdirSync } from "node:fs";
+		import { homedir } from "node:os";
+		import { join } from "node:path";
+
+		const home = homedir();
+		function scanForPiTui() {
+			const directPaths = [
+				"/home/alexis/.local/share/mise/installs/node/25.9.0/lib/node_modules/gentle-pi/node_modules/@earendil-works/pi-tui/dist/index.js",
+				join(home, ".gentle-shell/versions/4.3.0-1.2.0/node_modules/.pnpm/@earendil-works+pi-tui@1.2.0/node_modules/@earendil-works/pi-tui/dist/index.js"),
+			];
+			for (const p of directPaths) {
+				if (existsSync(p)) return p;
+			}
+			// Search in .gentle-shell/versions
+			const versionsDir = join(home, ".gentle-shell", "versions");
+			if (existsSync(versionsDir)) {
+				try {
+					for (const v of readdirSync(versionsDir)) {
+						const p = join(versionsDir, v, "node_modules", "@earendil-works", "pi-tui", "dist", "index.js");
+						if (existsSync(p)) return p;
+					}
+				} catch {}
+			}
+			return null;
+		}
+
+		const candidateTui = scanForPiTui();
+
+		if (candidateTui) {
+			const targetUrl = pathToFileURL(candidateTui).href;
+			const loaderCode = "export async function resolve(specifier, context, nextResolve) {" +
+				"if (specifier === '@earendil-works/pi-tui') { return { url: '" + targetUrl + "', shortCircuit: true }; }" +
+				"return nextResolve(specifier, context);" +
+			"}";
+			register("data:text/javascript," + encodeURIComponent(loaderCode), import.meta.url);
+		}
+	`;
+
 	const hooksSource = fs.readFileSync(
 		path.join(__dirname, "..", "extensions", "hooks", "index.ts"),
 		"utf8",
@@ -2197,26 +2239,6 @@ Implement fuzzy command palette.
 	describe("Block 5: Subagent Run Custom UI Renderers (renderCall & renderResult)", () => {
 		const subagentsPath = path.join(__dirname, "..", "extensions", "hooks", "studio-subagents.ts");
 
-		// Helper to ensure @earendil-works/pi-tui is resolvable in child process scripts
-		const tuiResolverHook = `
-			import { register } from "node:module";
-			import { pathToFileURL } from "node:url";
-			import { existsSync } from "node:fs";
-
-			const candidateTui = [
-				"/home/alexis/.local/share/mise/installs/node/25.9.0/lib/node_modules/gentle-pi/node_modules/@earendil-works/pi-tui/dist/index.js",
-			].find(p => existsSync(p));
-
-			if (candidateTui) {
-				const targetUrl = pathToFileURL(candidateTui).href;
-				const loaderCode = "export async function resolve(specifier, context, nextResolve) {" +
-					"if (specifier === '@earendil-works/pi-tui') { return { url: '" + targetUrl + "', shortCircuit: true }; }" +
-					"return nextResolve(specifier, context);" +
-				"}";
-				register("data:text/javascript," + encodeURIComponent(loaderCode), import.meta.url);
-			}
-		`;
-
 		test("studio-subagents.ts imports Text from @earendil-works/pi-tui", () => {
 			const source = fs.readFileSync(subagentsPath, "utf8");
 			expect(source).toMatch(/import\s*\{[^}]*\bText\b[^}]*\}\s*from\s*["']@earendil-works\/pi-tui["']/);
@@ -2415,6 +2437,259 @@ Implement fuzzy command palette.
 			expect(source).toMatch(/\bmode\s*:/);
 			expect(source).toMatch(/\btimeout_seconds\s*:/);
 			expect(source).toMatch(/\btarget_dir\s*:/);
+		});
+	});
+
+	// ──────────────────────────────────────────────
+	// Block 6: Additive Package Provisioning & Defensive Tool Registration
+	// ──────────────────────────────────────────────
+	describe("Block 6: Additive Package Provisioning & Defensive Tool Registration", () => {
+		const { execFileSync } = require("child_process");
+
+		test("provisionStudioProfile preserves user packages additively without filtering gentle or custom tools", () => {
+			const script = `
+				import { provisionStudioProfile } from "./bin/pi-studio.mjs";
+				import fs from "node:fs";
+				import os from "node:os";
+				import path from "node:path";
+
+				const tempTarget = fs.mkdtempSync(path.join(os.tmpdir(), "studio-test-target-"));
+				const tempBase = fs.mkdtempSync(path.join(os.tmpdir(), "studio-test-base-"));
+
+				try {
+					const initialSettings = {
+						theme: "dracula",
+						packages: [
+							"npm:custom-dev-tools",
+							"npm:gentle-pi",
+							"git:github.com/user/engine-visualizer",
+						],
+					};
+					fs.writeFileSync(
+						path.join(tempTarget, "settings.json"),
+						JSON.stringify(initialSettings, null, 2),
+						"utf8",
+					);
+
+					const updated = provisionStudioProfile(tempTarget, tempBase);
+
+					if (!updated.packages.includes("npm:custom-dev-tools")) throw new Error("custom package lost");
+					if (!updated.packages.includes("npm:gentle-pi")) throw new Error("gentle-pi was filtered out");
+					if (!updated.packages.includes("git:github.com/user/engine-visualizer")) throw new Error("git package lost");
+					if (!updated.packages.includes("npm:pi-web-access")) throw new Error("missing pi-web-access");
+					if (!updated.packages.includes("npm:pi-antigravity")) throw new Error("missing pi-antigravity");
+					if (!updated.packages.includes("npm:pi-btw")) throw new Error("missing pi-btw");
+
+					const saved = JSON.parse(fs.readFileSync(path.join(tempTarget, "settings.json"), "utf8"));
+					if (saved.theme !== "dracula") throw new Error("theme corrupted");
+					if (saved.packages.length !== updated.packages.length) throw new Error("file not updated on disk");
+				} finally {
+					fs.rmSync(tempTarget, { recursive: true, force: true });
+					fs.rmSync(tempBase, { recursive: true, force: true });
+				}
+			`;
+			expect(() => {
+				execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+					cwd: path.join(__dirname, ".."),
+				});
+			}).not.toThrow();
+		});
+
+		test("provisionStudioProfile correctly handles package objects and versioned specs without duplicating", () => {
+			const script = `
+				import { provisionStudioProfile } from "./bin/pi-studio.mjs";
+				import fs from "node:fs";
+				import os from "node:os";
+				import path from "node:path";
+
+				const tempTarget = fs.mkdtempSync(path.join(os.tmpdir(), "studio-test-target-"));
+				const tempBase = fs.mkdtempSync(path.join(os.tmpdir(), "studio-test-base-"));
+
+				try {
+					const initialSettings = {
+						packages: [
+							{ source: "npm:pi-web-access@2.0.0", extensions: ["!extensions/foo.ts"] },
+							"npm:pi-btw@1.0.0",
+						],
+					};
+					fs.writeFileSync(
+						path.join(tempTarget, "settings.json"),
+						JSON.stringify(initialSettings, null, 2),
+						"utf8",
+					);
+
+					const updated = provisionStudioProfile(tempTarget, tempBase);
+
+					// Must not duplicate pi-web-access or pi-btw
+					const webAccessMatches = updated.packages.filter(p => {
+						const src = typeof p === "string" ? p : p?.source;
+						return src?.includes("pi-web-access");
+					});
+					if (webAccessMatches.length !== 1) throw new Error("pi-web-access was duplicated: " + JSON.stringify(updated.packages));
+
+					const btwMatches = updated.packages.filter(p => {
+						const src = typeof p === "string" ? p : p?.source;
+						return src?.includes("pi-btw");
+					});
+					if (btwMatches.length !== 1) throw new Error("pi-btw was duplicated: " + JSON.stringify(updated.packages));
+
+					// Must add antigravity
+					const antigravityMatches = updated.packages.filter(p => {
+						const src = typeof p === "string" ? p : p?.source;
+						return src?.includes("pi-antigravity");
+					});
+					if (antigravityMatches.length !== 1) throw new Error("pi-antigravity not added");
+				} finally {
+					fs.rmSync(tempTarget, { recursive: true, force: true });
+					fs.rmSync(tempBase, { recursive: true, force: true });
+				}
+			`;
+			expect(() => {
+				execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+					cwd: path.join(__dirname, ".."),
+				});
+			}).not.toThrow();
+		});
+
+		test("provisionStudioProfile inherits base settings when target profile is freshly created", () => {
+			const script = `
+				import { provisionStudioProfile } from "./bin/pi-studio.mjs";
+				import fs from "node:fs";
+				import os from "node:os";
+				import path from "node:path";
+
+				const tempTarget = fs.mkdtempSync(path.join(os.tmpdir(), "studio-test-target-"));
+				const tempBase = fs.mkdtempSync(path.join(os.tmpdir(), "studio-test-base-"));
+
+				try {
+					const baseSettings = {
+						theme: "catppuccin-mocha",
+						defaultModel: "anthropic/claude-3-7-sonnet",
+						packages: ["npm:my-assistant-extension"],
+					};
+					fs.writeFileSync(
+						path.join(tempBase, "settings.json"),
+						JSON.stringify(baseSettings, null, 2),
+						"utf8",
+					);
+
+					const updated = provisionStudioProfile(tempTarget, tempBase);
+
+					if (updated.theme !== "catppuccin-mocha") throw new Error("base theme was not inherited");
+					if (updated.defaultModel !== "anthropic/claude-3-7-sonnet") throw new Error("defaultModel not inherited");
+					if (!updated.packages.includes("npm:my-assistant-extension")) throw new Error("base packages not inherited");
+					if (!updated.packages.includes("npm:pi-web-access")) throw new Error("missing pi-web-access");
+				} finally {
+					fs.rmSync(tempTarget, { recursive: true, force: true });
+					fs.rmSync(tempBase, { recursive: true, force: true });
+				}
+			`;
+			expect(() => {
+				execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+					cwd: path.join(__dirname, ".."),
+				});
+			}).not.toThrow();
+		});
+
+		test("registerAskUserQuestion detects existing tools via getAllTools without crashing", () => {
+			const script = `
+				const { registerAskUserQuestion } = await import("./extensions/hooks/studio-choice.ts");
+				let registered = false;
+				const mockPi = {
+					getAllTools: () => [{ name: "ask_user_question" }],
+					registerTool: () => {
+						registered = true;
+					},
+				};
+
+				registerAskUserQuestion(mockPi);
+				if (registered) throw new Error("ask_user_question should have been skipped");
+			`;
+			expect(() => {
+				execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+					cwd: path.join(__dirname, ".."),
+				});
+			}).not.toThrow();
+		});
+
+		test("registerStudioSubagentTools detects existing tools via getAllTools and catches exceptions gracefully", () => {
+			const script = `
+				${tuiResolverHook}
+				const { registerStudioSubagentTools } = await import("./extensions/hooks/studio-subagents.ts");
+				const registeredTools = [];
+				const mockPi = {
+					getAllTools: () => [{ name: "subagent_run" }],
+					registerTool: (t) => {
+						if (t.name === "subagent_status") {
+							throw new Error("Simulated registration collision");
+						}
+						registeredTools.push(t.name);
+					},
+				};
+
+				registerStudioSubagentTools(mockPi);
+				if (registeredTools.includes("subagent_run")) throw new Error("subagent_run should have been skipped");
+				if (!registeredTools.includes("subagent_list")) throw new Error("subagent_list was not registered");
+				if (!registeredTools.includes("subagent_result")) throw new Error("subagent_result was not registered");
+			`;
+			expect(() => {
+				execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+					cwd: path.join(__dirname, ".."),
+				});
+			}).not.toThrow();
+		});
+
+		test("ask_user_question registers clean renderCall and renderResult handlers without raw JSON dump", () => {
+			const script = `
+				const { registerAskUserQuestion } = await import("./extensions/hooks/studio-choice.ts");
+				let registered = null;
+				const mockPi = {
+					hasTool: () => false,
+					registerTool: (t) => {
+						if (t.name === "ask_user_question") registered = t;
+					},
+				};
+
+				registerAskUserQuestion(mockPi);
+				if (!registered) throw new Error("ask_user_question was not registered");
+				if (typeof registered.renderCall !== "function") throw new Error("renderCall is missing");
+				if (typeof registered.renderResult !== "function") throw new Error("renderResult is missing");
+
+				const mockTheme = {
+					fg: (slot, text) => "[" + slot + "]" + text + "[/" + slot + "]",
+					bold: (text) => "[b]" + text + "[/b]",
+				};
+
+				// Test renderCall output
+				const callComp = registered.renderCall(
+					{ questions: [{ header: "Paso 1", question: "¿Qué motor?" }] },
+					mockTheme,
+				);
+				if (!callComp || !callComp.text.includes("STUDIO CHOICE")) {
+					throw new Error("renderCall missing STUDIO CHOICE badge: " + callComp?.text);
+				}
+				if (!callComp.text.includes("Paso 1")) {
+					throw new Error("renderCall missing header: " + callComp?.text);
+				}
+
+				// Test renderResult output
+				const resComp = registered.renderResult(
+					{ details: { answers: [{ question: "¿Qué motor?", answer: "Bevy" }] } },
+					{ expanded: false, isPartial: false },
+					mockTheme,
+				);
+				if (!resComp || !resComp.text.includes("RESPUESTA CONFIRMADA")) {
+					throw new Error("renderResult missing RESPUESTA CONFIRMADA badge: " + resComp?.text);
+				}
+				if (!resComp.text.includes("Bevy")) {
+					throw new Error("renderResult missing answer: " + resComp?.text);
+				}
+			`;
+			expect(() => {
+				execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+					cwd: path.join(__dirname, ".."),
+				});
+			}).not.toThrow();
 		});
 	});
 });

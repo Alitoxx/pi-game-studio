@@ -179,8 +179,8 @@ export function inspectSetup(cwd: string): SetupStatus {
 	const expectedEngineAgents = filterAgentsForEngine(currentEngine);
 	const expectedAgents = expectedEngineAgents.length > 0 ? expectedEngineAgents.length : 9;
 
-	// Configured if the engine's required agents are installed (or all) and project.yaml/studio dir exists
-	const isConfigured = agentsInstalled >= (expectedAgents - 1) && (hasProjectYaml || hasGameStudioDir);
+	// Configured if project.yaml exists (package-level agents available) OR local agents are installed
+	const isConfigured = hasProjectYaml || (agentsInstalled >= (expectedAgents - 1) && hasGameStudioDir);
 
 	return {
 		agentsInstalled,

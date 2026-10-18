@@ -93,4 +93,27 @@ describe("Studio Subagents & Isolated Execution Engine", () => {
 		expect(indexSource).toContain('"turn_abort"');
 		expect(indexSource).toContain("studioAgentsRunner.cancelAll");
 	});
+
+	test("subagent viewer supports history scrolling in split, modal and stream views with wheel and keys", () => {
+		const viewerPath = path.join(__dirname, "..", "extensions", "hooks", "studio-subagents-viewer.ts");
+		const viewerSource = fs.readFileSync(viewerPath, "utf8");
+
+		// ScrollOffset support in views
+		expect(viewerSource).toContain("scrollOffset: number = 0");
+		expect(viewerSource).toContain("scrollOffset?: number");
+		expect(viewerSource).toContain("clampedOffset");
+
+		// Mouse wheel and click region handling
+		expect(viewerSource).toContain("handleMouse(event: any)");
+		expect(viewerSource).toContain('event?.type === "wheel"');
+		expect(viewerSource).toContain("wheelDelta");
+
+		// Extended navigation keys
+		expect(viewerSource).toContain('"shift+up"');
+		expect(viewerSource).toContain('"shift+down"');
+		expect(viewerSource).toContain('"pageup"');
+		expect(viewerSource).toContain('"pagedown"');
+		expect(viewerSource).toContain('"home"');
+		expect(viewerSource).toContain('"end"');
+	});
 });

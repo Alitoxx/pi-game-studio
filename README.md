@@ -283,14 +283,13 @@ pi-studio
 ```
 
 > 💡 **Dedicated CLI Launcher (`pi-studio`)**:
-> Using `pi-studio` guarantees that only your 9 gamedev agents (8 Core + 1 Engine Specialist) are loaded. Your standard `pi` command remains untouched for all your normal development projects.
+> Using `pi-studio` starts Pi with a dedicated gamedev workspace profile (`~/.pi/game-studio/agent`), keeping your studio workflow organized while respecting your sovereignty over packages and tools.
 >
-> **What runs inside `pi-studio`**:
-> - **Zero Gentle Shell pollution**: Excludes `gentle-pi` and any foreign coding subagents (`gentle-ai-worker`, `gentle-ai-explore`, etc.).
-> - **Essential Gamedev Utilities**: Auto-provisions clean, agent-free tools:
->   - `pi-web-access`: Enables live web documentation lookups for engine APIs (Bevy, Godot, Raylib) and shader references.
->   - `pi-antigravity`: Enables Google Antigravity & Gemini model provider integration.
->   - `pi-btw`: Handy keyboard shortcuts and contextual guidance.
+> **How `pi-studio` manages your environment**:
+> - **Additive & Sovereign Package Management**: Ensures essential gamedev tools (`pi-web-access`, `pi-antigravity`, `pi-btw`) are available out of the box, without ever deleting, censoring, or filtering packages you install.
+> - **Zero Persona/Prompt Leaks**: Strips foreign shell environment variables so studio sessions remain focused on your game directors and engine specialists.
+> - **Defensive Tool Coexistence**: Extensions gracefully detect pre-existing tools (`ask_user_question`, `subagent_run`), preventing collisions if shared utilities or host tools are active.
+> - **Seamless Credentials & Preferences**: Automatically mirrors your credentials, model configurations, trust approvals, and base preferences from your primary Pi environment.
 > - **Auto-cleaning Setup**: Running `/studio:setup` cleans up any legacy local `.pi/skills/` to prevent Pi skill collision warnings, serving skills directly from the package manifest.
 
 ### Setup & Onboarding

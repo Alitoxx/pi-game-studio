@@ -39,10 +39,33 @@ export function inspectStudioTasks(cwd: string): TasksSummary {
 
 			lines.forEach((line, idx) => {
 				const trimmed = line.trim();
+				// Solo considerar checkboxes de nivel superior (no sub-bullets identados)
+				if (line.startsWith("  ") || line.startsWith("\t")) {
+					return;
+				}
+
 				const checkMatch = trimmed.match(/^-\s*\[([ x/])\]\s*(.+)$/i);
 				if (checkMatch) {
 					const mark = checkMatch[1].toLowerCase();
 					const title = checkMatch[2].trim();
+
+					// Filtrar notas técnicas, comandos de compilación o constraints que no son entregables
+					const lower = title.toLowerCase();
+					if (
+						lower.startsWith("cargo check") ||
+						lower.startsWith("`cargo check") ||
+						lower.startsWith("cargo test") ||
+						lower.startsWith("`cargo test") ||
+						lower.startsWith("npm test") ||
+						lower.startsWith("cero crates") ||
+						lower.startsWith("`cero crates") ||
+						lower.startsWith("constraint:") ||
+						lower.startsWith("tests ") ||
+						lower.startsWith("adr-")
+					) {
+						return;
+					}
+
 					const status = mark === "x" ? "completed" : mark === "/" ? "in_progress" : "pending";
 					const isStale = status !== "completed" && daysAgo >= STALE_THRESHOLD_DAYS;
 
@@ -75,6 +98,11 @@ export function inspectStudioTasks(cwd: string): TasksSummary {
 
 					lines.forEach((line, idx) => {
 						const trimmed = line.trim();
+						// Solo considerar checkboxes de nivel superior (no sub-bullets identados)
+						if (line.startsWith("  ") || line.startsWith("\t")) {
+							return;
+						}
+
 						const checkMatch = trimmed.match(/^-\s*\[([ x/])\]\s*(.+)$/i);
 						if (checkMatch) {
 							const mark = checkMatch[1].toLowerCase();

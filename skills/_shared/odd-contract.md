@@ -10,6 +10,7 @@ Este archivo define los contratos y estándares compartidos para las **6 Skills 
 ## 2. Live Specs Single Source of Truth
 - Todo diseño de sistema o mecánica reside exclusivamente en `design/gdd/<feature>.md`.
 - El seguimiento de producción y sprints vive exclusivamente en `production/roadmap.md`.
+- **Higiene de Tareas y Cero Checkbox Bloat:** En `production/roadmap.md` cada sprint lleva **1 solo checkbox principal** para la tarea macro. Las notas de verificación (`cargo check limpio`, `tests verdes`, constraints) van como viñetas simples (`-`), nunca con `[ ]` o `[x]`. Prohibido duplicar colas de tareas futuras que ya existen en el GDD.
 - Cero archivos de especificación muertos o burocracia de documentos intermedios.
 
 ## 3. Atomic Scoping & Execution Budgets (~400 Líneas)

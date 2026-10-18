@@ -1,15 +1,17 @@
 #!/usr/bin/env node
 /**
- * pi-studio — Isolated CLI Launcher for Pi Game Studio
+ * pi-studio — Dedicated CLI Launcher for Pi Game Studio
  *
- * Runs Pi inside a dedicated, isolated profile (~/.pi/game-studio/agent)
- * completely decoupled from Gentle Shell or any external web coding agents.
+ * Runs Pi inside a dedicated studio profile (~/.pi/game-studio/agent)
+ * scoped for game development while preserving user package sovereignty
+ * and compatibility with the Pi ecosystem philosophy.
  *
  * Automatically:
- * 1. Provisions ~/.pi/game-studio/agent if missing.
- * 2. Mirrors auth.json and models-store.json from ~/.pi/agent so credentials work seamlessly.
- * 3. Registers pi-game-studio as the active package without third-party pollution.
- * 4. Clears Gentle Shell environment variables (GENTLE_PI_CONFIG_HOME, etc.).
+ * 1. Provisions ~/.pi/game-studio/agent if missing, inheriting user preferences.
+ * 2. Mirrors auth.json, models-store.json, trust.json, and keybindings.json from ~/.pi/agent.
+ * 3. Additively ensures pi-game-studio and clean auxiliary packages (web-access, antigravity, btw)
+ *    are registered without removing, censoring, or filtering any user-configured packages.
+ * 4. Cleans external harness environment variables to prevent persona leaks.
  * 5. Launches Pi with full argument and signal pass-through.
  */
 
@@ -21,6 +23,7 @@ import {
 	copyFileSync,
 	writeFileSync,
 	readFileSync,
+	realpathSync,
 } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
@@ -37,33 +40,41 @@ function ensureDirectory(dir) {
 	}
 }
 
-function shareCredentialFile(filename) {
-	const source = join(defaultPiAgentDir, filename);
-	const target = join(studioAgentDir, filename);
+export function provisionStudioProfile(targetDir = studioAgentDir, baseDir = defaultPiAgentDir) {
+	ensureDirectory(targetDir);
+	ensureDirectory(join(targetDir, "sessions"));
 
-	if (existsSync(source) && !existsSync(target)) {
-		try {
-			symlinkSync(source, target);
-		} catch {
+	// Mirror authentication, model store, trust, and keybindings so user never needs to re-login or re-approve
+	const mirrorFiles = ["auth.json", "models-store.json", "trust.json", "keybindings.json"];
+	for (const filename of mirrorFiles) {
+		const source = join(baseDir, filename);
+		const target = join(targetDir, filename);
+		if (existsSync(source) && !existsSync(target)) {
 			try {
-				copyFileSync(source, target);
-			} catch {}
+				symlinkSync(source, target);
+			} catch {
+				try {
+					copyFileSync(source, target);
+				} catch {}
+			}
 		}
 	}
-}
 
-function provisionStudioProfile() {
-	ensureDirectory(studioAgentDir);
-	ensureDirectory(join(studioAgentDir, "sessions"));
+	// Ensure pi-web-access operates with eager tool activation to prevent mid-conversation tool addition failures
+	const webSearchConfigPath = join(targetDir, "web-search.json");
+	if (!existsSync(webSearchConfigPath)) {
+		try {
+			writeFileSync(
+				webSearchConfigPath,
+				JSON.stringify({ toolActivation: "eager" }, null, 2),
+				"utf8",
+			);
+		} catch {}
+	}
 
-	// Mirror authentication, model store and trust so user never needs to re-login or re-approve
-	shareCredentialFile("auth.json");
-	shareCredentialFile("models-store.json");
-	shareCredentialFile("trust.json");
-	shareCredentialFile("keybindings.json");
-
-	// Ensure pristine settings.json referencing pi-game-studio
-	const settingsPath = join(studioAgentDir, "settings.json");
+	// Read existing settings or inherit user's base settings on first creation
+	const settingsPath = join(targetDir, "settings.json");
+	const baseSettingsPath = join(baseDir, "settings.json");
 	let currentSettings = {};
 
 	if (existsSync(settingsPath)) {
@@ -72,12 +83,23 @@ function provisionStudioProfile() {
 		} catch {
 			currentSettings = {};
 		}
+	} else if (existsSync(baseSettingsPath)) {
+		try {
+			// Inherit base preferences (themes, default models, etc.) while establishing dedicated studio packages
+			currentSettings = JSON.parse(readFileSync(baseSettingsPath, "utf8"));
+		} catch {
+			currentSettings = {};
+		}
 	}
 
-	const packages = Array.isArray(currentSettings.packages) ? currentSettings.packages : [];
-	const hasStudioPkg = packages.some(
-		(p) => typeof p === "string" && (p === packageRoot || p.includes("pi-game-studio")),
-	);
+	const packages = Array.isArray(currentSettings.packages) ? [...currentSettings.packages] : [];
+	const getPkgSource = (p) =>
+		typeof p === "string" ? p : typeof p?.source === "string" ? p.source : "";
+
+	const hasStudioPkg = packages.some((p) => {
+		const src = getPkgSource(p);
+		return src === packageRoot || src.includes("pi-game-studio");
+	});
 
 	if (!hasStudioPkg) {
 		packages.unshift(packageRoot);
@@ -85,26 +107,28 @@ function provisionStudioProfile() {
 
 	const defaultAuxPackages = ["npm:pi-web-access", "npm:pi-antigravity", "npm:pi-btw"];
 	for (const aux of defaultAuxPackages) {
-		if (!packages.includes(aux)) {
+		const auxName = aux.replace(/^npm:/, "").split("@")[0];
+		const exists = packages.some((p) => {
+			const src = getPkgSource(p);
+			return src === aux || src.replace(/^npm:/, "").split("@")[0] === auxName;
+		});
+		if (!exists) {
 			packages.push(aux);
 		}
 	}
 
-	// Strictly filter out any gentle packages if they ever leaked in
-	const cleanPackages = packages.filter((p) => {
-		if (typeof p !== "string") return false;
-		return !p.toLowerCase().includes("gentle");
-	});
-
+	// Additive provisioning: we preserve all existing user packages and never censor/filter them
 	const updatedSettings = {
 		tuiMode: "fullscreen",
 		...currentSettings,
-		packages: cleanPackages,
+		packages,
 	};
 
 	try {
 		writeFileSync(settingsPath, JSON.stringify(updatedSettings, null, 2), "utf8");
 	} catch {}
+
+	return updatedSettings;
 }
 
 function run() {
@@ -119,6 +143,9 @@ function run() {
 	delete env.GENTLE_PI_AGENT_HOME;
 	delete env.GENTLE_SHELL_USER_PI_HOME;
 	env.GENTLE_PI_SHELL = "0";
+
+	// Ensure npm does not block newly published packages if user has min-release-age configured in ~/.npmrc
+	env.npm_config_min_release_age = "0";
 
 	const args = process.argv.slice(2);
 	const piExecutable = process.env.PI_PATH || "pi";
@@ -158,4 +185,17 @@ function run() {
 	process.on("SIGTERM", () => forwardSignal("SIGTERM"));
 }
 
-run();
+export { run };
+
+function isDirectExecution() {
+	if (!process.argv[1]) return false;
+	try {
+		return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+	} catch {
+		return resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url));
+	}
+}
+
+if (isDirectExecution()) {
+	run();
+}

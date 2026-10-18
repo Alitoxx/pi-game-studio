@@ -9,7 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.9.1] - 2026-10-17
 
-### Changed & Improved
+### Added & Improved
+- **Contrato de Rationale Previo Obligatorio para Menús Nativos (`ask_user_question`)**:
+  - Erradicado el comportamiento de menús en seco o sin contexto previo en los 14 agentes oficiales (`agents/*.md`, `docs/gamedev-interaction-protocol.md`, `AGENTS.md` y `extensions/hooks/index.ts`).
+  - Antes de invocar `ask_user_question`, el agente debe emitir obligatoriamente en el chat: (1) `SITUACIÓN ACTUAL` (qué se completó o en qué hito de ODD estamos), (2) `ANÁLISIS DEL DILEMA` (impacto en Game Feel, FPS y alcance), y (3) `RECOMENDACIÓN DEL LEAD/DIRECTOR` (veredicto técnico y argumentado).
+  - Prohibida la auto-repetición de labels dentro de la descripción en las opciones interactivas.
+- **Activación Eager de Herramientas Web (Erradicación del Error 400 en OpenCode Go / Kimi)**:
+  - Configurado `toolActivation: "eager"` en `web-search.json` dentro de `bin/pi-studio.mjs` para activar las herramientas de `pi-web-access` desde el inicio de la sesión.
+  - Se elimina la herramienta intermedia `web_enable` y las mutaciones dinámicas de tools mid-conversation que causaban fallos `400: Upstream request failed` con modelos como `kimi-k3`.
+- **Aprovisionamiento Aditivo y Soberanía de Paquetes en `pi-studio`**:
+  - Eliminado el filtro restrictivo que purgaba paquetes del usuario (`cleanPackages = packages.filter(...)`). Ahora `pi-studio` opera bajo aprovisionamiento **estrictamente aditivo**: asegura que `pi-game-studio` y las utilidades esenciales (`pi-web-access`, `pi-antigravity`, `pi-btw`) estén presentes, pero respeta y preserva íntegramente cualquier paquete, tema o extensión que el usuario configure.
+  - Herencia de preferencias base: si el perfil de estudio no existe, hereda temas, modelos y configuraciones del entorno base de Pi (`~/.pi/agent/settings.json`) de forma transparente.
+- **Registro Defensivo de Herramientas (*Graceful Tool Coexistence*)**:
+  - `studio-choice.ts` y `studio-subagents.ts` verifican la existencia previa de herramientas (`ask_user_question`, `subagent_run`, `subagent_list`, `subagent_status`, `subagent_result`) mediante `hasTool` y `getAllTools()`, envolviendo los registros en bloques seguros `try/catch` para evitar fallos de arranque en caso de colisiones en el runtime de Pi.
 - **Riel Lateral TUI Desacoplado y Libre de Duplicación (Opción B)**:
   - Tarjeta `◈ System` ultra compacta (5 líneas), especializada exclusivamente en Proyecto (Título y ruta), Motor e Hito, y estado de Memoria (`Memory · ✓ conectado`).
   - Eliminada la duplicación de `Model` y `Context Gauge` en la tarjeta lateral, manteniéndolos en su posición canónica en la barra inferior.

@@ -100,10 +100,38 @@ function isKeyMatch(data: string, name: string): boolean {
 		);
 	}
 	if (name === "pageup") {
-		return matchesKeySafe(data, "pageup") || data === "\x1b[5~";
+		return (
+			matchesKeySafe(data, "pageup") ||
+			data === "\x1b[5~" ||
+			matchesKeySafe(data, "ctrl+u") ||
+			data === "\x15" ||
+			matchesKeySafe(data, "ctrl+b") ||
+			data === "\x02"
+		);
 	}
 	if (name === "pagedown") {
-		return matchesKeySafe(data, "pagedown") || data === "\x1b[6~";
+		return (
+			matchesKeySafe(data, "pagedown") ||
+			data === "\x1b[6~" ||
+			matchesKeySafe(data, "ctrl+d") ||
+			data === "\x04" ||
+			matchesKeySafe(data, "ctrl+f") ||
+			data === "\x06"
+		);
+	}
+	if (name === "shift+up") {
+		return (
+			matchesKeySafe(data, "shift+up") ||
+			data === "\x1b[1;2A" ||
+			data === "\x1b[a"
+		);
+	}
+	if (name === "shift+down") {
+		return (
+			matchesKeySafe(data, "shift+down") ||
+			data === "\x1b[1;2B" ||
+			data === "\x1b[b"
+		);
 	}
 	if (name === "home") {
 		return matchesKeySafe(data, "home") || data === "\x1b[H" || data === "\x1b[1~";
@@ -317,7 +345,7 @@ export function renderSubagentLiveConsoleView(
 export function renderSubagentModalView(
 	targetTask: TaskRecord,
 	width: number = 80,
-	options?: { selectedIndex?: number; totalTasks?: number; height?: number },
+	options?: { selectedIndex?: number; totalTasks?: number; height?: number; scrollOffset?: number },
 ): string[] {
 	const cardWidth = Math.max(48, width);
 	const innerWidth = cardWidth - 4;
@@ -388,7 +416,14 @@ export function renderSubagentModalView(
 		? targetTask.logs
 		: [`  ${DIM}(esperando primeros eventos de ejecución...)${RESET}`];
 
-	const eventLogs = allLogs.slice(-availableLogRows);
+	const scrollOffset = options?.scrollOffset ?? 0;
+	const totalLogs = allLogs.length;
+	const maxOffset = Math.max(0, totalLogs - availableLogRows);
+	const clampedOffset = Math.max(0, Math.min(scrollOffset, maxOffset));
+
+	const endIdx = totalLogs - clampedOffset;
+	const startIdx = Math.max(0, endIdx - availableLogRows);
+	const eventLogs = allLogs.slice(startIdx, endIdx);
 	for (const log of eventLogs) {
 		lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${WHITE}${truncateAnsi(log, innerWidth - 4)}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 	}
@@ -408,7 +443,8 @@ export function renderSubagentModalView(
 	}
 
 	lines.push(`${BORDER}╰${"─".repeat(cardWidth - 2)}╯${RESET}`);
-	lines.push(`  ${GRAY}Tab/v: Consola en Vivo • ↑/↓: Seleccionar agente • Esc: Salir • c: Cancelar • o: Abrir en editor externo${RESET}`);
+	const scrollIndicator = clampedOffset > 0 ? ` ${YELLOW}[Scroll: -${clampedOffset} • End: fin]${RESET}` : "";
+	lines.push(`  ${GRAY}Tab/v: Consola Stream • ↑/↓: Seleccionar agente • Esc: Salir • c: Cancelar • o: Abrir en editor externo • PgUp/PgDn/Rueda: Scroll${scrollIndicator}${RESET}`);
 
 	return lines;
 }
@@ -424,6 +460,7 @@ export function renderSubagentSplitView(
 	selectedIndex: number,
 	width: number = 84,
 	height?: number,
+	scrollOffset: number = 0,
 ): string[] {
 	const totalWidth = Math.max(76, width);
 	const leftWidth = Math.min(28, Math.max(22, Math.floor(totalWidth * 0.28)));
@@ -509,16 +546,21 @@ export function renderSubagentSplitView(
 		footerRightLines.push(`  ${YELLOW}◐ Ejecución activa en segundo plano...${RESET}`);
 	}
 
-	const logHeader = `${LAVENDER}${BOLD}Eventos y Llamadas de Herramientas (En Vivo)${RESET}`;
-	const fixedRightCount = headerLines.length + 1 /* logHeader */ + footerRightLines.length;
-
-	const rightBodyTarget = targetBodyRows || Math.max(leftContent.length, fixedRightCount + 10);
-	const availableLogRows = Math.max(3, rightBodyTarget - fixedRightCount);
-
 	const allLogs = targetTask.logs && targetTask.logs.length > 0
 		? targetTask.logs
 		: [`  ${DIM}(esperando primeros eventos de ejecución...)${RESET}`];
-	const eventLogs = allLogs.slice(-availableLogRows);
+
+	const totalLogs = allLogs.length;
+	const maxOffset = Math.max(0, totalLogs - availableLogRows);
+	const clampedOffset = Math.max(0, Math.min(scrollOffset, maxOffset));
+
+	const endIdx = totalLogs - clampedOffset;
+	const startIdx = Math.max(0, endIdx - availableLogRows);
+	const eventLogs = allLogs.slice(startIdx, endIdx);
+
+	const scrollHeaderNote = clampedOffset > 0 ? ` ${YELLOW}[Scroll: -${clampedOffset}]${RESET}` : "";
+	const logHeader = `${LAVENDER}${BOLD}Eventos y Llamadas de Herramientas (En Vivo)${RESET}${scrollHeaderNote}`;
+	const fixedRightCount = headerLines.length + 1 /* logHeader */ + footerRightLines.length;
 
 	const rightContent: string[] = [...headerLines, logHeader];
 	for (const log of eventLogs) {
@@ -540,7 +582,8 @@ export function renderSubagentSplitView(
 		lines.push(`${BORDER}│${RESET}${l}${BORDER}│${RESET} ${rPadded} ${BORDER}│${RESET}`);
 	}
 	lines.push(`${BORDER}╰${"─".repeat(leftWidth)}┴${"─".repeat(rightWidth)}╯${RESET}`);
-	lines.push(`  ${GRAY}Tab/v: Consola en Vivo • ↑/↓: Seleccionar agente • Esc: Salir • c: Cancelar • o: Abrir en editor externo${RESET}`);
+	const bottomScrollIndicator = clampedOffset > 0 ? ` ${YELLOW}[Scroll: -${clampedOffset} • End: fin]${RESET}` : "";
+	lines.push(`  ${GRAY}Tab/v: Consola Stream • ↑/↓: Seleccionar agente • Esc: Salir • c: Cancelar • o: Abrir en editor externo • PgUp/PgDn/Rueda: Scroll${bottomScrollIndicator}${RESET}`);
 
 	return lines;
 }
@@ -623,13 +666,28 @@ export class SubagentsViewerComponent {
 			return;
 		}
 
+		if (isKeyMatch(data, "shift+up")) {
+			this.scrollOffset++;
+			this.invalidate();
+			this.tui?.requestRender?.();
+			return;
+		}
+
+		if (isKeyMatch(data, "shift+down")) {
+			this.scrollOffset = Math.max(0, this.scrollOffset - 1);
+			this.invalidate();
+			this.tui?.requestRender?.();
+			return;
+		}
+
 		if (isKeyMatch(data, "up")) {
-			if (this.viewMode === "stream") {
+			if (this.viewMode === "stream" || this.tasks.length <= 1) {
 				this.scrollOffset++;
 				this.invalidate();
 				this.tui?.requestRender?.();
 			} else if (this.selectedIndex > 0) {
 				this.selectedIndex--;
+				this.scrollOffset = 0;
 				this.invalidate();
 				this.tui?.requestRender?.();
 			}
@@ -637,12 +695,13 @@ export class SubagentsViewerComponent {
 		}
 
 		if (isKeyMatch(data, "down")) {
-			if (this.viewMode === "stream") {
+			if (this.viewMode === "stream" || this.tasks.length <= 1) {
 				this.scrollOffset = Math.max(0, this.scrollOffset - 1);
 				this.invalidate();
 				this.tui?.requestRender?.();
 			} else if (this.selectedIndex < this.tasks.length - 1) {
 				this.selectedIndex++;
+				this.scrollOffset = 0;
 				this.invalidate();
 				this.tui?.requestRender?.();
 			}
@@ -741,11 +800,12 @@ export class SubagentsViewerComponent {
 			lines = renderSubagentLiveConsoleView(targetTask, width, height, this.scrollOffset);
 		} else {
 			lines = (width >= 76 && this.tasks.length > 1)
-				? renderSubagentSplitView(this.tasks, this.selectedIndex, width, height)
+				? renderSubagentSplitView(this.tasks, this.selectedIndex, width, height, this.scrollOffset)
 				: renderSubagentModalView(targetTask, width, {
 					selectedIndex: this.selectedIndex,
 					totalTasks: this.tasks.length,
 					height,
+					scrollOffset: this.scrollOffset,
 				});
 		}
 
@@ -753,6 +813,49 @@ export class SubagentsViewerComponent {
 		this.cachedHeight = height;
 		this.cachedLines = lines;
 		return lines;
+	}
+
+	handleMouse(event: any): any {
+		if (event?.type === "wheel") {
+			const delta = event.wheelDelta ?? (event.direction ?? 0);
+			if (delta !== 0) {
+				const lines = Math.max(1, Math.abs(delta)) * 2;
+				if (delta < 0) {
+					// Wheel up -> historial previo
+					this.scrollOffset += lines;
+				} else {
+					// Wheel down -> hacia el presente
+					this.scrollOffset = Math.max(0, this.scrollOffset - lines);
+				}
+				this.invalidate();
+				this.tui?.requestRender?.();
+				return { handled: true, render: true };
+			}
+		}
+
+		if (event?.type === "click" || event?.type === "press") {
+			// Click en la lista de agentes en Split View (panel izquierdo)
+			const width = this.cachedWidth || 80;
+			if (width >= 76 && this.tasks.length > 1 && this.viewMode !== "stream") {
+				const leftWidth = Math.min(28, Math.max(22, Math.floor(width * 0.28)));
+				if (event.x >= 0 && event.x <= leftWidth) {
+					const row = event.y - 1; // row 0 es borde superior
+					// row 0 es título "Agentes (N)", row 1 es divisor
+					const targetIndex = row - 2;
+					if (targetIndex >= 0 && targetIndex < this.tasks.length) {
+						if (this.selectedIndex !== targetIndex) {
+							this.selectedIndex = targetIndex;
+							this.scrollOffset = 0;
+							this.invalidate();
+							this.tui?.requestRender?.();
+							return { handled: true, render: true };
+						}
+					}
+				}
+			}
+		}
+
+		return undefined;
 	}
 }
 

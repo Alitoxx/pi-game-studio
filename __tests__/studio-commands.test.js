@@ -757,6 +757,58 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 		}).not.toThrow();
 	});
 
+	test("StudioQuestionnaireComponent handles Kitty protocol, VT100 application cursor, and number keys", async () => {
+		const { execFileSync } = require("child_process");
+		const script = `
+			const { StudioQuestionnaireComponent, isKey } = await import("./extensions/hooks/studio-choice.ts");
+
+			// Test isKey helper
+			if (!isKey("\\x1bOA", "up")) throw new Error("VT100 application cursor Up failed");
+			if (!isKey("\\x1bOB", "down")) throw new Error("VT100 application cursor Down failed");
+			if (!isKey("\\x1b[57373u", "up")) throw new Error("Kitty protocol Up failed");
+			if (!isKey("\\x1b[57374u", "down")) throw new Error("Kitty protocol Down failed");
+			if (!isKey("\\x1b[13u", "enter")) throw new Error("Kitty protocol Enter failed");
+			if (!isKey("\\x1b[27u", "escape")) throw new Error("Kitty protocol Escape failed");
+
+			// Test component navigation with Kitty and VT100 keys
+			let completedResult = null;
+			const questions = [
+				{
+					question: "Choose option",
+					options: [{ label: "Opt1" }, { label: "Opt2" }, { label: "Opt3" }],
+				},
+			];
+			const comp = new StudioQuestionnaireComponent(questions, { requestRender: () => {} }, {}, (res) => {
+				completedResult = res;
+			});
+
+			if (comp.cursor[0] !== 0) throw new Error("Initial cursor should be 0");
+
+			// Move down using Kitty sequence
+			comp.handleInput("\\x1b[57374u");
+			if (comp.cursor[0] !== 1) throw new Error("Expected cursor 1 after Kitty down, got " + comp.cursor[0]);
+
+			// Move down using VT100 sequence
+			comp.handleInput("\\x1bOB");
+			if (comp.cursor[0] !== 2) throw new Error("Expected cursor 2 after VT100 down, got " + comp.cursor[0]);
+
+			// Jump to option 1 using number key "1"
+			comp.handleInput("1");
+			if (comp.cursor[0] !== 0) throw new Error("Expected cursor 0 after pressing '1', got " + comp.cursor[0]);
+
+			// Select with Kitty Enter sequence
+			comp.handleInput("\\x1b[13u");
+			if (!completedResult || completedResult.cancelled) throw new Error("Expected completed result");
+			if (completedResult.answers[0].answer !== "Opt1") throw new Error("Expected Opt1 answer");
+		`;
+
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.resolve(__dirname, ".."),
+			});
+		}).not.toThrow();
+	});
+
 	test("studio-doctor.ts exports handleStudioDoctor, auditProjectStructure and adheres to sober TUI", () => {
 		const doctorSource = fs.readFileSync(
 			path.join(__dirname, "..", "extensions", "hooks", "studio-doctor.ts"),

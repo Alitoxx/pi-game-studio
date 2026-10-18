@@ -72,6 +72,181 @@ export function formatQuestionPrompt(currentIndex: number, questions: QuestionIt
 	return `▎ ${headerPrefix}${q.question}`;
 }
 
+let piTuiModule: any = null;
+let piTuiAttempted = false;
+
+export async function getPiTuiModule(): Promise<any> {
+	if (!piTuiAttempted) {
+		piTuiAttempted = true;
+		try {
+			piTuiModule = await import("@earendil-works/pi-tui");
+		} catch {}
+	}
+	return piTuiModule;
+}
+
+export function isKey(
+	data: string,
+	name:
+		| "up"
+		| "down"
+		| "left"
+		| "right"
+		| "enter"
+		| "escape"
+		| "tab"
+		| "shift_tab"
+		| "backspace"
+		| "space",
+	kb?: any,
+): boolean {
+	// 1. Injected keybindings manager from Pi
+	if (kb && typeof kb.matches === "function") {
+		try {
+			if (
+				name === "up" &&
+				(kb.matches(data, "tui.select.up") || kb.matches(data, "tui.editor.cursorUp"))
+			)
+				return true;
+			if (
+				name === "down" &&
+				(kb.matches(data, "tui.select.down") || kb.matches(data, "tui.editor.cursorDown"))
+			)
+				return true;
+			if (
+				name === "left" &&
+				(kb.matches(data, "tui.editor.cursorLeft") || kb.matches(data, "tui.select.left"))
+			)
+				return true;
+			if (
+				name === "right" &&
+				(kb.matches(data, "tui.editor.cursorRight") || kb.matches(data, "tui.select.right"))
+			)
+				return true;
+			if (
+				name === "enter" &&
+				(kb.matches(data, "tui.select.confirm") ||
+					kb.matches(data, "tui.editor.submit") ||
+					kb.matches(data, "tui.editor.newline"))
+			)
+				return true;
+			if (
+				name === "escape" &&
+				(kb.matches(data, "tui.select.cancel") ||
+					kb.matches(data, "app.interrupt") ||
+					kb.matches(data, "app.escape"))
+			)
+				return true;
+		} catch {}
+	}
+
+	// 2. Pi TUI matchesKey helper (if preloaded or available)
+	if (piTuiModule?.matchesKey) {
+		try {
+			const K = piTuiModule.Key;
+			if (
+				name === "up" &&
+				(piTuiModule.matchesKey(data, K?.up || "up") || piTuiModule.matchesKey(data, "k"))
+			)
+				return true;
+			if (
+				name === "down" &&
+				(piTuiModule.matchesKey(data, K?.down || "down") || piTuiModule.matchesKey(data, "j"))
+			)
+				return true;
+			if (
+				name === "left" &&
+				(piTuiModule.matchesKey(data, K?.left || "left") || piTuiModule.matchesKey(data, "h"))
+			)
+				return true;
+			if (
+				name === "right" &&
+				(piTuiModule.matchesKey(data, K?.right || "right") || piTuiModule.matchesKey(data, "l"))
+			)
+				return true;
+			if (name === "enter" && piTuiModule.matchesKey(data, K?.enter || "enter")) return true;
+			if (name === "space" && piTuiModule.matchesKey(data, K?.space || "space")) return true;
+			if (
+				name === "escape" &&
+				(piTuiModule.matchesKey(data, K?.escape || "escape") ||
+					piTuiModule.matchesKey(data, "ctrl+c"))
+			)
+				return true;
+			if (name === "tab" && piTuiModule.matchesKey(data, K?.tab || "tab")) return true;
+			if (
+				name === "shift_tab" &&
+				(piTuiModule.matchesKey(data, K?.shift ? K.shift("tab") : "shift+tab") ||
+					piTuiModule.matchesKey(data, "shift+tab"))
+			)
+				return true;
+			if (name === "backspace" && piTuiModule.matchesKey(data, K?.backspace || "backspace"))
+				return true;
+		} catch {}
+	}
+
+	// 3. Robust raw escape sequences & protocols (Kitty keyboard protocol, VT100 / xterm application keys, legacy ANSI)
+	switch (name) {
+		case "up":
+			return (
+				data === "\x1b[A" ||
+				data === "\x1bOA" ||
+				data === "k" ||
+				data === "K" ||
+				/^(\x1b\[1;[0-9]+A|\x1b\[[0-9;]*A|\x1b\[57373[;0-9]*u)$/.test(data)
+			);
+		case "down":
+			return (
+				data === "\x1b[B" ||
+				data === "\x1bOB" ||
+				data === "j" ||
+				data === "J" ||
+				/^(\x1b\[1;[0-9]+B|\x1b\[[0-9;]*B|\x1b\[57374[;0-9]*u)$/.test(data)
+			);
+		case "left":
+			return (
+				data === "\x1b[D" ||
+				data === "\x1bOD" ||
+				data === "h" ||
+				data === "H" ||
+				/^(\x1b\[1;[0-9]+D|\x1b\[[0-9;]*D|\x1b\[57376[;0-9]*u)$/.test(data)
+			);
+		case "right":
+			return (
+				data === "\x1b[C" ||
+				data === "\x1bOC" ||
+				data === "l" ||
+				data === "L" ||
+				/^(\x1b\[1;[0-9]+C|\x1b\[[0-9;]*C|\x1b\[57375[;0-9]*u)$/.test(data)
+			);
+		case "enter":
+			return (
+				data === "\r" ||
+				data === "\n" ||
+				data === "\r\n" ||
+				data === "\x1bOM" ||
+				/^(\x1b\[13[;0-9]*u|\x1b\[13;[0-9]+u)$/.test(data)
+			);
+		case "space":
+			return data === " " || /^\x1b\[32[;0-9]*u$/.test(data);
+		case "escape":
+			return (
+				data === "\x1b" ||
+				data === "\x1b\x1b" ||
+				data === "\x03" ||
+				/^\x1b\[27[;0-9]*u$/.test(data) ||
+				data === "q" ||
+				data === "Q"
+			);
+		case "tab":
+			return data === "\t" || /^\x1b\[9[;0-9]*u$/.test(data);
+		case "shift_tab":
+			return data === "\x1b[Z" || /^\x1b\[9;2u$/.test(data) || data === "\x1b[1;2Z";
+		case "backspace":
+			return data === "\x7f" || data === "\b" || /^\x1b\[127[;0-9]*u$/.test(data);
+	}
+	return false;
+}
+
 /**
  * Interactive Sovereign TUI Questionnaire Component for Pi Game Studio.
  * Mounts in ctx.ui.custom with top tab strip, cursor navigation, dimmed descriptions,
@@ -88,17 +263,20 @@ export class StudioQuestionnaireComponent {
 	private tui: any;
 	private theme: any;
 	private done: (result?: QuestionnaireResult) => void;
+	private kb?: any;
 
 	constructor(
 		questions: QuestionItem[],
 		tui: any,
 		theme: any,
 		done: (result?: QuestionnaireResult) => void,
+		kb?: any,
 	) {
 		this.questions = questions;
 		this.tui = tui;
 		this.theme = theme;
 		this.done = done;
+		this.kb = kb;
 		this.cursor = questions.map(() => 0);
 		this.answers = questions.map(() => undefined);
 		this.drafts = questions.map(() => "");
@@ -138,20 +316,20 @@ export class StudioQuestionnaireComponent {
 	public handleInput(data: string): void {
 		// When user is currently typing a custom free-text response
 		if (this.isEditingCustom) {
-			if (data === "\t") {
+			if (isKey(data, "tab", this.kb)) {
 				this.isEditingCustom = false;
 				this.activeQuestion = (this.activeQuestion + 1) % this.questions.length;
 				this.requestRender();
 				return;
 			}
-			if (data === "\x1b[Z") {
+			if (isKey(data, "shift_tab", this.kb)) {
 				this.isEditingCustom = false;
 				this.activeQuestion =
 					(this.activeQuestion - 1 + this.questions.length) % this.questions.length;
 				this.requestRender();
 				return;
 			}
-			if (data === "\x1b" || data === "\x1b\x1b") {
+			if (isKey(data, "escape", this.kb)) {
 				this.isEditingCustom = false;
 				this.requestRender();
 				return;
@@ -160,7 +338,7 @@ export class StudioQuestionnaireComponent {
 				this.done({ cancelled: true, answers: this.getCommittedAnswers() });
 				return;
 			}
-			if (data === "\r" || data === "\n") {
+			if (isKey(data, "enter", this.kb)) {
 				const q = this.questions[this.activeQuestion];
 				const draftVal = this.drafts[this.activeQuestion].trim() || "Otro";
 				this.answers[this.activeQuestion] = {
@@ -189,7 +367,7 @@ export class StudioQuestionnaireComponent {
 				this.requestRender();
 				return;
 			}
-			if (data === "\x7f" || data === "\b") {
+			if (isKey(data, "backspace", this.kb)) {
 				if (this.textCursor > 0) {
 					const draft = this.drafts[this.activeQuestion];
 					this.drafts[this.activeQuestion] =
@@ -199,12 +377,12 @@ export class StudioQuestionnaireComponent {
 				}
 				return;
 			}
-			if (data === "\x1b[D") {
+			if (isKey(data, "left", this.kb)) {
 				this.textCursor = Math.max(0, this.textCursor - 1);
 				this.requestRender();
 				return;
 			}
-			if (data === "\x1b[C") {
+			if (isKey(data, "right", this.kb)) {
 				this.textCursor = Math.min(this.drafts[this.activeQuestion].length, this.textCursor + 1);
 				this.requestRender();
 				return;
@@ -226,28 +404,32 @@ export class StudioQuestionnaireComponent {
 			return;
 		}
 
-		// Navigation mode: Tab / Shift+Tab to switch between question steps
-		if (data === "\t") {
-			this.activeQuestion = (this.activeQuestion + 1) % this.questions.length;
-			this.requestRender();
-			return;
-		}
-		if (data === "\x1b[Z") {
-			this.activeQuestion =
-				(this.activeQuestion - 1 + this.questions.length) % this.questions.length;
-			this.requestRender();
-			return;
+		// Navigation mode: Tab / Shift+Tab to switch between question steps (for multi-step)
+		if (this.questions.length > 1) {
+			if (isKey(data, "tab", this.kb) || isKey(data, "right", this.kb)) {
+				this.activeQuestion = (this.activeQuestion + 1) % this.questions.length;
+				this.requestRender();
+				return;
+			}
+			if (isKey(data, "shift_tab", this.kb) || isKey(data, "left", this.kb)) {
+				this.activeQuestion =
+					(this.activeQuestion - 1 + this.questions.length) % this.questions.length;
+				this.requestRender();
+				return;
+			}
 		}
 
-		// Up / Down and k/j to move option cursor
-		if (data === "\x1b[A" || data === "k" || data === "K") {
+		// Up to move option cursor
+		if (isKey(data, "up", this.kb)) {
 			if (this.cursor[this.activeQuestion] > 0) {
 				this.cursor[this.activeQuestion]--;
 				this.requestRender();
 			}
 			return;
 		}
-		if (data === "\x1b[B" || data === "j" || data === "J") {
+
+		// Down to move option cursor
+		if (isKey(data, "down", this.kb)) {
 			const q = this.questions[this.activeQuestion];
 			const allowCustom = q.allowCustomResponse !== false;
 			const maxRow = allowCustom ? q.options.length : q.options.length - 1;
@@ -258,8 +440,21 @@ export class StudioQuestionnaireComponent {
 			return;
 		}
 
-		// Enter: Select option or trigger custom text edit
-		if (data === "\r" || data === "\n") {
+		// Number keys (1-9) to quickly move cursor to option
+		if (/^[1-9]$/.test(data)) {
+			const numIdx = parseInt(data, 10) - 1;
+			const q = this.questions[this.activeQuestion];
+			const allowCustom = q.allowCustomResponse !== false;
+			const maxRow = allowCustom ? q.options.length : q.options.length - 1;
+			if (numIdx <= maxRow) {
+				this.cursor[this.activeQuestion] = numIdx;
+				this.requestRender();
+				return;
+			}
+		}
+
+		// Enter or Space: Select option or trigger custom text edit
+		if (isKey(data, "enter", this.kb) || isKey(data, "space", this.kb)) {
 			const q = this.questions[this.activeQuestion];
 			const allowCustom = q.allowCustomResponse !== false;
 			const cur = this.cursor[this.activeQuestion];
@@ -298,13 +493,7 @@ export class StudioQuestionnaireComponent {
 		}
 
 		// Esc / q / Ctrl+C to cancel questionnaire
-		if (
-			data === "\x1b" ||
-			data === "\x1b\x1b" ||
-			data === "q" ||
-			data === "Q" ||
-			data === "\x03"
-		) {
+		if (isKey(data, "escape", this.kb)) {
 			this.done({ cancelled: true, answers: this.getCommittedAnswers() });
 			return;
 		}
@@ -521,17 +710,19 @@ export function registerAskUserQuestion(pi: ExtensionAPI): void {
 
 			const isInteractiveTui =
 				Boolean(ctx?.hasUI) &&
+				(ctx as any)?.mode === "tui" &&
 				typeof (ctx.ui as any)?.custom === "function";
 
 			if (isInteractiveTui) {
+				await getPiTuiModule();
 				const selection = await (ctx.ui as any).custom(
 					(
 						tui: any,
 						theme: any,
-						_kb: any,
+						kb: any,
 						done: (res?: QuestionnaireResult) => void,
 					) => {
-						return new StudioQuestionnaireComponent(questions, tui, theme, done);
+						return new StudioQuestionnaireComponent(questions, tui, theme, done, kb);
 					},
 				);
 

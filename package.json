@@ -3,6 +3,7 @@
   "version": "1.9.1",
   "description": "Compact AI Game Studio for Pi — 8 Core roles + 1 Engine Specialist (8+1), 6 ODD skills pipeline",
   "license": "MIT",
+  "packageManager": "pnpm@11.28.5",
   "author": "Alexis <alexis@bytetech.com.ar>",
   "repository": {
     "type": "git",

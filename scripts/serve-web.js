@@ -55,7 +55,7 @@ const server = http.createServer((req, res) => {
   fs.stat(filePath, (err, stats) => {
     if (err || !stats.isFile()) {
       res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end(`File not found: ${reqPath}\nDid you run 'npm run build:web' first?`);
+      res.end(`File not found: ${reqPath}\nDid you run 'pnpm run build:web' first?`);
       return;
     }
 

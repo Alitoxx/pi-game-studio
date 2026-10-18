@@ -54,7 +54,7 @@ case "$ENGINE" in
 <body>
   <h1>PI GAME STUDIO — RAYLIB WEB RUNNER (PROTOTYPE)</h1>
   <canvas id="canvas" width="800" height="450"></canvas>
-  <p>To compile native WASM, install Emscripten (emsdk) and run: npm run build:web</p>
+  <p>To compile native WASM, install Emscripten (emsdk) and run: pnpm run build:web</p>
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
@@ -174,4 +174,4 @@ EOF
 esac
 
 echo -e "\n${GREEN}✔ Web package ready in ${OUTPUT_DIR}.${NC}"
-echo -e "Launch server with: ${CYAN}npm run serve:web${NC} or ${CYAN}/studio:web${NC}"
+echo -e "Launch server with: ${CYAN}pnpm run serve:web${NC} or ${CYAN}/studio:web${NC}"

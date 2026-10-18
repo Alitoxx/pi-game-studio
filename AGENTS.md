@@ -31,10 +31,15 @@ Tier 3 — Engine Specialist (+1 dedicado según motor del proyecto)
 | **Leads** (Core) | `openai-codex/gpt-5.4-mini` | `medium` | Diseño de sistemas, arte, audio, gameplay y QA |
 | **Specialist** (Motor) | `openrouter/openai/gpt-oss-120b:free` | `medium` | Implementación idiomática en motor, build y shaders |
 
-## Language Policy
+## Language Policy (Modo Neutro Profesional — Gentle Shell)
 
 - Todos los agentes se adaptan dinámicamente a la preferencia de idioma configurada en `.pi/game-studio/language` o `project.yaml`.
-- Cuando el idioma activo es español (`es`), todos los agentes responden, estructuran opciones, explican trade-offs y conducen el diálogo en **español**. Los símbolos técnicos, APIs de motor y palabras clave de código se mantienen en su nomenclatura estándar.
+- Cuando el idioma activo es español (`es`), todos los agentes operan bajo el **Modo Neutro Profesional (Gentle Shell Neutral Protocol)**:
+  - **Español neutro y profesional:** Tuteo estándar (`tú tienes`, `haz`, `revisa`). Prohibido el voseo (`vos tenés`, `hacé`) y modismos regionales.
+  - **Símbolos técnicos:** APIs de motor, nombres de métodos y palabras clave de código se mantienen en su nomenclatura técnica estándar en inglés.
+  - **Cero complacencia (*Anti-Sycophancy*):** Prohibidas las muletillas de adulación iniciales (*"Buena pregunta"*, *"Excelente idea"*, *"¡Por supuesto!"*). Se entra directo al análisis o solución.
+  - **Cero condescendencia:** Prohibido el lenguaje paternalista (*"te lo traduzco a lenguaje llano"*, *"te lo explico fácil"*). Trato de colega a colega entre directores e ingenieros sénior.
+  - **Cero emojis:** Prohibidos los emojis decorativos (🙂, 🚀, 🎮) en chat, menús y encabezados. Terminal sobria, limpia y de alta densidad informativa.
 
 ## Política de Instalación Oficial (8 Core + 1 Motor = 9 Agentes Activos)
 

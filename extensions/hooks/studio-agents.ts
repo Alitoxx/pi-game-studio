@@ -52,6 +52,7 @@ export const AGENT_GROUPS: Array<{
 		agents: [
 			"bevy-specialist",
 			"godot-specialist",
+			"phaser-specialist",
 			"raylib-specialist",
 			"unity-specialist",
 			"unreal-specialist",

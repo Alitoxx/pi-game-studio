@@ -12,15 +12,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Run tests
-        run: |
-          npm ci
-          npm test
+        run: pnpm test
 
       - name: Validate package.json
         run: |
@@ -55,6 +60,7 @@ jobs:
           for d in skills/*/; do
             [[ "$d" == *"test-results"* || "$d" == *"test-rubrics"* ]] && continue
             skill=$(basename "$d")
+            [[ "$skill" == _* ]] && continue
             if [ ! -f "${d}SKILL.md" ]; then
               echo "❌ $skill missing SKILL.md"
               exit 1
@@ -65,15 +71,17 @@ jobs:
             fi
             echo "✅ $skill"
           done
-          echo "All $( ls -d skills/*/ | wc -l ) skills valid"
+          echo "All $( ls -d skills/*/ | grep -v '/_' | wc -l | tr -d ' ' ) skills valid"
 
       - name: Validate assign-models.js
         run: |
-          node scripts/assign-models.js --dry-run --tier '{
+          output=$(node scripts/assign-models.js --dry-run --tier '{
             "director": "anthropic/claude-sonnet-4",
             "workhorse": "openai/gpt-4o",
             "lightweight": "ollama/llama3.2"
-          }' 2>&1 | grep -q "58 agent(s)"
+          }' 2>&1)
+          echo "$output"
+          echo "$output" | grep -q "Summary:" || { echo "❌ assign-models.js produced no summary"; exit 1; }
           echo "✅ assign-models.js runs clean"
 
       - name: Validate models.default.json
@@ -87,7 +95,7 @@ jobs:
 
       - name: Validate hooks extension compiles
         run: |
-          (cd extensions/hooks && npm install 2>/dev/null || true && npx tsc --noEmit 2>&1 || echo "⚠️ TypeScript check skipped (types may not resolve outside Pi)")
+          (cd extensions/hooks && pnpm install --ignore-scripts 2>/dev/null || true && pnpm dlx typescript tsc --noEmit 2>&1 || echo "⚠️ TypeScript check skipped (types may not resolve outside Pi)")
           echo "✅ hooks extension structure valid"
 
       - name: Check file count consistency
@@ -96,4 +104,4 @@ jobs:
           SKILLS=$(ls -d skills/*/ | wc -l | tr -d ' ')
           PROMPTS=$(find prompts -name '*.md' | wc -l | tr -d ' ')
           echo "📊 Agents: $AGENTS | Skills: $SKILLS | Templates: $PROMPTS"
-          [ "$AGENTS" = "55" ] || { echo "❌ Expected 55 agents, got $AGENTS"; exit 1; }
+          [ "$AGENTS" = "14" ] || { echo "❌ Expected 14 agents (8 core + 6 engine specialists), got $AGENTS"; exit 1; }

@@ -19,6 +19,8 @@ playground/
 
 # Build and coverage
 coverage/
+dist/
+/assets/
 project.local.yaml
 *.profile.json
 skills/test-results/

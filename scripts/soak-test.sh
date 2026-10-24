@@ -89,8 +89,8 @@ fi
 
 echo -e "\033[38;2;243;244;246mExecuting:\033[0m \033[38;2;56;189;248m$CMD\033[0m"
 
-# Launch in background
-$CMD >/dev/null 2>&1 &
+# Launch in background (bash -c preserves quoting for multi-word commands)
+bash -c "$CMD" >/dev/null 2>&1 &
 TARGET_PID=$!
 
 START_TIME=$(date +%s)
@@ -101,6 +101,10 @@ PEAK_RSS=0
 FINAL_RSS=0
 
 echo -e "\033[38;2;107;114;128mSampling memory every 2s (PID: $TARGET_PID)...\033[0m"
+
+# Warmup: sample only after the target process reached steady state, otherwise
+# the cold-start allocation shows up as a false leak in the baseline sample.
+sleep 2
 
 while [ "$ELAPSED" -lt "$DURATION" ]; do
     if ! kill -0 "$TARGET_PID" 2>/dev/null; then

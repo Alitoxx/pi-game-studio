@@ -53,8 +53,10 @@
     "synth": "node scripts/synth-studio.js"
   },
   "devDependencies": {
-    "jest": "^29.0.0",
-    "@types/jest": "^29.0.0"
+    "@earendil-works/pi-coding-agent": "^1.4.0",
+    "@earendil-works/pi-tui": "^1.4.0",
+    "@types/jest": "^29.0.0",
+    "jest": "^29.0.0"
   },
   "pi": {
     "image": "docs/assets/mascot.png",

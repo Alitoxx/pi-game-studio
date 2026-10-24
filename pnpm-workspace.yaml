@@ -1,0 +1,4 @@
+strictDepBuilds: false
+ignoredBuiltDependencies:
+  - "@google/genai"
+  - "protobufjs"

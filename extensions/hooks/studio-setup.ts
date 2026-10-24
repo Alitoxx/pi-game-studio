@@ -129,7 +129,7 @@ export function filterAgentsForEngine(engineName: string, all = false): string[]
 
 export function inspectSetup(cwd: string): SetupStatus {
 	const pkgRoot = resolvePackageRoot();
-	let totalPackageAgents = 13;
+	let totalPackageAgents = 14;
 	try {
 		if (existsSync(join(pkgRoot, "agents"))) {
 			totalPackageAgents = readdirSync(join(pkgRoot, "agents")).filter((f) =>

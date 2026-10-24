@@ -112,7 +112,7 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 		}
 	});
 
-	test("agent groups cover all 13 agents without duplicates", () => {
+	test("agent groups cover all 14 agents without duplicates", () => {
 		const agentsSource = fs.readFileSync(
 			path.join(__dirname, "..", "extensions", "hooks", "studio-agents.ts"),
 			"utf8",
@@ -123,7 +123,7 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 		].map((m) => m[1]);
 
 		const uniqueAgents = Array.from(new Set(agentMatches));
-		expect(uniqueAgents.length).toBe(13);
+		expect(uniqueAgents.length).toBe(14);
 	});
 
 	test("all interactive select handlers support Pi string return values", () => {

@@ -243,9 +243,9 @@ export default function (pi: ExtensionAPI) {
 		},
 	});
 
-	// /studio:roster — Navegador del catálogo de los 13 agentes del estudio
+	// /studio:roster — Navegador del catálogo de los 14 agentes del estudio
 	(pi as any).registerCommand?.("studio:roster", {
-		description: "[Studio] Navegador interactivo de los 13 agentes oficiales (8 Core + 5 Especialistas de motor)",
+		description: "[Studio] Navegador interactivo de los 14 agentes oficiales (8 Core + 6 Especialistas de motor)",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioAgents(args, ctx);
 		},

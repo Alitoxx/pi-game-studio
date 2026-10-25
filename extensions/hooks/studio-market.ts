@@ -18,6 +18,10 @@ import {
 	GRAY,
 	padAnsi,
 	truncateAnsi,
+	panelBottom,
+	panelRule,
+	panelRow,
+	panelTop,
 } from "./studio-palette.ts";
 
 export type SaturationLevel =
@@ -663,21 +667,23 @@ export function renderMarketReport(analysis: MarketAnalysis, cardWidth = 76): st
 	const headerTitle = `${ACCENT}${titlePrefix}${RESET}${WHITE}${cleanTitle}${RESET}`;
 	const headerBorderLen = Math.max(0, width - 4 - cleanTitle.length - titlePrefix.length);
 
-	lines.push(`${BORDER}┌──${RESET} ${headerTitle} ${BORDER}${"─".repeat(headerBorderLen)}┐${RESET}`);
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`Veredicto: ${verdictColored}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(panelTop(width, headerTitle, "square", BORDER));
+	lines.push(`${panelRow(`Veredicto: ${verdictColored}`, innerWidth + 2, BORDER)}`);
 	lines.push(
-		`${BORDER}│${RESET} ${padAnsi(
+		`${panelRow(
 			`Competencia: ${WHITE}${metrics.competitorCountFormatted}${RESET} juegos indexados en la tienda de Steam (${satColored})`,
-			innerWidth,
-		)} ${BORDER}│${RESET}`,
+			innerWidth + 2,
+			BORDER,
+		)}`,
 	);
 	lines.push(
-		`${BORDER}│${RESET} ${padAnsi(
+		`${panelRow(
 			`Rango de Precios: ${GREEN}${metrics.priceRange}${RESET} ${GRAY}•${RESET} ${WHITE}${metrics.releasedCount}${RESET} ${GRAY}lanzados${RESET}, ${WHITE}${metrics.upcomingCount}${RESET} ${GRAY}próximos en el top${RESET}`,
-			innerWidth,
-		)} ${BORDER}│${RESET}`,
+			innerWidth + 2,
+			BORDER,
+		)}`,
 	);
-	lines.push(`${BORDER}└${"─".repeat(width - 2)}┘${RESET}`);
+	lines.push(panelBottom(width - 2, "square", BORDER));
 
 	// ── 2. Top Competitor Matrix ──
 	lines.push("");
@@ -686,34 +692,34 @@ export function renderMarketReport(analysis: MarketAnalysis, cardWidth = 76): st
 	lines.push(`${BORDER}┌─${RESET} ${matrixHeader} ${BORDER}${"─".repeat(matrixBorderLen)}┐${RESET}`);
 
 	if (competitors.length === 0) {
-		lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${GRAY}No se encontraron competidores indexados directamente.${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`${panelRow(`  ${GRAY}No se encontraron competidores indexados directamente.${RESET}`, innerWidth + 2, BORDER)}`);
 	} else {
 		for (let i = 0; i < competitors.length; i++) {
 			const c = competitors[i];
 			const numBadge = `${SECONDARY}[${i + 1}]${RESET}`;
 			const nameTrunc = truncateAnsi(c.name, 36);
 			const rowHeader = `  ${numBadge} ${WHITE}${nameTrunc}${RESET} ${GRAY}(AppID: ${c.id})${RESET}  ${GREEN}${c.priceFormatted}${RESET}`;
-			lines.push(`${BORDER}│${RESET} ${padAnsi(rowHeader, innerWidth)} ${BORDER}│${RESET}`);
+			lines.push(`${panelRow(rowHeader, innerWidth + 2, BORDER)}`);
 
 			const statusBadge = c.isReleased ? `${GREEN}Lanzado${RESET}` : `${YELLOW}Próximo${RESET}`;
 			const reviewRow = `      ${GRAY}Rating:${RESET} ${WHITE}${c.ratingDesc}${RESET}  ${GRAY}•${RESET}  ${WHITE}${formatNumber(c.totalReviews)}${RESET} ${GRAY}reviews${RESET}  ${GRAY}•${RESET}  ${statusBadge}`;
-			lines.push(`${BORDER}│${RESET} ${padAnsi(reviewRow, innerWidth)} ${BORDER}│${RESET}`);
+			lines.push(`${panelRow(reviewRow, innerWidth + 2, BORDER)}`);
 
 			const est = c.boxleiter ?? calculateBoxleiterEstimate(c.totalReviews, c.priceUsd ?? 0);
 			const salesEstText = `${GRAY}Ventas Est:${RESET} ${WHITE}~${formatNumber(est.copies)} copias${RESET}`;
 			const revenueEstText = `${GRAY}Facturación Neta Dev:${RESET} ${GREEN}~$${formatNumber(est.netDevUsd)} USD${RESET}`;
 			const estRow = `      ${salesEstText} ${GRAY}•${RESET} ${revenueEstText}`;
-			lines.push(`${BORDER}│${RESET} ${padAnsi(estRow, innerWidth)} ${BORDER}│${RESET}`);
+			lines.push(`${panelRow(estRow, innerWidth + 2, BORDER)}`);
 
 			const linkRow = `      ${GRAY}Enlace:${RESET} ${GRAY}${c.steamUrl}${RESET}`;
-			lines.push(`${BORDER}│${RESET} ${padAnsi(linkRow, innerWidth)} ${BORDER}│${RESET}`);
+			lines.push(`${panelRow(linkRow, innerWidth + 2, BORDER)}`);
 
 			if (i < competitors.length - 1) {
-				lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${BORDER}${"┄".repeat(innerWidth - 4)}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+				lines.push(`${panelRow(`  ${BORDER}${"┄".repeat(innerWidth - 4)}${RESET}`, innerWidth + 2, BORDER)}`);
 			}
 		}
 	}
-	lines.push(`${BORDER}└${"─".repeat(width - 2)}┘${RESET}`);
+	lines.push(panelBottom(width - 2, "square", BORDER));
 
 	// ── 3. Análisis Financiero & Reglas del Productor ──
 	lines.push("");
@@ -722,26 +728,26 @@ export function renderMarketReport(analysis: MarketAnalysis, cardWidth = 76): st
 	const financialBorderLen = Math.max(0, width - 45);
 	lines.push(`${BORDER}┌─${RESET} ${financialHeader} ${BORDER}${"─".repeat(financialBorderLen)}┐${RESET}`);
 
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${YELLOW}PRESUPUESTO TEMPORAL MÁXIMO:${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`${panelRow(`  ${YELLOW}PRESUPUESTO TEMPORAL MÁXIMO:${RESET}`, innerWidth + 2, BORDER)}`);
 	const devBudgetLines = wrapText(finRules.maxDevBudget, innerWidth - 6);
 	for (const bl of devBudgetLines) {
-		lines.push(`${BORDER}│${RESET} ${padAnsi(`    ${WHITE}${bl}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`${panelRow(`    ${WHITE}${bl}${RESET}`, innerWidth + 2, BORDER)}`);
 	}
 
-	lines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${GREEN}UMBRAL DE WISHLISTS (ALGORITMO STEAM):${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`${panelRow("", innerWidth + 2, BORDER)}`);
+	lines.push(`${panelRow(`  ${GREEN}UMBRAL DE WISHLISTS (ALGORITMO STEAM):${RESET}`, innerWidth + 2, BORDER)}`);
 	const wishlistLines = wrapText(finRules.wishlistThreshold, innerWidth - 6);
 	for (const wl of wishlistLines) {
-		lines.push(`${BORDER}│${RESET} ${padAnsi(`    ${WHITE}${wl}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`${panelRow(`    ${WHITE}${wl}${RESET}`, innerWidth + 2, BORDER)}`);
 	}
 
-	lines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${RED}VETO DE SCOPE PREVENTIVO (RUTHLESS DESCOPING):${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`${panelRow("", innerWidth + 2, BORDER)}`);
+	lines.push(`${panelRow(`  ${RED}VETO DE SCOPE PREVENTIVO (RUTHLESS DESCOPING):${RESET}`, innerWidth + 2, BORDER)}`);
 	const vetoLines = wrapText(finRules.scopeVeto, innerWidth - 6);
 	for (const vl of vetoLines) {
-		lines.push(`${BORDER}│${RESET} ${padAnsi(`    ${WHITE}${vl}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`${panelRow(`    ${WHITE}${vl}${RESET}`, innerWidth + 2, BORDER)}`);
 	}
-	lines.push(`${BORDER}└${"─".repeat(width - 2)}┘${RESET}`);
+	lines.push(panelBottom(width - 2, "square", BORDER));
 
 	// ── 4. Cero Filtro (Análisis Implacable de Dirección) ──
 	lines.push("");
@@ -749,30 +755,30 @@ export function renderMarketReport(analysis: MarketAnalysis, cardWidth = 76): st
 	const filtroBorderLen = Math.max(0, width - 50);
 	lines.push(`${BORDER}┌─${RESET} ${filtroHeader} ${BORDER}${"─".repeat(filtroBorderLen)}┐${RESET}`);
 
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${RED}CRÍTICA DE TROPOS GENÉRICOS:${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`${panelRow(`  ${RED}CRÍTICA DE TROPOS GENÉRICOS:${RESET}`, innerWidth + 2, BORDER)}`);
 	const critiqueLines = wrapText(ceroFiltro.tropesCritique, innerWidth - 6);
 	for (const cl of critiqueLines) {
-		lines.push(`${BORDER}│${RESET} ${padAnsi(`    ${GRAY}${cl}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`${panelRow(`    ${GRAY}${cl}${RESET}`, innerWidth + 2, BORDER)}`);
 	}
 
-	lines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${YELLOW}GANCHO MECÁNICO DIFERENCIADOR (USP OBLIGATORIO):${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`${panelRow("", innerWidth + 2, BORDER)}`);
+	lines.push(`${panelRow(`  ${YELLOW}GANCHO MECÁNICO DIFERENCIADOR (USP OBLIGATORIO):${RESET}`, innerWidth + 2, BORDER)}`);
 	const hookLines = wrapText(ceroFiltro.mandatoryHook, innerWidth - 6);
 	for (const hl of hookLines) {
-		lines.push(`${BORDER}│${RESET} ${padAnsi(`    ${WHITE}${hl}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`${panelRow(`    ${WHITE}${hl}${RESET}`, innerWidth + 2, BORDER)}`);
 	}
-	lines.push(`${BORDER}└${"─".repeat(width - 2)}┘${RESET}`);
+	lines.push(panelBottom(width - 2, "square", BORDER));
 
 	// ── 5. Próximos Pasos ──
 	lines.push("");
 	const nextHeader = `${HEADING}PRÓXIMOS PASOS RECOMENDADOS${RESET}`;
 	const nextBorderLen = Math.max(0, width - 33);
 	lines.push(`${BORDER}┌─${RESET} ${nextHeader} ${BORDER}${"─".repeat(nextBorderLen)}┐${RESET}`);
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${WHITE}[1]${RESET} Definir pilares de diseño y ancla visual única    ${ACCENT}→ /concept${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${WHITE}[2]${RESET} Diseñar la mecánica de gancho en Live Spec viva   ${ACCENT}→ /spec${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${WHITE}[3]${RESET} Fijar límites técnicos y presupuestos de FPS      ${ACCENT}→ /arch${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${WHITE}[4]${RESET} Abrir el Hub y catálogo general de Pi Game Studio ${ACCENT}→ /studio${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`${BORDER}└${"─".repeat(width - 2)}┘${RESET}`);
+	lines.push(`${panelRow(`  ${WHITE}[1]${RESET} Definir pilares de diseño y ancla visual única    ${ACCENT}→ /concept${RESET}`, innerWidth + 2, BORDER)}`);
+	lines.push(`${panelRow(`  ${WHITE}[2]${RESET} Diseñar la mecánica de gancho en Live Spec viva   ${ACCENT}→ /spec${RESET}`, innerWidth + 2, BORDER)}`);
+	lines.push(`${panelRow(`  ${WHITE}[3]${RESET} Fijar límites técnicos y presupuestos de FPS      ${ACCENT}→ /arch${RESET}`, innerWidth + 2, BORDER)}`);
+	lines.push(`${panelRow(`  ${WHITE}[4]${RESET} Abrir el Hub y catálogo general de Pi Game Studio ${ACCENT}→ /studio${RESET}`, innerWidth + 2, BORDER)}`);
+	lines.push(panelBottom(width - 2, "square", BORDER));
 	lines.push("");
 
 	return lines;

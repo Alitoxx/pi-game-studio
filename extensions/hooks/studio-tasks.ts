@@ -1,4 +1,4 @@
-import { ACCENT, GREEN, YELLOW } from "./studio-palette.ts";
+import { ACCENT, GREEN, YELLOW, panelBottom, panelTop } from "./studio-palette.ts";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
@@ -140,12 +140,12 @@ export function inspectStudioTasks(cwd: string): TasksSummary {
 export function formatTasksOutput(summary: TasksSummary): string[] {
 	const lines: string[] = [];
 
-	lines.push("┌── STUDIO TASKS: GESTIÓN DE TAREAS & RADAR DE OBSOLESCENCIA ────┐");
+	lines.push(panelTop(64, "STUDIO TASKS: GESTIÓN DE TAREAS & RADAR DE OBSOLESCENCIA"));
 	lines.push(`│ Total: ${summary.totalCount} · Completadas: ${summary.completedCount} · En Progreso: ${summary.inProgressCount} · Pendientes: ${summary.pendingCount} │`);
 	if (summary.staleCount > 0) {
 		lines.push(`│ ⚠ TAREAS OBSOLETAS / STALE DETECTADAS: ${summary.staleCount}                          │`);
 	}
-	lines.push("└─────────────────────────────────────────────────────────────────┘");
+	lines.push(panelBottom(65));
 	lines.push("");
 
 	if (summary.totalCount === 0) {

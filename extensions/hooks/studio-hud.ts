@@ -2,6 +2,7 @@ import type { ExtensionContext, ExtensionAPI } from "@earendil-works/pi-coding-a
 import { existsSync, readFileSync, writeFileSync, unlinkSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
+import { panelBottom, panelRow, panelTop } from "./studio-palette.ts";
 import { readProducerState } from "./studio-start.ts";
 import { inspectSetup } from "./studio-setup.ts";
 
@@ -228,11 +229,9 @@ export function renderStudioStatusCard(
 		const maxTitleLen = Math.max(10, cardWidth - 7);
 		const displayTitle = rawTitle.length > maxTitleLen ? truncateAnsi(rawTitle, maxTitleLen) : rawTitle;
 		const titleStyled = `${r.accent(BOLD + displayTitle)}${RESET}`;
-		const titleVisibleLen = displayTitle.replace(/\x1b\[[0-9;]*m/g, "").length;
-		const ruleLen = Math.max(0, cardWidth - titleVisibleLen - 5);
 		const lines: string[] = [];
-		lines.push(`  ${BORDER}╭─${RESET} ${titleStyled} ${BORDER}${"─".repeat(ruleLen)}╮${RESET}`);
-		lines.push(`  ${BORDER}╰${"─".repeat(cardWidth - 2)}╯${RESET}`);
+		lines.push(`  ${panelTop(cardWidth - 2, titleStyled, "rounded", BORDER)}`);
+		lines.push(`  ${panelBottom(cardWidth - 2, "rounded", BORDER)}`);
 		return lines;
 	}
 
@@ -243,19 +242,18 @@ export function renderStudioStatusCard(
 	const lines: string[] = [];
 	const titleText = `System`;
 	const titleStyled = `${r.accent(BOLD + titleText)}${RESET}`;
-	const ruleLen = Math.max(0, cardWidth - titleText.length - 5);
-	lines.push(`  ${BORDER}╭─${RESET} ${titleStyled} ${BORDER}${"─".repeat(ruleLen)}╮${RESET}`);
+	lines.push(`  ${panelTop(cardWidth - 2, titleStyled, "rounded", BORDER)}`);
 
 	// Direct Project & Engine rows
 	const shortRoot = studioRoot.replace(process.env.HOME || "", "~");
 	const projectLine = truncateAnsi(`  ${r.text(gameTitle)}${RESET} ${r.muted(`(${shortRoot})`)}${RESET}`, innerWidth);
-	lines.push(`  ${BORDER}│${RESET} ${padAnsi(projectLine, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`  ${panelRow(projectLine, innerWidth + 2, BORDER)}`);
 	const engineLine = truncateAnsi(`  ${r.muted("Engine")}${RESET} ${r.accent(engine)}${RESET} ${r.muted("·")}${RESET} ${r.muted("Hito")}${RESET} ${r.text(milestone)}${RESET}`, innerWidth);
-	lines.push(`  ${BORDER}│${RESET} ${padAnsi(engineLine, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`  ${panelRow(engineLine, innerWidth + 2, BORDER)}`);
 	const memLine = truncateAnsi(`  ${r.muted("Memory")}${RESET} · ${engramStr}`, innerWidth);
-	lines.push(`  ${BORDER}│${RESET} ${padAnsi(memLine, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`  ${panelRow(memLine, innerWidth + 2, BORDER)}`);
 
-	lines.push(`  ${BORDER}╰${"─".repeat(cardWidth - 2)}╯${RESET}`);
+	lines.push(`  ${panelBottom(cardWidth - 2, "rounded", BORDER)}`);
 	return lines;
 }
 

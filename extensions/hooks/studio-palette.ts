@@ -119,11 +119,19 @@ export function resolveStudioTheme(piTheme?: any): StudioThemeRoles {
 }
 
 /**
+ * Visible length of a string that may carry ANSI SGR escapes: escapes count
+ * as zero. The single source of truth for panel geometry.
+ */
+function ansiVisibleLen(str: string): number {
+	return str.replace(/\x1b\[[0-9;]*m/g, "").length;
+}
+
+/**
  * Truncates a string containing ANSI escape codes while preserving color formatting
  * and calculating length strictly based on visible character count.
  */
 export function truncateAnsi(str: string, maxLen: number): string {
-	const visibleLen = str.replace(/\x1b\[[0-9;]*m/g, "").length;
+	const visibleLen = ansiVisibleLen(str);
 	if (visibleLen <= maxLen) return str;
 
 	let visibleCount = 0;
@@ -154,8 +162,105 @@ export function truncateAnsi(str: string, maxLen: number): string {
  * Right-pads an ANSI-formatted string up to the specified visible length.
  */
 export function padAnsi(str: string, len: number): string {
-	const visibleLen = str.replace(/\x1b\[[0-9;]*m/g, "").length;
+	const visibleLen = ansiVisibleLen(str);
 	return visibleLen < len ? str + " ".repeat(len - visibleLen) : str;
+}
+
+// ─── Panel frames (issue #52, slice 2) ───────────────────────────────
+// The studio draws panels in two corner families: square (legacy CLI boxes)
+// and rounded (TUI widget cards). Centralizing the geometry here means the
+// style question — which corners, which rule — is decoupled from the call
+// sites, and a border can no longer be one column off by hand.
+
+export type PanelStyle = "square" | "rounded";
+
+const PANEL_CORNERS: Record<PanelStyle, { top: [string, string]; bottom: [string, string] }> = {
+	square: { top: ["┌", "┐"], bottom: ["└", "┘"] },
+	rounded: { top: ["╭", "╮"], bottom: ["╰", "╯"] },
+};
+
+/** Dashes between the corner and the title, per each family's existing idiom: `┌── T ──┐` vs `╭─ T ─╮`. */
+const TITLE_LEAD: Record<PanelStyle, number> = { square: 2, rounded: 1 };
+
+/**
+ * Builds the top border of a panel. Total visible width is always
+ * `innerWidth + 2` (the two corners). With a title it reproduces the studio's
+ * existing pattern — corner, lead dashes, spaces around the title, fill — and
+ * truncates via `truncateAnsi` when the title cannot fit instead of
+ * overflowing. `frameColor` colours the border segments exactly where the
+ * original call sites placed their escapes (pass `BORDER` for the studio
+ * theme; the default is the plain character, byte-identical to the uncoloured
+ * call sites).
+ */
+export function panelTop(
+	innerWidth: number,
+	title?: string,
+	style: PanelStyle = "square",
+	frameColor: string = "",
+): string {
+	const [left, right] = PANEL_CORNERS[style].top;
+	const lead = TITLE_LEAD[style];
+	const width = Math.max(0, innerWidth);
+	const tail = frameColor ? RESET : "";
+
+	if (title === undefined) {
+		return frameColor + left + "─".repeat(width) + right + tail;
+	}
+
+	// The title owns the lead dashes (style), two spaces and itself; anything
+	// narrower than that cannot host a title, so it degrades to a plain frame.
+	const titleBudget = width - lead - 2;
+	if (titleBudget < 1) {
+		return frameColor + left + "─".repeat(width) + right + tail;
+	}
+	let text = title;
+	if (ansiVisibleLen(text) > titleBudget) {
+		text = truncateAnsi(text, titleBudget);
+	}
+	const fill = Math.max(0, width - lead - ansiVisibleLen(text) - 2);
+	const innerReset = frameColor ? RESET : "";
+	return (
+		frameColor +
+		left +
+		"─".repeat(lead) +
+		innerReset +
+		" " + text + " " +
+		frameColor +
+		"─".repeat(fill) +
+		right +
+		tail
+	);
+}
+
+/**
+ * Builds a mid-panel divider (`├───┤`). The junctions are T pieces for both
+ * families: rounded corners belong to the top and bottom edges only.
+ */
+export function panelRule(innerWidth: number, _style: PanelStyle = "square", frameColor: string = ""): string {
+	const tail = frameColor ? RESET : "";
+	return frameColor + "├" + "─".repeat(Math.max(0, innerWidth)) + "┤" + tail;
+}
+
+/**
+ * Builds the bottom border of a panel; total visible width is `innerWidth + 2`.
+ */
+export function panelBottom(innerWidth: number, style: PanelStyle = "square", frameColor: string = ""): string {
+	const [left, right] = PANEL_CORNERS[style].bottom;
+	const tail = frameColor ? RESET : "";
+	return frameColor + left + "─".repeat(Math.max(0, innerWidth)) + right + tail;
+}
+
+/**
+ * Builds one content row: `│ <content padded to innerWidth - 2> │`. Total
+ * visible width, padding included, is exactly `innerWidth + 2`. Content is
+ * padded, never truncated — callers truncate with `truncateAnsi` first when
+ * they need a hard cap. `frameColor` colours both border segments.
+ */
+export function panelRow(content: string, innerWidth: number, frameColor: string = ""): string {
+	const body = padAnsi(content, Math.max(0, innerWidth - 2));
+	const innerReset = frameColor ? RESET : "";
+	const tail = frameColor ? RESET : "";
+	return frameColor + "│" + innerReset + " " + body + " " + frameColor + "│" + tail;
 }
 
 // ──────────────────────────────────────────────

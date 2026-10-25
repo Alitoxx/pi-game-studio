@@ -17,6 +17,10 @@ import {
 	GRAY,
 	padAnsi,
 	truncateAnsi,
+	panelBottom,
+	panelRule,
+	panelRow,
+	panelTop,
 } from "./studio-palette.ts";
 
 export interface ConceptData {
@@ -383,24 +387,18 @@ export function renderSteamPagePreview(
 	const lines: string[] = [];
 
 	lines.push("");
-	lines.push(`${BORDER}┌${"─".repeat(width - 2)}┐${RESET}`);
+	lines.push(panelTop(width - 2, undefined, "square", BORDER));
 	lines.push(
-		`${BORDER}│${RESET} ${padAnsi(
-			`${ACCENT}${BOLD}STEAM STORE PAGE GENERATOR & COPY PREVIEW${RESET}`,
-			innerWidth,
-		)} ${BORDER}│${RESET}`,
+		`${panelRow(`${ACCENT}${BOLD}STEAM STORE PAGE GENERATOR & COPY PREVIEW${RESET}`, innerWidth + 2, BORDER)}`,
 	);
-	lines.push(`${BORDER}├${"─".repeat(width - 2)}┤${RESET}`);
+	lines.push(panelRule(width - 2, "square", BORDER));
 
 	// Metadata
 	const srcLabel = concept.sourceFile ? basename(concept.sourceFile) : "Auto-sintetizado";
 	lines.push(
-		`${BORDER}│${RESET} ${padAnsi(
-			`  ${DIM}Título:${RESET} ${WHITE}${concept.title}${RESET} ${DIM}│ Género:${RESET} ${SECONDARY}${concept.genre}${RESET} ${DIM}│ Fuente:${RESET} ${GRAY}${srcLabel}${RESET}`,
-			innerWidth,
-		)} ${BORDER}│${RESET}`,
+		`${panelRow(`  ${DIM}Título:${RESET} ${WHITE}${concept.title}${RESET} ${DIM}│ Género:${RESET} ${SECONDARY}${concept.genre}${RESET} ${DIM}│ Fuente:${RESET} ${GRAY}${srcLabel}${RESET}`, innerWidth + 2, BORDER)}`,
 	);
-	lines.push(`${BORDER}├${"─".repeat(width - 2)}┤${RESET}`);
+	lines.push(panelRule(width - 2, "square", BORDER));
 
 	// Short Description Preview
 	const charStatus = page.shortDescPass
@@ -408,67 +406,43 @@ export function renderSteamPagePreview(
 		: `${RED}[EXCEDIDO: ${page.shortDescLength}/300 chars]${RESET}`;
 
 	lines.push(
-		`${BORDER}│${RESET} ${padAnsi(
-			`${HEADING}SHORT DESCRIPTION (Gancho de conversión en tienda):${RESET} ${charStatus}`,
-			innerWidth,
-		)} ${BORDER}│${RESET}`,
+		`${panelRow(`${HEADING}SHORT DESCRIPTION (Gancho de conversión en tienda):${RESET} ${charStatus}`, innerWidth + 2, BORDER)}`,
 	);
 	lines.push(
-		`${BORDER}│${RESET} ${padAnsi(
-			`  ${WHITE}"${page.shortDescription}"${RESET}`,
-			innerWidth,
-		)} ${BORDER}│${RESET}`,
+		`${panelRow(`  ${WHITE}"${page.shortDescription}"${RESET}`, innerWidth + 2, BORDER)}`,
 	);
-	lines.push(`${BORDER}├${"─".repeat(width - 2)}┤${RESET}`);
+	lines.push(panelRule(width - 2, "square", BORDER));
 
 	// Key Features Preview
 	lines.push(
-		`${BORDER}│${RESET} ${padAnsi(
-			`${HEADING}KEY FEATURES (Verbos Activos de Jugabilidad):${RESET}`,
-			innerWidth,
-		)} ${BORDER}│${RESET}`,
+		`${panelRow(`${HEADING}KEY FEATURES (Verbos Activos de Jugabilidad):${RESET}`, innerWidth + 2, BORDER)}`,
 	);
 	for (const kf of page.keyFeatures) {
 		const line = `  ${SECONDARY}${kf.verb}${RESET} ${DIM}│${RESET} ${GRAY}${truncateAnsi(kf.description, innerWidth - 16)}${RESET}`;
-		lines.push(`${BORDER}│${RESET} ${padAnsi(line, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`${panelRow(line, innerWidth + 2, BORDER)}`);
 	}
-	lines.push(`${BORDER}├${"─".repeat(width - 2)}┤${RESET}`);
+	lines.push(panelRule(width - 2, "square", BORDER));
 
 	// BBCode Snapshot
 	lines.push(
-		`${BORDER}│${RESET} ${padAnsi(
-			`${HEADING}BBCODE GENERADO PARA STEAMWORKS ("About This Game"):${RESET}`,
-			innerWidth,
-		)} ${BORDER}│${RESET}`,
+		`${panelRow(`${HEADING}BBCODE GENERADO PARA STEAMWORKS ("About This Game"):${RESET}`, innerWidth + 2, BORDER)}`,
 	);
 	lines.push(
-		`${BORDER}│${RESET} ${padAnsi(
-			`  ${GRAY}[h2]EL MUNDO Y LA AMENAZA[/h2] ... [list][*] [b]DOMINA[/b]...[/list]${RESET}`,
-			innerWidth,
-		)} ${BORDER}│${RESET}`,
+		`${panelRow(`  ${GRAY}[h2]EL MUNDO Y LA AMENAZA[/h2] ... [list][*] [b]DOMINA[/b]...[/list]${RESET}`, innerWidth + 2, BORDER)}`,
 	);
 	lines.push(
-		`${BORDER}│${RESET} ${padAnsi(
-			`  ${DIM}Etiquetas aplicadas: [h2], [b], [list], [*], [i], [img]${RESET}`,
-			innerWidth,
-		)} ${BORDER}│${RESET}`,
+		`${panelRow(`  ${DIM}Etiquetas aplicadas: [h2], [b], [list], [*], [i], [img]${RESET}`, innerWidth + 2, BORDER)}`,
 	);
-	lines.push(`${BORDER}├${"─".repeat(width - 2)}┤${RESET}`);
+	lines.push(panelRule(width - 2, "square", BORDER));
 
 	// Save confirmation
 	lines.push(
-		`${BORDER}│${RESET} ${padAnsi(
-			`${GREEN}[GUARDADO EXITOSO]${RESET} Documento completo exportado a:`,
-			innerWidth,
-		)} ${BORDER}│${RESET}`,
+		`${panelRow(`${GREEN}[GUARDADO EXITOSO]${RESET} Documento completo exportado a:`, innerWidth + 2, BORDER)}`,
 	);
 	lines.push(
-		`${BORDER}│${RESET} ${padAnsi(
-			`  ${WHITE}${outPath}${RESET}`,
-			innerWidth,
-		)} ${BORDER}│${RESET}`,
+		`${panelRow(`  ${WHITE}${outPath}${RESET}`, innerWidth + 2, BORDER)}`,
 	);
-	lines.push(`${BORDER}└${"─".repeat(width - 2)}┘${RESET}`);
+	lines.push(panelBottom(width - 2, "square", BORDER));
 	lines.push("");
 
 	return lines;

@@ -3,6 +3,7 @@ import { execSync } from "child_process";
 import { existsSync, readdirSync, readFileSync } from "fs";
 import { join } from "path";
 import { findStudioRoot } from "./studio-root.ts";
+import { panelBottom, panelRow, panelTop } from "./studio-palette.ts";
 
 export type ChangeCategory = "DESIGN" | "CODE" | "DATA_ASSETS" | "PRODUCTION" | "CONFIG" | "OTHER";
 
@@ -244,9 +245,9 @@ function formatFileChangeRow(c: FileChange): string {
 export function formatChangesOutput(summary: ChangesSummary): string[] {
 	const lines: string[] = [];
 
-	lines.push("┌── CAMBIOS DEL ESTUDIO (STUDIO CHANGES) ──────────────────────────┐");
-	lines.push("│ Clasificación rigurosa de modificaciones por naturaleza de juego │");
-	lines.push("└──────────────────────────────────────────────────────────────────┘");
+	lines.push(panelTop(66, "CAMBIOS DEL ESTUDIO (STUDIO CHANGES)"));
+	lines.push(panelRow("Clasificación rigurosa de modificaciones por naturaleza de juego", 66));
+	lines.push(panelBottom(66));
 	lines.push("");
 
 	const totalChanges =

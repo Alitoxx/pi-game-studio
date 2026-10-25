@@ -19,6 +19,10 @@ import {
 	type StudioCommandItem,
 	filterCommands,
 	highlightMatch,
+	panelBottom,
+	panelRule,
+	panelRow,
+	panelTop,
 } from "./studio-palette.ts";
 
 /**
@@ -169,9 +173,8 @@ export class CommandPaletteOverlayComponent {
 
 		// Header
 		const title = `PI GAME STUDIO · PALETA DE COMANDOS [Alt+K]`;
-		const topFill = Math.max(0, cardWidth - title.length - 5);
 		lines.push(
-			`${BORDER}╭─${RESET} ${LAVENDER}${BOLD}${title}${RESET} ${BORDER}${"─".repeat(topFill)}╮${RESET}`,
+			panelTop(cardWidth - 2, `${LAVENDER}${BOLD}${title}${RESET}`, "rounded", BORDER),
 		);
 
 		// Category tabs
@@ -182,11 +185,9 @@ export class CommandPaletteOverlayComponent {
 			return `${role.muted(cat)}`;
 		}).join("  ");
 		lines.push(
-			`${BORDER}│${RESET} ${padAnsi(categoryTabs, innerWidth)} ${BORDER}│${RESET}`,
+			`${panelRow(categoryTabs, innerWidth + 2, BORDER)}`,
 		);
-		lines.push(
-			`${BORDER}├${"─".repeat(cardWidth - 2)}┤${RESET}`,
-		);
+		lines.push(panelRule(cardWidth - 2, "rounded", BORDER));
 
 		// Search input line
 		const searchPrompt = `${CYAN}> ${RESET}`;
@@ -200,16 +201,14 @@ export class CommandPaletteOverlayComponent {
 			searchDisplay = `${role.text(beforeCursor)}${RESET}\x1b[7m${atCursor}\x1b[27m${role.text(afterCursor)}${RESET}`;
 		}
 		lines.push(
-			`${BORDER}│${RESET} ${padAnsi(`${searchPrompt}${searchDisplay}`, innerWidth)} ${BORDER}│${RESET}`,
+			`${panelRow(`${searchPrompt}${searchDisplay}`, innerWidth + 2, BORDER)}`,
 		);
-		lines.push(
-			`${BORDER}├${"─".repeat(cardWidth - 2)}┤${RESET}`,
-		);
+		lines.push(panelRule(cardWidth - 2, "rounded", BORDER));
 
 		// Results slice
 		if (this.filtered.length === 0) {
 			lines.push(
-				`${BORDER}│${RESET} ${padAnsi(`  ${role.muted("No se encontraron comandos coincidentes.")}${RESET}`, innerWidth)} ${BORDER}│${RESET}`,
+				`${panelRow(`  ${role.muted("No se encontraron comandos coincidentes.")}${RESET}`, innerWidth + 2, BORDER)}`,
 			);
 		} else {
 			// Scrolling window calculation
@@ -243,22 +242,18 @@ export class CommandPaletteOverlayComponent {
 
 				const rowContent = `${pointer}${namePadded} ${descFormatted}`;
 				lines.push(
-					`${BORDER}│${RESET} ${padAnsi(rowContent, innerWidth)} ${BORDER}│${RESET}`,
+					`${panelRow(rowContent, innerWidth + 2, BORDER)}`,
 				);
 			}
 		}
 
 		// Footer navigation hints
-		lines.push(
-			`${BORDER}├${"─".repeat(cardWidth - 2)}┤${RESET}`,
-		);
+		lines.push(panelRule(cardWidth - 2, "rounded", BORDER));
 		const navHint = `${role.muted("↑/↓ o Ctrl+P/N: Mover · Tab: Categoría · Enter: Elegir · Esc: Cerrar")}`;
 		lines.push(
-			`${BORDER}│${RESET} ${padAnsi(` ${navHint}`, innerWidth)} ${BORDER}│${RESET}`,
+			`${panelRow(` ${navHint}`, innerWidth + 2, BORDER)}`,
 		);
-		lines.push(
-			`${BORDER}╰${"─".repeat(cardWidth - 2)}╯${RESET}`,
-		);
+		lines.push(panelBottom(cardWidth - 2, "rounded", BORDER));
 
 		return lines;
 	}

@@ -16,6 +16,8 @@ import {
 	SECONDARY,
 	WHITE,
 	YELLOW,
+	panelBottom,
+	panelTop,
 } from "./studio-palette.ts";
 
 export type PillarId =
@@ -672,11 +674,11 @@ export async function handleStudioGameFeel(
 		console.log(`\n${HEADING}⚡ CÓDIGO IDIOMÁTICO LISTO PARA COPIAR (${audit.snippets.length} faltante${audit.snippets.length > 1 ? "s" : ""}):${RESET}\n`);
 		for (const s of audit.snippets) {
 			console.log(`${SECONDARY}► ${s.title}:${RESET}`);
-			console.log(`${DIM}${BORDER}┌${"─".repeat(68)}┐${RESET}`);
+			console.log(`${DIM}${panelTop(68, undefined, "square", BORDER)}`);
 			for (const line of s.code.split("\n")) {
 				console.log(`${DIM}${BORDER}│${RESET}  ${line}`);
 			}
-			console.log(`${DIM}${BORDER}└${"─".repeat(68)}┘${RESET}\n`);
+			console.log(`${DIM}${panelBottom(68, "square", BORDER)}\n`);
 		}
 	} else {
 		console.log(`\n${GREEN}✓ ¡EXCELENTE! Todas las 5 dinámicas de Game Feel están implementadas.${RESET}`);

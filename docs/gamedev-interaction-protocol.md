@@ -54,7 +54,7 @@ Toda interacción, decisión arquitectural o diseño debe estructurarse utilizan
 
 Pi Game Studio opera bajo **ODD (Organic Driven Development)** como único modelo de desarrollo:
 - **Cero burocracia de especificaciones muertas**: Se prohíben pipelines multi-documento con propuestas, specs formales, planes de tareas separados y reportes de archivo que generen *Paper Game Design*.
-- **Live Spec en `design/gdd/<feature>.md`**: Para features sustanciales (≥ 2 pasos), se mantiene un único archivo vivo que agrupa la fantasía del jugador, fórmulas, checklist de tareas y evidencia de validación.
+- **Live Spec en `design/gdd/<feature>.md`**: Cuando la tarea no es pequeña — falla alguna de las tres condiciones del Paso 4 (entendida, riesgo contenido, reanudable desde el pedido original y el diff) — se mantiene un único archivo vivo que agrupa la fantasía del jugador, fórmulas, checklist de tareas y evidencia de validación. El conteo de pasos no decide esto.
 - **Validación continua en motor**: Cada tarea se implementa en bloques de ~400 líneas y se verifica de inmediato con el compilador del motor, métricas de FPS y cero allocations innecesarias en el game loop.
 
 ---

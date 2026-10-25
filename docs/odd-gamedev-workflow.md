@@ -21,7 +21,7 @@ El diseño se valida en pantalla mediante *Game Feel*, respuesta de controles y 
 │ 1. AUTHORIZE:  Confirmar intención de implementación               │
 │ 2. EXPLORE:    Leer código de motor (src/), GDD vivo y dependencias │
 │ 3. UNCERTAINTY:Una sola pregunta enfocada si hay duda de diseño     │
-│ 4. CLASSIFY:   ¿Ajuste directo (<2 pasos) o Feature Sustancial?    │
+│ 4. CLASSIFY:   ¿Entendida, acotada y reanudable? Si no: Live Spec   │
 │ 5. LIVE SPEC:  Para features sustanciales: design/gdd/<feature>.md  │
 │ 6. IMPLEMENT:  Especialista codifica en paquetes de ~400 líneas     │
 │ 7. VALIDATE:   Compilación limpia + Smoke Check + FPS + Handoff     │
@@ -43,11 +43,20 @@ Si hay un conflicto real de diseño o arquitectura (e.g. *¿Cámara isométrica 
 - No se hacen cuestionarios abiertos ni debates abstractos.
 
 ### Paso 4: Classify (Clasificación de Tarea)
-- **Tarea Pequeña / Mecánica directa** (< 2 pasos significativos, e.g. ajustar velocidad de personaje, corregir colisión, agregar un shader simple):
+
+El tamaño no se decide contando pasos, archivos ni tests. Se decide con **tres condiciones que deben cumplirse juntas**:
+
+1. **Entendida**: el resultado esperado, qué cambiar y dónde ya se conocen; no queda ninguna decisión de producto o diseño abierta.
+2. **Riesgo contenido**: no toca datos que no se puedan reconstruir, seguridad, contratos que otros ya consumen, concurrencia ni entrega/entorno.
+3. **Reanudable desde el diff**: si la sesión se cortara ahora, otra persona podría terminarla con el pedido original y el `git diff`. Si hace falta contexto que no está en ninguno de los dos, la tarea no es pequeña.
+
+- **Tarea Pequeña / Mecánica directa** (las tres condiciones se cumplen, e.g. ajustar velocidad de personaje, corregir colisión, agregar un shader simple):
   - No genera documentos nuevos.
   - Pasa directo a implementación y verificación.
-- **Feature Sustancial** (≥ 2 pasos o sistema nuevo, e.g. sistema de inventario, combate con combos, IA de hordas):
+- **Feature Sustancial** (alguna condición falla, e.g. sistema de inventario, combate con combos, IA de hordas, o un cambio de formato de guardado):
   - Requiere un único documento vivo de feature (**Live Spec**).
+
+La cantidad de pasos, archivos o tests es una **pista**, nunca el criterio: un cambio de una línea en el esquema de guardado es sustancial porque rompe partidas existentes y no se reanuda sin contexto, mientras que dos renombres triviales son pequeños.
 
 ### Paso 5: Live Spec (Documento Único Vivo de Feature)
 Se almacena como la única fuente de verdad en `design/gdd/<feature-name>.md`:

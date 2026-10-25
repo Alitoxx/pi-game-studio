@@ -103,3 +103,33 @@ describe("Cross-References Validation", () => {
 		}
 	});
 });
+
+describe("ODD task classification", () => {
+	const read = (p) => fs.readFileSync(path.join(__dirname, "..", p), "utf8");
+
+	test("size is decided by resumability, never by counting steps", () => {
+		const workflow = read("docs/odd-gamedev-workflow.md");
+		const protocol = read("docs/gamedev-interaction-protocol.md");
+
+		// The proxy Organic Driven Development rejects: a step count decided
+		// whether a Live Spec was required, so a one-line savegame format change
+		// skipped it while two trivial renames demanded one.
+		expect(workflow).not.toMatch(/<\s*2\s*pasos/i);
+		expect(workflow).not.toMatch(/≥\s*2\s*pasos/i);
+		expect(protocol).not.toMatch(/≥\s*2\s*pasos/i);
+
+		const start = workflow.indexOf("### Paso 4");
+		const end = workflow.indexOf("### Paso 5");
+		expect(start).toBeGreaterThan(-1);
+		expect(end).toBeGreaterThan(start);
+		const classify = workflow.slice(start, end);
+
+		// The three conditions that decide size, all present in the rule itself.
+		expect(classify).toMatch(/entendid/i);
+		expect(classify).toMatch(/riesgo contenido|riesgo acotado/i);
+		expect(classify).toMatch(/reanudable/i);
+		expect(classify).toMatch(/diff/);
+		// Step count survives only as a hint, named as such.
+		expect(classify).toMatch(/pista/i);
+	});
+});

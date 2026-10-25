@@ -1908,6 +1908,35 @@ Implement fuzzy command palette.
 			}).not.toThrow();
 		});
 
+		test("Bounded edit surfaces reach the specialist through the child environment", () => {
+			const script = `
+				const { surfacesFromEnv, BoundedSurfacesGuard } = await import("./extensions/hooks/studio-surfaces-guard.ts");
+
+				if (surfacesFromEnv(undefined).length !== 0) throw new Error("unset env must yield no surfaces");
+				if (surfacesFromEnv("").length !== 0) throw new Error("empty env must yield no surfaces");
+				if (surfacesFromEnv("not-json").length !== 0) throw new Error("malformed env must yield no surfaces");
+
+				const fromEnv = surfacesFromEnv(JSON.stringify(["src/", "assets/"]));
+				if (fromEnv.length !== 2) throw new Error("env surfaces not parsed: " + fromEnv.length);
+
+				const guard = new BoundedSurfacesGuard();
+				guard.setFromEnv(JSON.stringify(["src/"]));
+				if (!guard.validate("src/player.rs").allowed) throw new Error("in-scope edit must be allowed inside the child");
+				if (guard.validate("package.json").allowed) throw new Error("out-of-scope edit must be blocked inside the child");
+				if (!guard.validate("package.json").reason) throw new Error("blocked edit must explain why");
+
+				const unbounded = new BoundedSurfacesGuard();
+				unbounded.setFromEnv(undefined);
+				if (!unbounded.validate("package.json").allowed) throw new Error("no declared surfaces must stay unbounded");
+			`;
+			const { execFileSync } = require("child_process");
+			expect(() => {
+				execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+					cwd: path.join(__dirname, ".."),
+				});
+			}).not.toThrow();
+		});
+
 		test("Integration in index.ts wires palette, shortcuts, and safety guards", () => {
 			// Commands and shortcut registration
 			expect(hooksSource).toContain('registerCommand?.("palette"');

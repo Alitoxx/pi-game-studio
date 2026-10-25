@@ -171,6 +171,22 @@ describe("Runner enforces the specialist return contract", () => {
 				throw new Error("valid contract should complete, got: " + good.status + " / " + good.error);
 			}
 
+			// The child must receive the declared edit surfaces, and stay unbounded without them.
+			process.env.FAKE_ECHO_SURFACES = "1";
+			const scoped = await studioAgentsRunner.run(manifest, task, tmp, "task");
+			const scopedResult = scoped.result || "";
+			if (scoped.status !== "completed") {
+				throw new Error("scoped run should complete, got: " + scoped.status + " / " + scoped.error);
+			}
+			if (!scopedResult.includes("src/") || scopedResult.includes("<unset>")) {
+				throw new Error("child did not receive the allowed edit surfaces: " + scopedResult);
+			}
+
+			const unscoped = await studioAgentsRunner.run(manifest, "Implementa el movimiento base.", tmp, "task");
+			if (!(unscoped.result || "").includes("<unset>")) {
+				throw new Error("undisclosed surfaces must stay unbounded: " + unscoped.result);
+			}
+
 			if (previousPiPath === undefined) delete process.env.PI_PATH;
 			else process.env.PI_PATH = previousPiPath;
 			fs.rmSync(tmp, { recursive: true, force: true });

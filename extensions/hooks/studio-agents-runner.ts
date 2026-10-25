@@ -3,6 +3,28 @@ import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { AgentManifest } from "./studio-agent-loader.ts";
 import { validateSpecialistReturn } from "./return-contract.ts";
+import { parseAllowedSurfaces } from "./studio-surfaces-guard.ts";
+
+/**
+ * Builds the child process environment for a dispatched specialist, forwarding
+ * the bounded edit surfaces declared in the task so the child-side guard can
+ * enforce the same boundaries as the parent. Tasks that declare no surfaces
+ * keep the historical unbounded behaviour.
+ */
+export function buildSubagentEnv(
+	task: string,
+	base: NodeJS.ProcessEnv = process.env,
+): NodeJS.ProcessEnv {
+	const env: NodeJS.ProcessEnv = { ...base };
+	const surfaces = parseAllowedSurfaces(task);
+	if (surfaces.length > 0) {
+		env.PI_STUDIO_ALLOWED_SURFACES = JSON.stringify(surfaces);
+	} else {
+		// Never inherit a stale scope from a parent that was itself a child process.
+		delete env.PI_STUDIO_ALLOWED_SURFACES;
+	}
+	return env;
+}
 
 export interface TaskRecord {
 	id: string;
@@ -244,11 +266,11 @@ export class StudioAgentsRunner {
 			try {
 				child = spawn(piExecutable, args, {
 					cwd: record.cwd,
-					env: {
+					env: buildSubagentEnv(record.task, {
 						...process.env,
 						PI_GAME_STUDIO_CHILD: "1",
 						PI_GAME_STUDIO_AGENT: manifest.name,
-					},
+					}),
 					stdio: ["pipe", "pipe", "pipe"],
 				});
 			} catch (err: any) {

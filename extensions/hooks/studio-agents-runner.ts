@@ -39,6 +39,8 @@ export interface TaskRecord {
 	resolvedRoot: string;
 	/** Compactions that happened inside the child, with their reason and outcome. */
 	compactions?: Array<{ reason: string; ok: boolean }>;
+	/** Delegation tools a child declared but never received: depth is one. */
+	delegationStripped?: string[];
 	/** Real usage reported by the child, accumulated per completed message. */
 	usage?: { input: number; output: number; cacheRead: number; cacheWrite: number; cost: number };
 	/** Timestamp of the last sign of life from the child, for the idle watchdog. */
@@ -323,7 +325,21 @@ export class StudioAgentsRunner {
 			// A dispatched child has no UI, so granting ask_user_question only produces a
 			// cancelled request and a stalled run. Escalation goes through the return
 			// contract instead, where the parent can relay it as a blocking choice.
-			const childTools = (manifest.tools ?? []).filter((t) => t !== "ask_user_question");
+			//
+			// Depth is one. A child that could dispatch again would launch work it has no
+			// tool to inspect, collect or cancel, while its own parent sees a completed
+			// agent that produced nothing. The whole subagent_* family is stripped — not
+			// just subagent_run — so a template cannot reopen the hole by declaring a
+			// sibling tool, and the strip is recorded instead of happening in silence.
+			const declaredTools = manifest.tools ?? [];
+			const delegationTools = declaredTools.filter((t) => t.startsWith("subagent_"));
+			const childTools = declaredTools.filter(
+				(t) => t !== "ask_user_question" && !t.startsWith("subagent_"),
+			);
+			if (delegationTools.length > 0) {
+				record.delegationStripped = delegationTools;
+				record.latestActivity = `Profundidad 1: ${delegationTools.join(", ")} no otorgado a ${manifest.name}`;
+			}
 
 			const executivePrompt = [
 				`[PI GAME STUDIO SPECIALIST DISPATCH — ODD PROTOCOL ACTIVE]`,

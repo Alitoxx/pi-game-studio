@@ -77,7 +77,7 @@ Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar 
 9. **Radar de Próximos Pasos & Recibos de Entrega**: Acciones siguientes claras con sus comandos ejecutables.
 10. **Return Contract de Especialistas**: En delegaciones `subagent_run`, los especialistas devuelven exclusivamente un bloque YAML compacto (`status`, `summary`, `files_changed`, `validation`, `gameplay_impact`) eliminando prosa conversacional redundante.
 11. **Flow Completion & Producer Auto-Handoff Protocol**: Cierre automático de tareas con actualización instantánea de `production/roadmap.md` (`<!-- PRODUCER_STATE -->`) y relevo directo al siguiente especialista sin preguntas especulativas.
-12. **Native Isolated Subagents (`subagent_run`)**: Ejecución de especialistas mediante procesos hijos de Pi en modo no interactivo (`pi --print`). La sesión padre mantiene el rol de orquestador/productor sin contaminación de contexto ni ejecución de código inline.
+12. **Native Isolated Subagents (`subagent_run`)**: Ejecución de especialistas mediante procesos hijos de Pi en modo no interactivo (`pi --print`). La sesión padre mantiene el rol de orquestador/productor sin contaminación de contexto ni ejecución de código inline. **La profundidad es uno**: solo el `producer` en la sesión padre delega, y el runner retira toda herramienta `subagent_*` del proceso hijo aunque el template la declare.
 13. **Decisiones Estructuradas con Criterio Situacional (`ask_user_question`)**: Las decisiones genuinas de diseño, dilemas de arquitectura y bifurcaciones de alcance se presentan mediante la herramienta unificada `ask_user_question` con modales interactivos en la terminal (`ctx.ui.select`), permitiendo navegación con flechas (`↑`/`↓`) y selección con `Enter`. **Contrato estricto:** Se utiliza exclusivamente ante dilemas o decisiones reales, nunca para saludos rutinarios o transiciones secuenciales de tareas ya acordadas en el roadmap. Antes de la tool, el agente explica en prosa natural el contexto, trade-offs y su recomendación técnica experta. Las opciones deben ser limpias y no redundantes (prohibido duplicar el título dentro de la descripción). Soporta tanto decisiones individuales como cuestionarios en lote (hasta 4 preguntas secuenciales en un solo turno), con opción `"Otro..."` por defecto.
 
 ---
@@ -93,12 +93,12 @@ Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar 
 
 #### `creative-director`
 - **Archivo:** [`agents/creative-director.md`](agents/creative-director.md)
-- **Presupuesto de Razonamiento:** `high` | **Herramientas:** `read, find, grep, write, edit, web_search, subagent_run, ask_user_question`
+- **Presupuesto de Razonamiento:** `high` | **Herramientas:** `read, find, grep, write, edit, web_search, ask_user_question`
 - **Misión y Alcance:** The Creative Director is the highest-level creative authority for the project. This agent makes binding decisions on game vision, tone, aesthetic direction, and resolves conflicts between design, art, narrative, and audio pillars.
 
 #### `technical-director`
 - **Archivo:** [`agents/technical-director.md`](agents/technical-director.md)
-- **Presupuesto de Razonamiento:** `high` | **Herramientas:** `read, find, grep, write, edit, bash, web_search, subagent_run, ask_user_question`
+- **Presupuesto de Razonamiento:** `high` | **Herramientas:** `read, find, grep, write, edit, bash, web_search, ask_user_question`
 - **Misión y Alcance:** The Technical Director owns all high-level technical decisions including engine architecture, technology choices, performance strategy, and technical risk management.
 
 ### Tier 2: Leads & Core Devs

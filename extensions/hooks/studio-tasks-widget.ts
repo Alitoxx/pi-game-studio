@@ -18,6 +18,8 @@ import {
 	BORDER,
 	truncateAnsi,
 	padAnsi,
+	resolveStudioTheme,
+	type StudioThemeRoles,
 } from "./studio-palette.ts";
 
 export const TASKS_WIDGET_KEY = "studio-tasks";
@@ -68,7 +70,10 @@ export function renderTasksWidgetCard(
 	width: number = 74,
 	collapsed?: boolean,
 	studioRoot?: string,
+	role?: StudioThemeRoles,
 ): string[] {
+	// Total by construction: without a theme handle the studio palette is used as-is.
+	const r = role ?? resolveStudioTheme();
 	const isCollapsed = collapsed !== undefined
 		? collapsed
 		: (studioRoot ? isTasksCardCollapsed(studioRoot) : false);
@@ -109,7 +114,7 @@ export function renderTasksWidgetCard(
 		const rawTitle = `${titleBase} [collapsed]`;
 		const maxTitleLen = Math.max(10, cardWidth - 7);
 		const displayTitle = rawTitle.length > maxTitleLen ? truncateAnsi(rawTitle, maxTitleLen) : rawTitle;
-		const titleStyled = `${BLUE}${displayTitle}${RESET}`;
+		const titleStyled = `${r.accent(displayTitle)}${RESET}`;
 		const titleVisibleLen = displayTitle.replace(/\x1b\[[0-9;]*m/g, "").length;
 		const ruleLen = Math.max(0, cardWidth - titleVisibleLen - 5);
 		lines.push(`  ${BORDER}╭─${RESET} ${titleStyled} ${BORDER}${"─".repeat(ruleLen)}╮${RESET}`);
@@ -118,15 +123,15 @@ export function renderTasksWidgetCard(
 	}
 
 	const titleText = titleBase;
-	const titleStyled = `${BLUE}${titleText}${RESET}`;
+	const titleStyled = `${r.accent(titleText)}${RESET}`;
 	const ruleLen = Math.max(0, cardWidth - titleText.length - 5);
 	lines.push(`  ${BORDER}╭─${RESET} ${titleStyled} ${BORDER}${"─".repeat(ruleLen)}╮${RESET}`);
 
 	if (tasks.length === 0) {
-		lines.push(`  ${BORDER}│${RESET} ${padAnsi(`  ${GRAY}○${RESET} ${DIM}Sin tareas activas (/concept o /tasks)${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`  ${BORDER}│${RESET} ${padAnsi(`  ${r.muted("○")}${RESET} ${DIM}Sin tareas activas (/concept o /tasks)${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 		if (nextStep) {
 			lines.push(`  ${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
-			const nextLine = truncateAnsi(`  ${GREEN}→${RESET} ${GRAY}${nextStep}${RESET}`, innerWidth);
+			const nextLine = truncateAnsi(`  ${r.success("→")}${RESET} ${r.muted(nextStep)}${RESET}`, innerWidth);
 			lines.push(`  ${BORDER}│${RESET} ${padAnsi(nextLine, innerWidth)} ${BORDER}│${RESET}`);
 		}
 		lines.push(`  ${BORDER}╰${"─".repeat(cardWidth - 2)}╯${RESET}`);
@@ -145,20 +150,20 @@ export function renderTasksWidgetCard(
 	].slice(0, 7);
 
 	for (const task of displayTasks) {
-		let icon = `${GRAY}○${RESET}`;
-		let titleColor = WHITE;
+		let icon = `${r.muted("○")}`;
+		let titleColor = (t: string) => r.text(t);
 
 		if (task.status === "completed") {
-			icon = `${GREEN}✓${RESET}`;
-			titleColor = `${DIM}${GRAY}`;
+			icon = `${r.success("✓")}`;
+			titleColor = (t: string) => `${DIM}${r.muted(t)}`;
 		} else if (task.status === "in_progress") {
-			icon = `${YELLOW}◐${RESET}`;
-			titleColor = `${WHITE}`;
+			icon = `${r.warn("◐")}`;
+			titleColor = (t: string) => r.text(t);
 		}
 
-		let rowText = `${icon} ${titleColor}${task.title}${RESET}`;
+		let rowText = `${icon} ${titleColor(task.title)}${RESET}`;
 		if (task.isStale) {
-			rowText += ` ${YELLOW}${DIM}(stale)${RESET}`;
+			rowText += ` ${r.warn(`${DIM}(stale)`)}${RESET}`;
 		}
 
 		const truncatedRow = truncateAnsi(rowText, innerWidth);
@@ -173,7 +178,7 @@ export function renderTasksWidgetCard(
 
 	if (nextStep) {
 		lines.push(`  ${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
-		const nextLine = truncateAnsi(`  ${GREEN}→${RESET} ${GRAY}${nextStep}${RESET}`, innerWidth);
+		const nextLine = truncateAnsi(`  ${r.success("→")}${RESET} ${r.muted(nextStep)}${RESET}`, innerWidth);
 		lines.push(`  ${BORDER}│${RESET} ${padAnsi(nextLine, innerWidth)} ${BORDER}│${RESET}`);
 	}
 
@@ -204,19 +209,22 @@ export function updateTasksWidget(ctx: ExtensionContext): void {
 		return;
 	}
 
-	(ctx.ui as any).setWidget(TASKS_WIDGET_KEY, (tui: any, _theme: any) => ({
-		render(width: number) {
-			// If fullscreen right rail sidebar is active, suppress bottom dock
-			if (tui && isStudioSidebarActive(tui)) {
-				return [];
-			}
-			const statusLines = renderStudioStatusCard(ctx, studioRoot, width || 74);
-			const taskLines = renderTasksWidgetCard(summary.tasks, width || 74, undefined, studioRoot);
-			return [...statusLines, "", ...taskLines];
-		},
-		invalidate() {
-			invalidateStudioSidebar(tui);
-		},
-	}));
+	(ctx.ui as any).setWidget(TASKS_WIDGET_KEY, (tui: any, theme: any) => {
+		const role = resolveStudioTheme(theme);
+		return {
+			render(width: number) {
+				// If fullscreen right rail sidebar is active, suppress bottom dock
+				if (tui && isStudioSidebarActive(tui)) {
+					return [];
+				}
+				const statusLines = renderStudioStatusCard(ctx, studioRoot, width || 74, undefined, role);
+				const taskLines = renderTasksWidgetCard(summary.tasks, width || 74, undefined, studioRoot, role);
+				return [...statusLines, "", ...taskLines];
+			},
+			invalidate() {
+				invalidateStudioSidebar(tui);
+			},
+		};
+	});
 }
 

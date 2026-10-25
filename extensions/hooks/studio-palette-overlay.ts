@@ -11,6 +11,7 @@ import {
 	BORDER,
 	YELLOW,
 	GREEN,
+	resolveStudioTheme,
 	truncateAnsi,
 	padAnsi,
 	PALETTE_CATEGORIES,
@@ -160,6 +161,8 @@ export class CommandPaletteOverlayComponent {
 	}
 
 	public render(width: number): string[] {
+		// Pi hands this component a theme handle; resolve the semantic roles from it.
+		const role = resolveStudioTheme(this.theme);
 		const cardWidth = Math.min(76, Math.max(56, width - 4));
 		const innerWidth = cardWidth - 4;
 		const lines: string[] = [];
@@ -174,9 +177,9 @@ export class CommandPaletteOverlayComponent {
 		// Category tabs
 		const categoryTabs = PALETTE_CATEGORIES.map((cat, idx) => {
 			if (idx === this.selectedCategoryIndex) {
-				return `${BLUE}[${cat}]${RESET}`;
+				return `${role.accent(`[${cat}]`)}${RESET}`;
 			}
-			return `${GRAY}${cat}${RESET}`;
+			return `${role.muted(cat)}`;
 		}).join("  ");
 		lines.push(
 			`${BORDER}│${RESET} ${padAnsi(categoryTabs, innerWidth)} ${BORDER}│${RESET}`,
@@ -189,12 +192,12 @@ export class CommandPaletteOverlayComponent {
 		const searchPrompt = `${CYAN}> ${RESET}`;
 		let searchDisplay = "";
 		if (this.query.length === 0) {
-			searchDisplay = `${GRAY}[Escribe para buscar comandos...]${RESET}`;
+			searchDisplay = `${role.muted("[Escribe para buscar comandos...]")}`;
 		} else {
 			const beforeCursor = this.query.slice(0, this.cursor);
 			const atCursor = this.query[this.cursor] || " ";
 			const afterCursor = this.query.slice(this.cursor + 1);
-			searchDisplay = `${WHITE}${beforeCursor}${RESET}\x1b[7m${atCursor}\x1b[27m${WHITE}${afterCursor}${RESET}`;
+			searchDisplay = `${role.text(beforeCursor)}${RESET}\x1b[7m${atCursor}\x1b[27m${role.text(afterCursor)}${RESET}`;
 		}
 		lines.push(
 			`${BORDER}│${RESET} ${padAnsi(`${searchPrompt}${searchDisplay}`, innerWidth)} ${BORDER}│${RESET}`,
@@ -206,7 +209,7 @@ export class CommandPaletteOverlayComponent {
 		// Results slice
 		if (this.filtered.length === 0) {
 			lines.push(
-				`${BORDER}│${RESET} ${padAnsi(`  ${GRAY}No se encontraron comandos coincidentes.${RESET}`, innerWidth)} ${BORDER}│${RESET}`,
+				`${BORDER}│${RESET} ${padAnsi(`  ${role.muted("No se encontraron comandos coincidentes.")}${RESET}`, innerWidth)} ${BORDER}│${RESET}`,
 			);
 		} else {
 			// Scrolling window calculation
@@ -230,13 +233,13 @@ export class CommandPaletteOverlayComponent {
 				const item = visibleSlice[i];
 				const isSelected = itemIdx === this.selectedIndex;
 
-				const pointer = isSelected ? `${BLUE}▶${RESET} ` : "  ";
+				const pointer = isSelected ? `${role.accent("▶")}${RESET} ` : "  ";
 				const highlightedName = highlightMatch(item.name, item.indices, CYAN, WHITE);
-				const namePadded = padAnsi(`${WHITE}${highlightedName}${RESET}`, 22);
+				const namePadded = padAnsi(`${role.text(highlightedName)}${RESET}`, 22);
 
 				const descLen = innerWidth - 26;
 				const descTrunc = truncateAnsi(item.description, Math.max(10, descLen));
-				const descFormatted = isSelected ? `${WHITE}${descTrunc}${RESET}` : `${GRAY}${descTrunc}${RESET}`;
+				const descFormatted = isSelected ? `${role.text(descTrunc)}${RESET}` : `${role.muted(descTrunc)}${RESET}`;
 
 				const rowContent = `${pointer}${namePadded} ${descFormatted}`;
 				lines.push(
@@ -249,7 +252,7 @@ export class CommandPaletteOverlayComponent {
 		lines.push(
 			`${BORDER}├${"─".repeat(cardWidth - 2)}┤${RESET}`,
 		);
-		const navHint = `${GRAY}↑/↓ o Ctrl+P/N: Mover · Tab: Categoría · Enter: Elegir · Esc: Cerrar${RESET}`;
+		const navHint = `${role.muted("↑/↓ o Ctrl+P/N: Mover · Tab: Categoría · Enter: Elegir · Esc: Cerrar")}`;
 		lines.push(
 			`${BORDER}│${RESET} ${padAnsi(` ${navHint}`, innerWidth)} ${BORDER}│${RESET}`,
 		);

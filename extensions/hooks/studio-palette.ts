@@ -58,6 +58,66 @@ export const YELLOW = WARNING; // legacy name
 export const ERROR = colorEnabled ? "\x1b[38;2;192;115;110m" : ""; // #C0736E clay
 export const RED = ERROR; // legacy name
 
+// ─── Theme integration (issue #52, slice 3, option A+B) ───────────────────────
+// A: semantic roles resolve through Pi's theme when a theme handle exists.
+// B: the studio keeps its brand accent, but as a HUE with two luminances, not
+// one fixed hex — the dark-terminal luminance stays #7A93C9; on a light
+// terminal the same hue is darkened so body text and accent clear 4.5:1.
+
+/** Same hue as #7A93C9, darkened until it clears WCAG 4.5:1 on white (the base measures 3.07:1, which fails). */
+export const BRAND_LIGHT = "#5C6E97";
+/** A dark neutral body colour for light terminals: #C8CCD4 measures 1.6:1 on white, which fails. */
+export const TEXT_LIGHT = "#2F333A";
+
+/** Converts a #RRGGBB literal into the module's sanctioned RGB escape (empty under NO_COLOR). */
+function hexEscape(hex: string): string {
+	const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
+	if (!m) return "";
+	return rgbEscape(parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16));
+}
+
+/** Semantic colour roles a render callback can use instead of the fixed palette exports. */
+export interface StudioThemeRoles {
+	success: (text: string) => string;
+	error: (text: string) => string;
+	warn: (text: string) => string;
+	muted: (text: string) => string;
+	accent: (text: string) => string;
+	text: (text: string) => string;
+	faint: (text: string) => string;
+}
+
+/**
+ * Resolves the studio's semantic colour roles against Pi's theme handle.
+ * Every returned function is total: no theme, a theme without `fg`, or a
+ * throwing `fg` falls back to the studio palette instead of throwing.
+ */
+export function resolveStudioTheme(piTheme?: any): StudioThemeRoles {
+	const hasFg = typeof piTheme?.fg === "function";
+	// A throwing `fg` falls back to the studio palette wrap, not to bare text.
+	const token = (name: string, fallback: string, text: string): string => {
+		if (!hasFg) return fallback;
+		try {
+			return piTheme.fg(name, text);
+		} catch {
+			return fallback;
+		}
+	};
+	const isLight = piTheme?.appearance === "light";
+	const plain = (colour: string, text: string): string => `${colour}${text}${RESET}`;
+	return {
+		success: (text) => token("success", plain(SUCCESS, text), text),
+		error: (text) => token("error", plain(ERROR, text), text),
+		warn: (text) => token("warning", plain(WARNING, text), text),
+		muted: (text) => token("dim", plain(MUTED, text), text),
+		// The brand NEVER routes through the theme token — this keeps the studio's identity.
+		accent: (text) => plain(isLight ? hexEscape(BRAND_LIGHT) : ACCENT, text),
+		text: (text) => plain(isLight ? hexEscape(TEXT_LIGHT) : TEXT, text),
+		// Decoration, not text: stays on the studio palette even with a live theme.
+		faint: (text) => plain(FAINT, text),
+	};
+}
+
 /**
  * Truncates a string containing ANSI escape codes while preserving color formatting
  * and calculating length strictly based on visible character count.

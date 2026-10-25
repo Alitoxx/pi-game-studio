@@ -14,6 +14,8 @@ import {
 	SECONDARY,
 	WHITE,
 	RED,
+	resolveStudioTheme,
+	type StudioThemeRoles,
 } from "./studio-palette.ts";
 
 export const AGENTS_WIDGET_KEY = "studio-subagents";
@@ -59,8 +61,11 @@ export function formatElapsed(ms: number): string {
  * ◐ COMPILANDO (amber), ✓ OK (green), ✗ BLOQUEADO (red), ○ EN COLA (gray),
  * and engine tags ([Bevy], [Godot], [Raylib], [Unity], [Unreal]) for specialists.
  */
-export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 74): string[] {
+export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 74, role?: StudioThemeRoles): string[] {
 	if (!tasks || tasks.length === 0) return [];
+
+	// Total by construction: without a theme handle the studio palette is used as-is.
+	const r = role ?? resolveStudioTheme();
 
 	const activeTasks = tasks.filter(
 		(t) => t.status === "running" || t.status === "queued" || (t.endedAt && Date.now() - t.endedAt < 60000)
@@ -80,7 +85,7 @@ export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 7
 	lines.push("");
 
 	// Header: ENGINE DISPATCH  <N> active (or reciente)
-	const headerTitle = `${BLUE}${BOLD}ENGINE DISPATCH${RESET}  ${DIM}${countText}${RESET}`;
+	const headerTitle = `${r.accent(BOLD + "ENGINE DISPATCH")}${RESET}  ${DIM}${countText}${RESET}`;
 	lines.push(headerTitle);
 
 	// Spacing between header and items
@@ -88,13 +93,13 @@ export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 7
 
 	const now = Date.now();
 	for (const task of activeTasks) {
-		let statusBadge = `${GRAY}○ EN COLA${RESET}`;
+		let statusBadge = `${r.muted("○ EN COLA")}`;
 		if (task.status === "completed") {
-			statusBadge = `${GREEN}✓ OK${RESET}`;
+			statusBadge = `${r.success("✓ OK")}`;
 		} else if (task.status === "running") {
-			statusBadge = `${YELLOW}◐ COMPILANDO${RESET}`;
+			statusBadge = `${r.warn("◐ COMPILANDO")}`;
 		} else if (task.status === "failed") {
-			statusBadge = `${RED}✗ BLOQUEADO${RESET}`;
+			statusBadge = `${r.error("✗ BLOQUEADO")}`;
 		}
 
 		// Calculate elapsed runtime
@@ -121,7 +126,7 @@ export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 7
 		// Format specialist engine tag and agent name
 		const engineTag = getAgentEngineTag(task.agent);
 		const enginePrefix = engineTag ? `${SECONDARY}${engineTag}${RESET} ` : "";
-		const leftPrefix = `${statusBadge}  ${enginePrefix}${WHITE}${task.agent}${RESET}  `;
+		const leftPrefix = `${statusBadge}  ${enginePrefix}${r.text(task.agent)}${RESET}  `;
 
 		const rawActivity = (task.latestActivity || task.task).replace(/\s+/g, " ").trim();
 		const leftVisible = stripAnsi(leftPrefix).length;
@@ -133,7 +138,7 @@ export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 7
 				? (maxActivityLen > 1 ? rawActivity.slice(0, maxActivityLen - 1) + "…" : "")
 				: rawActivity;
 			const spacesCount = Math.max(2, contentWidth - leftVisible - activityDisplay.length - teleVisible);
-			const row = `${leftPrefix}${WHITE}${activityDisplay}${RESET}${" ".repeat(spacesCount)}${DIM}${telemetryStr}${RESET}`;
+			const row = `${leftPrefix}${r.text(activityDisplay)}${RESET}${" ".repeat(spacesCount)}${DIM}${telemetryStr}${RESET}`;
 			lines.push(row);
 		} else {
 			// Compact row for narrow viewports
@@ -176,15 +181,18 @@ export function updateSubagentsWidget(ctx: ExtensionContext): void {
 		return;
 	}
 
-	(ctx.ui as any).setWidget(AGENTS_WIDGET_KEY, (tui: any, _theme: any) => ({
-		render(width: number) {
-			if (tui && isStudioSidebarActive(tui)) {
-				return [];
-			}
-			return renderSubagentsWidgetCard(activeTasks, width || 74);
-		},
-		invalidate() {
-			invalidateStudioSidebar(tui);
-		},
-	}));
+	(ctx.ui as any).setWidget(AGENTS_WIDGET_KEY, (tui: any, theme: any) => {
+		const role = resolveStudioTheme(theme);
+		return {
+			render(width: number) {
+				if (tui && isStudioSidebarActive(tui)) {
+					return [];
+				}
+				return renderSubagentsWidgetCard(activeTasks, width || 74, role);
+			},
+			invalidate() {
+				invalidateStudioSidebar(tui);
+			},
+		};
+	});
 }

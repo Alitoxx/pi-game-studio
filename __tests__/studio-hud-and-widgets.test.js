@@ -105,7 +105,7 @@ describe("Studio HUD and Live Tasks Widget", () => {
 			path.join(__dirname, "..", "extensions", "hooks", "index.ts"),
 			"utf8",
 		);
-		expect(indexSource).toContain("renderBanner(width, studioRoot)");
+		expect(indexSource).toContain("renderBanner(width, studioRoot");
 		expect(indexSource).toContain("updateTasksWidget(ctx)");
 		expect(indexSource).toContain("updateStudioHUD(ctx, pi)");
 	});

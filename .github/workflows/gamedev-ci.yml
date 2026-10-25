@@ -80,20 +80,50 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # This repository may or may not have GitHub Pages configured. Without it,
+      # configure-pages fails with "Get Pages site failed" and turns every push to
+      # main red for a publish target nobody asked for. Probe first, publish only
+      # when Pages is actually enabled; otherwise the job skips and stays green.
+      - name: Check GitHub Pages availability
+        id: pages_probe
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if curl -sf \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/pages" > /dev/null; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "### Web deploy skipped"
+              echo ""
+              echo "GitHub Pages is not enabled for this repository, so there is no"
+              echo "publish target. Enable Pages (Settings -> Pages -> Source: GitHub"
+              echo "Actions) and this job will deploy the starter build again."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Download Web Artifact
+        if: steps.pages_probe.outputs.enabled == 'true'
         uses: actions/download-artifact@v4
         with:
           name: game-web-dist
           path: dist/web/
 
       - name: Setup Pages
+        if: steps.pages_probe.outputs.enabled == 'true'
         uses: actions/configure-pages@v4
 
       - name: Upload Artifact to Pages
+        if: steps.pages_probe.outputs.enabled == 'true'
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist/web/
 
       - name: Deploy to GitHub Pages
+        if: steps.pages_probe.outputs.enabled == 'true'
         id: deployment
         uses: actions/deploy-pages@v4

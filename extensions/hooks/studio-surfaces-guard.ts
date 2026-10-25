@@ -143,22 +143,40 @@ export function surfacesFromEnv(raw: string | undefined): string[] {
  * Stateful manager tracking currently active bounded edit surfaces.
  */
 export class BoundedSurfacesGuard {
-	private allowedSurfaces: string[] = [];
-	private activeTask?: string;
+	/**
+	 * One scope per dispatched task. A single shared list meant the first task to
+	 * finish released the boundary still constraining its neighbours, so concurrent
+	 * background work could write outside its declared scope.
+	 */
+	private scopes = new Map<string, string[]>();
+	private processSurfaces: string[] = [];
 
 	public setAllowedSurfaces(surfaces: string[]): void {
-		this.allowedSurfaces = surfaces.map(normalizePath).filter(Boolean);
+		this.processSurfaces = surfaces.map(normalizePath).filter(Boolean);
 	}
 
+	/** Union of every active scope; empty means unbounded, as before. */
 	public getAllowedSurfaces(): string[] {
-		return [...this.allowedSurfaces];
+		const union = new Set<string>(this.processSurfaces);
+		for (const surfaces of this.scopes.values()) {
+			for (const surface of surfaces) union.add(surface);
+		}
+		return Array.from(union);
 	}
 
-	public setFromTask(taskDescription: string): string[] {
-		const parsed = parseAllowedSurfaces(taskDescription);
-		this.allowedSurfaces = parsed;
-		this.activeTask = taskDescription;
+	public setForTask(taskId: string, surfaces: string[]): string[] {
+		const parsed = surfaces.map(normalizePath).filter(Boolean);
+		this.scopes.set(taskId, parsed);
 		return parsed;
+	}
+
+	public setFromTask(taskDescription: string, taskId = "default"): string[] {
+		return this.setForTask(taskId, parseAllowedSurfaces(taskDescription));
+	}
+
+	/** Releases one task's scope without touching the others. */
+	public clearTask(taskId: string): void {
+		this.scopes.delete(taskId);
 	}
 
 	/**
@@ -167,21 +185,21 @@ export class BoundedSurfacesGuard {
 	 */
 	public setFromEnv(raw: string | undefined): string[] {
 		const parsed = surfacesFromEnv(raw);
-		this.allowedSurfaces = parsed;
+		this.processSurfaces = parsed;
 		return parsed;
 	}
 
 	public clear(): void {
-		this.allowedSurfaces = [];
-		this.activeTask = undefined;
+		this.scopes.clear();
+		this.processSurfaces = [];
 	}
 
 	public isAllowed(filePath: string): boolean {
-		return isPathAllowed(filePath, this.allowedSurfaces);
+		return isPathAllowed(filePath, this.getAllowedSurfaces());
 	}
 
 	public validate(filePath: string): SurfaceValidationResult {
-		return validateEditSurface(filePath, this.allowedSurfaces);
+		return validateEditSurface(filePath, this.getAllowedSurfaces());
 	}
 }
 

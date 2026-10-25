@@ -1059,3 +1059,38 @@ describe("Compaction during a child run", () => {
 		}).not.toThrow();
 	}, 70000);
 });
+
+describe("Parent edit-surface scopes", () => {
+	test("finishing one task does not release the scope of another", () => {
+		const script = `
+			const { BoundedSurfacesGuard } = await import("./extensions/hooks/studio-surfaces-guard.ts");
+
+			const guard = new BoundedSurfacesGuard();
+			guard.setForTask("task-a", ["src/player/"]);
+			guard.setForTask("task-b", ["src/enemy/"]);
+
+			if (!guard.isAllowed("src/player/player.rs")) throw new Error("task-a's own scope must be allowed while it runs");
+			if (!guard.isAllowed("src/enemy/enemy.rs")) throw new Error("task-b's own scope must be allowed while it runs");
+
+			guard.clearTask("task-a");
+
+			if (guard.isAllowed("src/player/player.rs")) {
+				throw new Error("a finished task must release its scope");
+			}
+			if (!guard.isAllowed("src/enemy/enemy.rs")) {
+				throw new Error("the other task's scope must survive its neighbour finishing");
+			}
+
+			guard.clearTask("task-b");
+			if (!guard.isAllowed("src/anything.rs")) {
+				throw new Error("with no active scopes the guard must be unbounded again");
+			}
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+			});
+		}).not.toThrow();
+	}, 30000);
+});

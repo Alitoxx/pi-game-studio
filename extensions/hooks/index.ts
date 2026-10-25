@@ -75,16 +75,16 @@ export default function (pi: ExtensionAPI) {
 	studioAgentsRunner.subscribe((task) => {
 		if (task.status === "completed") {
 			playSuccessChime();
-			boundedSurfacesGuard.clear();
+			boundedSurfacesGuard.clearTask(task.id);
 			const tokens = usageToTokens(task);
 			recordTokenUsage(task.agent, task.model || "inherit", tokens.input, tokens.output);
 		} else if (task.status === "failed") {
 			playErrorChime();
-			boundedSurfacesGuard.clear();
+			boundedSurfacesGuard.clearTask(task.id);
 		} else if (task.status === "cancelled") {
-			boundedSurfacesGuard.clear();
+			boundedSurfacesGuard.clearTask(task.id);
 		} else if (task.status === "running" && task.task) {
-			boundedSurfacesGuard.setFromTask(task.task);
+			boundedSurfacesGuard.setFromTask(task.task, task.id);
 		}
 	});
 

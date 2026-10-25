@@ -5,7 +5,11 @@
     "moduleResolution": "bundler",
     "strict": true,
     "skipLibCheck": true,
-    "types": []
+    "types": [],
+    "allowImportingTsExtensions": true,
+    "noEmit": true
   },
-  "include": ["*.ts"]
+  "include": [
+    "*.ts"
+  ]
 }

@@ -74,7 +74,7 @@ export async function handleStudioAgents(
 		);
 
 		if (matchedGroup) {
-			printGroup(matchedGroup, ctx.cwd);
+			printGroup(matchedGroup, ctx);
 			return;
 		}
 	}

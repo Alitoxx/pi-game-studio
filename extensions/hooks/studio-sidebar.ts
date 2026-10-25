@@ -124,6 +124,16 @@ export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => voi
 		scrollbar: "auto",
 	});
 
+	// Every dispatch result needs the exact target geometry so drag and release
+	// events can be retargeted to this scroll view.
+	const scrollTarget = (event: TuiMouseEvent) => ({
+		component: scroll,
+		originX: event.screenX - event.x,
+		originY: event.screenY - event.y,
+		width: event.width,
+		height: event.height,
+	});
+
 	scroll.handleMouse = (event: TuiMouseEvent) => {
 		if (event.type === "wheel") {
 			scroll.scrollBy(event.wheelDelta ?? 0);
@@ -143,7 +153,7 @@ export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => voi
 		if (event.type === "click" || event.type === "press") {
 			const now = Date.now();
 			if (now - lastToggleTime < 250) {
-				return { handled: true };
+				return { handled: true, target: scrollTarget(event) };
 			}
 
 			const lineY = (scroll.scrollTop ?? 0) + event.y;
@@ -161,7 +171,7 @@ export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => voi
 				try {
 					tui.requestRender();
 				} catch {}
-				return { handled: true, render: true };
+				return { handled: true, render: true, target: scrollTarget(event) };
 			}
 
 			if (
@@ -176,7 +186,7 @@ export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => voi
 				try {
 					tui.requestRender();
 				} catch {}
-				return { handled: true, render: true };
+				return { handled: true, render: true, target: scrollTarget(event) };
 			}
 		}
 
@@ -384,7 +394,7 @@ export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => voi
 		state.active = false;
 		clearInterval(timer);
 		try {
-			scroll.hideTransientScrollbar();
+			(scroll as any).hideTransientScrollbar();
 		} catch {}
 		for (const cleanup of cleanups.reverse()) cleanup();
 		try {

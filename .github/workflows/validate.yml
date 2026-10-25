@@ -27,6 +27,12 @@ jobs:
       - name: Run tests
         run: pnpm test
 
+      # The hooks ship to users and jest runs with --experimental-strip-types,
+      # which erases types without checking them. This step is the only thing that
+      # verifies them, so it must fail the job when it fails.
+      - name: Type-check the hooks extension
+        run: pnpm exec tsc -p extensions/hooks/tsconfig.json --noEmit
+
       - name: Validate package.json
         run: |
           node -e "
@@ -93,10 +99,6 @@ jobs:
             console.log('✅ models.default.json with keys:', keys.join(', '));
           "
 
-      - name: Validate hooks extension compiles
-        run: |
-          (cd extensions/hooks && pnpm install --ignore-scripts 2>/dev/null || true && pnpm dlx typescript tsc --noEmit 2>&1 || echo "⚠️ TypeScript check skipped (types may not resolve outside Pi)")
-          echo "✅ hooks extension structure valid"
 
       - name: Check file count consistency
         run: |

@@ -9,8 +9,10 @@ describe("Studio palette", () => {
 	test("no file outside the palette module hardcodes a colour", () => {
 		const offenders = files
 			.filter((f) => f !== "studio-palette.ts")
-			.filter((f) => /38;2;\d+;\d+;\d+/.test(fs.readFileSync(path.join(hooksDir, f), "utf8")))
-			.map((f) => `${f} (${(fs.readFileSync(path.join(hooksDir, f), "utf8").match(/38;2;\d+;\d+;\d+/g) || []).length})`);
+			// Match the escape PREFIX, not only literal triples: a colour built by
+			// interpolation (a gradient) bypasses a triple-only check.
+			.filter((f) => /38;2;/.test(fs.readFileSync(path.join(hooksDir, f), "utf8")))
+			.map((f) => `${f} (${(fs.readFileSync(path.join(hooksDir, f), "utf8").match(/38;2;/g) || []).length})`);
 		expect(offenders).toEqual([]);
 	});
 

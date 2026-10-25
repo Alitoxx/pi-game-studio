@@ -8,6 +8,27 @@ export const RESET = colorEnabled ? "\x1b[0m" : "";
 export const BOLD = colorEnabled ? "\x1b[1m" : "";
 export const DIM = colorEnabled ? "\x1b[2m" : "";
 
+/** True when the terminal should receive colour at all. */
+export const COLORS_ENABLED = colorEnabled;
+
+/**
+ * Builds a colour escape from a computed RGB triple. The only sanctioned way to
+ * interpolate colours (gradients): the invariant forbids the escape sequence
+ * anywhere else, so a dynamic colour cannot drift from this module either.
+ */
+export function rgbEscape(r: number, g: number, b: number): string {
+	return colorEnabled ? `\x1b[38;2;${r};${g};${b}m` : "";
+}
+
+/** Interpolates between two roles, returning the escape for the position requested. */
+export function gradientEscape(from: number[], to: number[], t: number): string {
+	const clamp = Math.max(0, Math.min(1, t));
+	const r = Math.round(from[0] + (to[0] - from[0]) * clamp);
+	const g = Math.round(from[1] + (to[1] - from[1]) * clamp);
+	const b = Math.round(from[2] + (to[2] - from[2]) * clamp);
+	return rgbEscape(r, g, b);
+}
+
 // ─── Roles ────────────────────────────────────────────────────────────────────
 // Hierarchy comes from BRIGHTNESS, not from hue: body text is the brightest
 // thing on screen, states sit below it, borders recede. One accent only.

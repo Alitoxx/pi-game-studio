@@ -6,17 +6,7 @@ import { detectProjectEngine, formatEngineBadge } from "./engine-detector.ts";
 import { inspectSetup } from "./studio-setup.ts";
 import { readProducerState } from "./studio-start.ts";
 
-import {
-	RESET,
-	BOLD,
-	DIM,
-	ACCENT as STUDIO_ACCENT,
-	SECONDARY as STUDIO_LABEL,
-	WHITE as STUDIO_VALUE,
-	HEADING as STUDIO_HIGHLIGHT,
-	GRAY as STUDIO_DIM,
-	YELLOW as STUDIO_GOLD,
-} from "./studio-palette.ts";
+import { ACCENT as STUDIO_ACCENT, BOLD, DIM, GRAY as STUDIO_DIM, HEADING as STUDIO_HIGHLIGHT, RESET, SECONDARY as STUDIO_LABEL, WHITE as STUDIO_VALUE, YELLOW as STUDIO_GOLD, gradientEscape } from "./studio-palette.ts";
 
 export function isArtEnabled(root: string): boolean {
 	try {
@@ -53,13 +43,14 @@ const ART_RAW = [
 ];
 
 function getGradientArtLine(line: string, index: number, total: number): string {
-	const c1 = [103, 232, 249]; // Glacial Cyan #67E8F9
-	const c2 = [167, 139, 250]; // Midnight Amethyst #A78BFA
+	// The art fades from the structural tone into the accent: same family, so the
+	// banner stays part of the palette instead of introducing its own colours.
 	const t = index / Math.max(1, total - 1);
-	const r = Math.round(c1[0] + (c2[0] - c1[0]) * t);
-	const g = Math.round(c1[1] + (c2[1] - c1[1]) * t);
-	const b = Math.round(c1[2] + (c2[2] - c1[2]) * t);
-	return `\x1b[38;2;${r};${g};${b}m${line}${RESET}`;
+	return `${gradientEscape(
+		[147, 163, 190], // SECONDARY #93A3BE
+		[122, 147, 201], // ACCENT #7A93C9
+		t,
+	)}${line}${RESET}`;
 }
 
 function getGitBranch(cwd: string): string {

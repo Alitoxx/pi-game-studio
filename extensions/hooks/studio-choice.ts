@@ -27,6 +27,8 @@ import {
 	RESET,
 	BOLD,
 	DIM,
+	panelBottom,
+	panelTop,
 } from "./studio-palette.ts";
 
 export interface QuestionOption {
@@ -553,11 +555,11 @@ export class StudioQuestionnaireComponent {
 			const afterCursor = draft.slice(this.textCursor + 1);
 
 			lines.push(`  ${SECONDARY}Respuesta personalizada:${RESET}`);
-			lines.push(`  ${BORDER}╭──────────────────────────────────────────────────────────╮${RESET}`);
+			lines.push(`  ${panelTop(58, undefined, "rounded", BORDER)}`);
 			lines.push(
 				`  ${BORDER}│${RESET} > ${WHITE}${beforeCursor}${RESET}\x1b[7m${atCursor}\x1b[27m${WHITE}${afterCursor}${RESET}`,
 			);
-			lines.push(`  ${BORDER}╰──────────────────────────────────────────────────────────╯${RESET}`);
+			lines.push(`  ${panelBottom(58, "rounded", BORDER)}`);
 			return lines;
 		}
 

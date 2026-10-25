@@ -21,6 +21,10 @@ import {
 	RED,
 	truncateAnsi,
 	padAnsi,
+	panelBottom,
+	panelRule,
+	panelRow,
+	panelTop,
 } from "./studio-palette.ts";
 
 let piTuiMatchesKey: ((data: string, keyId: string) => boolean) | undefined;
@@ -267,19 +271,18 @@ export function renderSubagentLiveConsoleView(
 	if (targetTask.status === "queued") statusBadge = `${GRAY}○ EN COLA${RESET}`;
 
 	const headerTitle = `CONSOLA EN VIVO · ${(targetTask.title || targetTask.agent).toUpperCase()}`;
-	const ruleLen = Math.max(0, cardWidth - headerTitle.length - 5);
 
-	lines.push(`${BORDER}╭─${RESET} ${BLUE}${headerTitle}${RESET} ${BORDER}${"─".repeat(ruleLen)}╮${RESET}`);
+	lines.push(panelTop(cardWidth - 2, `${BLUE}${headerTitle}${RESET}`, "rounded", BORDER));
 
 	// Compact 2-line header bar
 	const statusLine = `  ${statusBadge} ${GRAY}·${RESET} ${GRAY}Modelo:${RESET} ${BLUE}${targetTask.model || "inherit"}${RESET} ${GRAY}·${RESET} ${GRAY}Tiempo:${RESET} ${WHITE}${elapsedStr}${RESET} ${GRAY}·${RESET} ${GRAY}Task:${RESET} ${DIM}${targetTask.id}${RESET}`;
-	lines.push(`${BORDER}│${RESET} ${padAnsi(statusLine, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`${panelRow(statusLine, innerWidth + 2, BORDER)}`);
 
 	const firstTaskLine = targetTask.task.split("\n")[0]?.trim() || "";
 	const instructionLine = `  ${GRAY}Instrucción:${RESET} ${WHITE}${truncateAnsi(firstTaskLine, innerWidth - 17)}${RESET}`;
-	lines.push(`${BORDER}│${RESET} ${padAnsi(instructionLine, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`${panelRow(instructionLine, innerWidth + 2, BORDER)}`);
 
-	lines.push(`${BORDER}├${"─".repeat(cardWidth - 2)}┤${RESET}`);
+	lines.push(panelRule(cardWidth - 2, "rounded", BORDER));
 
 	// Chrome count: 4 top lines + 2 bottom lines = 6
 	const requestedHeight = height ? Math.max(16, height) : 24;
@@ -321,16 +324,16 @@ export function renderSubagentLiveConsoleView(
 			styledLog = `${WHITE}${rawLog}${RESET}`;
 		}
 
-		lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${truncateAnsi(styledLog, innerWidth - 4)}`, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`${panelRow(`  ${truncateAnsi(styledLog, innerWidth - 4)}`, innerWidth + 2, BORDER)}`);
 	}
 
 	// Pad remaining vertical rows if log stream has fewer lines than terminal height
 	const padCount = availableRows - visibleLogs.length;
 	for (let p = 0; p < padCount; p++) {
-		lines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`${panelRow("", innerWidth + 2, BORDER)}`);
 	}
 
-	lines.push(`${BORDER}╰${"─".repeat(cardWidth - 2)}╯${RESET}`);
+	lines.push(panelBottom(cardWidth - 2, "rounded", BORDER));
 
 	const scrollIndicator = clampedOffset > 0 ? ` [Scroll: -${clampedOffset}]` : "";
 	lines.push(`  ${GRAY}Tab/v: Alternar Resumen • ↑/↓/PgUp/PgDn: Scroll • o: Editor • c: Cancelar • Esc: Salir${scrollIndicator}${RESET}`);
@@ -364,48 +367,47 @@ export function renderSubagentModalView(
 	if (targetTask.status === "queued") statusBadge = `${GRAY}○ EN COLA${RESET}`;
 
 	const headerTitle = `INSPECTOR DE ESPECIALISTA · ${(targetTask.title || targetTask.agent).toUpperCase()}`;
-	const ruleLen = Math.max(0, cardWidth - headerTitle.length - 5);
 
-	lines.push(`${BORDER}╭─${RESET} ${BLUE}${headerTitle}${RESET} ${BORDER}${"─".repeat(ruleLen)}╮${RESET}`);
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`${LAVENDER}Detalles de Ejecución${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${GRAY}Agente:${RESET}  ${WHITE}${targetTask.agent}${RESET} (${targetTask.title})`, innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${GRAY}Modelo:${RESET}  ${BLUE}${targetTask.model || "inherit"}${RESET}  ${GRAY}·  Estado:${RESET} ${statusBadge}`, innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${GRAY}Tiempo:${RESET}  ${WHITE}${elapsedStr}${RESET}  ${GRAY}·  Task ID:${RESET} ${DIM}${targetTask.id}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(panelTop(cardWidth - 2, `${BLUE}${headerTitle}${RESET}`, "rounded", BORDER));
+	lines.push(`${panelRow(`${LAVENDER}Detalles de Ejecución${RESET}`, innerWidth + 2, BORDER)}`);
+	lines.push(`${panelRow(`  ${GRAY}Agente:${RESET}  ${WHITE}${targetTask.agent}${RESET} (${targetTask.title})`, innerWidth + 2, BORDER)}`);
+	lines.push(`${panelRow(`  ${GRAY}Modelo:${RESET}  ${BLUE}${targetTask.model || "inherit"}${RESET}  ${GRAY}·  Estado:${RESET} ${statusBadge}`, innerWidth + 2, BORDER)}`);
+	lines.push(`${panelRow(`  ${GRAY}Tiempo:${RESET}  ${WHITE}${elapsedStr}${RESET}  ${GRAY}·  Task ID:${RESET} ${DIM}${targetTask.id}${RESET}`, innerWidth + 2, BORDER)}`);
 
 	if (options?.totalTasks && options.totalTasks > 1) {
 		const currentIdx = (options.selectedIndex ?? 0) + 1;
-		lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${GRAY}Navegación:${RESET} [${currentIdx}/${options.totalTasks}] ${GRAY}(usa ↑/↓ para cambiar de agente)${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`${panelRow(`  ${GRAY}Navegación:${RESET} [${currentIdx}/${options.totalTasks}] ${GRAY}(usa ↑/↓ para cambiar de agente)${RESET}`, innerWidth + 2, BORDER)}`);
 	}
 
-	lines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`${panelRow("", innerWidth + 2, BORDER)}`);
 
 	// Panel 1: Instruction / Prompt
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`${LAVENDER}Instrucción Asignada${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`${panelRow(`${LAVENDER}Instrucción Asignada${RESET}`, innerWidth + 2, BORDER)}`);
 	const taskLines = targetTask.task.split("\n").slice(0, 3);
 	for (const tl of taskLines) {
-		lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${WHITE}${truncateAnsi(tl.trim(), innerWidth - 4)}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`${panelRow(`  ${WHITE}${truncateAnsi(tl.trim(), innerWidth - 4)}${RESET}`, innerWidth + 2, BORDER)}`);
 	}
-	lines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`${panelRow("", innerWidth + 2, BORDER)}`);
 
 	// Prepare results or error lines
 	const resultLines: string[] = [];
 	if (targetTask.result) {
-		resultLines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
-		resultLines.push(`${BORDER}│${RESET} ${padAnsi(`${LAVENDER}Resultado / Entrega Final${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+		resultLines.push(`${panelRow("", innerWidth + 2, BORDER)}`);
+		resultLines.push(`${panelRow(`${LAVENDER}Resultado / Entrega Final${RESET}`, innerWidth + 2, BORDER)}`);
 		const resultPreview = targetTask.result.split("\n").slice(0, 6);
 		for (const rl of resultPreview) {
-			resultLines.push(`${BORDER}│${RESET} ${padAnsi(`  ${GREEN}${truncateAnsi(rl, innerWidth - 4)}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+			resultLines.push(`${panelRow(`  ${GREEN}${truncateAnsi(rl, innerWidth - 4)}${RESET}`, innerWidth + 2, BORDER)}`);
 		}
 	} else if (targetTask.error) {
-		resultLines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
-		resultLines.push(`${BORDER}│${RESET} ${padAnsi(`${RED}Error Registrado:${RESET} ${truncateAnsi(targetTask.error, innerWidth - 20)}`, innerWidth)} ${BORDER}│${RESET}`);
+		resultLines.push(`${panelRow("", innerWidth + 2, BORDER)}`);
+		resultLines.push(`${panelRow(`${RED}Error Registrado:${RESET} ${truncateAnsi(targetTask.error, innerWidth - 20)}`, innerWidth + 2, BORDER)}`);
 	} else if (targetTask.status === "running") {
-		resultLines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
-		resultLines.push(`${BORDER}│${RESET} ${padAnsi(`  ${YELLOW}◐ Especialista ejecutando en segundo plano...${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+		resultLines.push(`${panelRow("", innerWidth + 2, BORDER)}`);
+		resultLines.push(`${panelRow(`  ${YELLOW}◐ Especialista ejecutando en segundo plano...${RESET}`, innerWidth + 2, BORDER)}`);
 	}
 
 	// Panel 2: Live Tool Call Events & Logs
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`${LAVENDER}Eventos y Llamadas de Herramientas (En Vivo)${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`${panelRow(`${LAVENDER}Eventos y Llamadas de Herramientas (En Vivo)${RESET}`, innerWidth + 2, BORDER)}`);
 
 	const footerChrome = 2; // bottom border + shortcuts footer
 	const fixedCount = lines.length + resultLines.length + footerChrome;
@@ -425,7 +427,7 @@ export function renderSubagentModalView(
 	const startIdx = Math.max(0, endIdx - availableLogRows);
 	const eventLogs = allLogs.slice(startIdx, endIdx);
 	for (const log of eventLogs) {
-		lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${WHITE}${truncateAnsi(log, innerWidth - 4)}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`${panelRow(`  ${WHITE}${truncateAnsi(log, innerWidth - 4)}${RESET}`, innerWidth + 2, BORDER)}`);
 	}
 
 	// Fill remaining vertical space to achieve 100% full screen
@@ -433,7 +435,7 @@ export function renderSubagentModalView(
 		const currentTotal = lines.length + resultLines.length + footerChrome;
 		const paddingNeeded = requestedHeight - currentTotal;
 		for (let p = 0; p < paddingNeeded; p++) {
-			lines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
+			lines.push(`${panelRow("", innerWidth + 2, BORDER)}`);
 		}
 	}
 
@@ -442,7 +444,7 @@ export function renderSubagentModalView(
 		lines.push(rl);
 	}
 
-	lines.push(`${BORDER}╰${"─".repeat(cardWidth - 2)}╯${RESET}`);
+	lines.push(panelBottom(cardWidth - 2, "rounded", BORDER));
 	const scrollIndicator = clampedOffset > 0 ? ` ${YELLOW}[Scroll: -${clampedOffset} • End: fin]${RESET}` : "";
 	lines.push(`  ${GRAY}Tab/v: Consola Stream • ↑/↓: Seleccionar agente • Esc: Salir • c: Cancelar • o: Abrir en editor externo • PgUp/PgDn/Rueda: Scroll${scrollIndicator}${RESET}`);
 

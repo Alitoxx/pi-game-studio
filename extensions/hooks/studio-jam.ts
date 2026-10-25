@@ -13,6 +13,9 @@ import {
 	GRAY,
 	BORDER,
 	padAnsi,
+	panelBottom,
+	panelRow,
+	panelTop,
 } from "./studio-palette.ts";
 
 const JAM_FILE_RELATIVE = join(".pi", "game-studio", "jam-mode");
@@ -90,20 +93,20 @@ export function renderJamBanner(active: boolean): string[] {
 	const innerWidth = width - 4;
 	const lines: string[] = [];
 
-	lines.push(`${BORDER}╭${"─".repeat(width - 2)}╮${RESET}`);
+	lines.push(panelTop(width - 2, undefined, "rounded", BORDER));
 	if (active) {
-		lines.push(`${BORDER}│${RESET} ${padAnsi(`${YELLOW}${BOLD}⚡ GAME JAM / RAPID PROTOTYPING MODE ACTIVADO${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-		lines.push(`${BORDER}│${RESET} ${padAnsi(`${GRAY}• Confirmaciones no críticas:${RESET} ${GREEN}SILENCIADAS${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-		lines.push(`${BORDER}│${RESET} ${padAnsi(`${GRAY}• Perf Guard estricto:${RESET}        ${YELLOW}MODO SOFT (solo advertencias)${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-		lines.push(`${BORDER}│${RESET} ${padAnsi(`${GRAY}• ODD Pipeline:${RESET}               ${PURPLE}Iteración rápida, foco en jugabilidad${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-		lines.push(`${BORDER}│${RESET} ${padAnsi(`${GRAY}• Persistencia:${RESET}               ${WHITE}.pi/game-studio/jam-mode${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`${panelRow(`${YELLOW}${BOLD}⚡ GAME JAM / RAPID PROTOTYPING MODE ACTIVADO${RESET}`, innerWidth + 2, BORDER)}`);
+		lines.push(`${panelRow(`${GRAY}• Confirmaciones no críticas:${RESET} ${GREEN}SILENCIADAS${RESET}`, innerWidth + 2, BORDER)}`);
+		lines.push(`${panelRow(`${GRAY}• Perf Guard estricto:${RESET}        ${YELLOW}MODO SOFT (solo advertencias)${RESET}`, innerWidth + 2, BORDER)}`);
+		lines.push(`${panelRow(`${GRAY}• ODD Pipeline:${RESET}               ${PURPLE}Iteración rápida, foco en jugabilidad${RESET}`, innerWidth + 2, BORDER)}`);
+		lines.push(`${panelRow(`${GRAY}• Persistencia:${RESET}               ${WHITE}.pi/game-studio/jam-mode${RESET}`, innerWidth + 2, BORDER)}`);
 	} else {
-		lines.push(`${BORDER}│${RESET} ${padAnsi(`${PURPLE}${BOLD}🛡️ MODO STUDIO ESTÁNDAR (PRODUCCIÓN)${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-		lines.push(`${BORDER}│${RESET} ${padAnsi(`${GRAY}• Confirmaciones interactivas:${RESET} ${GREEN}ACTIVAS${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-		lines.push(`${BORDER}│${RESET} ${padAnsi(`${GRAY}• Perf Guard:${RESET}                  ${GREEN}ESTRICTO (cero allocs en loop)${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-		lines.push(`${BORDER}│${RESET} ${padAnsi(`${GRAY}• ODD Pipeline:${RESET}               ${WHITE}Estándar (~400 líneas / test)${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`${panelRow(`${PURPLE}${BOLD}🛡️ MODO STUDIO ESTÁNDAR (PRODUCCIÓN)${RESET}`, innerWidth + 2, BORDER)}`);
+		lines.push(`${panelRow(`${GRAY}• Confirmaciones interactivas:${RESET} ${GREEN}ACTIVAS${RESET}`, innerWidth + 2, BORDER)}`);
+		lines.push(`${panelRow(`${GRAY}• Perf Guard:${RESET}                  ${GREEN}ESTRICTO (cero allocs en loop)${RESET}`, innerWidth + 2, BORDER)}`);
+		lines.push(`${panelRow(`${GRAY}• ODD Pipeline:${RESET}               ${WHITE}Estándar (~400 líneas / test)${RESET}`, innerWidth + 2, BORDER)}`);
 	}
-	lines.push(`${BORDER}╰${"─".repeat(width - 2)}╯${RESET}`);
+	lines.push(panelBottom(width - 2, "rounded", BORDER));
 
 	return lines;
 }

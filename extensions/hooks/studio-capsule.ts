@@ -17,6 +17,10 @@ import {
 	GRAY,
 	padAnsi,
 	truncateAnsi,
+	panelBottom,
+	panelRule,
+	panelRow,
+	panelTop,
 } from "./studio-palette.ts";
 
 /**
@@ -552,57 +556,42 @@ export function renderCapsuleReport(summary: CapsuleAuditSummary, termWidth = 80
 	const lines: string[] = [];
 
 	lines.push("");
-	lines.push(`${BORDER}┌${"─".repeat(width - 2)}┐${RESET}`);
+	lines.push(panelTop(width - 2, undefined, "square", BORDER));
 	lines.push(
-		`${BORDER}│${RESET} ${padAnsi(
-			`${ACCENT}STEAM STORE CAPSULE ART & COVER AUDIT${RESET} ${GRAY}(Steamworks Specs)${RESET}`,
-			innerWidth,
-		)} ${BORDER}│${RESET}`,
+		`${panelRow(`${ACCENT}STEAM STORE CAPSULE ART & COVER AUDIT${RESET} ${GRAY}(Steamworks Specs)${RESET}`, innerWidth + 2, BORDER)}`,
 	);
-	lines.push(`${BORDER}├${"─".repeat(width - 2)}┤${RESET}`);
+	lines.push(panelRule(width - 2, "square", BORDER));
 
 	// Section 1: Tooling status
 	const toolStatus = summary.hasMagick
 		? `${GREEN}[ACTIVO]${RESET} ImageMagick (${summary.magickBinary}) — Simulación 231x87 y contraste activados`
 		: `${YELLOW}[MODO BÁSICO]${RESET} Lectura binaria nativa. Falta 'magick' para simulación de contraste`;
-	lines.push(`${BORDER}│${RESET} ${padAnsi(toolStatus, innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`${BORDER}├${"─".repeat(width - 2)}┤${RESET}`);
+	lines.push(`${panelRow(toolStatus, innerWidth + 2, BORDER)}`);
+	lines.push(panelRule(width - 2, "square", BORDER));
 
 	// Section 2: Reference specifications header
 	lines.push(
-		`${BORDER}│${RESET} ${padAnsi(
-			`${HEADING}RESOLUCIONES OFICIALES STEAMWORKS:${RESET}`,
-			innerWidth,
-		)} ${BORDER}│${RESET}`,
+		`${panelRow(`${HEADING}RESOLUCIONES OFICIALES STEAMWORKS:${RESET}`, innerWidth + 2, BORDER)}`,
 	);
 
 	for (const spec of Object.values(STEAM_CAPSULE_SPECS)) {
 		const isCrit = spec.critical ? ` ${RED}[CRÍTICA: CTR Core]${RESET}` : "";
 		const specLine = `  ${WHITE}${spec.width}x${spec.height}${RESET} ${DIM}│${RESET} ${SECONDARY}${spec.name}${RESET}${isCrit} ${GRAY}— ${spec.steamworksRole}${RESET}`;
-		lines.push(`${BORDER}│${RESET} ${padAnsi(specLine, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`${panelRow(specLine, innerWidth + 2, BORDER)}`);
 	}
-	lines.push(`${BORDER}├${"─".repeat(width - 2)}┤${RESET}`);
+	lines.push(panelRule(width - 2, "square", BORDER));
 
 	// Section 3: Audited images
 	if (summary.targetFiles.length === 0) {
 		lines.push(
-			`${BORDER}│${RESET} ${padAnsi(
-				`${YELLOW}No se encontraron imágenes de cápsula en assets/, branding/ o art/.${RESET}`,
-				innerWidth,
-			)} ${BORDER}│${RESET}`,
+			`${panelRow(`${YELLOW}No se encontraron imágenes de cápsula en assets/, branding/ o art/.${RESET}`, innerWidth + 2, BORDER)}`,
 		);
 		lines.push(
-			`${BORDER}│${RESET} ${padAnsi(
-				`${DIM}Pasa una ruta explícita: ${WHITE}/capsule-check assets/branding/mi_capsula.png${RESET}`,
-				innerWidth,
-			)} ${BORDER}│${RESET}`,
+			`${panelRow(`${DIM}Pasa una ruta explícita: ${WHITE}/capsule-check assets/branding/mi_capsula.png${RESET}`, innerWidth + 2, BORDER)}`,
 		);
 	} else {
 		lines.push(
-			`${BORDER}│${RESET} ${padAnsi(
-				`${HEADING}IMÁGENES ANALIZADAS (${summary.targetFiles.length}):${RESET}`,
-				innerWidth,
-			)} ${BORDER}│${RESET}`,
+			`${panelRow(`${HEADING}IMÁGENES ANALIZADAS (${summary.targetFiles.length}):${RESET}`, innerWidth + 2, BORDER)}`,
 		);
 
 		for (const item of summary.targetFiles) {
@@ -614,10 +603,10 @@ export function renderCapsuleReport(summary: CapsuleAuditSummary, termWidth = 80
 			}
 
 			const headerLine = `  ${statusBadge} ${WHITE}${item.fileName}${RESET} ${GRAY}(${item.width}x${item.height} px, ${item.fileSizeFormatted})${RESET}`;
-			lines.push(`${BORDER}│${RESET} ${padAnsi(headerLine, innerWidth)} ${BORDER}│${RESET}`);
+			lines.push(`${panelRow(headerLine, innerWidth + 2, BORDER)}`);
 
 			const matchLine = `     ${DIM}Destino sugerido:${RESET} ${SECONDARY}${item.matchedSpec.name}${RESET} ${GRAY}(Oficial: ${item.matchedSpec.width}x${item.matchedSpec.height})${RESET}`;
-			lines.push(`${BORDER}│${RESET} ${padAnsi(matchLine, innerWidth)} ${BORDER}│${RESET}`);
+			lines.push(`${panelRow(matchLine, innerWidth + 2, BORDER)}`);
 
 			if (item.matchStatus !== "exact") {
 				const diffStr =
@@ -625,10 +614,7 @@ export function renderCapsuleReport(summary: CapsuleAuditSummary, termWidth = 80
 						? `Requiere reescalado exacto sin distorsión (Aspect ratio correcto)`
 						: `Diferencia: ${item.diffWidth > 0 ? "+" : ""}${item.diffWidth}w, ${item.diffHeight > 0 ? "+" : ""}${item.diffHeight}h px`;
 				lines.push(
-					`${BORDER}│${RESET} ${padAnsi(
-						`     ${YELLOW}→ ${diffStr}${RESET}`,
-						innerWidth,
-					)} ${BORDER}│${RESET}`,
+					`${panelRow(`     ${YELLOW}→ ${diffStr}${RESET}`, innerWidth + 2, BORDER)}`,
 				);
 			}
 
@@ -636,21 +622,18 @@ export function renderCapsuleReport(summary: CapsuleAuditSummary, termWidth = 80
 				const leg = item.legibility;
 				const legColor = leg.rating === "excelente" ? GREEN : leg.rating === "adecuado" ? SECONDARY : leg.rating === "extremo" ? RED : YELLOW;
 				const legLine = `     ${DIM}Simulación 231x87:${RESET} ${legColor}${leg.rating.toUpperCase()}${RESET} ${GRAY}(Contraste: ${leg.contrastPercent}%, Brillo: ${leg.luminancePercent}%)${RESET}`;
-				lines.push(`${BORDER}│${RESET} ${padAnsi(legLine, innerWidth)} ${BORDER}│${RESET}`);
-				lines.push(`${BORDER}│${RESET} ${padAnsi(`     ${DIM}Nota:${RESET} ${GRAY}${leg.comment}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+				lines.push(`${panelRow(legLine, innerWidth + 2, BORDER)}`);
+				lines.push(`${panelRow(`     ${DIM}Nota:${RESET} ${GRAY}${leg.comment}${RESET}`, innerWidth + 2, BORDER)}`);
 			}
 
-			lines.push(`${BORDER}│${RESET} ${" ".repeat(innerWidth)} ${BORDER}│${RESET}`);
+			lines.push(`${panelRow("", innerWidth + 2, BORDER)}`);
 		}
 	}
 
 	// Section 4: Missing specs checklist
-	lines.push(`${BORDER}├${"─".repeat(width - 2)}┤${RESET}`);
+	lines.push(panelRule(width - 2, "square", BORDER));
 	lines.push(
-		`${BORDER}│${RESET} ${padAnsi(
-			`${HEADING}ESTADO DEL SET DE CÁPSULAS PARA STEAM:${RESET}`,
-			innerWidth,
-		)} ${BORDER}│${RESET}`,
+		`${panelRow(`${HEADING}ESTADO DEL SET DE CÁPSULAS PARA STEAM:${RESET}`, innerWidth + 2, BORDER)}`,
 	);
 
 	for (const spec of Object.values(STEAM_CAPSULE_SPECS)) {
@@ -658,71 +641,47 @@ export function renderCapsuleReport(summary: CapsuleAuditSummary, termWidth = 80
 		const icon = isMissing ? `${RED}[FALTA]${RESET}` : `${GREEN}[LISTO]${RESET}`;
 		const critTag = spec.critical ? ` ${RED}(¡URGENTE PARA VISIBILIDAD!)${RESET}` : "";
 		const line = `  ${icon} ${WHITE}${spec.name}${RESET} ${GRAY}(${spec.width}x${spec.height})${RESET}${critTag}`;
-		lines.push(`${BORDER}│${RESET} ${padAnsi(line, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`${panelRow(line, innerWidth + 2, BORDER)}`);
 	}
 
 	// Section 5: Advice & Magick commands
-	lines.push(`${BORDER}├${"─".repeat(width - 2)}┤${RESET}`);
+	lines.push(panelRule(width - 2, "square", BORDER));
 	if (!summary.hasMagick) {
 		lines.push(
-			`${BORDER}│${RESET} ${padAnsi(
-				`${YELLOW}RECOMENDACIÓN TÉCNICA (Art Director):${RESET}`,
-				innerWidth,
-			)} ${BORDER}│${RESET}`,
+			`${panelRow(`${YELLOW}RECOMENDACIÓN TÉCNICA (Art Director):${RESET}`, innerWidth + 2, BORDER)}`,
 		);
 		lines.push(
-			`${BORDER}│${RESET} ${padAnsi(
-				`  Instala ImageMagick para simulación y recorte automático de cápsulas:`,
-				innerWidth,
-			)} ${BORDER}│${RESET}`,
+			`${panelRow(`  Instala ImageMagick para simulación y recorte automático de cápsulas:`, innerWidth + 2, BORDER)}`,
 		);
 		lines.push(
-			`${BORDER}│${RESET} ${padAnsi(
-				`  ${ACCENT}macOS:${RESET} brew install imagemagick ${DIM}│${RESET} ${ACCENT}Linux:${RESET} sudo apt install imagemagick`,
-				innerWidth,
-			)} ${BORDER}│${RESET}`,
+			`${panelRow(`  ${ACCENT}macOS:${RESET} brew install imagemagick ${DIM}│${RESET} ${ACCENT}Linux:${RESET} sudo apt install imagemagick`, innerWidth + 2, BORDER)}`,
 		);
 	} else if (summary.missingSpecs.length > 0) {
 		lines.push(
-			`${BORDER}│${RESET} ${padAnsi(
-				`${HEADING}COMANDOS RÁPIDOS DE GENERACIÓN (ImageMagick):${RESET}`,
-				innerWidth,
-			)} ${BORDER}│${RESET}`,
+			`${panelRow(`${HEADING}COMANDOS RÁPIDOS DE GENERACIÓN (ImageMagick):${RESET}`, innerWidth + 2, BORDER)}`,
 		);
 		const smallMissing = summary.missingSpecs.find((s) => s.id === "small");
 		if (smallMissing) {
 			lines.push(
-				`${BORDER}│${RESET} ${padAnsi(
-					`  ${DIM}# Generar cápsula pequeña (231x87) con ajuste y recorte centrado:${RESET}`,
-					innerWidth,
-				)} ${BORDER}│${RESET}`,
+				`${panelRow(`  ${DIM}# Generar cápsula pequeña (231x87) con ajuste y recorte centrado:${RESET}`, innerWidth + 2, BORDER)}`,
 			);
 			lines.push(
-				`${BORDER}│${RESET} ${padAnsi(
-					`  ${SECONDARY}magick <master_art.png> -resize 231x87^ -gravity center -extent 231x87 assets/branding/capsule_small.png${RESET}`,
-					innerWidth,
-				)} ${BORDER}│${RESET}`,
+				`${panelRow(`  ${SECONDARY}magick <master_art.png> -resize 231x87^ -gravity center -extent 231x87 assets/branding/capsule_small.png${RESET}`, innerWidth + 2, BORDER)}`,
 			);
 		}
 		const headerMissing = summary.missingSpecs.find((s) => s.id === "header");
 		if (headerMissing) {
 			lines.push(
-				`${BORDER}│${RESET} ${padAnsi(
-					`  ${SECONDARY}magick <master_art.png> -resize 460x215^ -gravity center -extent 460x215 assets/branding/capsule_header.png${RESET}`,
-					innerWidth,
-				)} ${BORDER}│${RESET}`,
+				`${panelRow(`  ${SECONDARY}magick <master_art.png> -resize 460x215^ -gravity center -extent 460x215 assets/branding/capsule_header.png${RESET}`, innerWidth + 2, BORDER)}`,
 			);
 		}
 	} else {
 		lines.push(
-			`${BORDER}│${RESET} ${padAnsi(
-				`${GREEN}¡SET COMPLETO! Todas las cápsulas requeridas por Steamworks están validadas.${RESET}`,
-				innerWidth,
-			)} ${BORDER}│${RESET}`,
+			`${panelRow(`${GREEN}¡SET COMPLETO! Todas las cápsulas requeridas por Steamworks están validadas.${RESET}`, innerWidth + 2, BORDER)}`,
 		);
 	}
 
-	lines.push(`${BORDER}└${"─".repeat(width - 2)}┘${RESET}`);
+	lines.push(panelBottom(width - 2, "square", BORDER));
 	lines.push("");
 
 	return lines;

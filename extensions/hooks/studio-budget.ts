@@ -1,5 +1,5 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { ACCENT as PURPLE, BOLD, BORDER, DIM, GRAY, GREEN, HEADING as LAVENDER, RED, RESET, SECONDARY as CYAN, WHITE, YELLOW, padAnsi, truncateAnsi } from "./studio-palette.ts";
+import { ACCENT as PURPLE, BOLD, BORDER, DIM, GRAY, GREEN, HEADING as LAVENDER, RED, RESET, SECONDARY as CYAN, WHITE, YELLOW, padAnsi, truncateAnsi, panelBottom, panelRow, panelTop } from "./studio-palette.ts";
 
 export type DisciplineCategory = "Directors" | "Game Designer" | "Specialists" | "Other";
 
@@ -356,21 +356,21 @@ export function renderBudgetCard(report: BudgetReport, width: number = 74): stri
 	const innerWidth = cardWidth - 4;
 	const lines: string[] = [];
 
-	lines.push(`${BORDER}╭─${RESET} ${PURPLE}${BOLD}ESTIMATED STUDIO BUDGET & TOKENS${RESET} ${BORDER}${"─".repeat(Math.max(0, cardWidth - 38))}╮${RESET}`);
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`${LAVENDER}Resumen de Sesión Activa${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(panelTop(cardWidth - 3, `${PURPLE}${BOLD}ESTIMATED STUDIO BUDGET & TOKENS${RESET}`, "rounded", BORDER));
+	lines.push(panelRow(`${LAVENDER}Resumen de Sesión Activa${RESET}`, innerWidth + 2, BORDER));
 
 	// Total tokens row
 	const totalTokensStr = `${WHITE}${formatNumber(report.totalTokens)}${RESET} ${GRAY}tokens${RESET} (${GRAY}In:${RESET} ${CYAN}${formatNumber(report.totalInputTokens)}${RESET} ${GRAY}· Out:${RESET} ${GREEN}${formatNumber(report.totalOutputTokens)}${RESET} ${GRAY}· Cache:${RESET} ${YELLOW}${formatNumber(report.totalCacheTokens)}${RESET})`;
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${GRAY}Consumo Total:${RESET} ${totalTokensStr}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(panelRow(`  ${GRAY}Consumo Total:${RESET} ${totalTokensStr}`, innerWidth + 2, BORDER));
 
 	// Cost row
 	const costStr = `${GREEN}$${report.totalCostUsd.toFixed(4)} USD${RESET}`;
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${GRAY}Costo Estimado:${RESET} ${costStr} ${GRAY}(basado en tiers de modelos)${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${GRAY}Eventos registrados:${RESET} ${WHITE}${report.recordCount}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(panelRow(`  ${GRAY}Costo Estimado:${RESET} ${costStr} ${GRAY}(basado en tiers de modelos)${RESET}`, innerWidth + 2, BORDER));
+	lines.push(panelRow(`  ${GRAY}Eventos registrados:${RESET} ${WHITE}${report.recordCount}${RESET}`, innerWidth + 2, BORDER));
+	lines.push(panelRow("", innerWidth + 2, BORDER));
 
 	// Discipline Breakdown
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`${LAVENDER}Desglose por Disciplina de Estudio${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(panelRow(`${LAVENDER}Desglose por Disciplina de Estudio${RESET}`, innerWidth + 2, BORDER));
 
 	const disciplines: { name: DisciplineCategory; color: string }[] = [
 		{ name: "Directors", color: PURPLE },
@@ -388,14 +388,14 @@ export function renderBudgetCard(report: BudgetReport, width: number = 74): stri
 		const tokensPad = `${formatNumber(stat.totalTokens)} tkn`.padStart(12, " ");
 
 		const lineContent = `  ${d.color}${namePad}${RESET} [${d.color}${bar}${RESET}] ${pctPad}  ${GRAY}•${RESET} ${WHITE}${tokensPad}${RESET}  ${GRAY}•${RESET} ${GREEN}${costPad}${RESET}`;
-		lines.push(`${BORDER}│${RESET} ${padAnsi(lineContent, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(panelRow(lineContent, innerWidth + 2, BORDER));
 	}
 
 	// Agents summary table if agents exist
 	const agentKeys = Object.keys(report.byAgent);
 	if (agentKeys.length > 0) {
-		lines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
-		lines.push(`${BORDER}│${RESET} ${padAnsi(`${LAVENDER}Detalle por Agente (${agentKeys.length})${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(panelRow("", innerWidth + 2, BORDER));
+		lines.push(panelRow(`${LAVENDER}Detalle por Agente (${agentKeys.length})${RESET}`, innerWidth + 2, BORDER));
 
 		for (const key of agentKeys.slice(0, 8)) {
 			const a = report.byAgent[key];
@@ -404,11 +404,11 @@ export function renderBudgetCard(report: BudgetReport, width: number = 74): stri
 			const tokens = `${formatNumber(a.totalTokens)} tkn`.padStart(12, " ");
 			const cost = `$${a.costUsd.toFixed(4)}`.padStart(8, " ");
 			const row = `  ${WHITE}${agentName}${RESET} ${GRAY}${modelName}${RESET} ${tokens}  ${GREEN}${cost}${RESET}`;
-			lines.push(`${BORDER}│${RESET} ${padAnsi(row, innerWidth)} ${BORDER}│${RESET}`);
+			lines.push(panelRow(row, innerWidth + 2, BORDER));
 		}
 	}
 
-	lines.push(`${BORDER}╰${"─".repeat(cardWidth - 2)}╯${RESET}`);
+	lines.push(panelBottom(cardWidth - 2, "rounded", BORDER));
 	lines.push(`  ${GRAY}Tip: Usa /studio:budget reset para reiniciar el contador de sesión.${RESET}`);
 
 	return lines;

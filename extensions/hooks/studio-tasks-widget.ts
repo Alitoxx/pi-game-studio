@@ -18,6 +18,9 @@ import {
 	BORDER,
 	truncateAnsi,
 	padAnsi,
+	panelBottom,
+	panelRow,
+	panelTop,
 	resolveStudioTheme,
 	type StudioThemeRoles,
 } from "./studio-palette.ts";
@@ -115,26 +118,23 @@ export function renderTasksWidgetCard(
 		const maxTitleLen = Math.max(10, cardWidth - 7);
 		const displayTitle = rawTitle.length > maxTitleLen ? truncateAnsi(rawTitle, maxTitleLen) : rawTitle;
 		const titleStyled = `${r.accent(displayTitle)}${RESET}`;
-		const titleVisibleLen = displayTitle.replace(/\x1b\[[0-9;]*m/g, "").length;
-		const ruleLen = Math.max(0, cardWidth - titleVisibleLen - 5);
-		lines.push(`  ${BORDER}╭─${RESET} ${titleStyled} ${BORDER}${"─".repeat(ruleLen)}╮${RESET}`);
-		lines.push(`  ${BORDER}╰${"─".repeat(cardWidth - 2)}╯${RESET}`);
+		lines.push(`  ${panelTop(cardWidth - 2, titleStyled, "rounded", BORDER)}`);
+		lines.push(`  ${panelBottom(cardWidth - 2, "rounded", BORDER)}`);
 		return lines;
 	}
 
 	const titleText = titleBase;
 	const titleStyled = `${r.accent(titleText)}${RESET}`;
-	const ruleLen = Math.max(0, cardWidth - titleText.length - 5);
-	lines.push(`  ${BORDER}╭─${RESET} ${titleStyled} ${BORDER}${"─".repeat(ruleLen)}╮${RESET}`);
+	lines.push(`  ${panelTop(cardWidth - 2, titleStyled, "rounded", BORDER)}`);
 
 	if (tasks.length === 0) {
-		lines.push(`  ${BORDER}│${RESET} ${padAnsi(`  ${r.muted("○")}${RESET} ${DIM}Sin tareas activas (/concept o /tasks)${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`  ${panelRow(`  ${r.muted("○")}${RESET} ${DIM}Sin tareas activas (/concept o /tasks)${RESET}`, innerWidth + 2, BORDER)}`);
 		if (nextStep) {
-			lines.push(`  ${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
+			lines.push(`  ${panelRow("", innerWidth + 2, BORDER)}`);
 			const nextLine = truncateAnsi(`  ${r.success("→")}${RESET} ${r.muted(nextStep)}${RESET}`, innerWidth);
-			lines.push(`  ${BORDER}│${RESET} ${padAnsi(nextLine, innerWidth)} ${BORDER}│${RESET}`);
+			lines.push(`  ${panelRow(nextLine, innerWidth + 2, BORDER)}`);
 		}
-		lines.push(`  ${BORDER}╰${"─".repeat(cardWidth - 2)}╯${RESET}`);
+		lines.push(`  ${panelBottom(cardWidth - 2, "rounded", BORDER)}`);
 		return lines;
 	}
 
@@ -167,22 +167,22 @@ export function renderTasksWidgetCard(
 		}
 
 		const truncatedRow = truncateAnsi(rowText, innerWidth);
-		lines.push(`  ${BORDER}│${RESET} ${padAnsi(truncatedRow, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`  ${panelRow(truncatedRow, innerWidth + 2, BORDER)}`);
 	}
 
 	const remaining = targetTasks.length - displayTasks.length;
 	if (remaining > 0) {
 		const more = `${DIM}... y ${remaining} tarea(s) más (/studio:tasks)${RESET}`;
-		lines.push(`  ${BORDER}│${RESET} ${padAnsi(more, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`  ${panelRow(more, innerWidth + 2, BORDER)}`);
 	}
 
 	if (nextStep) {
-		lines.push(`  ${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`  ${panelRow("", innerWidth + 2, BORDER)}`);
 		const nextLine = truncateAnsi(`  ${r.success("→")}${RESET} ${r.muted(nextStep)}${RESET}`, innerWidth);
-		lines.push(`  ${BORDER}│${RESET} ${padAnsi(nextLine, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`  ${panelRow(nextLine, innerWidth + 2, BORDER)}`);
 	}
 
-	lines.push(`  ${BORDER}╰${"─".repeat(cardWidth - 2)}╯${RESET}`);
+	lines.push(`  ${panelBottom(cardWidth - 2, "rounded", BORDER)}`);
 	return lines;
 }
 

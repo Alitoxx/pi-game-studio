@@ -17,6 +17,10 @@ import {
 	BORDER,
 	padAnsi,
 	truncateAnsi,
+	panelBottom,
+	panelRule,
+	panelRow,
+	panelTop,
 } from "./studio-palette.ts";
 
 export type FilterCategory = "All" | "Milestones" | "ADRs" | "Specs";
@@ -69,8 +73,8 @@ export function renderTimelineSplitView(
 		return isAct ? `${CYAN}[${name}]${RESET}` : `${GRAY}[○ ${name}]${RESET}`;
 	}).join("  ");
 
-	lines.push(`${BORDER}╭─${RESET} ${PURPLE}${BOLD}TIMELINE DE PRODUCCIÓN Y DECISIONES (ODD)${RESET} ${BORDER}${"─".repeat(Math.max(0, totalWidth - 48))}╮${RESET}`);
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${GRAY}Filtro:${RESET} ${tabLabels}  ${DIM}(Tab para cambiar)${RESET}`, totalWidth - 4)} ${BORDER}│${RESET}`);
+	lines.push(panelTop(totalWidth - 4, `${PURPLE}${BOLD}TIMELINE DE PRODUCCIÓN Y DECISIONES (ODD)${RESET}`, "rounded", BORDER));
+	lines.push(`${panelRow(`  ${GRAY}Filtro:${RESET} ${tabLabels}  ${DIM}(Tab para cambiar)${RESET}`, totalWidth - 2, BORDER)}`);
 	lines.push(`${BORDER}├${"─".repeat(leftWidth)}┬${"─".repeat(rightWidth)}┤${RESET}`);
 
 	// 2. Left column (tree with ASCII spine)

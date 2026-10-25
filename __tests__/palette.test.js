@@ -42,6 +42,112 @@ describe("Studio palette", () => {
 		).not.toThrow();
 	}, 30000);
 
+	describe("panel frame helpers (issue #52, slice 2)", () => {
+		const runScript = (script) =>
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+			}).toString();
+
+		// Shared preamble: visible-width counter identical to the palette's own.
+		const PRELUDE = `
+			const p = await import("./extensions/hooks/studio-palette.ts");
+			const visible = (s) => s.replace(/\x1b\[[0-9;]*m/g, "").length;
+			const expectWidth = (label, line, w) => {
+				if (visible(line) !== w) throw new Error(label + ": visible width " + visible(line) + " != " + w + ": " + JSON.stringify(line));
+			};
+		`;
+
+		test("square and rounded corners reproduce the studio's two frame families", () => {
+			const script = `
+				${PRELUDE}
+				if (p.panelTop(10, undefined, "square") !== "\u250c" + "\u2500".repeat(10) + "\u2510") {
+					throw new Error("square top corners drifted: " + JSON.stringify(p.panelTop(10, undefined, "square")));
+				}
+				if (p.panelTop(10, undefined, "rounded") !== "\u256d" + "\u2500".repeat(10) + "\u256e") {
+					throw new Error("rounded top corners drifted: " + JSON.stringify(p.panelTop(10, undefined, "rounded")));
+				}
+				if (p.panelBottom(10, "square") !== "\u2514" + "\u2500".repeat(10) + "\u2518") {
+					throw new Error("square bottom corners drifted");
+				}
+				if (p.panelBottom(10, "rounded") !== "\u2570" + "\u2500".repeat(10) + "\u256f") {
+					throw new Error("rounded bottom corners drifted");
+				}
+			`;
+			runScript(script);
+		}, 30000);
+
+		test("panelTop embeds the title in the studio idiom at the promised width", () => {
+			const script = `
+				${PRELUDE}
+				// square: \u250c\u2500\u2500 TITLE \u2500\u2500\u2500\u2510 — rounded: \u256d\u2500 TITLE \u2500\u2500\u256e
+				const sq = p.panelTop(20, "HELLO", "square");
+				if (sq !== "\u250c\u2500\u2500 HELLO " + "\u2500".repeat(11) + "\u2510") {
+					throw new Error("square title pattern drifted: " + JSON.stringify(sq));
+				}
+				const rd = p.panelTop(20, "HELLO", "rounded");
+				if (rd !== "\u256d\u2500 HELLO " + "\u2500".repeat(12) + "\u256e") {
+					throw new Error("rounded title pattern drifted: " + JSON.stringify(rd));
+				}
+				expectWidth("square title", sq, 22);
+				expectWidth("rounded title", rd, 22);
+			`;
+			runScript(script);
+		}, 30000);
+
+		test("width math is ANSI-aware", () => {
+			const script = `
+				${PRELUDE}
+				// A styled title keeps the same geometry as its plain twin.
+				const plain = p.panelTop(20, "HELLO", "rounded");
+				const styled = p.panelTop(20, "\\x1b[38;2;122;147;201mHELLO\\x1b[0m", "rounded");
+				if (visible(styled) !== visible(plain)) {
+					throw new Error("ANSI title changed the geometry: " + JSON.stringify(styled));
+				}
+				if (visible(styled) !== 22) throw new Error("styled title width drifted");
+				if (!styled.includes("\\x1b[38;2;122;147;201mHELLO\\x1b[0m")) {
+					throw new Error("the title escapes must be embedded verbatim");
+				}
+				// A styled row keeps the promised width too.
+				const row = p.panelRow("\\x1b[31mhi\\x1b[0m", 10);
+				expectWidth("styled row", row, 12);
+				if (row !== "\u2502 \\x1b[31mhi\\x1b[0m       \u2502") {
+					throw new Error("styled row drifted: " + JSON.stringify(row));
+				}
+			`;
+			runScript(script);
+		}, 30000);
+
+		test("a title longer than the panel truncates instead of overflowing", () => {
+			const script = `
+				${PRELUDE}
+				const line = p.panelTop(10, "A VERY LONG PANEL TITLE THAT CANNOT FIT", "square");
+				expectWidth("truncated title", line, 12);
+				if (!line.includes("\u2026")) throw new Error("expected the truncateAnsi ellipsis marker");
+			`;
+			runScript(script);
+		}, 30000);
+
+		test("panelRule and panelBottom match panelTop's width", () => {
+			const script = `
+				${PRELUDE}
+				for (const style of ["square", "rounded"]) {
+					for (const w of [0, 1, 46, 74]) {
+						expectWidth("panelTop " + style + " " + w, p.panelTop(w, undefined, style), w + 2);
+						expectWidth("panelRule " + style + " " + w, p.panelRule(w, style), w + 2);
+						expectWidth("panelBottom " + style + " " + w, p.panelBottom(w, style), w + 2);
+					}
+				}
+				if (p.panelRule(10, "square") !== "\u251c" + "\u2500".repeat(10) + "\u2524") {
+					throw new Error("rule must keep the T junctions: " + JSON.stringify(p.panelRule(10, "square")));
+				}
+				if (p.panelRow("hello", 10) !== "\u2502 hello    \u2502") {
+					throw new Error("plain row drifted: " + JSON.stringify(p.panelRow("hello", 10)));
+				}
+			`;
+			runScript(script);
+		}, 30000);
+	});
+
 	describe("ornament vocabulary", () => {
 		const read = (f) => fs.readFileSync(path.join(hooksDir, f), "utf8");
 

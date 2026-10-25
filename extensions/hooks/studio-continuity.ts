@@ -3,7 +3,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
 import { readProducerState } from "./studio-start.ts";
-import { ACCENT, ACCENT as BLUE, BORDER, CYAN, DIM, GRAY, GREEN, RESET, SECONDARY, WHITE, YELLOW, padAnsi } from "./studio-palette.ts";
+import { ACCENT, ACCENT as BLUE, BORDER, CYAN, DIM, GRAY, GREEN, RESET, SECONDARY, WHITE, YELLOW, padAnsi, panelBottom, panelRow, panelTop } from "./studio-palette.ts";
 
 export interface PendingTaskInfo {
 	id: string;
@@ -77,11 +77,11 @@ export function findNextPendingTask(studioRoot: string): PendingTaskInfo | null 
  */
 export function formatContinuityPrompt(nextTask: PendingTaskInfo): string[] {
 	const lines: string[] = [];
-	lines.push(`┌── SPRINT CONTINUITY GATE: FAST-FORWARD PIPELINE ────────────────┐`);
-	lines.push(`│ Tarea anterior completada con éxito. Siguiente en cola ODD:    │`);
-	lines.push(`│ • Origen: ${nextTask.sourceFile.padEnd(52, " ")} │`);
-	lines.push(`│ • Tarea:  ${nextTask.title.slice(0, 52).padEnd(52, " ")} │`);
-	lines.push(`└─────────────────────────────────────────────────────────────────┘`);
+	lines.push(panelTop(65, "SPRINT CONTINUITY GATE: FAST-FORWARD PIPELINE"));
+	lines.push(panelRow("Tarea anterior completada con éxito. Siguiente en cola ODD:", 64));
+	lines.push(panelRow(`• Origen: ${nextTask.sourceFile.padEnd(52, " ")}`, 64));
+	lines.push(panelRow(`• Tarea:  ${nextTask.title.slice(0, 52).padEnd(52, " ")}`, 64));
+	lines.push(panelBottom(65));
 	return lines;
 }
 

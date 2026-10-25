@@ -17,6 +17,10 @@ import {
 	WHITE,
 	GRAY,
 	padAnsi,
+	panelBottom,
+	panelRule,
+	panelRow,
+	panelTop,
 } from "./studio-palette.ts";
 
 export type SupportedEngine = "Godot" | "Bevy" | "Raylib" | "Unity" | "Unreal" | "Phaser";
@@ -768,85 +772,58 @@ export function renderAudioBusConfirmation(result: BusScaffoldResult, termWidth 
 	const lines: string[] = [];
 
 	lines.push("");
-	lines.push(`${BORDER}┌${"─".repeat(width - 2)}┐${RESET}`);
+	lines.push(panelTop(width - 2, undefined, "square", BORDER));
 	lines.push(
-		`${BORDER}│${RESET} ${padAnsi(
-			`${ACCENT}${BOLD}AUDIO BUS HIERARCHY & DUCKING MATRIX${RESET} ${GRAY}(Audio Director)${RESET}`,
-			innerWidth,
-		)} ${BORDER}│${RESET}`,
+		`${panelRow(`${ACCENT}${BOLD}AUDIO BUS HIERARCHY & DUCKING MATRIX${RESET} ${GRAY}(Audio Director)${RESET}`, innerWidth + 2, BORDER)}`,
 	);
-	lines.push(`${BORDER}├${"─".repeat(width - 2)}┤${RESET}`);
+	lines.push(panelRule(width - 2, "square", BORDER));
 
 	// Engine & target file
 	lines.push(
-		`${BORDER}│${RESET} ${padAnsi(
-			`  ${DIM}Motor activo:${RESET} ${WHITE}${result.engine}${RESET} ${DIM}│ Archivo:${RESET} ${SECONDARY}${result.relPath}${RESET}`,
-			innerWidth,
-		)} ${BORDER}│${RESET}`,
+		`${panelRow(`  ${DIM}Motor activo:${RESET} ${WHITE}${result.engine}${RESET} ${DIM}│ Archivo:${RESET} ${SECONDARY}${result.relPath}${RESET}`, innerWidth + 2, BORDER)}`,
 	);
-	lines.push(`${BORDER}├${"─".repeat(width - 2)}┤${RESET}`);
+	lines.push(panelRule(width - 2, "square", BORDER));
 
 	// Tree view
 	lines.push(
-		`${BORDER}│${RESET} ${padAnsi(
-			`${HEADING}JERARQUÍA DE BUSES Y SIDECHAIN DUCKING:${RESET}`,
-			innerWidth,
-		)} ${BORDER}│${RESET}`,
+		`${panelRow(`${HEADING}JERARQUÍA DE BUSES Y SIDECHAIN DUCKING:${RESET}`, innerWidth + 2, BORDER)}`,
 	);
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${WHITE}Master Bus${RESET} ${GRAY}(0.0 dB)${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`${panelRow(`  ${WHITE}Master Bus${RESET} ${GRAY}(0.0 dB)${RESET}`, innerWidth + 2, BORDER)}`);
 	lines.push(
-		`${BORDER}│${RESET} ${padAnsi(
-			`    ${DIM}├──${RESET} ${SECONDARY}Music${RESET} ${GRAY}(-3.0 dB)${RESET} ${YELLOW}[Sidechain Ducking: se atenúa al hablar Voice]${RESET}`,
-			innerWidth,
-		)} ${BORDER}│${RESET}`,
+		`${panelRow(`    ${DIM}├──${RESET} ${SECONDARY}Music${RESET} ${GRAY}(-3.0 dB)${RESET} ${YELLOW}[Sidechain Ducking: se atenúa al hablar Voice]${RESET}`, innerWidth + 2, BORDER)}`,
 	);
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`    ${DIM}├──${RESET} ${WHITE}SFX${RESET} ${GRAY}(0.0 dB)${RESET} ${DIM}— Efectos, armas, colisiones${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`${panelRow(`    ${DIM}├──${RESET} ${WHITE}SFX${RESET} ${GRAY}(0.0 dB)${RESET} ${DIM}— Efectos, armas, colisiones${RESET}`, innerWidth + 2, BORDER)}`);
 	lines.push(
-		`${BORDER}│${RESET} ${padAnsi(
-			`    ${DIM}├──${RESET} ${GREEN}Voice${RESET} ${GRAY}(0.0 dB)${RESET} ${RED}[Trigger Ducking: baja Music -9dB durante diálogo]${RESET}`,
-			innerWidth,
-		)} ${BORDER}│${RESET}`,
+		`${panelRow(`    ${DIM}├──${RESET} ${GREEN}Voice${RESET} ${GRAY}(0.0 dB)${RESET} ${RED}[Trigger Ducking: baja Music -9dB durante diálogo]${RESET}`, innerWidth + 2, BORDER)}`,
 	);
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`    ${DIM}├──${RESET} ${WHITE}UI${RESET} ${GRAY}(0.0 dB)${RESET} ${DIM}— Clics, botones, feedback directo${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`    ${DIM}└──${RESET} ${WHITE}Ambient${RESET} ${GRAY}(-4.0 dB)${RESET} ${DIM}— Loops de viento, cuevas, fondos${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`${BORDER}├${"─".repeat(width - 2)}┤${RESET}`);
+	lines.push(`${panelRow(`    ${DIM}├──${RESET} ${WHITE}UI${RESET} ${GRAY}(0.0 dB)${RESET} ${DIM}— Clics, botones, feedback directo${RESET}`, innerWidth + 2, BORDER)}`);
+	lines.push(`${panelRow(`    ${DIM}└──${RESET} ${WHITE}Ambient${RESET} ${GRAY}(-4.0 dB)${RESET} ${DIM}— Loops de viento, cuevas, fondos${RESET}`, innerWidth + 2, BORDER)}`);
+	lines.push(panelRule(width - 2, "square", BORDER));
 
 	// Ducking configuration details
 	lines.push(
-		`${BORDER}│${RESET} ${padAnsi(
-			`${HEADING}CONFIGURACIÓN DEL COMPRESOR / DUCKING:${RESET}`,
-			innerWidth,
-		)} ${BORDER}│${RESET}`,
+		`${panelRow(`${HEADING}CONFIGURACIÓN DEL COMPRESOR / DUCKING:${RESET}`, innerWidth + 2, BORDER)}`,
 	);
 	lines.push(
-		`${BORDER}│${RESET} ${padAnsi(
-			`  ${GRAY}${result.duckingConfig}${RESET}`,
-			innerWidth,
-		)} ${BORDER}│${RESET}`,
+		`${panelRow(`  ${GRAY}${result.duckingConfig}${RESET}`, innerWidth + 2, BORDER)}`,
 	);
-	lines.push(`${BORDER}├${"─".repeat(width - 2)}┤${RESET}`);
+	lines.push(panelRule(width - 2, "square", BORDER));
 
 	// Instructions
 	lines.push(
-		`${BORDER}│${RESET} ${padAnsi(
-			`${HEADING}CÓMO ENRUTAR REPRODUCTORES DE AUDIO (${result.engine}):${RESET}`,
-			innerWidth,
-		)} ${BORDER}│${RESET}`,
+		`${panelRow(`${HEADING}CÓMO ENRUTAR REPRODUCTORES DE AUDIO (${result.engine}):${RESET}`, innerWidth + 2, BORDER)}`,
 	);
 
 	const codeLines = result.routingCodeSnippet.split("\n");
 	for (const cl of codeLines) {
-		lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${DIM}${cl}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`${panelRow(`  ${DIM}${cl}${RESET}`, innerWidth + 2, BORDER)}`);
 	}
 
-	lines.push(`${BORDER}├${"─".repeat(width - 2)}┤${RESET}`);
+	lines.push(panelRule(width - 2, "square", BORDER));
 	lines.push(
-		`${BORDER}│${RESET} ${padAnsi(
-			`${GREEN}[CREACIÓN EXITOSA]${RESET} Jerarquía de audio profesional generada en disco.`,
-			innerWidth,
-		)} ${BORDER}│${RESET}`,
+		`${panelRow(`${GREEN}[CREACIÓN EXITOSA]${RESET} Jerarquía de audio profesional generada en disco.`, innerWidth + 2, BORDER)}`,
 	);
-	lines.push(`${BORDER}└${"─".repeat(width - 2)}┘${RESET}`);
+	lines.push(panelBottom(width - 2, "square", BORDER));
 	lines.push("");
 
 	return lines;

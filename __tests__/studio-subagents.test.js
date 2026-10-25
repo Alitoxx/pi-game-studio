@@ -390,7 +390,10 @@ describe("Studio tool registration is observable", () => {
 
 			const regs = getStudioToolRegistrations();
 			const failed = regs.filter((r) => r.status === "failed");
-			if (failed.length !== 4) throw new Error("expected 4 failed registrations, got " + failed.length);
+			if (failed.length < 4) throw new Error("expected every studio tool to fail, got " + failed.length);
+			if (regs.some((r) => r.status !== "failed")) {
+				throw new Error("a throwing registerTool must mark every tool failed, got: " + JSON.stringify(regs));
+			}
 			if (!/host refused registration/.test(failed[0].reason || "")) {
 				throw new Error("the failure message was lost: " + failed[0].reason);
 			}
@@ -906,4 +909,70 @@ describe("Token accounting", () => {
 			});
 		}).not.toThrow();
 	}, 40000);
+});
+
+describe("Live steering", () => {
+	test("a steering message reaches the running child instead of forcing a re-dispatch", () => {
+		const script = `
+			const fs = await import("node:fs");
+			const os = await import("node:os");
+			const path = await import("node:path");
+
+			const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "studio-steer-"));
+			const fakePi = path.join(tmp, "pi");
+			fs.copyFileSync("__tests__/fixtures/fake-pi-rpc.mjs", fakePi);
+			fs.chmodSync(fakePi, 0o755);
+			const commandLog = path.join(tmp, "commands.log");
+			const previousPiPath = process.env.PI_PATH;
+			process.env.PI_PATH = fakePi;
+			process.env.FAKE_SILENT_AFTER_PROMPT = "1";
+			process.env.FAKE_COMMAND_LOG = commandLog;
+
+			const { studioAgentsRunner } = await import("./extensions/hooks/studio-agents-runner.ts");
+			const manifest = { name: "bevy-specialist", title: "BS", tier: "specialist", model: "inherit", thinking: "medium", tools: ["read"], systemPrompt: "t" };
+			const record = await studioAgentsRunner.run(manifest, "Implementa el combate.", tmp, "background", undefined, 30000);
+
+			const read = () => { try { return fs.readFileSync(commandLog, "utf8"); } catch { return ""; } };
+			const waitFor = async (pattern) => {
+				const deadline = Date.now() + 10000;
+				while (Date.now() < deadline) {
+					if (pattern.test(read())) return true;
+					await new Promise((r) => setTimeout(r, 100));
+				}
+				return false;
+			};
+
+			if (!(await waitFor(/"prompt"/))) throw new Error("the child never received the prompt");
+
+			if (studioAgentsRunner.steer("task-que-no-existe", "x") !== false) {
+				throw new Error("steering a task that is not running must report false");
+			}
+
+			if (studioAgentsRunner.steer(record.id, "Corrige el rumbo: usa ECS.") !== true) {
+				throw new Error("steering a running task must report true");
+			}
+
+			if (!(await waitFor(/"type":"steer"[^}]*(Corrige el rumbo)/))) {
+				throw new Error("the steering message never reached the child: " + read().slice(-400));
+			}
+			if (!(record.logs || []).some((l) => /steer/i.test(l))) {
+				throw new Error("the record must log the steering for the viewer");
+			}
+
+			studioAgentsRunner.cancel(record.id, "fin del test");
+			await new Promise((r) => setTimeout(r, 300));
+			if (previousPiPath === undefined) delete process.env.PI_PATH;
+			else process.env.PI_PATH = previousPiPath;
+			delete process.env.FAKE_SILENT_AFTER_PROMPT;
+			delete process.env.FAKE_COMMAND_LOG;
+			try { fs.rmSync(tmp, { recursive: true, force: true }); } catch { /* el hijo puede seguir escribiendo */ }
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+				timeout: 60000,
+			});
+		}).not.toThrow();
+	}, 70000);
 });

@@ -73,7 +73,7 @@ The result: you still make every decision, but now you have a fast, coordinated 
 | Category      | Count | Description                                                                                                              |
 | ------------- | ----- | ------------------------------------------------------------------------------------------------------------------------ |
 | **Agents**    | 8+1   | Compact active studio: 8 Core roles + 1 dedicated Engine Specialist per project                                           |
-| **Subagents** | Native| Isolated child process execution via `subagent_run`, `subagent_list`, `subagent_status` & `subagent_result`              |
+| **Subagents** | Native| Isolated child process execution via `subagent_run`, `subagent_list`, `subagent_status`, `subagent_result` & `subagent_steer`   |
 | **Interactive**| Native| Interactive terminal menus & batch questionnaires via `ask_user_question` (arrow keys & Enter)             |
 | **Skills**    | 6 ODD | Full lifecycle pipeline: `/concept`, `/spec`, `/arch`, `/code`, `/test`, `/ship`                                          |
 | **Chains**    | 3     | Multi-agent execution pipelines via native isolated subagents (`subagent_run`)                                           |

@@ -168,6 +168,31 @@ export class StudioAgentsRunner {
 		return Array.from(this.tasks.values()).reverse();
 	}
 
+	/**
+	 * Delivers a steering message to a running child. Pi queues it and applies it
+	 * after the current tool calls, before the next model call — the alternative is
+	 * killing the specialist and paying the whole read-and-setup cost again.
+	 */
+	steer(id: string, message: string): boolean {
+		const child = this.liveProcesses.get(id);
+		const task = this.tasks.get(id);
+		const text = message?.trim();
+		if (!child || !task || !text) return false;
+
+		try {
+			child.stdin?.write(`${JSON.stringify({ type: "steer", message: text })}\n`);
+		} catch (error) {
+			recordFailure("runner.steer", error);
+			return false;
+		}
+
+		task.lastActivityAt = Date.now();
+		task.logs.push(`        steer  ${text.slice(0, 80)}`);
+		task.latestActivity = `Steering: ${text.slice(0, 35)}`;
+		this.notifyListeners(task);
+		return true;
+	}
+
 	cancel(id: string, reason = "cancelled by user"): boolean {
 		const task = this.tasks.get(id);
 		if (!task) return false;
@@ -420,7 +445,9 @@ export class StudioAgentsRunner {
 			const sendRpc = (payload: Record<string, unknown>) => {
 				try {
 					child.stdin?.write(`${JSON.stringify(payload)}\n`);
-				} catch {}
+				} catch (error) {
+					recordFailure("runner.stdin.write", error);
+				}
 			};
 
 			// Enviar prompt inicial al conectarse

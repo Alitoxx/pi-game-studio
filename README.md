@@ -288,7 +288,8 @@ pi-studio
 > **How `pi-studio` manages your environment**:
 > - **Additive & Sovereign Package Management**: Ensures essential gamedev tools (`pi-web-access`, `pi-antigravity`, `pi-btw`) are available out of the box, without ever deleting, censoring, or filtering packages you install.
 > - **Zero Persona/Prompt Leaks**: Strips foreign shell environment variables so studio sessions remain focused on your game directors and engine specialists.
-> - **Defensive Tool Coexistence**: Extensions gracefully detect pre-existing tools (`ask_user_question`, `subagent_run`), preventing collisions if shared utilities or host tools are active.
+> - **Defensive Tool Coexistence**: Extensions detect pre-existing tools (`ask_user_question`, `subagent_run`) and stand down instead of colliding. A replaced studio tool is announced at startup and listed by `/studio:doctor`, so the runner never goes inert silently.
+> - **Bound Dispatch**: `subagent_run` refuses to start outside a Game Studio project (`allow_outside_studio: true` overrides it) and stamps the resolved root on every receipt, so a task proves where the work happened.
 > - **Seamless Credentials & Preferences**: Automatically mirrors your credentials, model configurations, trust approvals, and base preferences from your primary Pi environment.
 > - **Auto-cleaning Setup**: Running `/studio:setup` cleans up any legacy local `.pi/skills/` to prevent Pi skill collision warnings, serving skills directly from the package manifest.
 

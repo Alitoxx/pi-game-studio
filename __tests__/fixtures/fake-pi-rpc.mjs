@@ -68,6 +68,9 @@ process.stdin.on("data", (chunk) => {
 		return; // stays alive: only cancellation can end this run
 	}
 
+	// FAKE_STDERR models the diagnostic noise a real child writes while succeeding.
+	if (process.env.FAKE_STDERR) process.stderr.write(process.env.FAKE_STDERR + "\n");
+
 	emit({
 		type: "message_update",
 		assistantMessageEvent: { type: "text_delta", delta: receipt },

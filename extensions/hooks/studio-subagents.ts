@@ -5,6 +5,7 @@ import { resolve, sep } from "node:path";
 import { loadAgentManifest, listAvailableAgents } from "./studio-agent-loader.ts";
 import { studioAgentsRunner } from "./studio-agents-runner.ts";
 import { registerStudioTool } from "./studio-tool-registry.ts";
+import { findStudioRoot } from "./studio-root.ts";
 
 export {
 	getStudioToolRegistrations,
@@ -51,6 +52,11 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 					type: "number",
 					description:
 						"Optional timeout limit in seconds (default is 300s for task mode, 900s for background mode).",
+				},
+				allow_outside_studio: {
+					type: "boolean",
+					description:
+						"Dispatch even when the working directory is not a Pi Game Studio project. Off by default: a specialist assumes design/gdd/ and .pi/ exist.",
 				},
 				target_dir: {
 					type: "string",
@@ -233,6 +239,22 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 				};
 			}
 
+			// A specialist assumes design/gdd/ and .pi/: dispatched from the wrong tree it
+			// would enforce its edit surfaces against the wrong repository, and the receipt
+			// would not prove where the work happened.
+			const studioRoot = findStudioRoot(ctx.cwd);
+			if (!studioRoot && params.allow_outside_studio !== true) {
+				return {
+					content: [
+						{
+							type: "text",
+							text: `Error: ${ctx.cwd} no es un proyecto de Pi Game Studio.\nCorre /setup para inicializar el estudio, o despacha desde la raiz del proyecto. Para forzar el despacho, pasa allow_outside_studio: true.`,
+						},
+					],
+					details: { error: "outside_studio", cwd: ctx.cwd },
+				};
+			}
+
 			if (!taskPrompt) {
 				return {
 					content: [{ type: "text", text: "Error: 'task' parameter is required." }],
@@ -294,7 +316,7 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 							].join("\n"),
 						},
 					],
-					details: { taskId: record.id, agent: manifest.name, status: record.status },
+					details: { taskId: record.id, agent: manifest.name, status: record.status, root: record.resolvedRoot },
 				};
 			}
 
@@ -331,7 +353,7 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 								text: receiptText,
 							},
 						],
-						details: { taskId: record.id, agent: manifest.name, status: record.status },
+						details: { taskId: record.id, agent: manifest.name, status: record.status, root: record.resolvedRoot },
 					};
 				}
 
@@ -342,7 +364,7 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 							text: record.result || "(el especialista no produjo salida)",
 						},
 					],
-					details: { taskId: record.id, agent: manifest.name, status: record.status },
+					details: { taskId: record.id, agent: manifest.name, status: record.status, root: record.resolvedRoot },
 				};
 			}
 
@@ -387,6 +409,8 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 					taskId: record.id,
 					agent: manifest.name,
 					status: record.status,
+					root: record.resolvedRoot,
+					stderrTail: record.stderrTail,
 					error: record.error,
 				},
 			};

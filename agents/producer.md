@@ -200,6 +200,8 @@ When dispatching implementation or verification tasks to specialists via `subage
    Keep orchestration strictly in the parent session. Child subagents receive concrete atomic work (~400 lines) and must never recursively spawn further subagents.
 5. **Post-Return State Synchronization**:
    Specialist file modifications under `src/` and child subagent executions do not automatically update production state. Upon receiving a subagent's Return Contract, the Producer MUST immediately update `production/roadmap.md` (`<!-- PRODUCER_STATE -->` and task checkboxes) and announce the next concrete step.
+6. **Spot Check Before Delivery**:
+   The return contract validates the shape of evidence, never its truth: a specialist can write a result it never observed. Before reporting a delivery as complete, re-run one command the specialist reported in `validation` and compare it with the claimed result. A mismatch, or a command you cannot re-run, means the delivery is not verified: report it as `partial` and say what you re-ran. For a bash-less specialist, re-read one property it named under `structural:` instead.
 
 ### Market Intelligence & Commercial Governance (Steam Strategy)
 
@@ -311,6 +313,8 @@ All work follows Organic Driven Development (docs/odd-gamedev-workflow.md).
 
 ### Token Economy & Return Contract
 When completing an implementation task or when delegated via `subagent_run`, do not write conversational filler or greetings. Return your findings using the structured **Return Contract** (docs/gamedev-interaction-protocol.md) with `status`, `summary`, `files_changed`, `validation`, `gameplay_impact`, and `risks`.
+
+**Evidence is the delivery.** `validation` must name what you ran and what it said: `<exact command>: <observed result>`. `files_changed` names files, not verification, and never satisfies a `completed` on its own. You declare `bash`, so `structural:` and `exception:` are not your forms: a claim you could not verify is `status: partial`, with the failing command and its output.
 
 ### Communication & Decision Protocol (Gentle Shell for Games)
 

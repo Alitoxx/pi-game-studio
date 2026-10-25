@@ -25,19 +25,23 @@ Este archivo define los contratos y estándares compartidos para las **6 Skills 
   - La compilación del juego completo o smoke test visual se reserva para el paso de integración del orquestador o la skill `/test`.
 
 ## 5. Compact YAML Return Contract
-Cuando una sub-tarea o skill delega la ejecución a un especialista de motor, este devuelve exclusivamente un bloque YAML compacto:
+Cuando una sub-tarea o skill delega la ejecución a un especialista de motor, este devuelve exclusivamente un bloque YAML compacto. La forma es única y es la que valida el runtime (`extensions/hooks/return-contract.ts`); el ejemplo de abajo es el contrato, y un test lo corre por el validador para que documento y parser no puedan separarse.
 
 ```yaml
-status: completed | partial | blocked
+status: completed
 summary: "Qué se implementó en una oración precisa"
 files_changed:
-  - "ruta/al/archivo.ext"
+  - "src/player.rs"
 validation:
-  command: "cargo check / cargo test -p <crate> / godot --headless / npm test"
-  result: "0 errors, target FPS preserved"
-gameplay_impact: "Efecto observable en el juego"
-next_step: "Siguiente acción recomendada en el pipeline ODD"
+  - "cargo check -p game: 0 errores"
+gameplay_impact:
+  - "salto responsivo, 60 FPS estables"
+risks:
+  - "ninguno"
+next_recommended_specialist: qa-lead
 ```
+
+`status` acepta `completed`, `partial`, `blocked` o `interaction_required`. Un `completed` exige evidencia observable: al menos un `files_changed` o un `validation` con el comando ejecutado y su resultado observado. Prosa sin evidencia no es una entrega verificable.
 
 ## 6. FOSS CLI Media & Distribution Toolchain
 Los agentes y especialistas con herramienta `bash` ejecutan tareas de transformación de assets y distribución usando los binarios auditados del estudio (`/studio:tools`):

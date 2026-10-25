@@ -2867,3 +2867,34 @@ Implement fuzzy command palette.
 
 
 
+
+describe("Shared ODD contract", () => {
+	test("the Return Contract documented in skills/_shared parses with the runtime validator", () => {
+		// The documented example is the contract: if the parser cannot read it, the
+		// docs and the runtime have diverged and a conforming delivery can be rejected.
+		const script = `
+			const fs = await import("node:fs");
+			const { validateSpecialistReturn } = await import("./extensions/hooks/return-contract.ts");
+
+			const doc = fs.readFileSync("skills/_shared/odd-contract.md", "utf8");
+			const block = /\\\`\\\`\\\`yaml\\s*\\n([\\s\\S]*?)\\n\\\`\\\`\\\`/.exec(doc);
+			if (!block) throw new Error("skills/_shared/odd-contract.md has no yaml example");
+			const sample = block[1];
+
+			const res = validateSpecialistReturn(sample);
+			if (!res.isValid) throw new Error("documented example rejected: " + res.errors.join(" | "));
+			if (!(res.parsed?.validation?.length)) {
+				throw new Error("documented example carries validation the parser drops");
+			}
+			if (!(res.parsed?.files_changed?.length)) {
+				throw new Error("documented example carries files_changed the parser drops");
+			}
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+			});
+		}).not.toThrow();
+	});
+});

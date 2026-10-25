@@ -1,13 +1,37 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 
+/**
+ * Thinking levels Pi accepts for `--thinking`. Pi clamps a level the selected
+ * model does not support, so an unknown value here is a typo, not a capability
+ * limit: it must never reach the child process.
+ */
+export const THINKING_LEVELS = ["off", "minimal", "low", "medium", "high", "xhigh", "max"] as const;
+export type ThinkingLevel = (typeof THINKING_LEVELS)[number];
+
+/**
+ * Resolves the reasoning budget declared by an agent template, falling back to
+ * the tier default when the value is missing or outside Pi's vocabulary.
+ */
+export function resolveThinkingLevel(
+	raw: unknown,
+	tier: "director" | "lead" | "specialist",
+): ThinkingLevel {
+	const fallback: ThinkingLevel = tier === "director" ? "high" : "medium";
+	if (typeof raw !== "string") return fallback;
+	const value = raw.trim().toLowerCase();
+	return (THINKING_LEVELS as readonly string[]).includes(value)
+		? (value as ThinkingLevel)
+		: fallback;
+}
+
 export interface AgentManifest {
 	name: string;
 	title: string;
 	description: string;
 	tier: "director" | "lead" | "specialist";
 	model: string;
-	thinking: "off" | "minimal" | "low" | "medium" | "high";
+	thinking: ThinkingLevel;
 	tools: string[];
 	filePath: string;
 	systemPrompt: string;
@@ -127,7 +151,7 @@ export function loadAgentManifest(name: string, cwd: string): AgentManifest | nu
 			description: meta.description || "",
 			tier,
 			model: meta.model || "inherit",
-			thinking: (meta.thinking as any) || defaultThinking,
+			thinking: resolveThinkingLevel(meta.thinking, tier),
 			tools: Array.isArray(meta.tools) ? meta.tools : ["read", "write", "edit", "bash"],
 			filePath: targetPath,
 			systemPrompt: body,

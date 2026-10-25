@@ -199,3 +199,150 @@ describe("Runner enforces the specialist return contract", () => {
 		}).not.toThrow();
 	}, 30000);
 });
+
+describe("Runner forwards the declared reasoning budget", () => {
+	const repoRoot = path.join(__dirname, "..");
+
+	test("directors run at high and leads at medium, as their templates declare", () => {
+		const script = `
+			const fs = await import("node:fs");
+			const os = await import("node:os");
+			const path = await import("node:path");
+
+			const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "studio-thinking-"));
+			const fakePi = path.join(tmp, "pi");
+			fs.copyFileSync("__tests__/fixtures/fake-pi-rpc.mjs", fakePi);
+			fs.chmodSync(fakePi, 0o755);
+
+			const previousPiPath = process.env.PI_PATH;
+			process.env.PI_PATH = fakePi;
+			process.env.FAKE_ECHO_ARGV = "1";
+			process.env.FAKE_RECEIPT = [
+				"status: completed",
+				"summary: ok",
+				"files_changed:",
+				"  - src/a.rs",
+			].join("\\n");
+
+			const { studioAgentsRunner } = await import("./extensions/hooks/studio-agents-runner.ts");
+			const base = { tier: "director", model: "inherit", tools: ["read"], systemPrompt: "test" };
+
+			const director = await studioAgentsRunner.run(
+				{ ...base, name: "creative-director", title: "Creative Director", thinking: "high" },
+				"Define el pilar de combate.",
+				tmp,
+				"task",
+			);
+			if (!(director.result || "").includes("ARGV=")) {
+				throw new Error("child did not report its argv: " + director.result);
+			}
+			if (!(director.result || "").includes("--thinking high")) {
+				throw new Error("director did not receive --thinking high: " + /ARGV=(.*)/.exec(director.result || "")?.[1]);
+			}
+
+			const lead = await studioAgentsRunner.run(
+				{ ...base, name: "gameplay-programmer", title: "Gameplay Programmer", tier: "lead", thinking: "medium" },
+				"Implementa el movimiento.",
+				tmp,
+				"task",
+			);
+			if (!(lead.result || "").includes("--thinking medium")) {
+				throw new Error("lead did not receive --thinking medium: " + /ARGV=(.*)/.exec(lead.result || "")?.[1]);
+			}
+
+			if (previousPiPath === undefined) delete process.env.PI_PATH;
+			else process.env.PI_PATH = previousPiPath;
+			fs.rmSync(tmp, { recursive: true, force: true });
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], { cwd: repoRoot });
+		}).not.toThrow();
+	}, 30000);
+});
+
+describe("Thinking level vocabulary", () => {
+	test("unknown or missing values normalize to the tier default", () => {
+		const script = `
+			const { resolveThinkingLevel } = await import("./extensions/hooks/studio-agent-loader.ts");
+
+			const cases = [
+				["hight", "director", "high"],      // typo must not reach the child
+				["max", "lead", "max"],             // wide Pi vocabulary is preserved
+				[undefined, "lead", "medium"],
+				["", "specialist", "medium"],
+			];
+			for (const [raw, tier, expected] of cases) {
+				const got = resolveThinkingLevel(raw, tier);
+				if (got !== expected) throw new Error("resolveThinkingLevel(" + raw + ", " + tier + ") = " + got + ", expected " + expected);
+			}
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+			});
+		}).not.toThrow();
+	});
+});
+
+describe("Runner correlates the prompt response and the settlement flag", () => {
+	const repoRoot = path.join(__dirname, "..");
+
+	function scenario(body) {
+		const script = `
+			const fs = await import("node:fs");
+			const os = await import("node:os");
+			const path = await import("node:path");
+
+			const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "studio-prompt-"));
+			const fakePi = path.join(tmp, "pi");
+			fs.copyFileSync("__tests__/fixtures/fake-pi-rpc.mjs", fakePi);
+			fs.chmodSync(fakePi, 0o755);
+			const previousPiPath = process.env.PI_PATH;
+			process.env.PI_PATH = fakePi;
+			process.env.FAKE_RECEIPT = "status: completed\\nsummary: ok\\nfiles_changed:\\n  - src/a.rs";
+
+			const { studioAgentsRunner } = await import("./extensions/hooks/studio-agents-runner.ts");
+			const manifest = { name: "gameplay-programmer", title: "GP", tier: "lead", model: "inherit", thinking: "medium", tools: ["read"], systemPrompt: "test" };
+			const started = Date.now();
+			// Short watchdog: without response correlation the task can only end by timeout.
+			const record = await studioAgentsRunner.run(manifest, "Implementa el movimiento.", tmp, "task", undefined, 3000);
+			const elapsed = Date.now() - started;
+
+			if (previousPiPath === undefined) delete process.env.PI_PATH;
+			else process.env.PI_PATH = previousPiPath;
+			fs.rmSync(tmp, { recursive: true, force: true });
+			${body}
+		`;
+		const { execFileSync } = require("child_process");
+		return () => execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+			cwd: repoRoot,
+			env: { ...process.env },
+		});
+	}
+
+	test("a rejected prompt fails the task immediately, naming the rejection", () => {
+		process.env.FAKE_PROMPT_REJECT = "prompt rejected: agent busy";
+		try {
+			expect(scenario(`
+				if (record.status !== "failed") throw new Error("rejected prompt should fail, got: " + record.status);
+				if (!/agent busy|rechaz/i.test(record.error || "")) throw new Error("error must name the rejection, got: " + record.error);
+				if (elapsed > 2500) throw new Error("must resolve on the response, not the watchdog; took " + elapsed + "ms");
+			`)).not.toThrow();
+		} finally {
+			delete process.env.FAKE_PROMPT_REJECT;
+		}
+	}, 30000);
+
+	test("an aborted settlement is reported as cancelled, not completed", () => {
+		process.env.FAKE_SETTLED_ABORTED = "1";
+		try {
+			expect(scenario(`
+				if (record.status !== "cancelled") throw new Error("aborted settlement should cancel the task, got: " + record.status);
+			`)).not.toThrow();
+		} finally {
+			delete process.env.FAKE_SETTLED_ABORTED;
+		}
+	}, 30000);
+});

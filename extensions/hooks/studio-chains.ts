@@ -33,6 +33,12 @@ export interface StudioChain {
 		section?: string;
 		/** Bounded edit surfaces forwarded to the child as the canonical heading. */
 		surfaces?: string[];
+		/**
+		 * The step cannot write: its agent declares no write tools. Declaring it keeps
+		 * the unbounded-surface warning honest instead of flagging a read-only step as
+		 * free to write anywhere.
+		 */
+		readOnly?: boolean;
 		instructions: string;
 	}>;
 }
@@ -53,7 +59,12 @@ export function validateChain(chain: StudioChain): ChainValidationReport {
 	const writersByOutput = new Map<string, Array<{ index: number; agent: string; section?: string }>>();
 
 	chain.steps.forEach((step, index) => {
-		if (!step.surfaces || step.surfaces.length === 0) {
+		if (step.readOnly && step.surfaces && step.surfaces.length > 0) {
+			errors.push(
+				`El paso ${index + 1} (${step.agent}) se declara 'readOnly' y a la vez declara superficies de edición: una de las dos declaraciones es falsa.`,
+			);
+		}
+		if (!step.readOnly && (!step.surfaces || step.surfaces.length === 0)) {
 			warnings.push(
 				`El paso ${index + 1} (${step.agent}) no declara superficies de edición: corre con escritura libre en todo el worktree.`,
 			);
@@ -165,6 +176,7 @@ function parseChainFile(content: string, filename: string): StudioChain | null {
 		let output: string | undefined;
 		let outputMode: string | undefined;
 		let section: string | undefined;
+		let readOnly = false;
 		const surfaces: string[] = [];
 		const instructions: string[] = [];
 
@@ -197,6 +209,8 @@ function parseChainFile(content: string, filename: string): StudioChain | null {
 				}
 			} else if (line.startsWith("progress:")) {
 				continue;
+			} else if (line.startsWith("readOnly:")) {
+				readOnly = line.replace(/^readOnly:\s*/, "").trim() === "true";
 			} else {
 				instructions.push(line);
 			}
@@ -209,6 +223,7 @@ function parseChainFile(content: string, filename: string): StudioChain | null {
 			outputMode,
 			section,
 			surfaces: surfaces.length > 0 ? surfaces : undefined,
+			readOnly: readOnly || undefined,
 			instructions: instructions.join("\n").trim(),
 		});
 	}

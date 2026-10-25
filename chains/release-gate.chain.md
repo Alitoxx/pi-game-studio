@@ -40,3 +40,11 @@ surfaces:
 progress: true
 
 Assemble the final release package manifest for `{build}`. Draft release notes, platform store checklist (Steam, itch.io, Consoles, Mobile), version bump confirmation, and deployment rollback plan.
+
+## qa-verifier
+
+reads: production/qa/bugs.md
+readOnly: true
+progress: true
+
+Independent read-only verification for `{build}` — final blocking gate of the chain. Do not trust the reports of the previous steps: re-derive the probes from the milestone spec, the release criteria and the original request, and execute the evidence commands yourself (`read`, `find`, `grep`, `bash`). For each release criterion (regression triage, performance targets, build stability, store readiness) issue a PASS / FAIL / UNVERIFIABLE verdict with the exact command and observed result as `cmd` evidence. Return the studio contract: `status: completed` (verdict PASS) or `status: blocked`, `summary`, `validation`, `risks`. A `blocked` verdict stops the release: the chain cannot be considered good while any criterion is open.

@@ -72,6 +72,39 @@ describe("Chain step contract", () => {
 		`)).not.toThrow();
 	}, 30000);
 
+	test("a read-only step is not reported as unbounded, and cannot claim surfaces it does not use", () => {
+		expect(() => run(`
+			const { validateChain } = await import("./extensions/hooks/studio-chains.ts");
+
+			const readOnly = {
+				name: "readonly",
+				title: "readonly",
+				description: "",
+				steps: [{ agent: "qa-verifier", readOnly: true, instructions: "verify" }],
+			};
+
+			const report = validateChain(readOnly);
+			if (report.errors.length !== 0) throw new Error("a read-only step must not be an error");
+			// The warning exists to flag a step that can write anywhere. A step whose
+			// agent declares no write tools cannot, so the warning would be a lie.
+			if (report.warnings.length !== 0) {
+				throw new Error("a read-only step must not be reported as unbounded: " + report.warnings.join(" "));
+			}
+
+			// Declaring both is self-contradictory: one of the two statements is false.
+			const contradictory = {
+				name: "contradictory",
+				title: "contradictory",
+				description: "",
+				steps: [{ agent: "qa-verifier", readOnly: true, surfaces: ["src/"], instructions: "verify" }],
+			};
+			const contradiction = validateChain(contradictory);
+			if (contradiction.errors.length === 0) {
+				throw new Error("readOnly plus surfaces must be rejected as contradictory");
+			}
+		`)).not.toThrow();
+	}, 30000);
+
 	test("the step prompt carries the surfaces and the section contract", () => {
 		expect(() => run(`
 			const { buildStepPrompt } = await import("./extensions/hooks/studio-chains.ts");

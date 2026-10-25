@@ -37,6 +37,25 @@ describe("Utility Scripts", () => {
 			}
 		});
 
+		test("tier roster matches runtime resolution: art/audio directors are workhorse", () => {
+			const { execFileSync } = require("child_process");
+			const dryRun = (tier, model) =>
+				execFileSync(
+					process.execPath,
+					[scriptPath, "--dry-run", "--tier", JSON.stringify({ [tier]: model })],
+					{ encoding: "utf8" },
+				);
+
+			const lightweight = dryRun("lightweight", "probe/light");
+			expect(lightweight).not.toContain("art-director");
+			expect(lightweight).not.toContain("audio-director");
+			expect(lightweight).toContain("(0 agents)");
+
+			const workhorse = dryRun("workhorse", "probe/work");
+			expect(workhorse).toContain("art-director");
+			expect(workhorse).toContain("audio-director");
+		});
+
 		test("each file in agents/ appears in exactly one tier", () => {
 			const agentsDir = path.join(__dirname, "..", "agents");
 			const agentFiles = fs

@@ -13,16 +13,18 @@ describe("Pi Game Studio Package", () => {
 	test("should have Pi configuration", () => {
 		expect(pkg.pi).toBeDefined();
 		expect(pkg.pi.skills).toEqual(["./skills"]);
-		expect(pkg.pi.prompts).toEqual(["./prompts"]);
+		expect(pkg.pi.prompts).toBeUndefined();
 		expect(pkg.pi.extensions).toEqual(["./extensions"]);
 		expect(pkg.pi.themes).toEqual(["./themes"]);
 	});
 
 	test("should have required files", () => {
-		const requiredFiles = ["agents/", "skills/", "prompts/", "extensions/", "themes/"];
+		const requiredFiles = ["agents/", "skills/", "extensions/", "themes/"];
 		requiredFiles.forEach((file) => {
 			expect(pkg.files).toContain(file);
 		});
+		// The orphaned template layer was retired: it must not come back via the manifest.
+		expect(pkg.files).not.toContain("prompts/");
 	});
 });
 

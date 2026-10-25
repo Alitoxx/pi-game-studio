@@ -984,6 +984,12 @@ export default function (pi: ExtensionAPI) {
 	// Fires on session_start to show studio dashboard and check docs
 	// ──────────────────────────────────────────────
 	pi.on("session_start", async (_event, ctx) => {
+		// Bounded edit surfaces forwarded by the parent runner: this process is a
+		// dispatched specialist, so enforce the task boundaries declared upstream.
+		if (process.env.PI_STUDIO_ALLOWED_SURFACES) {
+			boundedSurfacesGuard.setFromEnv(process.env.PI_STUDIO_ALLOWED_SURFACES);
+		}
+
 		const studioRoot = findStudioRoot(ctx.cwd);
 
 		// Only run in the game-studio project context

@@ -235,7 +235,7 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 						details: { error: "invalid_target_dir" },
 					};
 				}
-				scopedTaskPrompt += `\n\n[SCOPE] Edit only files under '${targetDir}' (Live Specs in design/gdd/ remain readable). Validate only this unit (e.g. 'cargo test -p <crate>' if it is a Rust crate).`;
+				scopedTaskPrompt += `\n\n[SCOPE] Edit only files under '${targetDir}' (Live Specs in design/gdd/ remain readable). Validate only this unit (e.g. 'cargo test -p <crate>' if it is a Rust crate).\n\n## Allowed edit surfaces\n- ${targetDir}`;
 			}
 
 			if (!agentName) {

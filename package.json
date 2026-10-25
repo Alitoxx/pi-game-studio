@@ -29,7 +29,6 @@
     "bin/",
     "agents/",
     "skills/",
-    "prompts/",
     "extensions/",
     "chains/",
     "scripts/",
@@ -62,9 +61,6 @@
     "image": "docs/assets/mascot.png",
     "skills": [
       "./skills"
-    ],
-    "prompts": [
-      "./prompts"
     ],
     "extensions": [
       "./extensions"

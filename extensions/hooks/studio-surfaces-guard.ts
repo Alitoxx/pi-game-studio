@@ -121,6 +121,25 @@ export function validateEditSurface(
 }
 
 /**
+ * Reads bounded edit surfaces forwarded by the parent runner through the child
+ * environment. Malformed or absent values yield an empty list, which keeps the
+ * historical unbounded behaviour for tasks that never declared surfaces.
+ */
+export function surfacesFromEnv(raw: string | undefined): string[] {
+	if (!raw) return [];
+	try {
+		const parsed = JSON.parse(raw);
+		if (!Array.isArray(parsed)) return [];
+		return parsed
+			.filter((entry): entry is string => typeof entry === "string")
+			.map(normalizePath)
+			.filter(Boolean);
+	} catch {
+		return [];
+	}
+}
+
+/**
  * Stateful manager tracking currently active bounded edit surfaces.
  */
 export class BoundedSurfacesGuard {
@@ -139,6 +158,16 @@ export class BoundedSurfacesGuard {
 		const parsed = parseAllowedSurfaces(taskDescription);
 		this.allowedSurfaces = parsed;
 		this.activeTask = taskDescription;
+		return parsed;
+	}
+
+	/**
+	 * Loads the surfaces a dispatched subagent received from its parent runner.
+	 * Used inside the child process, where the task text is not available.
+	 */
+	public setFromEnv(raw: string | undefined): string[] {
+		const parsed = surfacesFromEnv(raw);
+		this.allowedSurfaces = parsed;
 		return parsed;
 	}
 

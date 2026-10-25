@@ -2,6 +2,29 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { AgentManifest } from "./studio-agent-loader.ts";
+import { validateSpecialistReturn } from "./return-contract.ts";
+import { parseAllowedSurfaces } from "./studio-surfaces-guard.ts";
+
+/**
+ * Builds the child process environment for a dispatched specialist, forwarding
+ * the bounded edit surfaces declared in the task so the child-side guard can
+ * enforce the same boundaries as the parent. Tasks that declare no surfaces
+ * keep the historical unbounded behaviour.
+ */
+export function buildSubagentEnv(
+	task: string,
+	base: NodeJS.ProcessEnv = process.env,
+): NodeJS.ProcessEnv {
+	const env: NodeJS.ProcessEnv = { ...base };
+	const surfaces = parseAllowedSurfaces(task);
+	if (surfaces.length > 0) {
+		env.PI_STUDIO_ALLOWED_SURFACES = JSON.stringify(surfaces);
+	} else {
+		// Never inherit a stale scope from a parent that was itself a child process.
+		delete env.PI_STUDIO_ALLOWED_SURFACES;
+	}
+	return env;
+}
 
 export interface TaskRecord {
 	id: string;
@@ -215,8 +238,8 @@ export class StudioAgentsRunner {
 				`\`\`\``,
 			].join("\n");
 
-			// Resolver binario de Pi
-			const piExecutable = process.execPath.includes("pi") ? process.execPath : "pi";
+			// Resolver binario de Pi (PI_PATH permite entornos aislados y tests herméticos)
+			const piExecutable = process.env.PI_PATH || (process.execPath.includes("pi") ? process.execPath : "pi");
 			
 			// Preparar flags de Pi en modo RPC bidireccional (idéntico a Gentle Shell)
 			const args: string[] = [
@@ -234,6 +257,12 @@ export class StudioAgentsRunner {
 				args.push("--model", targetModel);
 			}
 
+			// The declared reasoning budget is part of the role contract: forward it
+			// instead of letting every agent run at the session default.
+			if (manifest.thinking) {
+				args.push("--thinking", manifest.thinking);
+			}
+
 			// Herramientas permitidas
 			if (manifest.tools && manifest.tools.length > 0) {
 				args.push("--tools", manifest.tools.join(","));
@@ -243,11 +272,11 @@ export class StudioAgentsRunner {
 			try {
 				child = spawn(piExecutable, args, {
 					cwd: record.cwd,
-					env: {
+					env: buildSubagentEnv(record.task, {
 						...process.env,
 						PI_GAME_STUDIO_CHILD: "1",
 						PI_GAME_STUDIO_AGENT: manifest.name,
-					},
+					}),
 					stdio: ["pipe", "pipe", "pipe"],
 				});
 			} catch (err: any) {
@@ -273,6 +302,10 @@ export class StudioAgentsRunner {
 			let rpcBuffer = "";
 			let promptSent = false;
 			let agentSettled = false; // true tras agent_settled: un SIGTERM de gracia posterior no es un fallo
+			const promptRequestId = `prompt-${record.id}`;
+			let superseded = false; // el runner ya decidió el desenlace (prompt rechazado)
+			let settledAborted = false; // agent_settled.aborted === true
+
 			let thinkingBuffer = "";
 			let textBuffer = "";
 			const activeToolCalls = new Map<string, { toolName: string; detail: string; startedAt: number }>();
@@ -288,7 +321,7 @@ export class StudioAgentsRunner {
 			const initTimer = setTimeout(() => {
 				if (!promptSent) {
 					promptSent = true;
-					sendRpc({ type: "prompt", message: executivePrompt });
+					sendRpc({ id: promptRequestId, type: "prompt", message: executivePrompt });
 					record.latestActivity = "Prompt enviado al especialista";
 					this.notifyListeners(record);
 				}
@@ -311,10 +344,32 @@ export class StudioAgentsRunner {
 						if (!promptSent && (event.type === "response" || event.type === "turn_start" || event.type === "ready")) {
 							promptSent = true;
 							clearTimeout(initTimer);
-							sendRpc({ type: "prompt", message: executivePrompt });
+							sendRpc({ id: promptRequestId, type: "prompt", message: executivePrompt });
 							record.latestActivity = "Especialista conectado";
 							record.logs.push(`${formatRel(record.startedAt)}  rpc   conexión establecida`);
 							this.notifyListeners(record);
+						}
+
+						// 0. Correlación del prompt: Pi responde a cada comando y la respuesta
+						// dice si el run arrancó. Ignorarla convierte un rechazo en un timeout ciego.
+						if (event.type === "response" && event.command === "prompt" && event.id === promptRequestId) {
+							const disposition = event.data?.disposition;
+							if (event.success === false) {
+								superseded = true;
+								record.status = "failed";
+								record.error = `Prompt rejected by the child: ${event.error || "unknown reason"}`;
+								record.latestActivity = "Prompt rechazado";
+								record.logs.push(`${formatRel(record.startedAt)}  rpc   prompt rechazado`);
+								this.notifyListeners(record);
+								try { child.kill("SIGTERM"); } catch {}
+							} else if (disposition === "handled") {
+								superseded = true;
+								record.status = "failed";
+								record.error = "Prompt handled by a child extension command: no run started";
+								record.latestActivity = "Prompt consumido sin run";
+								this.notifyListeners(record);
+								try { child.kill("SIGTERM"); } catch {}
+							}
 						}
 
 						// 1. Detección de inicio de herramientas (TOOL_START)
@@ -491,6 +546,7 @@ export class StudioAgentsRunner {
 						// 5. Finalización natural en agent_settled
 						if (event.type === "agent_settled") {
 							agentSettled = true;
+							if (event.aborted === true) settledAborted = true;
 							if (thinkingBuffer.trim()) {
 								const headline = thinkingBuffer.trim().split("\n")[0]?.trim();
 								if (headline && !lastLoggedThinking.has(headline)) {
@@ -552,6 +608,20 @@ export class StudioAgentsRunner {
 				this.liveProcesses.delete(record.id);
 				record.endedAt = Date.now();
 
+				if (superseded) {
+					// El desenlace ya se decidió al leer la respuesta del prompt.
+					this.notifyListeners(record);
+					return resolve(record);
+				}
+
+				if (settledAborted) {
+					record.status = "cancelled";
+					record.result = resultText.trim() || null;
+					record.latestActivity = "Abortado por el hijo (agent_settled.aborted)";
+					this.notifyListeners(record);
+					return resolve(record);
+				}
+
 				if (record.status === "cancelled") {
 					record.latestActivity = "Cancelado por usuario/timeout";
 					this.notifyListeners(record);
@@ -559,9 +629,22 @@ export class StudioAgentsRunner {
 				}
 
 				if (code === 0 || (agentSettled && code === null)) {
-					record.status = "completed";
-					record.result = resultText.trim() || "(el especialista no produjo salida)";
-					record.latestActivity = "Completado exitosamente";
+					const delivery = resultText.trim();
+					const contract = validateSpecialistReturn(delivery);
+
+					if (!contract.isValid) {
+						// El contrato de retorno es la puerta del Zero Bleed: una entrega que no
+						// lo cumple no se marca completada, se reporta como fallo con sus razones.
+						record.status = "failed";
+						record.error = `Return contract violation: ${contract.errors.join(" ")}`;
+						record.result = delivery || null;
+						record.latestActivity = "Contrato de retorno inválido";
+						record.logs.push(`        contract: ${contract.errors.length} violación(es)`);
+					} else {
+						record.status = "completed";
+						record.result = delivery || "(el especialista no produjo salida)";
+						record.latestActivity = "Completado exitosamente";
+					}
 				} else {
 					record.status = "failed";
 					record.error = stderr.trim() || `Subagent process exited with code ${code}`;

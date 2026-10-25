@@ -414,15 +414,43 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 		expect(source).toContain("ALERTA DRIFT");
 	});
 
-	test("return-contract exposes validator and detects conversational bleed", () => {
-		const source = fs.readFileSync(
-			path.join(__dirname, "..", "extensions", "hooks", "return-contract.ts"),
-			"utf8",
-		);
-		expect(source).toContain("export function validateSpecialistReturn");
-		expect(source).toContain("status:");
-		expect(source).toContain("summary:");
-		expect(source).toContain("FORBIDDEN_CONVERSATIONAL_PHRASES");
+	test("return-contract validator enforces schema, status enum and completion evidence", () => {
+		const script = `
+			const { validateSpecialistReturn } = await import("./extensions/hooks/return-contract.ts");
+
+			const valid = [
+				"status: completed",
+				"summary: Movimiento base implementado",
+				"files_changed:",
+				"  - src/player.rs",
+				"validation:",
+				"  - cargo test -p game",
+			].join("\\n");
+			const res = validateSpecialistReturn(valid);
+			if (!res.isValid) throw new Error("valid contract rejected: " + res.errors.join(" | "));
+			if (res.parsed?.status !== "completed") throw new Error("status not parsed");
+			if (!res.parsed?.files_changed?.includes("src/player.rs")) throw new Error("files_changed not parsed");
+
+			const noStatus = validateSpecialistReturn("summary: hice cosas");
+			if (noStatus.isValid) throw new Error("missing status accepted");
+			if (!noStatus.errors.some((e) => e.includes("status"))) throw new Error("missing status error not reported");
+
+			const badStatus = validateSpecialistReturn("status: done\\nsummary: ok");
+			if (badStatus.isValid) throw new Error("invalid status enum accepted");
+
+			const noEvidence = validateSpecialistReturn("status: completed\\nsummary: quedo lindo");
+			if (noEvidence.isValid) throw new Error("completed without observable evidence accepted");
+			if (!noEvidence.errors.some((e) => e.includes("evidencia"))) throw new Error("missing evidence error not reported");
+
+			const partialNoEvidence = validateSpecialistReturn("status: partial\\nsummary: avance parcial");
+			if (!partialNoEvidence.isValid) throw new Error("partial without evidence should stay valid");
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+			});
+		}).not.toThrow();
 	});
 
 	test("studio-tasks exposes task inspector and stale detector", () => {
@@ -1880,6 +1908,35 @@ Implement fuzzy command palette.
 			}).not.toThrow();
 		});
 
+		test("Bounded edit surfaces reach the specialist through the child environment", () => {
+			const script = `
+				const { surfacesFromEnv, BoundedSurfacesGuard } = await import("./extensions/hooks/studio-surfaces-guard.ts");
+
+				if (surfacesFromEnv(undefined).length !== 0) throw new Error("unset env must yield no surfaces");
+				if (surfacesFromEnv("").length !== 0) throw new Error("empty env must yield no surfaces");
+				if (surfacesFromEnv("not-json").length !== 0) throw new Error("malformed env must yield no surfaces");
+
+				const fromEnv = surfacesFromEnv(JSON.stringify(["src/", "assets/"]));
+				if (fromEnv.length !== 2) throw new Error("env surfaces not parsed: " + fromEnv.length);
+
+				const guard = new BoundedSurfacesGuard();
+				guard.setFromEnv(JSON.stringify(["src/"]));
+				if (!guard.validate("src/player.rs").allowed) throw new Error("in-scope edit must be allowed inside the child");
+				if (guard.validate("package.json").allowed) throw new Error("out-of-scope edit must be blocked inside the child");
+				if (!guard.validate("package.json").reason) throw new Error("blocked edit must explain why");
+
+				const unbounded = new BoundedSurfacesGuard();
+				unbounded.setFromEnv(undefined);
+				if (!unbounded.validate("package.json").allowed) throw new Error("no declared surfaces must stay unbounded");
+			`;
+			const { execFileSync } = require("child_process");
+			expect(() => {
+				execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+					cwd: path.join(__dirname, ".."),
+				});
+			}).not.toThrow();
+		});
+
 		test("Integration in index.ts wires palette, shortcuts, and safety guards", () => {
 			// Commands and shortcut registration
 			expect(hooksSource).toContain('registerCommand?.("palette"');
@@ -2810,3 +2867,34 @@ Implement fuzzy command palette.
 
 
 
+
+describe("Shared ODD contract", () => {
+	test("the Return Contract documented in skills/_shared parses with the runtime validator", () => {
+		// The documented example is the contract: if the parser cannot read it, the
+		// docs and the runtime have diverged and a conforming delivery can be rejected.
+		const script = `
+			const fs = await import("node:fs");
+			const { validateSpecialistReturn } = await import("./extensions/hooks/return-contract.ts");
+
+			const doc = fs.readFileSync("skills/_shared/odd-contract.md", "utf8");
+			const block = /\\\`\\\`\\\`yaml\\s*\\n([\\s\\S]*?)\\n\\\`\\\`\\\`/.exec(doc);
+			if (!block) throw new Error("skills/_shared/odd-contract.md has no yaml example");
+			const sample = block[1];
+
+			const res = validateSpecialistReturn(sample);
+			if (!res.isValid) throw new Error("documented example rejected: " + res.errors.join(" | "));
+			if (!(res.parsed?.validation?.length)) {
+				throw new Error("documented example carries validation the parser drops");
+			}
+			if (!(res.parsed?.files_changed?.length)) {
+				throw new Error("documented example carries files_changed the parser drops");
+			}
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+			});
+		}).not.toThrow();
+	});
+});

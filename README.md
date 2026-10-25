@@ -18,7 +18,6 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
   <a href="agents"><img src="https://img.shields.io/badge/architecture-8%2B1%20Compact-blueviolet" alt="8+1 Compact Studio"></a>
   <a href="skills"><img src="https://img.shields.io/badge/skills-6%20ODD-green" alt="6 ODD Skills"></a>
-  <a href="prompts"><img src="https://img.shields.io/badge/templates-10-orange" alt="10 Templates"></a>
   <a href="chains"><img src="https://img.shields.io/badge/chains-3-yellow" alt="3 Chains"></a>
   <a href="starters"><img src="https://img.shields.io/badge/starters-6-cyan" alt="6 Starters"></a>
   <a href="extensions"><img src="https://img.shields.io/badge/hooks-4-red" alt="4 Hooks"></a>
@@ -77,7 +76,6 @@ The result: you still make every decision, but now you have a fast, coordinated 
 | **Subagents** | Native| Isolated child process execution via `subagent_run`, `subagent_list`, `subagent_status` & `subagent_result`              |
 | **Interactive**| Native| Interactive terminal menus & batch questionnaires via `ask_user_question` (arrow keys & Enter)             |
 | **Skills**    | 6 ODD | Full lifecycle pipeline: `/concept`, `/spec`, `/arch`, `/code`, `/test`, `/ship`                                          |
-| **Templates** | 10    | Master templates for GDDs, ADRs, art/sound bibles, game concepts, and release checklists |
 | **Chains**    | 3     | Multi-agent execution pipelines via native isolated subagents (`subagent_run`)                                           |
 | **Starters**  | 6     | Starter Kits for 6 major engines (Bevy, Godot, Phaser, Raylib, Unity, Unreal)                                                    |
 | **Hooks**     | 4     | Automated validation on commits, pushes, skill changes, and session audit/gap detection                                  |
@@ -90,7 +88,7 @@ The result: you still make every decision, but now you have a fast, coordinated 
 | ----------------------------- | ----------------------------------------------------- |
 | `.claude/agents/*.md`         | `agents/*.md` (source) → `.pi/agents/` (via `/setup`) |
 | `.claude/skills/*/SKILL.md`   | `skills/*/SKILL.md`                                   |
-| `.claude/docs/templates/*.md` | `prompts/*.md`                                        |
+| `.claude/docs/templates/*.md` | _Retired — ODD live specs in `design/gdd/` replace master templates_ |
 | `.claude/hooks/*.sh`          | `extensions/hooks/index.ts`                           |
 | `.claude/rules/*.md`          | _Handled in-line by skills_                           |
 | `CLAUDE.md`                   | `package.json` (pi manifest)                          |
@@ -167,7 +165,9 @@ The recommended model assignment lives in `models.default.json`:
 | **Workhorses** (Tier 2–3) | `openrouter/openai/gpt-oss-120b:free` | `medium`        | Balanced model for day-to-day design, implementation, and review              |
 | **Lightweight** (Special) | `openrouter/openai/gpt-oss-20b:free`  | `low`           | Fast model for simple, repetitive tasks, logs, and community updates          |
 
-After running `/setup`, the mapping is written to `.pi/gentle-ai/models.json`. You can edit it directly or use `/assign-models` to change models interactively.
+After running `/setup`, the mapping is written to `.pi/game-studio/models.json`. You can edit it directly or use `/assign-models` to change models interactively.
+
+Agents ship with `model: inherit`, so without overrides every agent uses the model of your active Pi session. `models.default.json` contributes only the three tier defaults (`director`, `workhorse`, `lightweight`).
 
 ## Customizing Models
 
@@ -186,18 +186,18 @@ The skill guides you through:
 
 ### Via `models.json` (manual)
 
-Edit `.pi/gentle-ai/models.json`:
+Edit `.pi/game-studio/models.json`:
 
 ```json
 {
-  "creative-director": "anthropic/claude-sonnet-4",
-  "technical-director": "anthropic/claude-sonnet-4",
-  "producer": "anthropic/claude-sonnet-4",
-  "game-designer": "openai/gpt-4o",
-  "lead-programmer": "openai/gpt-4o",
-  "community-manager": "ollama/llama3.2"
+  "director": "openai-codex/gpt-5.4-mini",
+  "workhorse": "openrouter/openai/gpt-oss-120b:free",
+  "lightweight": "openrouter/openai/gpt-oss-20b:free",
+  "creative-director": "anthropic/claude-sonnet-4"
 }
 ```
+
+Tier keys apply to every agent of that tier; a real agent name adds a single override on top of its tier default.
 
 Agents not listed use the session default.
 
@@ -336,7 +336,7 @@ Or jump directly to a specific skill or template:
 /assign-models
 ```
 
-Or edit `.pi/gentle-ai/models.json` directly.
+Or edit `.pi/game-studio/models.json` directly.
 
 ### Connect Engram (Optional Memory Accelerator)
 
@@ -372,7 +372,6 @@ pi-game-studio/                     # Package root
 ├── models.default.json             # Recommended 3-tier model mapping
 ├── agents/                         # 14 source agents (8 Core + 6 Engine Specialists)
 ├── skills/                         # 6 ODD lifecycle skills (SKILL.md per directory)
-├── prompts/                        # 10 master templates
 ├── extensions/                     # Hooks extension
 │   └── hooks/
 │       ├── index.ts                # 4 ported hooks
@@ -387,10 +386,9 @@ Pi Game Studio is a **Pi package** (not a file copy). Everything lives in the pa
 1. **`pi install`** — registers the package in Pi's settings
 2. **`/setup`** — copies agents to `.pi/agents/` and configures model mapping
 3. **Skills** — loaded directly from the package; available as `/` commands
-4. **Templates** — available through Pi's prompt template expansion
-5. **Hooks** — loaded as a Pi extension; run automatically on relevant events
+4. **Hooks** — loaded as a Pi extension; run automatically on relevant events
 
-Agents use `model: inherit` — they adopt the model from your Pi session configuration. The `models.default.json` provides a recommended tier-based mapping that gets installed to `.pi/gentle-ai/models.json` and can be customized per agent.
+Agents use `model: inherit` — they adopt the model from your Pi session configuration. The `models.default.json` provides a recommended tier-based mapping that gets installed to `.pi/game-studio/models.json` and can be customized per agent.
 
 Delegation between agents works through Pi's `subagent` tool. A director spawns a lead, a lead spawns specialists. Each agent returns structured results and passes decisions back up. Director gates enforce quality checkpoints.
 
@@ -460,7 +458,7 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
     - `/jam` — Game Jam mode for 48–72h hackathons, relaxing rigid documentation while enforcing rapid 2h sprints and 30m commits.
     - `/market-research` — Steam market intelligence, competitor comp mining, tag optimization, and pricing analysis.
     - Enhanced `/reverse-document` — Full repository brownfield adoption and subsystem reverse-engineering from code to GDD.
-    - Formal Game Design Frameworks (`prompts/game-design-frameworks.md`) — MDA Framework, Flow Theory, Self-Determination Theory (SDT), and Bartle Player Taxonomy.
+    - Formal Game Design Frameworks (master templates) — MDA Framework, Flow Theory, Self-Determination Theory (SDT), and Bartle Player Taxonomy. _Retired: the orphaned master-template layer was removed in favour of ODD live specs._
   - **Live Engine MCP Layer ("Files First, MCP Accelerated")**:
     - `/connect-engine-mcp` — Interactive diagnostic and connection hub for Godot, Unity, Unreal, and Bevy MCP servers.
     - Updated engine leads (`godot-specialist`, `unity-specialist`, `unreal-specialist`, `bevy-specialist`) with real-time scene inspection and node tree query capabilities.
@@ -521,7 +519,7 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
 
 ### v0.5.3 — 2026-09-25
 
-- **Clean Model Inheritance & Overrides Filtering**: When applying `inherit` mode or tier defaults, `.pi/gentle-ai/models.json` now stores a clean tier mapping instead of duplicating 50 redundant agent keys. False agent overrides are automatically filtered out from model listings, displaying `✔ Todos los agentes heredan el modelo activo de tu sesión.`
+- **Clean Model Inheritance & Overrides Filtering**: When applying `inherit` mode or tier defaults, `.pi/game-studio/models.json` now stores a clean tier mapping instead of duplicating 50 redundant agent keys. False agent overrides are automatically filtered out from model listings, displaying `✔ Todos los agentes heredan el modelo activo de tu sesión.`
 - **Pi TUI Render Safety**: Eliminated raw `console.log` invocations when `ctx.hasUI` is active across all studio commands, preventing screen smearing, duplicate printing, and collisions with Pi's interactive status bar / breadcrumbs.
 
 ### v0.5.2 — 2026-09-25
@@ -570,7 +568,7 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
   - 4 runtime hooks
 - **README provenance note** — added explicit source/origin and Pi-homologation notes for upstream parity tracking
 - **Regression coverage** — added inventory tests so README counts stay in sync with the actual file tree
-- **Setup completion** — generated `.pi/gentle-ai/models.json` from `models.default.json`
+- **Setup completion** — generated `.pi/game-studio/models.json` from `models.default.json`
 
 ### v0.2.0 — 2026-05-12
 
@@ -624,7 +622,7 @@ This project is a migration of **Claude Code Game Studios** to run natively on P
 
 ### Homologation note
 
-- Imported counts were normalized to the current Pi tree: 14 agents, 6 skills, 10 templates, 4 runtime hooks.
+- Imported counts were normalized to the current Pi tree: 14 agents, 6 skills, 4 runtime hooks. The legacy master-template layer was later retired.
 - `extensions/hooks/index.ts` remains the single hook entrypoint; hook behavior is split across four handlers.
 
 Este port no existiría sin el trabajo fundacional de Donchitos y striderZA. Gracias.

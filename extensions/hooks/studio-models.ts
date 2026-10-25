@@ -241,6 +241,7 @@ async function configureAgentModel(
 		"qa-lead",
 		"bevy-specialist",
 		"godot-specialist",
+		"phaser-specialist",
 		"raylib-specialist",
 		"unity-specialist",
 		"unreal-specialist",
@@ -280,7 +281,7 @@ function formatModelsList(cfg: Record<string, string>): string {
 	const allInherit = dirModel === "inherit" && workModel === "inherit" && lightModel === "inherit";
 
 	const TIER_1 = ["producer", "creative-director", "technical-director"];
-	const TIER_3 = ["bevy-specialist", "godot-specialist", "raylib-specialist", "unity-specialist", "unreal-specialist"];
+	const TIER_3 = ["bevy-specialist", "godot-specialist", "phaser-specialist", "raylib-specialist", "unity-specialist", "unreal-specialist"];
 
 	// An override is an agent explicitly configured with a model different from its role/tier default
 	const overrides = Object.entries(cfg)

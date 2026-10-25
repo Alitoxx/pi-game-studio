@@ -40,9 +40,7 @@ describe("Homologation metadata", () => {
 						path.join(__dirname, "..", "skills", d.name, "SKILL.md"),
 					),
 			).length;
-		const prompts = countMarkdownFilesRecursive(
-			path.join(__dirname, "..", "prompts"),
-		);
+		const promptsDir = path.join(__dirname, "..", "prompts");
 		const hooksSource = fs.readFileSync(
 			path.join(__dirname, "..", "extensions", "hooks", "index.ts"),
 			"utf8",
@@ -51,7 +49,12 @@ describe("Homologation metadata", () => {
 
 		expect(readme).toMatch(new RegExp(`${agents}\\s+(?:source\\s+)?agents`));
 		expect(readme).toContain(`${skills} skills`);
-		expect(readme).toContain(`${prompts} templates`);
+		// The orphaned template layer (game-concept, collaborative-protocols, GDD/ADR
+		// masters) is retired: it contradicted ODD and pointed at commands that do
+		// not exist. The README must stop advertising it.
+		expect(fs.existsSync(promptsDir)).toBe(false);
+		expect(readme).not.toContain("prompts/");
+		expect(readme).not.toContain("templates-10");
 		expect(readme).toContain(`${hooks} hooks`);
 	});
 

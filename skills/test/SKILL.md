@@ -5,7 +5,7 @@ model: inherit
 inheritProjectContext: true
 tools:
   - read
-  - glob
+  - find
   - grep
   - write
   - edit

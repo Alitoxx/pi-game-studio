@@ -69,7 +69,7 @@ Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar 
 5. **Pillars & Constraints Header**: Contexto del juego, género, target y pilares siempre visibles.
 6. **Gameplay & Technical Trade-offs Matrix**: Evaluación rigurosa de *Alternativa vs. Game Feel vs. FPS vs. Costo/Scope*.
 7. **Director Gate / Technical Verdict**: Recomendación vinculante fundamentada del Lead/Director responsable.
-8. **Lossless Choice Envelope**: Menú cerrado, numerado y sin opciones ambiguas ([1], [2], [3]).
+8. **Lossless Choice Envelope**: Toda decisión se presenta con `ask_user_question` como opciones ordenadas, cada una con su efecto; el humano navega con flechas y confirma con `Enter`. Nunca se le pide escribir un número.
 9. **Radar de Próximos Pasos & Recibos de Entrega**: Acciones siguientes claras con sus comandos ejecutables.
 10. **Return Contract de Especialistas**: En delegaciones `subagent_run`, los especialistas devuelven exclusivamente un bloque YAML compacto (`status`, `summary`, `files_changed`, `validation`, `gameplay_impact`) eliminando prosa conversacional redundante.
 11. **Flow Completion & Producer Auto-Handoff Protocol**: Cierre automático de tareas con actualización instantánea de `production/roadmap.md` (`<!-- PRODUCER_STATE -->`) y relevo directo al siguiente especialista sin preguntas especulativas.

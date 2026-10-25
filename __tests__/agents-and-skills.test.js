@@ -391,3 +391,73 @@ describe("Shared ODD Contract Validation", () => {
 		}
 	});
 });
+
+describe("Skills declare only what the runtime provides", () => {
+	const skillsDir = path.join(__dirname, "..", "skills");
+	const skillDirs = fs
+		.readdirSync(skillsDir, { withFileTypes: true })
+		.filter((d) => d.isDirectory())
+		.map((d) => d.name);
+
+	const piTools = new Set([
+		"read",
+		"write",
+		"edit",
+		"find",
+		"grep",
+		"bash",
+		"web_search",
+		"subagent_run",
+		"subagent_list",
+		"subagent_status",
+		"subagent_result",
+		"subagent_steer",
+		"ask_user_question",
+	]);
+
+	const declaredTools = (content) => {
+		const block = /^tools:\s*\n((?:\s*-\s*\S+\n?)+)/m.exec(content);
+		if (!block) return [];
+		return block[1]
+			.split("\n")
+			.map((l) => l.replace(/^\s*-\s*/, "").trim())
+			// The frontmatter terminator also starts with a dash.
+			.filter((t) => Boolean(t) && !/^-+$/.test(t));
+	};
+
+	test.each(skillDirs)("skill '%s' declares only real Pi tools", (dir) => {
+		const file = path.join(skillsDir, dir, "SKILL.md");
+		if (!fs.existsSync(file)) return;
+		const tools = declaredTools(fs.readFileSync(file, "utf8"));
+		const unknown = tools.filter((t) => !piTools.has(t));
+		expect({ skill: dir, unknown }).toEqual({ skill: dir, unknown: [] });
+	});
+
+	test.each(skillDirs)("skill '%s' does not reference a retired media binary", (dir) => {
+		const file = path.join(skillsDir, dir, "SKILL.md");
+		if (!fs.existsSync(file)) return;
+		const body = fs.readFileSync(file, "utf8");
+		expect({ skill: dir, sox: /\bsox\b/.test(body) }).toEqual({ skill: dir, sox: false });
+	});
+});
+
+describe("Documentation names only what exists", () => {
+	const root = path.join(__dirname, "..");
+	const readmeFull = fs.readFileSync(path.join(root, "README.md"), "utf8");
+	// Live documentation only: the Changelog is history and may name retired
+	// commands as such.
+	const readme = readmeFull.split("## Changelog")[0];
+	const agents = fs.readFileSync(path.join(root, "AGENTS.md"), "utf8");
+
+	test("README does not document a command that is not registered", () => {
+		expect(readme.includes("/setup-engine")).toBe(false);
+	});
+
+	test("README does not reference a skill directory that is not shipped", () => {
+		expect(readme.includes("skills/setup-engine")).toBe(false);
+	});
+
+	test("AGENTS.md does not mandate a numbered menu the runtime forbids", () => {
+		expect(/Menú cerrado, numerado/i.test(agents)).toBe(false);
+	});
+});

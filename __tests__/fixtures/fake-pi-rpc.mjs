@@ -20,6 +20,12 @@ const emit = (payload) => process.stdout.write(`${JSON.stringify(payload)}\n`);
 emit({ type: "ready" });
 
 process.stdin.on("data", (chunk) => {
+	// FAKE_COMMAND_LOG records every RPC command the child actually receives, so a
+	// test can prove a command reached the process rather than a function return.
+	if (process.env.FAKE_COMMAND_LOG) {
+		require("node:fs").appendFileSync(process.env.FAKE_COMMAND_LOG, String(chunk).replace(/\n/g, "\n") + "\n");
+	}
+
 	if (answered) return;
 
 	// Parse the request so the response can be correlated by id, as Pi does.

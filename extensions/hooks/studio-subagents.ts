@@ -418,6 +418,62 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 	});
 
 	// ──────────────────────────────────────────────
+	// Tool: subagent_steer
+	// Corrige el rumbo de un especialista vivo en lugar de matarlo y re-despachar
+	// ──────────────────────────────────────────────
+	safeRegisterTool({
+		name: "subagent_steer",
+		label: "Studio Subagent Steer",
+		description:
+			"Sends a steering message to a running specialist. Pi delivers it after the current tool calls and before the next model call, so the specialist can adjust course instead of being killed and re-dispatched from scratch.",
+		parameters: {
+			type: "object",
+			additionalProperties: false,
+			required: ["task_id", "message"],
+			properties: {
+				task_id: {
+					type: "string",
+					description: "ID of a running task, as returned by subagent_run in background mode.",
+				},
+				message: {
+					type: "string",
+					description: "New instruction or correction for the specialist.",
+				},
+			},
+		},
+		async execute(
+			_id: string,
+			params: Record<string, unknown>,
+			_signal: AbortSignal | undefined,
+			_onUpdate: any,
+			_ctx: ExtensionContext,
+		) {
+			const taskId = String(params.task_id || "").trim();
+			const message = String(params.message || "").trim();
+			if (!taskId || !message) {
+				return {
+					content: [{ type: "text", text: "Error: 'task_id' and 'message' are required." }],
+					details: { error: "missing_parameters" },
+				};
+			}
+
+			const delivered = studioAgentsRunner.steer(taskId, message);
+			const record = studioAgentsRunner.getTask(taskId);
+			return {
+				content: [
+					{
+						type: "text",
+						text: delivered
+							? `Steering delivered to ${record?.agent ?? taskId}. It applies after the current tool calls.`
+							: `Error: ${taskId} is not running. Steering only applies to a live specialist; check subagent_status.`,
+					},
+				],
+				details: { taskId, delivered, root: record?.resolvedRoot },
+			};
+		},
+	});
+
+	// ──────────────────────────────────────────────
 	// Tool: subagent_list
 	// Lista los especialistas disponibles
 	// ──────────────────────────────────────────────

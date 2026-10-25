@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (Runner Lifecycle & Observability)
+- **Specialist reasoning budget reaches the child** (`--thinking`): every agent template declared it and the runner never passed it, so all 14 ran at the session default. The loader now validates the value against Pi's vocabulary, so a typo falls back to the tier default instead of reaching the process.
+- **The RPC prompt response is read**: the prompt is sent with an id and its `success`/`disposition` is honoured. A rejected prompt fails the task immediately with the reason instead of burning the watchdog, and `agent_settled.aborted` is reported as cancelled rather than completed.
+- **Replaced studio tools are visible**: when another package already owns `subagent_run`, `subagent_list`, `subagent_status`, `subagent_result` or `ask_user_question`, the skip is recorded and surfaced at `session_start` and in `/studio:doctor`, instead of leaving the runner inert with no log line.
+- **Specialists can escalate a decision**: `ask_user_question` is no longer granted to children (it can never work — a child has no UI). A specialist stops with `status: interaction_required` carrying `question`, `options` and `blocking`, and `subagent_run` returns it as a blocking choice for the parent to relay.
+- **Child process trees are terminated**: cooperative `abort` first, then `SIGTERM` and `SIGKILL` to the whole process group, plus a `session_shutdown` hook that cancels every live specialist. Grandchildren spawned by a build no longer survive cancellation.
+- **Critical-path failures are recorded**: `recordFailure(area, error)` keeps the last 50 failures, prints one line per distinct cause and feeds `/studio:doctor`, replacing silent `catch {}` blocks in spawn, signalling, stdin close and roadmap writes.
+- **Children no longer persist discarded sessions**: `--no-session` in the child, with the last 20 stderr lines kept on the record so a failed run stays diagnosable.
+- **Dispatch root is bounded and proven**: `subagent_run` refuses to start outside a Game Studio project (`allow_outside_studio: true` overrides it) and stamps `resolvedRoot` on every receipt.
+- **Chains declare bounded surfaces and owned sections**: steps accept `surfaces:` and `section:`, and `validateChain` refuses a chain where two steps replace the same artifact without distinct sections. All three shipped chains collided before this change.
+- **The watchdog judges silence, not elapsed time**: activity refreshes the budget, a tool in flight gets a larger allowance, and concurrency is capped instead of unbounded.
+- **Token accounting uses reported usage**: accumulated from `message_end`, with the character heuristic surviving only as a flagged estimate.
+
+### Fixed (Build & CI)
+- The CI type check could not fail: `pnpm dlx typescript tsc --noEmit || echo "skipped"` swallowed every exit code and never compiled a file. `typescript` is now a real devDependency, `allowImportingTsExtensions` is enabled, and the step fails the job. Fixing it surfaced two latent runtime bugs: an out-of-scope variable in the subagent log view and a continuity flow calling an export that never existed.
+- GitHub Pages deploy no longer turns `main` red when the repository has no Pages site: the job probes the API first and skips.
+- Actions moved off the deprecated `node20` runtime, and the runner image is pinned to `ubuntu-24.04`.
+- Pull request checks run for stacked branches too: the workflows filtered by base branch, so a PR targeting another feature branch ran no CI at all.
+
+
 ### Fixed (Contract Enforcement & Sources of Truth)
 - **Return Contract gate**: `StudioAgentsRunner` validates every specialist delivery with the previously unused `return-contract.ts` validator. A delivery that breaks the contract marks the task as failed with each violation named, instead of reporting a green receipt; the raw report is preserved for the Producer. `status: completed` additionally requires `files_changed` or `validation`, because a delivery that names neither was never verified.
   - Behavioral tests replace the source-grep assertion that only checked the validator existed. New end-to-end coverage drives the real runner over a fake RPC child.

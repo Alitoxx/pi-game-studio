@@ -37,6 +37,8 @@ export interface TaskRecord {
 	cwd: string;
 	/** Studio root the dispatch actually operated on: the receipt must prove it. */
 	resolvedRoot: string;
+	/** Timestamp of the last sign of life from the child, for the idle watchdog. */
+	lastActivityAt?: number;
 	/** Last stderr lines, kept because children no longer persist a session. */
 	stderrTail?: string[];
 	status: "queued" | "running" | "completed" | "failed" | "cancelled" | "interaction_required";
@@ -262,9 +264,15 @@ export class StudioAgentsRunner {
 			record.latestActivity = "Iniciando especialista en modo RPC...";
 			this.notifyListeners(record);
 
-			// Watchdog timeout específico o según modo (background: 15 min, task: 5 min)
-			const activeTimeout = record.timeoutMs
+			// Two budgets, not one deadline: silence means stuck, elapsed time does not.
+			// A child that keeps reporting activity may run as long as it needs; a tool in
+			// flight (a build, a test suite) gets a larger allowance than plain idle.
+			const idleBudget = record.timeoutMs
 				|| (record.mode === "background" ? 900000 : this.timeoutMs);
+			const toolIdleBudget =
+				Number(process.env.PI_STUDIO_TOOL_IDLE_MS) || Math.max(idleBudget * 3, 30000);
+			record.lastActivityAt = Date.now();
+			let activeTool: string | null = null;
 
 			// Preparar instrucción ejecutiva para el especialista bajo protocolo ODD estricto
 			// A dispatched child has no UI, so granting ask_user_question only produces a
@@ -334,6 +342,18 @@ export class StudioAgentsRunner {
 			// keeps what is needed to diagnose a failed run.
 			args.push("--no-session");
 
+			// Unbounded parallelism means several specialists competing for the same
+			// worktree with nobody watching. Refuse rather than queue: the caller decides.
+			const maxConcurrency = Number(process.env.PI_STUDIO_MAX_CONCURRENCY) || 4;
+			if (this.liveProcesses.size >= maxConcurrency) {
+				record.status = "failed";
+				record.error = `Concurrencia maxima alcanzada (${maxConcurrency} especialistas en ejecucion). Espera o cancela uno antes de despachar otro.`;
+				record.endedAt = Date.now();
+				record.latestActivity = "Rechazado por concurrencia";
+				this.notifyListeners(record);
+				return resolve(record);
+			}
+
 			let child: ChildProcess;
 			try {
 				child = spawn(piExecutable, args, {
@@ -398,6 +418,7 @@ export class StudioAgentsRunner {
 			// Procesar eventos JSON streaming de la RPC (idéntico a Gentle Shell)
 			child.stdout?.setEncoding("utf8");
 			child.stdout?.on("data", (chunk: string) => {
+				record.lastActivityAt = Date.now();
 				rpcBuffer += chunk;
 				const lines = rpcBuffer.split("\n");
 				rpcBuffer = lines.pop() ?? "";
@@ -442,6 +463,7 @@ export class StudioAgentsRunner {
 
 						// 1. Detección de inicio de herramientas (TOOL_START)
 						if (event.type === "tool_execution_start" || event.type === "tool_start") {
+							activeTool = String(event.toolName || event.name || "tool");
 							const toolCallId = event.toolCallId || event.id || `call_${Date.now()}_${Math.random()}`;
 							const toolName = event.toolName || event.name || "tool";
 							const args = event.args || {};
@@ -482,6 +504,7 @@ export class StudioAgentsRunner {
 
 						// 2. Finalización de herramienta con salida real (TOOL_END)
 						if (event.type === "tool_execution_end") {
+							activeTool = null;
 							const toolCallId = event.toolCallId || event.id;
 							const tracked = toolCallId ? activeToolCalls.get(toolCallId) : undefined;
 							const toolName = event.toolName || tracked?.toolName || "tool";
@@ -652,6 +675,7 @@ export class StudioAgentsRunner {
 
 			child.stderr?.setEncoding("utf8");
 			child.stderr?.on("data", (chunk: string) => {
+				record.lastActivityAt = Date.now();
 				stderr += chunk;
 				const clean = chunk.trim();
 				if (clean) {
@@ -665,12 +689,20 @@ export class StudioAgentsRunner {
 			});
 
 			// Watchdog timeout adaptativo (activeTimeout)
-			const timer = setTimeout(() => {
-				if (this.liveProcesses.has(record.id)) {
-					this.cancel(record.id, `Timeout: agent exceeded ${activeTimeout / 1000}s limit`);
-					resolve(record);
-				}
-			}, activeTimeout);
+			const tickMs = Math.max(150, Math.min(2000, Math.floor(idleBudget / 4)));
+			const timer = setInterval(() => {
+				if (!this.liveProcesses.has(record.id)) return;
+				const idleFor = Date.now() - (record.lastActivityAt ?? Date.now());
+				const budget = activeTool ? toolIdleBudget : idleBudget;
+				if (idleFor < budget) return;
+				const seconds = Math.round(idleFor / 1000);
+				this.cancel(
+					record.id,
+					activeTool
+						? `Timeout: sin actividad de la herramienta '${activeTool}' durante ${seconds}s`
+						: `Timeout: sin actividad del especialista durante ${seconds}s`,
+				);
+			}, tickMs);
 
 			child.on("close", (code) => {
 				clearTimeout(timer);

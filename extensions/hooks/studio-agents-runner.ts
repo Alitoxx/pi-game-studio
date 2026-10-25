@@ -1,7 +1,8 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { recordFailure } from "./studio-diagnostics.ts";
+import { findStudioRoot } from "./studio-root.ts";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import type { AgentManifest } from "./studio-agent-loader.ts";
 import { validateSpecialistReturn } from "./return-contract.ts";
 import { parseAllowedSurfaces } from "./studio-surfaces-guard.ts";
@@ -34,6 +35,10 @@ export interface TaskRecord {
 	task: string;
 	mode: "task" | "background";
 	cwd: string;
+	/** Studio root the dispatch actually operated on: the receipt must prove it. */
+	resolvedRoot: string;
+	/** Last stderr lines, kept because children no longer persist a session. */
+	stderrTail?: string[];
 	status: "queued" | "running" | "completed" | "failed" | "cancelled" | "interaction_required";
 	/** Escalation payload when the specialist needs a decision it cannot take. */
 	interaction?: { question: string; options: string[]; blocking: boolean } | null;
@@ -202,6 +207,8 @@ export class StudioAgentsRunner {
 			? manifest.model
 			: activeModel || "inherit";
 
+		const stderrTail: string[] = [];
+
 		const record: TaskRecord = {
 			id: taskId,
 			agent: manifest.name,
@@ -209,6 +216,8 @@ export class StudioAgentsRunner {
 			task: taskPrompt,
 			mode,
 			cwd,
+			resolvedRoot: findStudioRoot(cwd) ?? resolve(cwd),
+			stderrTail,
 			status: "queued",
 			model: chosenModel,
 			latestActivity: "En cola para ejecución...",
@@ -319,6 +328,11 @@ export class StudioAgentsRunner {
 			if (childTools.length > 0) {
 				args.push("--tools", childTools.join(","));
 			}
+
+			// A specialist session has no consumer: the studio cannot resume it, so
+			// persisting one only fills the user's session list. The stderr tail below
+			// keeps what is needed to diagnose a failed run.
+			args.push("--no-session");
 
 			let child: ChildProcess;
 			try {
@@ -642,6 +656,11 @@ export class StudioAgentsRunner {
 				const clean = chunk.trim();
 				if (clean) {
 					record.logs.push(`        stderr: ${clean.slice(0, 100)}`);
+					for (const line of clean.split("\n")) {
+						if (!line.trim()) continue;
+						record.stderrTail!.push(line.trim());
+						if (record.stderrTail!.length > 20) record.stderrTail!.shift();
+					}
 				}
 			});
 

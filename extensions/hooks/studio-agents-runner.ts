@@ -34,7 +34,9 @@ export interface TaskRecord {
 	task: string;
 	mode: "task" | "background";
 	cwd: string;
-	status: "queued" | "running" | "completed" | "failed" | "cancelled";
+	status: "queued" | "running" | "completed" | "failed" | "cancelled" | "interaction_required";
+	/** Escalation payload when the specialist needs a decision it cannot take. */
+	interaction?: { question: string; options: string[]; blocking: boolean } | null;
 	model?: string;
 	latestActivity?: string;
 	result: string | null;
@@ -256,6 +258,11 @@ export class StudioAgentsRunner {
 				|| (record.mode === "background" ? 900000 : this.timeoutMs);
 
 			// Preparar instrucción ejecutiva para el especialista bajo protocolo ODD estricto
+			// A dispatched child has no UI, so granting ask_user_question only produces a
+			// cancelled request and a stalled run. Escalation goes through the return
+			// contract instead, where the parent can relay it as a blocking choice.
+			const childTools = (manifest.tools ?? []).filter((t) => t !== "ask_user_question");
+
 			const executivePrompt = [
 				`[PI GAME STUDIO SPECIALIST DISPATCH — ODD PROTOCOL ACTIVE]`,
 				`Role: ${manifest.name} (${manifest.title} - Tier: ${manifest.tier})`,
@@ -264,7 +271,7 @@ export class StudioAgentsRunner {
 				record.task,
 				``,
 				`[ODD GAMEDEV EXECUTION RULES — MANDATORY]`,
-				`1. AUTONOMOUS DIRECT EXECUTION: This task has already been authorized by the Producer/User. Do NOT ask conversational questions, do NOT output menus, and do NOT wait for confirmation before writing files. Execute the task directly on disk using your allowed tools (${manifest.tools.join(", ")}).`,
+				`1. AUTONOMOUS DIRECT EXECUTION: This task has already been authorized by the Producer/User. Do NOT ask conversational questions, do NOT output menus, and do NOT wait for confirmation before writing files. Execute the task directly on disk using your allowed tools (${childTools.join(", ")}). If a decision is genuinely above your role, stop with 'status: interaction_required' and a 'question' instead of guessing.`,
 				`2. ATOMIC SCOPE (~400 LINES): Deliver coherent changes of ~400 lines (code + data/tests). Do NOT dump monolithic 800+ line blocks in one pass. If the design requires more, implement the foundational core cleanly and set status: partial in the completion receipt.`,
 				`3. SCOPED ENGINE VALIDATION (NO MONOLITHIC BUILDS): If you validate via bash:`,
 				`   - If working on an isolated crate or component (e.g. crates/radio-core), run ONLY focused tests: e.g. 'cargo test -p <crate>' or 'cargo check -p <crate>'.`,
@@ -309,8 +316,8 @@ export class StudioAgentsRunner {
 			}
 
 			// Herramientas permitidas
-			if (manifest.tools && manifest.tools.length > 0) {
-				args.push("--tools", manifest.tools.join(","));
+			if (childTools.length > 0) {
+				args.push("--tools", childTools.join(","));
 			}
 
 			let child: ChildProcess;
@@ -687,6 +694,12 @@ export class StudioAgentsRunner {
 						record.result = delivery || null;
 						record.latestActivity = "Contrato de retorno inválido";
 						record.logs.push(`        contract: ${contract.errors.length} violación(es)`);
+					} else if (contract.parsed?.status === "interaction_required") {
+						record.status = "interaction_required";
+						record.interaction = contract.parsed.interaction ?? null;
+						record.result = delivery || null;
+						record.latestActivity = "Esperando decisión del usuario";
+						record.logs.push("        contract: interaction_required");
 					} else {
 						record.status = "completed";
 						record.result = delivery || "(el especialista no produjo salida)";

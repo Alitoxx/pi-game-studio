@@ -346,6 +346,36 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 				};
 			}
 
+			// A specialist that cannot decide stops here: surface the payload so the
+			// parent can present it to the user instead of guessing on its behalf.
+			if (record.status === "interaction_required" && record.interaction) {
+				const options = record.interaction.options.length
+					? record.interaction.options.map((o, i) => `  ${i + 1}. ${o}`).join("\n")
+					: "  (sin opciones propuestas)";
+				return {
+					content: [
+						{
+							type: "text",
+							text: [
+								`[STUDIO DECISION REQUIRED] ${manifest.name} stopped before continuing.`,
+								"",
+								record.interaction.question,
+								"",
+								options,
+								"",
+								"Relay this to the user as a blocking choice, then re-dispatch the task with the answer.",
+							].join("\n"),
+						},
+					],
+					details: {
+						taskId: record.id,
+						agent: manifest.name,
+						status: record.status,
+						interaction: record.interaction,
+					},
+				};
+			}
+
 			return {
 				content: [
 					{

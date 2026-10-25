@@ -490,6 +490,7 @@ export function renderSubagentSplitView(
 		let icon = `${GRAY}○${RESET}`;
 		if (t.status === "completed") icon = `${GREEN}✓${RESET}`;
 		else if (t.status === "running") icon = `${YELLOW}◐${RESET}`;
+		else if (t.status === "interaction_required") icon = `${YELLOW}?${RESET}`;
 		else if (t.status === "failed") icon = `${RED}✗${RESET}`;
 
 		const isSelected = actualIdx === selectedIndex;

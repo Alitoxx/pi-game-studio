@@ -43,6 +43,20 @@ next_recommended_specialist: qa-lead
 
 `status` acepta `completed`, `partial`, `blocked` o `interaction_required`. Un `completed` exige evidencia observable: al menos un `files_changed` o un `validation` con el comando ejecutado y su resultado observado. Prosa sin evidencia no es una entrega verificable.
 
+Un especialista despachado **no tiene UI**: no puede preguntar. Si la decisión está por encima de su rol, se detiene y la entrega como payload, que el padre releva como elección bloqueante:
+
+```yaml
+status: interaction_required
+summary: "Dos arquitecturas válidas; la decisión no es del especialista"
+question: "¿ECS con sistemas o jerarquía de escenas?"
+options:
+  - "ECS con sistemas"
+  - "Jerarquía de escenas"
+blocking: true
+```
+
+`question` es obligatorio en una escalada; `options` y `blocking` son recomendados. Un `interaction_required` sin pregunta se considera entrega inválida: no es accionable y el hijo se colgaría igual.
+
 ## 6. FOSS CLI Media & Distribution Toolchain
 Los agentes y especialistas con herramienta `bash` ejecutan tareas de transformación de assets y distribución usando los binarios auditados del estudio (`/studio:tools`):
 - **Sprites & Texturas 2D**:

@@ -80,6 +80,7 @@ The result: you still make every decision, but now you have a fast, coordinated 
 | **Starters**  | 6     | Starter Kits for 6 major engines (Bevy, Godot, Phaser, Raylib, Unity, Unreal)                                                    |
 | **Hooks**     | 4     | Automated validation on commits, pushes, skill changes, and session audit/gap detection                                  |
 | **Engram**    | 1     | Optional persistent memory — decisions auto-save across sessions when Engram is connected, and specialists persist durable discoveries; without it the runner strips `mem_save` and records the gap instead of asking a child for a tool it lacks |
+| **Deny baseline** | — | Least-privilege `deny:` frontmatter per role (patterns or `"*"` default deny), forwarded as `--exclude-tools` so deny wins over allow, plus one `**Boundary:**` line per template stating what the role must never do |
 | **Setup**     | 2     | `/setup` — install agents and model config; `/assign-models` — customize models per agent                                |
 
 ## Key Mappings (CCGS → Pi)

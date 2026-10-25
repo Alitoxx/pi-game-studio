@@ -41,6 +41,10 @@ export interface TaskRecord {
 	compactions?: Array<{ reason: string; ok: boolean }>;
 	/** Delegation tools a child declared but never received: depth is one. */
 	delegationStripped?: string[];
+	/** Deny patterns actually forwarded to the child as --exclude-tools. */
+	deniedTools?: string[];
+	/** Exact tool names both allowed and denied: deny wins, the contradiction is on record. */
+	denyConflicts?: string[];
 	/** Memory tools a child declared but never received: no provider installed. */
 	memoryUnavailable?: string[];
 	/** Real usage reported by the child, accumulated per completed message. */
@@ -75,6 +79,12 @@ export interface RunnerOptions {
 	 * actually installed would silently remove the capability.
 	 */
 	hasTool?: (name: string) => boolean;
+	/**
+	 * Returns the host's whole tool inventory (documented `getAllTools()` probe).
+	 * Used to derive the complement a `deny: ["*"]` baseline must exclude, so an
+	 * empty or missing allow list cannot let a child inherit Pi's defaults.
+	 */
+	toolInventory?: () => string[];
 }
 
 export function formatRel(startedAt?: number | null): string {
@@ -154,6 +164,7 @@ export class StudioAgentsRunner {
 	private counter = 0;
 	private timeoutMs = 300000; // 5 min default stall/run limit for complex chain tasks
 	private hasTool: ((name: string) => boolean) | null = null;
+	private toolInventory: (() => string[]) | null = null;
 
 	constructor(options: RunnerOptions = {}) {
 		if (options.timeoutMs) {
@@ -161,6 +172,9 @@ export class StudioAgentsRunner {
 		}
 		if (options.hasTool) {
 			this.hasTool = options.hasTool;
+		}
+		if (options.toolInventory) {
+			this.toolInventory = options.toolInventory;
 		}
 	}
 
@@ -171,6 +185,11 @@ export class StudioAgentsRunner {
 	 */
 	setToolProbe(probe: ((name: string) => boolean) | null): void {
 		this.hasTool = probe;
+	}
+
+	/** Installs (or clears) the host inventory probe used by the deny baseline. */
+	setToolInventory(inventory: (() => string[]) | null): void {
+		this.toolInventory = inventory;
 	}
 
 	subscribe(listener: TaskListener): () => void {
@@ -387,6 +406,42 @@ export class StudioAgentsRunner {
 				record.latestActivity = `Sin proveedor de memoria: ${unavailableMemory.join(", ")} no otorgado a ${manifest.name}`;
 			}
 
+			// Least-privilege deny baseline. Allow lists say what a role gets; the deny
+			// list says what it may never get, and deny wins. Without it, a tool added
+			// to the runtime would silently widen every agent, and an empty allow list
+			// would make the child inherit Pi's defaults (read, bash, edit, write).
+			const declaredDeny = Array.isArray(manifest.deny) ? manifest.deny : [];
+			const denyConflicts = declaredDeny.filter(
+				(d) => d !== "*" && declaredTools.includes(d),
+			);
+			if (denyConflicts.length > 0) {
+				record.denyConflicts = denyConflicts;
+				record.latestActivity = `Contradicción de privilegios: ${denyConflicts.join(", ")} declarado(s) en tools y en deny; deny gana`;
+			}
+
+			let excludedTools: string[];
+			if (declaredDeny.includes("*")) {
+				// Default deny: exclude everything the host exposes that the allow list
+				// does not grant, plus a fixed baseline for tools the inventory probe
+				// cannot see. This is what closes the empty-allow-list hole: bash stays
+				// granted because the allow list names it, write and edit never do.
+				let inventory: string[] = [];
+				if (this.toolInventory) {
+					try {
+						inventory = this.toolInventory() ?? [];
+					} catch {
+						inventory = [];
+					}
+				}
+				const baseline = ["write", "edit", "powershell", "codemode"];
+				const pool = new Set([...inventory, ...baseline]);
+				excludedTools = Array.from(pool).filter((t) => !childTools.includes(t));
+			} else {
+				excludedTools = declaredDeny.filter((d) => d !== "*");
+			}
+			// Dedupe, keep declaration order.
+			excludedTools = Array.from(new Set(excludedTools));
+
 			const executivePrompt = [
 				`[PI GAME STUDIO SPECIALIST DISPATCH — ODD PROTOCOL ACTIVE]`,
 				`Role: ${manifest.name} (${manifest.title} - Tier: ${manifest.tier})`,
@@ -447,6 +502,14 @@ export class StudioAgentsRunner {
 			// Herramientas permitidas
 			if (childTools.length > 0) {
 				args.push("--tools", childTools.join(","));
+			}
+
+			// Deny baseline: forwarded as Pi's own exclusion flag, applied after every
+			// other selection, so a denied tool cannot reach the child even if a future
+			// template allows it.
+			if (excludedTools.length > 0) {
+				args.push("--exclude-tools", excludedTools.join(","));
+				record.deniedTools = excludedTools;
 			}
 
 			// A specialist session has no consumer: the studio cannot resume it, so

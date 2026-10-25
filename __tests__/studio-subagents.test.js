@@ -1223,3 +1223,113 @@ describe("Parent edit-surface scopes", () => {
 		}).not.toThrow();
 	}, 30000);
 });
+
+describe("Runner enforces the least-privilege deny baseline", () => {
+	const repoRoot = path.join(__dirname, "..");
+
+	test('deny ["*"] excludes everything not allowed plus the baseline, never an allowed tool', () => {
+		const script = `
+			const fs = await import("node:fs");
+			const os = await import("node:os");
+			const path = await import("node:path");
+
+			const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "studio-deny-"));
+			const fakePi = path.join(tmp, "pi");
+			fs.copyFileSync("__tests__/fixtures/fake-pi-rpc.mjs", fakePi);
+			fs.chmodSync(fakePi, 0o755);
+			const previousPiPath = process.env.PI_PATH;
+			process.env.PI_PATH = fakePi;
+			process.env.FAKE_ECHO_ARGV = "1";
+			process.env.FAKE_RECEIPT = "status: completed\\nsummary: ok\\nfiles_changed:\\n  - src/a.rs\\nvalidation:\\n  - cargo test -p game: 5 passed";
+
+			const { StudioAgentsRunner } = await import("./extensions/hooks/studio-agents-runner.ts");
+			const runner = new StudioAgentsRunner({
+				toolInventory: () => ["read", "find", "grep", "bash", "write", "edit", "todo"],
+			});
+			const manifest = {
+				name: "qa-verifier", title: "QV", tier: "lead", model: "inherit", thinking: "medium",
+				tools: ["read", "find", "grep", "bash"],
+				deny: ["*"],
+				systemPrompt: "test",
+			};
+			const record = await runner.run(manifest, "Audita la entrega.", tmp, "task");
+
+			if (record.status !== "completed") {
+				throw new Error("dispatch failed: " + record.status + " (" + (record.error || "") + ")");
+			}
+			const argv = /ARGV=(.*)/.exec(record.result || "")?.[1] || "";
+			if (!argv.includes("--tools read,find,grep,bash")) {
+				throw new Error("the allow list must still be granted, argv was " + argv);
+			}
+			const excluded = /--exclude-tools ([^ ]+)/.exec(argv)?.[1]?.split(",") ?? [];
+			// Default deny must close the empty-allow-list hole: write and edit are
+			// excluded from the runtime inventory even though no --tools would have
+			// been sent without an allow list.
+			if (!excluded.includes("write") || !excluded.includes("edit")) {
+				throw new Error("default deny must exclude write and edit, argv was " + argv);
+			}
+			if (excluded.includes("bash")) {
+				throw new Error("an allowed tool must survive default deny (the auditor runs evidence commands), argv was " + argv);
+			}
+			if (JSON.stringify(record.deniedTools) !== JSON.stringify(excluded)) {
+				throw new Error("the record must carry the forwarded exclusions, got " + JSON.stringify(record.deniedTools));
+			}
+
+			if (previousPiPath === undefined) delete process.env.PI_PATH;
+			else process.env.PI_PATH = previousPiPath;
+			delete process.env.FAKE_ECHO_ARGV;
+			fs.rmSync(tmp, { recursive: true, force: true });
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], { cwd: repoRoot });
+		}).not.toThrow();
+	}, 40000);
+
+	test("an explicit deny contradicts the allow list and still wins, with the conflict recorded", () => {
+		const script = `
+			const fs = await import("node:fs");
+			const os = await import("node:os");
+			const path = await import("node:path");
+
+			const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "studio-conflict-"));
+			const fakePi = path.join(tmp, "pi");
+			fs.copyFileSync("__tests__/fixtures/fake-pi-rpc.mjs", fakePi);
+			fs.chmodSync(fakePi, 0o755);
+			const previousPiPath = process.env.PI_PATH;
+			process.env.PI_PATH = fakePi;
+			process.env.FAKE_ECHO_ARGV = "1";
+			process.env.FAKE_RECEIPT = "status: completed\\nsummary: ok\\nfiles_changed:\\n  - src/a.rs\\nvalidation:\\n  - structural: src/a.rs: presente";
+
+			const { studioAgentsRunner } = await import("./extensions/hooks/studio-agents-runner.ts");
+			const manifest = {
+				name: "game-designer", title: "GD", tier: "lead", model: "inherit", thinking: "medium",
+				tools: ["read", "write"],
+				deny: ["write"],
+				systemPrompt: "test",
+			};
+			const record = await studioAgentsRunner.run(manifest, "Describe el sistema.", tmp, "task");
+
+			if (record.status !== "completed") {
+				throw new Error("dispatch failed: " + record.status + " (" + (record.error || "") + ")");
+			}
+			if (JSON.stringify(record.denyConflicts) !== JSON.stringify(["write"])) {
+				throw new Error("the contradiction must be recorded, got " + JSON.stringify(record.denyConflicts));
+			}
+			const argv = /ARGV=(.*)/.exec(record.result || "")?.[1] || "";
+			const excluded = /--exclude-tools ([^ ]+)/.exec(argv)?.[1]?.split(",") ?? [];
+			if (!excluded.includes("write")) {
+				throw new Error("deny wins over allow: write must be excluded, argv was " + argv);
+			}
+
+			if (previousPiPath === undefined) delete process.env.PI_PATH;
+			else process.env.PI_PATH = previousPiPath;
+			delete process.env.FAKE_ECHO_ARGV;
+			fs.rmSync(tmp, { recursive: true, force: true });
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], { cwd: repoRoot });
+		}).not.toThrow();
+	}, 40000);
+});

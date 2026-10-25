@@ -33,6 +33,8 @@ export interface AgentManifest {
 	model: string;
 	thinking: ThinkingLevel;
 	tools: string[];
+	/** Least-privilege deny baseline: tool names/patterns never granted; "*" = default deny. */
+	deny: string[];
 	filePath: string;
 	systemPrompt: string;
 }
@@ -94,7 +96,16 @@ export function parseAgentFrontmatter(content: string): {
 		if (!trimmed || trimmed.startsWith("#")) continue;
 
 		if (trimmed.startsWith("- ") && currentKey && isList) {
-			meta[currentKey].push(trimmed.slice(2).trim());
+			// Strip surrounding quotes the same way scalar values are stripped, so a
+			// quoted list item like - "*" arrives as * and not as "*".
+			let item = trimmed.slice(2).trim();
+			if (
+				(item.startsWith('"') && item.endsWith('"')) ||
+				(item.startsWith("'") && item.endsWith("'"))
+			) {
+				item = item.slice(1, -1);
+			}
+			meta[currentKey].push(item);
 			continue;
 		}
 
@@ -154,6 +165,7 @@ export function loadAgentManifest(name: string, cwd: string): AgentManifest | nu
 			model: meta.model || "inherit",
 			thinking: resolveThinkingLevel(meta.thinking, tier),
 			tools: Array.isArray(meta.tools) ? meta.tools : ["read", "write", "edit", "bash"],
+			deny: Array.isArray(meta.deny) ? meta.deny.map((v: any) => String(v)) : [],
 			filePath: targetPath,
 			systemPrompt: body,
 		};

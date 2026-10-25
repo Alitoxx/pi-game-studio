@@ -1,3 +1,4 @@
+import { formatStudioToolDiagnostics, getStudioToolRegistrations } from "./studio-tool-registry.ts";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { execSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
@@ -676,6 +677,20 @@ export async function handleStudioDoctor(
 	const audit = auditEnginePrerequisites(targetEngine, studioRoot);
 	const structure = auditProjectStructure(studioRoot);
 	const lines = formatAuditReport(audit, structure);
+
+	// A replaced studio tool is a runtime failure, not an engine gap: report it
+	// even when every prerequisite is installed.
+	const toolLines = formatStudioToolDiagnostics();
+	lines.push("");
+	lines.push("  Herramientas del estudio:");
+	if (toolLines.length === 0) {
+		lines.push(
+			`  [OK] ${getStudioToolRegistrations().length} herramienta(s) registradas por el estudio.`,
+		);
+	} else {
+		lines.push(...toolLines);
+	}
+
 	for (const l of lines) console.log(l);
 
 	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {

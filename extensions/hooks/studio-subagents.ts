@@ -4,30 +4,18 @@ import { existsSync } from "node:fs";
 import { resolve, sep } from "node:path";
 import { loadAgentManifest, listAvailableAgents } from "./studio-agent-loader.ts";
 import { studioAgentsRunner } from "./studio-agents-runner.ts";
+import { registerStudioTool } from "./studio-tool-registry.ts";
+
+export {
+	getStudioToolRegistrations,
+	formatStudioToolDiagnostics,
+} from "./studio-tool-registry.ts";
 
 export function registerStudioSubagentTools(pi: ExtensionAPI): void {
-	// If tools are already provided globally (e.g. by host or another extension), don't register duplicates
-	const hasTool = (name: string) => {
-		try {
-			if (typeof (pi as any).hasTool === "function") return (pi as any).hasTool(name);
-			if (typeof (pi as any).getAllTools === "function") {
-				const tools = (pi as any).getAllTools();
-				return Array.isArray(tools) && tools.some((t: any) => t?.name === name);
-			}
-			return false;
-		} catch {
-			return false;
-		}
-	};
-
-	const safeRegisterTool = (toolDef: any) => {
-		if (hasTool(toolDef.name)) {
-			return;
-		}
-		try {
-			(pi as any).registerTool?.(toolDef);
-		} catch {}
-	};
+	// A tool name already owned by the host or another extension is skipped, but
+	// never silently: the registry records why, and session_start and
+	// /studio:doctor surface it.
+	const safeRegisterTool = (toolDef: any) => registerStudioTool(pi as any, toolDef);
 
 	// ──────────────────────────────────────────────
 	// Tool: subagent_run

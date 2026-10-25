@@ -2898,3 +2898,28 @@ describe("Shared ODD contract", () => {
 		}).not.toThrow();
 	});
 });
+
+describe("ask_user_question registration is observable", () => {
+	test("a host-provided ask_user_question is recorded as skipped, not silently ignored", () => {
+		const script = `
+			const { registerAskUserQuestion } = await import("./extensions/hooks/studio-choice.ts");
+			const { getStudioToolRegistrations, formatStudioToolDiagnostics } =
+				await import("./extensions/hooks/studio-tool-registry.ts");
+
+			registerAskUserQuestion({ getAllTools: () => [{ name: "ask_user_question" }], registerTool: () => {} });
+
+			const reg = getStudioToolRegistrations().find((r) => r.name === "ask_user_question");
+			if (!reg) throw new Error("the skipped question tool left no record");
+			if (reg.status !== "skipped") throw new Error("expected skipped, got " + reg.status);
+			if (!formatStudioToolDiagnostics().join(" ").includes("ask_user_question")) {
+				throw new Error("diagnostics must name the tool");
+			}
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+			});
+		}).not.toThrow();
+	}, 30000);
+});

@@ -78,7 +78,7 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 			const fg = (slot: string, text: string) => (theme?.fg ? theme.fg(slot as any, text) : text);
 			const bold = (text: string) => (theme?.bold ? theme.bold(text) : text);
 
-			const badge = fg("accent", "▌ ◈ ENGINE DISPATCH");
+			const badge = fg("accent", "ENGINE DISPATCH");
 			const header = `${badge} · ${bold(agentName)} (${title})`;
 
 			const rawTask = String(args?.task || "").trim();
@@ -101,7 +101,7 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 
 			// 1. Partial / running state
 			if (isPartial) {
-				const badge = fg("accent", "▌ ● COMPILANDO / EJECUTANDO");
+				const badge = fg("accent", "◐ COMPILANDO / EJECUTANDO");
 				return new Text(`${badge} · ${bold(agentName)}...`, 0, 0);
 			}
 
@@ -138,7 +138,7 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 					errorMsg = "unknown error";
 				}
 
-				const badge = fg("error", "▌ ■ DISPATCH ERROR");
+				const badge = fg("error", "✗ DISPATCH ERROR");
 				const line = `${badge} · ${bold(agentName)}: ${errorMsg}`;
 				return new Text(line, 0, 0);
 			}
@@ -176,7 +176,7 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 			const filesStr = files.length > 0 ? files.join(", ") : "(ninguno)";
 
 			if (!expanded) {
-				const badge = fg("success", "▌ ▲ DISPATCH OK");
+				const badge = fg("success", "✓ DISPATCH OK");
 				const header = `${badge} · ${bold(agentName)}`;
 				const hint = fg("dim", "(Ctrl+O para expandir entrega completa)");
 				const lines = [
@@ -189,7 +189,7 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 			}
 
 			// 4. Complete and expanded
-			const badge = fg("success", "▌ ▲ DISPATCH OK");
+			const badge = fg("success", "✓ DISPATCH OK");
 			const header = `${badge} · ${bold(agentName)}`;
 			const receiptBox = [
 				`┌── DELIVERY RECEIPT: ${agentName.toUpperCase()} ────────────────────────┐`,

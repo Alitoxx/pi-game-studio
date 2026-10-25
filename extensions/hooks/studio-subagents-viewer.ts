@@ -266,7 +266,7 @@ export function renderSubagentLiveConsoleView(
 	if (targetTask.status === "cancelled") statusBadge = `${GRAY}○ CANCELADO${RESET}`;
 	if (targetTask.status === "queued") statusBadge = `${GRAY}○ EN COLA${RESET}`;
 
-	const headerTitle = `◈ CONSOLA EN VIVO · ${(targetTask.title || targetTask.agent).toUpperCase()}`;
+	const headerTitle = `CONSOLA EN VIVO · ${(targetTask.title || targetTask.agent).toUpperCase()}`;
 	const ruleLen = Math.max(0, cardWidth - headerTitle.length - 5);
 
 	lines.push(`${BORDER}╭─${RESET} ${BLUE}${headerTitle}${RESET} ${BORDER}${"─".repeat(ruleLen)}╮${RESET}`);
@@ -300,7 +300,7 @@ export function renderSubagentLiveConsoleView(
 	for (const rawLog of visibleLogs) {
 		let styledLog = rawLog;
 		if (rawLog.includes("  bash ") || rawLog.includes("❯ bash:")) {
-			styledLog = `${SECONDARY}${BOLD}${rawLog}${RESET}`;
+			styledLog = `${SECONDARY}${rawLog}${RESET}`;
 		} else if (rawLog.includes("  read ") || rawLog.includes("📖 read:")) {
 			styledLog = `${LAVENDER}${rawLog}${RESET}`;
 		} else if (rawLog.includes("  write ") || rawLog.includes("  edit ") || rawLog.includes("✎ write:") || rawLog.includes("✎ edit:")) {
@@ -312,7 +312,7 @@ export function renderSubagentLiveConsoleView(
 		} else if (rawLog.includes("  text ") || rawLog.includes("💬")) {
 			styledLog = `${WHITE}${rawLog}${RESET}`;
 		} else if (rawLog.includes("  done ")) {
-			styledLog = `${GREEN}${BOLD}${rawLog}${RESET}`;
+			styledLog = `${GREEN}${rawLog}${RESET}`;
 		} else if (rawLog.includes("err (") || rawLog.includes("✗ [error") || rawLog.includes("stderr:")) {
 			styledLog = `${RED}${rawLog}${RESET}`;
 		} else if (rawLog.includes("ok (") || rawLog.includes("out (") || rawLog.includes("↳ [")) {
@@ -363,11 +363,11 @@ export function renderSubagentModalView(
 	if (targetTask.status === "cancelled") statusBadge = `${GRAY}○ CANCELADO${RESET}`;
 	if (targetTask.status === "queued") statusBadge = `${GRAY}○ EN COLA${RESET}`;
 
-	const headerTitle = `◈ INSPECTOR DE ESPECIALISTA · ${(targetTask.title || targetTask.agent).toUpperCase()}`;
+	const headerTitle = `INSPECTOR DE ESPECIALISTA · ${(targetTask.title || targetTask.agent).toUpperCase()}`;
 	const ruleLen = Math.max(0, cardWidth - headerTitle.length - 5);
 
 	lines.push(`${BORDER}╭─${RESET} ${BLUE}${headerTitle}${RESET} ${BORDER}${"─".repeat(ruleLen)}╮${RESET}`);
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`${LAVENDER}${BOLD}Detalles de Ejecución${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`${BORDER}│${RESET} ${padAnsi(`${LAVENDER}Detalles de Ejecución${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${GRAY}Agente:${RESET}  ${WHITE}${targetTask.agent}${RESET} (${targetTask.title})`, innerWidth)} ${BORDER}│${RESET}`);
 	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${GRAY}Modelo:${RESET}  ${BLUE}${targetTask.model || "inherit"}${RESET}  ${GRAY}·  Estado:${RESET} ${statusBadge}`, innerWidth)} ${BORDER}│${RESET}`);
 	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${GRAY}Tiempo:${RESET}  ${WHITE}${elapsedStr}${RESET}  ${GRAY}·  Task ID:${RESET} ${DIM}${targetTask.id}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
@@ -380,7 +380,7 @@ export function renderSubagentModalView(
 	lines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
 
 	// Panel 1: Instruction / Prompt
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`${LAVENDER}${BOLD}Instrucción Asignada${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`${BORDER}│${RESET} ${padAnsi(`${LAVENDER}Instrucción Asignada${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 	const taskLines = targetTask.task.split("\n").slice(0, 3);
 	for (const tl of taskLines) {
 		lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${WHITE}${truncateAnsi(tl.trim(), innerWidth - 4)}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
@@ -391,21 +391,21 @@ export function renderSubagentModalView(
 	const resultLines: string[] = [];
 	if (targetTask.result) {
 		resultLines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
-		resultLines.push(`${BORDER}│${RESET} ${padAnsi(`${LAVENDER}${BOLD}Resultado / Entrega Final${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+		resultLines.push(`${BORDER}│${RESET} ${padAnsi(`${LAVENDER}Resultado / Entrega Final${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 		const resultPreview = targetTask.result.split("\n").slice(0, 6);
 		for (const rl of resultPreview) {
 			resultLines.push(`${BORDER}│${RESET} ${padAnsi(`  ${GREEN}${truncateAnsi(rl, innerWidth - 4)}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 		}
 	} else if (targetTask.error) {
 		resultLines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
-		resultLines.push(`${BORDER}│${RESET} ${padAnsi(`${RED}${BOLD}Error Registrado:${RESET} ${truncateAnsi(targetTask.error, innerWidth - 20)}`, innerWidth)} ${BORDER}│${RESET}`);
+		resultLines.push(`${BORDER}│${RESET} ${padAnsi(`${RED}Error Registrado:${RESET} ${truncateAnsi(targetTask.error, innerWidth - 20)}`, innerWidth)} ${BORDER}│${RESET}`);
 	} else if (targetTask.status === "running") {
 		resultLines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
 		resultLines.push(`${BORDER}│${RESET} ${padAnsi(`  ${YELLOW}◐ Especialista ejecutando en segundo plano...${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 	}
 
 	// Panel 2: Live Tool Call Events & Logs
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`${LAVENDER}${BOLD}Eventos y Llamadas de Herramientas (En Vivo)${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`${BORDER}│${RESET} ${padAnsi(`${LAVENDER}Eventos y Llamadas de Herramientas (En Vivo)${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 
 	const footerChrome = 2; // bottom border + shortcuts footer
 	const fixedCount = lines.length + resultLines.length + footerChrome;
@@ -474,7 +474,7 @@ export function renderSubagentSplitView(
 
 	// Generate left column lines (subagents list)
 	const leftContent: string[] = [];
-	leftContent.push(` ${BLUE}${BOLD}Agentes (${tasks.length})${RESET}`);
+	leftContent.push(` ${BLUE}Agentes (${tasks.length})${RESET}`);
 	leftContent.push(`${BORDER}${"─".repeat(leftWidth - 1)}${RESET}`);
 
 	const maxVisibleLeftTasks = targetBodyRows ? Math.max(2, targetBodyRows - 2) : tasks.length;
@@ -495,7 +495,7 @@ export function renderSubagentSplitView(
 
 		const isSelected = actualIdx === selectedIndex;
 		const marker = isSelected ? `${BLUE}▸${RESET} ` : "  ";
-		const agentColor = isSelected ? `${BOLD}${WHITE}` : `${GRAY}`;
+		const agentColor = isSelected ? `${WHITE}` : `${GRAY}`;
 		const maxNameLen = leftWidth - 7;
 		const nameDisplay = truncateAnsi(t.agent, maxNameLen);
 
@@ -516,14 +516,14 @@ export function renderSubagentSplitView(
 	if (targetTask.status === "queued") statusBadge = `${GRAY}○ EN COLA${RESET}`;
 
 	const headerLines: string[] = [];
-	const headerTitle = `◈ INSPECTOR DE ESPECIALISTA · ${(targetTask.title || targetTask.agent).toUpperCase()}`;
+	const headerTitle = `INSPECTOR DE ESPECIALISTA · ${(targetTask.title || targetTask.agent).toUpperCase()}`;
 	headerLines.push(`${BLUE}${BOLD}${truncateAnsi(headerTitle, rightWidth - 2)}${RESET}`);
 	headerLines.push(`  ${GRAY}Modelo:${RESET} ${BLUE}${targetTask.model || "inherit"}${RESET}  ${GRAY}·${RESET}  ${statusBadge}  ${GRAY}·${RESET}  ${WHITE}${elapsedStr}${RESET}`);
 	headerLines.push(`  ${GRAY}Task ID:${RESET} ${DIM}${targetTask.id}${RESET}`);
 	headerLines.push("");
 
 	// Panel: Instruction
-	headerLines.push(`${LAVENDER}${BOLD}Instrucción Asignada${RESET}`);
+	headerLines.push(`${LAVENDER}Instrucción Asignada${RESET}`);
 	const taskLines = targetTask.task.split("\n").slice(0, 3);
 	for (const tl of taskLines) {
 		headerLines.push(`  ${WHITE}${truncateAnsi(tl.trim(), rightWidth - 4)}${RESET}`);
@@ -534,14 +534,14 @@ export function renderSubagentSplitView(
 	const footerRightLines: string[] = [];
 	if (targetTask.result) {
 		footerRightLines.push("");
-		footerRightLines.push(`${LAVENDER}${BOLD}Resultado / Entrega Final${RESET}`);
+		footerRightLines.push(`${LAVENDER}Resultado / Entrega Final${RESET}`);
 		const resultPreview = targetTask.result.split("\n").slice(0, 5);
 		for (const rl of resultPreview) {
 			footerRightLines.push(`  ${GREEN}${truncateAnsi(rl, rightWidth - 4)}${RESET}`);
 		}
 	} else if (targetTask.error) {
 		footerRightLines.push("");
-		footerRightLines.push(`${RED}${BOLD}Error Registrado:${RESET} ${truncateAnsi(targetTask.error, rightWidth - 20)}`);
+		footerRightLines.push(`${RED}Error Registrado:${RESET} ${truncateAnsi(targetTask.error, rightWidth - 20)}`);
 	} else if (targetTask.status === "running") {
 		footerRightLines.push("");
 		footerRightLines.push(`  ${YELLOW}◐ Ejecución activa en segundo plano...${RESET}`);
@@ -566,7 +566,7 @@ export function renderSubagentSplitView(
 	const eventLogs = allLogs.slice(startIdx, endIdx);
 
 	const scrollHeaderNote = clampedOffset > 0 ? ` ${YELLOW}[Scroll: -${clampedOffset}]${RESET}` : "";
-	const logHeader = `${LAVENDER}${BOLD}Eventos y Llamadas de Herramientas (En Vivo)${RESET}${scrollHeaderNote}`;
+	const logHeader = `${LAVENDER}Eventos y Llamadas de Herramientas (En Vivo)${RESET}${scrollHeaderNote}`;
 	const fixedRightCount = headerLines.length + 1 /* logHeader */ + footerRightLines.length;
 
 	const rightContent: string[] = [...headerLines, logHeader];

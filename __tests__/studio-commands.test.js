@@ -1108,7 +1108,7 @@ Next: Level Design
 		);
 	});
 
-	test("studio-subagents-widget renders sovereign gamedev console dispatch with accent bar ▌ and engine telemetry", () => {
+	test("studio-subagents-widget renders sovereign gamedev console dispatch without accent bar and with engine telemetry", () => {
 		const widgetPath = path.join(__dirname, "..", "extensions", "hooks", "studio-subagents-widget.ts");
 		expect(fs.existsSync(widgetPath)).toBe(true);
 
@@ -1116,17 +1116,17 @@ Next: Level Design
 		expect(widgetSource).toContain("export function renderSubagentsWidgetCard");
 		expect(widgetSource).toContain("export function formatElapsed");
 
-		// Sovereign game engine console left accent bar ▌ instead of box borders
-		expect(widgetSource).toContain("▌");
+		// Sovereign game engine console telemetry rows instead of box borders; the retired bar stays out
+		expect(widgetSource).not.toContain("▌");
 		expect(widgetSource).not.toContain("╭─");
 		expect(widgetSource).not.toContain("╰─");
 
 		// Header and sovereign gamedev telemetry status glyphs
-		expect(widgetSource).toContain("◈ ENGINE DISPATCH");
+		expect(widgetSource).toContain("ENGINE DISPATCH");
 		expect(widgetSource).not.toContain("❀ Agents");
-		expect(widgetSource).toContain("● COMPILANDO"); // running / compiling
-		expect(widgetSource).toContain("▲ OK"); // completed
-		expect(widgetSource).toContain("■ BLOQUEADO"); // failed
+		expect(widgetSource).toContain("◐ COMPILANDO"); // running / compiling
+		expect(widgetSource).toContain("✓ OK"); // completed
+		expect(widgetSource).toContain("✗ BLOQUEADO"); // failed
 		expect(widgetSource).toContain("○ EN COLA"); // queued
 
 		// Engine tags for specialists
@@ -1380,9 +1380,9 @@ Next: Level Design
 		expect(perfSource).toContain("FileAccess.open");
 
 		// Actionable warning message
-		expect(perfSource).toContain("◈ PERF ALERT:");
+		expect(perfSource).toContain("PERF ALERT:");
 		expect(perfSource).toContain("allocations detected in frame loop of");
-		expect(perfSource).toContain("▲ PERF AUDIT OK:");
+		expect(perfSource).toContain("✓ PERF AUDIT OK:");
 
 		// Behavioral test of frame loop regexes & patterns
 		const frameLoopRegex = /func\s+(_process|_physics_process|update)\s*\(|fn\s+([a-zA-Z0-9_]*(?:update|tick|system)[a-zA-Z0-9_]*)\s*\(|(?:void)\s+(Update|FixedUpdate)\s*\(/;
@@ -1415,9 +1415,9 @@ Next: Level Design
 		expect(watchSource).toContain("cmake --build");
 
 		// Background notification telemetry
-		expect(watchSource).toContain("◈ COMPILE OK:");
+		expect(watchSource).toContain("COMPILE OK:");
 		expect(watchSource).toContain("build clean in");
-		expect(watchSource).toContain("◈ BUILD ERROR:");
+		expect(watchSource).toContain("BUILD ERROR:");
 
 		// Replicates engine command mapping
 		function resolveCompileCmd(engine) {
@@ -1505,7 +1505,7 @@ Next: Level Design
 
 	test("Auto-perf-guard hook is wired in index.ts for write events", () => {
 		expect(hooksSource).toContain("auditFilePerformance");
-		expect(hooksSource).toContain("◈ PERF ALERT:");
+		expect(hooksSource).toContain("PERF ALERT:");
 		expect(hooksSource).toContain("handleStudioPerfAudit");
 		expect(hooksSource).toContain("handleStudioWatch");
 		expect(hooksSource).toContain("handleStudioAssets");
@@ -2286,7 +2286,7 @@ Implement fuzzy command palette.
 						category: "ADRs",
 						title: "ADR-001: Godot 4 C#",
 						status: "Accepted",
-						icon: "◈",
+						icon: "•",
 						sourceFile: "docs/architecture/adr-001.md",
 						details: {
 							context: "Alto rendimiento",
@@ -2439,8 +2439,8 @@ Implement fuzzy command palette.
 				);
 				if (!(callComp instanceof Text)) throw new Error("renderCall must return a Text instance");
 				const text = callComp.text;
-				if (!text.includes("▌ ◈ ENGINE DISPATCH")) throw new Error("Missing ENGINE DISPATCH badge: " + text);
-				if (!text.includes("[accent]▌ ◈ ENGINE DISPATCH[/accent]")) throw new Error("Badge not styled with accent: " + text);
+				if (!text.includes("ENGINE DISPATCH")) throw new Error("Missing ENGINE DISPATCH badge: " + text);
+				if (!text.includes("[accent]ENGINE DISPATCH[/accent]")) throw new Error("Badge not styled with accent: " + text);
 				if (!text.includes("[bold]game-designer[/bold]")) throw new Error("Agent name not bold: " + text);
 				if (!text.includes("Diseñar tabla de armas y drop rate")) throw new Error("Missing compact 1-line task: " + text);
 				if (text.includes("Detalles adicionales")) throw new Error("Task prompt not truncated to 1 line: " + text);
@@ -2492,7 +2492,7 @@ Implement fuzzy command palette.
 				);
 				if (!(partialComp instanceof Text)) throw new Error("renderResult must return Text");
 				const partialText = partialComp.text;
-				if (!partialText.includes("▌ ● COMPILANDO / EJECUTANDO")) throw new Error("Missing running badge: " + partialText);
+				if (!partialText.includes("◐ COMPILANDO / EJECUTANDO")) throw new Error("Missing running badge: " + partialText);
 				if (!partialText.includes("gameplay-programmer") || !partialText.includes("...")) {
 					throw new Error("Missing agent name in running state: " + partialText);
 				}
@@ -2529,7 +2529,7 @@ Implement fuzzy command palette.
 					{ args: { agent: "game-designer" } }
 				);
 				const compactText = compactComp.text;
-				if (!compactText.includes("▌ ▲ DISPATCH OK")) throw new Error("Missing DISPATCH OK badge: " + compactText);
+				if (!compactText.includes("✓ DISPATCH OK")) throw new Error("Missing DISPATCH OK badge: " + compactText);
 				if (!compactText.includes("game-designer")) throw new Error("Missing agent name: " + compactText);
 				if (!compactText.includes("Resumen: Diseño de sistema de progresión y loot")) throw new Error("Missing parsed summary: " + compactText);
 				if (!compactText.includes("Archivos: design/gdd/loot.md, design/gdd/economy.md")) throw new Error("Missing parsed files: " + compactText);
@@ -2558,7 +2558,7 @@ Implement fuzzy command palette.
 					{ args: { agent: "godot-specialist" } }
 				);
 				const failedText = failedComp.text;
-				if (!failedText.includes("▌ ■ DISPATCH ERROR")) throw new Error("Missing DISPATCH ERROR badge: " + failedText);
+				if (!failedText.includes("✗ DISPATCH ERROR")) throw new Error("Missing DISPATCH ERROR badge: " + failedText);
 				if (!failedText.includes("godot-specialist") || !failedText.includes("crashed on script validation")) {
 					throw new Error("Missing agent error message: " + failedText);
 				}

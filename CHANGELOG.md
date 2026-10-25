@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`NO_COLOR` is honoured**: with it set, every escape becomes an empty string instead of the studio imposing its palette.
 - **Invariant**: no file outside `studio-palette.ts` may hardcode an RGB escape, and the test asserts the brightness order (text > states > borders) so a future palette cannot flatten it again.
 - **`scripts/palette-preview.js`** prints the live palette with saturation and brightness, plus a sample panel, reading the module itself — the swatches cannot drift from the code.
+- **One ornament vocabulary for command output.** Command panels layered `◈`, `▌`, bold and colour in the same header row, so texture read as structure: the decorative glyphs are retired (`◈`, `▌`, `▲`, `■`), status uses a single four-state set (`✓` done, `✗` failed, `◐` running, `○` queued, replacing `✔`/`●`/`▲`/`■`), enumerable items get one bullet (`•`, replacing `●`/`◆`/`★`), and bold is reserved for the block title — down from ~149 uses to 40 across `extensions/hooks/`. A palette test now asserts the retired glyphs cannot return and caps total `BOLD` usage.
 
 
 ### Fixed (Runner Lifecycle & Observability)

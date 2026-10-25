@@ -265,7 +265,7 @@ export function parseProductionTimeline(cwd: string): TimelineData {
 						title,
 						status,
 						date,
-						icon: "◈",
+						icon: "•",
 						sourceFile: join("docs", "architecture", file),
 						timestamp: stat.mtimeMs,
 						details: {

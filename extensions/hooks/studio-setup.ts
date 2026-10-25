@@ -428,7 +428,7 @@ export async function runGuidedSetup(
 	];
 
 	const confirmOptions = [
-		`✔ Confirmar e Instalar Pi Game Studio (${targetCount} agentes para ${selectedEngine})`,
+		`✓ Confirmar e Instalar Pi Game Studio (${targetCount} agentes para ${selectedEngine})`,
 		"❌ Cancelar sin modificar archivos",
 	];
 
@@ -696,7 +696,7 @@ export function installStudioFiles(
 	writeFileSync(logPath, currentLog + logEntry, "utf8");
 
 	const summaryMsg = [
-		`✔ ¡Pi Game Studio instalado con éxito!`,
+		`✓ ¡Pi Game Studio instalado con éxito!`,
 		`• Agentes: ${copiedCount} agentes en .pi/agents/`,
 		`• Motor: ${engine} (en project.yaml)`,
 		`• Dimensión: ${dimension.toUpperCase()} (en project.yaml)`,
@@ -711,7 +711,7 @@ export function installStudioFiles(
 		ctx.ui.notify(summaryMsg, "info");
 	} else {
 		console.log("");
-		console.log("\x1b[1m" + GREEN + "✔ ¡Pi Game Studio instalado con éxito!\x1b[0m");
+		console.log("" + GREEN + "✓ ¡Pi Game Studio instalado con éxito!\x1b[0m");
 		console.log(`  ${ACCENT}• Agentes:\x1b[0m    ${copiedCount} agentes en ${WHITE}.pi/agents/\x1b[0m`);
 		console.log(`  ${ACCENT}• Motor:\x1b[0m      ${engine} en ${WHITE}project.yaml\x1b[0m`);
 		console.log(`  ${ACCENT}• Dimensión:\x1b[0m  ${dimension.toUpperCase()} en ${WHITE}project.yaml\x1b[0m`);
@@ -763,7 +763,7 @@ export function installModelsConfig(ctx: ExtensionContext): void {
 
 	if (existsSync(modelsSrc)) {
 		writeFileSync(modelsDest, readFileSync(modelsSrc));
-		const msg = "✔ Modelos recomendados aplicados en .pi/game-studio/models.json";
+		const msg = "✓ Modelos recomendados aplicados en .pi/game-studio/models.json";
 		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			ctx.ui.notify(msg, "info");
 		} else {

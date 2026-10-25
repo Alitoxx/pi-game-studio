@@ -941,7 +941,7 @@ export async function handleStudioScaffold(
 
 	const resolved = resolveEngineAndDimension(studioRoot, args);
 
-	console.log(`\n${ACCENT}${BOLD}▌ ◈ PI GAME STUDIO · SANDBOX SCAFFOLD${RESET}`);
+	console.log(`\n${ACCENT}${BOLD}PI GAME STUDIO · SANDBOX SCAFFOLD${RESET}`);
 	console.log(`${DIM}Generando entorno jugable interactivo en ${resolved.engine} (${resolved.dimension.toUpperCase()})...${RESET}\n`);
 
 	const result = await scaffoldPlayground(
@@ -961,7 +961,7 @@ export async function handleStudioScaffold(
 	}
 
 	// Render created files
-	console.log(`${BOLD}${WHITE}Archivos del Sandbox:${RESET}`);
+	console.log(`${WHITE}Archivos del Sandbox:${RESET}`);
 	for (const f of result.files) {
 		const actionBadge =
 			f.action === "created"
@@ -970,7 +970,7 @@ export async function handleStudioScaffold(
 				? `${YELLOW}[SOBRESCRITO]${RESET}`
 				: `${SECONDARY}[SUFIJO]${RESET}`;
 
-		console.log(`  ${actionBadge} ${BOLD}${f.relPath}${RESET}`);
+		console.log(`  ${actionBadge} ${f.relPath}${RESET}`);
 		console.log(`         ${DIM}${f.description}${RESET}`);
 	}
 
@@ -983,8 +983,8 @@ export async function handleStudioScaffold(
 
 	// Executable instructions box
 	console.log(`\n${BORDER}──────────────────────────────────────────────────────────────────────${RESET}`);
-	console.log(`${HEADING}${BOLD}⚡ PRÓXIMO PASO PARA EJECUTAR:${RESET}`);
-	console.log(`  ${GREEN}${BOLD}${result.runCommand}${RESET}`);
+	console.log(`${HEADING}⚡ PRÓXIMO PASO PARA EJECUTAR:${RESET}`);
+	console.log(`  ${GREEN}${result.runCommand}${RESET}`);
 	if (result.editCommand) {
 		console.log(`  ${DIM}Para abrir en el editor:${RESET} ${SECONDARY}${result.editCommand}${RESET}`);
 	}

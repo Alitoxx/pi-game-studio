@@ -258,7 +258,7 @@ export async function handleStudioSound(
 		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			(ctx.ui as any).notify("Notificaciones sonoras desactivadas.", "info");
 		}
-		console.log("▌ Notificaciones de audio del estudio: DESACTIVADAS (off)");
+		console.log("Notificaciones de audio del estudio: DESACTIVADAS (off)");
 		return;
 	}
 
@@ -267,7 +267,7 @@ export async function handleStudioSound(
 		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			(ctx.ui as any).notify("Notificaciones sonoras activadas.", "info");
 		}
-		console.log("▌ Notificaciones de audio del estudio: ACTIVADAS (on)");
+		console.log("Notificaciones de audio del estudio: ACTIVADAS (on)");
 		playSuccessChime(root);
 		return;
 	}
@@ -284,7 +284,7 @@ export async function handleStudioSound(
 			"info",
 		);
 	}
-	console.log(`▌ Notificaciones de audio del estudio: ${statusMsg}`);
+	console.log(`Notificaciones de audio del estudio: ${statusMsg}`);
 	if (next) {
 		playSuccessChime(root);
 	}

@@ -105,7 +105,7 @@ export async function runEngineCompileCheck(
 			const warningsCount = warningMatches.length;
 
 			if (!err) {
-				const message = `◈ COMPILE OK: ${resolvedEngine} build clean in ${durationSec}s · ${warningsCount} warnings`;
+				const message = `COMPILE OK: ${resolvedEngine} build clean in ${durationSec}s · ${warningsCount} warnings`;
 				resolve({
 					success: true,
 					engine: resolvedEngine,
@@ -117,7 +117,7 @@ export async function runEngineCompileCheck(
 				});
 			} else {
 				const errorSnippet = fullOutput.split("\n").slice(0, 5).join("\n");
-				const message = `◈ BUILD ERROR: ${resolvedEngine} compile failed in ${durationSec}s:\n${errorSnippet}`;
+				const message = `BUILD ERROR: ${resolvedEngine} compile failed in ${durationSec}s:\n${errorSnippet}`;
 				resolve({
 					success: false,
 					engine: resolvedEngine,
@@ -155,8 +155,8 @@ export async function handleStudioWatch(
 	if (subcmd === "stop") {
 		const stopped = stopStudioWatcher();
 		const msg = stopped
-			? "◈ ENGINE WATCHER: Detenido correctamente."
-			: "◈ ENGINE WATCHER: No había ningún watcher activo.";
+			? "ENGINE WATCHER: Detenido correctamente."
+			: "ENGINE WATCHER: No había ningún watcher activo.";
 		console.log(`${YELLOW}${msg}${RESET}`);
 		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			(ctx.ui as any).notify(msg, "info");
@@ -166,8 +166,8 @@ export async function handleStudioWatch(
 
 	if (subcmd === "status") {
 		const statusMsg = isWatching
-			? `◈ ENGINE WATCHER: ACTIVO monitorizando para ${activeWatcherEngine}.`
-			: "◈ ENGINE WATCHER: INACTIVO.";
+			? `ENGINE WATCHER: ACTIVO monitorizando para ${activeWatcherEngine}.`
+			: "ENGINE WATCHER: INACTIVO.";
 		console.log(`${BLUE}${statusMsg}${RESET}`);
 		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			(ctx.ui as any).notify(statusMsg, "info");
@@ -176,7 +176,7 @@ export async function handleStudioWatch(
 	}
 
 	if (subcmd === "once" || subcmd === "check") {
-		console.log(`${BLUE}▌ ◈ Compilando y verificando motor (${engine})...${RESET}`);
+		console.log(`${BLUE}Compilando y verificando motor (${engine})...${RESET}`);
 		const res = await runEngineCompileCheck(engine, studioRoot);
 		if (res.success) {
 			console.log(`${GREEN}${res.message}${RESET}`);
@@ -195,7 +195,7 @@ export async function handleStudioWatch(
 	// Default: Start watcher
 	stopStudioWatcher();
 
-	console.log(`\n${BLUE}▌ ◈ LIVE ENGINE WATCHER & HOT-RELOAD${RESET}`);
+	console.log(`\n${BLUE}${BOLD}LIVE ENGINE WATCHER & HOT-RELOAD${RESET}`);
 	console.log(`${DIM}Iniciando watcher para motor ${engine}...${RESET}`);
 
 	// Initial compile check
@@ -255,13 +255,13 @@ export async function handleStudioWatch(
 		isWatching = true;
 		activeWatcherEngine = engine;
 
-		const startMsg = `◈ LIVE WATCHER ACTIVO: Supervisando cambios en ${watchDir} (${engine})`;
+		const startMsg = `LIVE WATCHER ACTIVO: Supervisando cambios en ${watchDir} (${engine})`;
 		console.log(`${BLUE}${startMsg}${RESET}\n`);
 		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			(ctx.ui as any).notify(startMsg, "info");
 		}
 	} catch (err: any) {
-		const errMsg = `◈ ERROR iniciando watcher: ${err.message}`;
+		const errMsg = `ERROR iniciando watcher: ${err.message}`;
 		console.log(`${RED}${errMsg}${RESET}`);
 		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			(ctx.ui as any).notify(errMsg, "error");

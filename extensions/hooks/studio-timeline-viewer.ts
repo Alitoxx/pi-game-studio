@@ -66,16 +66,16 @@ export function renderTimelineSplitView(
 	const tabLabels = FILTER_TABS.map((tab) => {
 		const isAct = tab === activeFilter;
 		const name = tab === "All" ? "Todos" : tab === "Milestones" ? "Hitos" : tab === "ADRs" ? "ADRs" : "Live Specs";
-		return isAct ? `${CYAN}${BOLD}[● ${name}]${RESET}` : `${GRAY}[○ ${name}]${RESET}`;
+		return isAct ? `${CYAN}[${name}]${RESET}` : `${GRAY}[○ ${name}]${RESET}`;
 	}).join("  ");
 
-	lines.push(`${BORDER}╭─${RESET} ${PURPLE}${BOLD}◈ TIMELINE DE PRODUCCIÓN Y DECISIONES (ODD)${RESET} ${BORDER}${"─".repeat(Math.max(0, totalWidth - 48))}╮${RESET}`);
+	lines.push(`${BORDER}╭─${RESET} ${PURPLE}${BOLD}TIMELINE DE PRODUCCIÓN Y DECISIONES (ODD)${RESET} ${BORDER}${"─".repeat(Math.max(0, totalWidth - 48))}╮${RESET}`);
 	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${GRAY}Filtro:${RESET} ${tabLabels}  ${DIM}(Tab para cambiar)${RESET}`, totalWidth - 4)} ${BORDER}│${RESET}`);
 	lines.push(`${BORDER}├${"─".repeat(leftWidth)}┬${"─".repeat(rightWidth)}┤${RESET}`);
 
 	// 2. Left column (tree with ASCII spine)
 	const leftLines: string[] = [];
-	leftLines.push(` ${LAVENDER}${BOLD}Árbol de Hitos y ADRs (${items.length})${RESET}`);
+	leftLines.push(` ${LAVENDER}Árbol de Hitos y ADRs (${items.length})${RESET}`);
 	leftLines.push(`${BORDER}${"─".repeat(leftWidth - 1)}${RESET}`);
 
 	for (let i = 0; i < items.length; i++) {
@@ -95,7 +95,7 @@ export function renderTimelineSplitView(
 			iconColor = CYAN;
 		}
 
-		const textColor = isSelected ? `${BOLD}${WHITE}` : it.type === "milestone" ? `${WHITE}` : `${GRAY}`;
+		const textColor = isSelected ? `${WHITE}` : it.type === "milestone" ? `${WHITE}` : `${GRAY}`;
 		const maxTitleLen = Math.max(10, leftWidth - spine.length - 8);
 		const titleDisplay = truncateAnsi(it.title, maxTitleLen);
 
@@ -107,8 +107,8 @@ export function renderTimelineSplitView(
 
 	let typeBadge = `${PURPLE}[HITO]${RESET}`;
 	if (targetItem.type === "task") typeBadge = `${GRAY}[TAREA]${RESET}`;
-	if (targetItem.type === "adr") typeBadge = `${PURPLE}${BOLD}[ADR]${RESET}`;
-	if (targetItem.type === "spec") typeBadge = `${CYAN}${BOLD}[LIVE SPEC]${RESET}`;
+	if (targetItem.type === "adr") typeBadge = `${PURPLE}[ADR]${RESET}`;
+	if (targetItem.type === "spec") typeBadge = `${CYAN}[LIVE SPEC]${RESET}`;
 
 	let statusBadge = `${GRAY}○ ${targetItem.status}${RESET}`;
 	if (targetItem.status === "Completed" || targetItem.status === "Accepted" || targetItem.status === "Approved") {
@@ -117,7 +117,7 @@ export function renderTimelineSplitView(
 		statusBadge = `${YELLOW}◐ ${targetItem.status}${RESET}`;
 	}
 
-	rightLines.push(`${typeBadge} ${WHITE}${BOLD}${truncateAnsi(targetItem.title, rightWidth - 16)}${RESET}`);
+	rightLines.push(`${typeBadge} ${WHITE}${truncateAnsi(targetItem.title, rightWidth - 16)}${RESET}`);
 	rightLines.push(`  ${GRAY}Estado:${RESET} ${statusBadge}  ${GRAY}·${RESET}  ${GRAY}Archivo:${RESET} ${CYAN}${targetItem.sourceFile || "N/A"}${RESET}`);
 	if (targetItem.date) {
 		rightLines.push(`  ${GRAY}Fecha / Registro:${RESET} ${WHITE}${targetItem.date}${RESET}`);
@@ -127,14 +127,14 @@ export function renderTimelineSplitView(
 	// Panel Content by Type
 	if (targetItem.type === "adr") {
 		// ADR Details: Context, Decision, Consequences, Trade-offs
-		rightLines.push(`${LAVENDER}${BOLD}Contexto del Problema${RESET}`);
+		rightLines.push(`${LAVENDER}Contexto del Problema${RESET}`);
 		const contextLines = (targetItem.details.context || "Sin contexto documentado.").split("\n").slice(0, 3);
 		for (const cl of contextLines) {
 			rightLines.push(`  ${WHITE}${truncateAnsi(cl.trim(), rightWidth - 4)}${RESET}`);
 		}
 		rightLines.push("");
 
-		rightLines.push(`${LAVENDER}${BOLD}Decisión de Arquitectura${RESET}`);
+		rightLines.push(`${LAVENDER}Decisión de Arquitectura${RESET}`);
 		const decisionLines = (targetItem.details.decision || "Decisión técnica.").split("\n").slice(0, 3);
 		for (const dl of decisionLines) {
 			rightLines.push(`  ${GREEN}${truncateAnsi(dl.trim(), rightWidth - 4)}${RESET}`);
@@ -142,7 +142,7 @@ export function renderTimelineSplitView(
 		rightLines.push("");
 
 		if (targetItem.details.tradeoffs) {
-			rightLines.push(`${LAVENDER}${BOLD}Trade-offs y Alternativas Evaluadas${RESET}`);
+			rightLines.push(`${LAVENDER}Trade-offs y Alternativas Evaluadas${RESET}`);
 			const tradeLines = targetItem.details.tradeoffs.split("\n").slice(0, 3);
 			for (const tl of tradeLines) {
 				rightLines.push(`  ${YELLOW}${truncateAnsi(tl.trim(), rightWidth - 4)}${RESET}`);
@@ -151,7 +151,7 @@ export function renderTimelineSplitView(
 		}
 
 		if (targetItem.details.consequences) {
-			rightLines.push(`${LAVENDER}${BOLD}Consecuencias e Impacto Técnico${RESET}`);
+			rightLines.push(`${LAVENDER}Consecuencias e Impacto Técnico${RESET}`);
 			const consLines = targetItem.details.consequences.split("\n").slice(0, 3);
 			for (const cl of consLines) {
 				rightLines.push(`  ${GRAY}${truncateAnsi(cl.trim(), rightWidth - 4)}${RESET}`);
@@ -159,7 +159,7 @@ export function renderTimelineSplitView(
 		}
 	} else if (targetItem.type === "spec") {
 		// Live Spec Details: Overview, Acceptance Criteria, Tuning Knobs
-		rightLines.push(`${LAVENDER}${BOLD}Resumen de Gameplay / Fantasía${RESET}`);
+		rightLines.push(`${LAVENDER}Resumen de Gameplay / Fantasía${RESET}`);
 		const summaryLines = (targetItem.details.summary || "").split("\n").slice(0, 4);
 		for (const sl of summaryLines) {
 			rightLines.push(`  ${WHITE}${truncateAnsi(sl.trim(), rightWidth - 4)}${RESET}`);
@@ -167,7 +167,7 @@ export function renderTimelineSplitView(
 		rightLines.push("");
 
 		if (targetItem.details.acceptanceCriteria && targetItem.details.acceptanceCriteria.length > 0) {
-			rightLines.push(`${LAVENDER}${BOLD}Criterios de Aceptación (Verificación ODD)${RESET}`);
+			rightLines.push(`${LAVENDER}Criterios de Aceptación (Verificación ODD)${RESET}`);
 			for (const crit of targetItem.details.acceptanceCriteria.slice(0, 5)) {
 				rightLines.push(`  ${CYAN}${truncateAnsi(crit, rightWidth - 4)}${RESET}`);
 			}
@@ -175,20 +175,20 @@ export function renderTimelineSplitView(
 		}
 
 		if (targetItem.details.tuningKnobs && targetItem.details.tuningKnobs.length > 0) {
-			rightLines.push(`${LAVENDER}${BOLD}Variables de Balance (Tuning Knobs)${RESET}`);
+			rightLines.push(`${LAVENDER}Variables de Balance (Tuning Knobs)${RESET}`);
 			for (const knob of targetItem.details.tuningKnobs.slice(0, 4)) {
 				rightLines.push(`  ${YELLOW}${truncateAnsi(knob, rightWidth - 4)}${RESET}`);
 			}
 		}
 	} else {
 		// Milestone or Task Details
-		rightLines.push(`${LAVENDER}${BOLD}Detalles de Producción${RESET}`);
+		rightLines.push(`${LAVENDER}Detalles de Producción${RESET}`);
 		rightLines.push(`  ${WHITE}${targetItem.details.summary || targetItem.title}${RESET}`);
 		rightLines.push("");
 
 		if (targetItem.details.producerState) {
 			const ps = targetItem.details.producerState;
-			rightLines.push(`${LAVENDER}${BOLD}Estado del Productor (Roadmap Live)${RESET}`);
+			rightLines.push(`${LAVENDER}Estado del Productor (Roadmap Live)${RESET}`);
 			if (ps.gameTitle) rightLines.push(`  ${GRAY}Juego:${RESET}     ${WHITE}${ps.gameTitle}${RESET}`);
 			if (ps.engine) rightLines.push(`  ${GRAY}Motor:${RESET}     ${CYAN}${ps.engine}${RESET}`);
 			if (ps.milestone) rightLines.push(`  ${GRAY}Hito:${RESET}      ${YELLOW}${ps.milestone}${RESET}`);

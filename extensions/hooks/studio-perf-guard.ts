@@ -124,7 +124,7 @@ export function auditFilePerformance(filePath: string, fileContent?: string): Pe
 			allocationsCount: 0,
 			blockingCallsCount: 0,
 			isClean: true,
-			summary: `◈ PERF AUDIT: ${filePath} (ignorado o sin contenido)`,
+			summary: `PERF AUDIT: ${filePath} (ignorado o sin contenido)`,
 		};
 	}
 
@@ -226,11 +226,11 @@ export function auditFilePerformance(filePath: string, fileContent?: string): Pe
 
 	let summary = "";
 	if (allocationsCount > 0) {
-		summary = `◈ PERF ALERT: ${allocationsCount} allocations detected in frame loop of ${filePath}`;
+		summary = `PERF ALERT: ${allocationsCount} allocations detected in frame loop of ${filePath}`;
 	} else if (blockingCallsCount > 0) {
-		summary = `◈ PERF ALERT: ${blockingCallsCount} blocking calls detected in ${filePath}`;
+		summary = `PERF ALERT: ${blockingCallsCount} blocking calls detected in ${filePath}`;
 	} else {
-		summary = `▲ PERF OK: ${filePath} limpio de allocs en frame loop`;
+		summary = `✓ PERF OK: ${filePath} limpio de allocs en frame loop`;
 	}
 
 	return {
@@ -308,7 +308,7 @@ export async function handleStudioPerfAudit(
 				filesToScan = [fullPath];
 			}
 		} else {
-			console.log(`${RED}■ Error: Ruta no encontrada: ${targetPath}${RESET}`);
+			console.log(`${RED}✗ Error: Ruta no encontrada: ${targetPath}${RESET}`);
 			return [];
 		}
 	} else {
@@ -326,7 +326,7 @@ export async function handleStudioPerfAudit(
 		}
 	}
 
-	console.log(`\n${BLUE}▌ ◈ PERFORMANCE & ALLOCATIONS GUARD${RESET}`);
+	console.log(`\n${BLUE}${BOLD}PERFORMANCE & ALLOCATIONS GUARD${RESET}`);
 	console.log(`${DIM}Analizando frame loops, allocs y llamadas bloqueantes en ${filesToScan.length} archivos...${RESET}\n`);
 
 	const results: PerfAuditResult[] = [];
@@ -341,7 +341,7 @@ export async function handleStudioPerfAudit(
 
 		if (!res.isClean) {
 			const relPath = file.startsWith(studioRoot) ? file.slice(studioRoot.length + 1) : file;
-			console.log(`${YELLOW}◈ PERF ALERT: ${res.allocationsCount} allocations detected in frame loop of ${relPath}${RESET}`);
+			console.log(`${YELLOW}PERF ALERT: ${res.allocationsCount} allocations detected in frame loop of ${relPath}${RESET}`);
 			for (const issue of res.issues) {
 				const tag = issue.severity === "error" ? `${RED}BLOQUEO${RESET}` : `${YELLOW}ALLOC${RESET}`;
 				console.log(`   ${DIM}L${issue.line}:${RESET} [${tag}] ${issue.message}`);
@@ -352,13 +352,13 @@ export async function handleStudioPerfAudit(
 	}
 
 	if (totalAllocs === 0 && totalBlocking === 0) {
-		const okMsg = `▲ PERF AUDIT OK: 0 frame loop allocations found across ${filesToScan.length} files.`;
+		const okMsg = `✓ PERF AUDIT OK: 0 frame loop allocations found across ${filesToScan.length} files.`;
 		console.log(`${GREEN}${okMsg}${RESET}\n`);
 		if (ctx?.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			(ctx.ui as any).notify(okMsg, "info");
 		}
 	} else {
-		const alertMsg = `◈ PERF ALERT: ${totalAllocs} allocs en frame loops y ${totalBlocking} llamadas bloqueantes detectadas.`;
+		const alertMsg = `PERF ALERT: ${totalAllocs} allocs en frame loops y ${totalBlocking} llamadas bloqueantes detectadas.`;
 		console.log(`${YELLOW}${alertMsg}${RESET}\n`);
 		if (ctx?.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			(ctx.ui as any).notify(alertMsg, "warning");

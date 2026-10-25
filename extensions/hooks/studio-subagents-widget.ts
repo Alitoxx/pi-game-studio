@@ -55,8 +55,8 @@ export function formatElapsed(ms: number): string {
 
 /**
  * Sovereign Gamedev Console Engine Dispatch telemetry widget.
- * Uses left studio accent (▌) with authentic gamedev pipeline badges:
- * ● COMPILANDO (amber), ▲ OK (green), ■ BLOQUEADO (red), ○ EN COLA (gray),
+ * Uses authentic gamedev pipeline badges:
+ * ◐ COMPILANDO (amber), ✓ OK (green), ✗ BLOQUEADO (red), ○ EN COLA (gray),
  * and engine tags ([Bevy], [Godot], [Raylib], [Unity], [Unreal]) for specialists.
  */
 export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 74): string[] {
@@ -69,33 +69,32 @@ export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 7
 	if (activeTasks.length === 0) return [];
 
 	const targetWidth = Math.max(40, width);
-	const contentWidth = targetWidth - 2; // Reserve 2 columns for "▌ "
+	const contentWidth = targetWidth;
 
 	const runningCount = activeTasks.filter((t) => t.status === "running").length;
 	const countText = runningCount > 0 ? `${runningCount} active` : "reciente";
 
-	const bar = `${BLUE}▌${RESET}`;
 	const lines: string[] = [];
 
-	// Top padding bar
-	lines.push(bar);
+	// Top padding
+	lines.push("");
 
-	// Header: ▌ ◈ ENGINE DISPATCH  <N> active (or reciente)
-	const headerTitle = `${BLUE}◈ ENGINE DISPATCH${RESET}  ${DIM}${countText}${RESET}`;
-	lines.push(`${bar} ${headerTitle}`);
+	// Header: ENGINE DISPATCH  <N> active (or reciente)
+	const headerTitle = `${BLUE}${BOLD}ENGINE DISPATCH${RESET}  ${DIM}${countText}${RESET}`;
+	lines.push(headerTitle);
 
-	// Spacing bar between header and items
-	lines.push(bar);
+	// Spacing between header and items
+	lines.push("");
 
 	const now = Date.now();
 	for (const task of activeTasks) {
 		let statusBadge = `${GRAY}○ EN COLA${RESET}`;
 		if (task.status === "completed") {
-			statusBadge = `${GREEN}▲ OK${RESET}`;
+			statusBadge = `${GREEN}✓ OK${RESET}`;
 		} else if (task.status === "running") {
-			statusBadge = `${YELLOW}● COMPILANDO${RESET}`;
+			statusBadge = `${YELLOW}◐ COMPILANDO${RESET}`;
 		} else if (task.status === "failed") {
-			statusBadge = `${RED}■ BLOQUEADO${RESET}`;
+			statusBadge = `${RED}✗ BLOQUEADO${RESET}`;
 		}
 
 		// Calculate elapsed runtime
@@ -122,7 +121,7 @@ export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 7
 		// Format specialist engine tag and agent name
 		const engineTag = getAgentEngineTag(task.agent);
 		const enginePrefix = engineTag ? `${SECONDARY}${engineTag}${RESET} ` : "";
-		const leftPrefix = `${statusBadge}  ${enginePrefix}${BOLD}${WHITE}${task.agent}${RESET}  `;
+		const leftPrefix = `${statusBadge}  ${enginePrefix}${WHITE}${task.agent}${RESET}  `;
 
 		const rawActivity = (task.latestActivity || task.task).replace(/\s+/g, " ").trim();
 		const leftVisible = stripAnsi(leftPrefix).length;
@@ -135,16 +134,16 @@ export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 7
 				: rawActivity;
 			const spacesCount = Math.max(2, contentWidth - leftVisible - activityDisplay.length - teleVisible);
 			const row = `${leftPrefix}${WHITE}${activityDisplay}${RESET}${" ".repeat(spacesCount)}${DIM}${telemetryStr}${RESET}`;
-			lines.push(`${bar} ${row}`);
+			lines.push(row);
 		} else {
 			// Compact row for narrow viewports
 			const row = `${leftPrefix}${DIM}${telemetryStr}${RESET}`;
-			lines.push(`${bar} ${row}`);
+			lines.push(row);
 		}
 	}
 
-	// Bottom padding bar
-	lines.push(bar);
+	// Bottom padding
+	lines.push("");
 
 	return lines;
 }

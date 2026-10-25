@@ -3,7 +3,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
 import { readProducerState } from "./studio-start.ts";
-import { ACCENT, ACCENT as BLUE, BOLD, BORDER, CYAN, DIM, GRAY, GREEN, RESET, SECONDARY, WHITE, YELLOW, padAnsi } from "./studio-palette.ts";
+import { ACCENT, ACCENT as BLUE, BORDER, CYAN, DIM, GRAY, GREEN, RESET, SECONDARY, WHITE, YELLOW, padAnsi } from "./studio-palette.ts";
 
 export interface PendingTaskInfo {
 	id: string;
@@ -97,7 +97,7 @@ export async function handleStudioContinuity(
 	const next = findNextPendingTask(studioRoot);
 
 	if (!next) {
-		console.log("\n" + GREEN + "✔ No hay tareas atómicas pendientes en el Live Spec ni en el roadmap.\x1b[0m");
+		console.log("\n" + GREEN + "✓ No hay tareas atómicas pendientes en el Live Spec ni en el roadmap.\x1b[0m");
 		console.log("El sprint actual está 100% completado. Usa " + SECONDARY + "/studio:start\x1b[0m o " + SECONDARY + "/studio:feature\x1b[0m para planificar la siguiente etapa.\n");
 		return;
 	}

@@ -290,9 +290,9 @@ export function auditAssets(studioRoot: string, modelBudgetBytes: number = DEFAU
 
 	let summary = "";
 	if (warnings.length === 0) {
-		summary = `▲ ASSETS OK: ${images.length} imágenes optimizadas, ${models.length} modelos dentro de presupuesto, manifest sincronizado.`;
+		summary = `✓ ASSETS OK: ${images.length} imágenes optimizadas, ${models.length} modelos dentro de presupuesto, manifest sincronizado.`;
 	} else {
-		summary = `◈ ASSETS AUDIT: ${unoptimizedImagesCount} imágenes sin optimizar, ${overBudgetModelsCount} modelos sobre presupuesto, ${manifest.missingCount} missing, ${manifest.placeholderCount} placeholders.`;
+		summary = `ASSETS AUDIT: ${unoptimizedImagesCount} imágenes sin optimizar, ${overBudgetModelsCount} modelos sobre presupuesto, ${manifest.missingCount} missing, ${manifest.placeholderCount} placeholders.`;
 	}
 
 	return {
@@ -407,7 +407,7 @@ export async function handleStudioAssets(
 	const isOptimize = (args || "").trim().toLowerCase().includes("optimize");
 
 	if (isOptimize) {
-		console.log(`\n${BLUE}▌ ◈ ASSET OPTIMIZER (/studio:assets optimize)${RESET}`);
+		console.log(`\n${BLUE}${BOLD}ASSET OPTIMIZER (/studio:assets optimize)${RESET}`);
 		console.log(`${DIM}Optimizando imágenes PNG mediante herramientas FOSS auditadas...${RESET}\n`);
 
 		const optReport = optimizeProjectAssets(studioRoot);
@@ -417,7 +417,7 @@ export async function handleStudioAssets(
 			return optReport;
 		}
 
-		console.log(`${BOLD}${WHITE}Imágenes optimizadas:${RESET} ${optReport.optimizedCount}`);
+		console.log(`${WHITE}Imágenes optimizadas:${RESET} ${optReport.optimizedCount}`);
 		console.log(`  • Tamaño inicial:  ${formatBytes(optReport.totalInitialBytes)}`);
 		console.log(`  • Tamaño final:    ${formatBytes(optReport.totalFinalBytes)}`);
 		console.log(`  • Espacio ahorrado: ${GREEN}${formatBytes(optReport.totalSavedBytes)} (${optReport.savingsPercent}% reducción)${RESET}\n`);
@@ -432,18 +432,18 @@ export async function handleStudioAssets(
 		return optReport;
 	}
 
-	console.log(`\n${BLUE}▌ ◈ ASSET PIPELINE & MANIFEST INSPECTOR${RESET}`);
+	console.log(`\n${BLUE}${BOLD}ASSET PIPELINE & MANIFEST INSPECTOR${RESET}`);
 	console.log(`${DIM}Inspeccionando imágenes .png, modelos 3D y assets/manifest.yaml...${RESET}\n`);
 
 	const report = auditAssets(studioRoot);
 
 	// Images report
 	const unoptImages = report.images.filter((i) => !i.isOptimized);
-	console.log(`${BOLD}${WHITE}Imágenes PNG:${RESET} ${report.images.length} detectadas`);
+	console.log(`${WHITE}Imágenes PNG:${RESET} ${report.images.length} detectadas`);
 	if (unoptImages.length === 0) {
-		console.log(`  ${GREEN}▲ Todas las imágenes PNG están optimizadas.${RESET}`);
+		console.log(`  ${GREEN}✓ Todas las imágenes PNG están optimizadas.${RESET}`);
 	} else {
-		console.log(`  ${YELLOW}◈ ${unoptImages.length} imágenes requieren oxipng:${RESET}`);
+		console.log(`  ${YELLOW}${unoptImages.length} imágenes requieren oxipng:${RESET}`);
 		for (const img of unoptImages.slice(0, 5)) {
 			console.log(`    - ${img.relPath} (${img.sizeFormatted}) -> ${DIM}${img.recommendation}${RESET}`);
 		}
@@ -454,33 +454,33 @@ export async function handleStudioAssets(
 
 	// 3D Models report
 	const overBudgetModels = report.models.filter((m) => !m.withinBudget);
-	console.log(`\n${BOLD}${WHITE}Modelos 3D (.glb / .gltf):${RESET} ${report.models.length} detectados`);
+	console.log(`\n${WHITE}Modelos 3D (.glb / .gltf):${RESET} ${report.models.length} detectados`);
 	if (overBudgetModels.length === 0) {
-		console.log(`  ${GREEN}▲ Todos los modelos están dentro del presupuesto (<= 10MB).${RESET}`);
+		console.log(`  ${GREEN}✓ Todos los modelos están dentro del presupuesto (<= 10MB).${RESET}`);
 	} else {
-		console.log(`  ${RED}■ ${overBudgetModels.length} modelos sobre presupuesto:${RESET}`);
+		console.log(`  ${RED}✗ ${overBudgetModels.length} modelos sobre presupuesto:${RESET}`);
 		for (const m of overBudgetModels) {
 			console.log(`    - ${m.relPath} (${m.sizeFormatted}) -> ${m.recommendation}`);
 		}
 	}
 
 	// Manifest report
-	console.log(`\n${BOLD}${WHITE}Manifest de Assets (assets/manifest.yaml):${RESET}`);
+	console.log(`\n${WHITE}Manifest de Assets (assets/manifest.yaml):${RESET}`);
 	if (!report.manifest.exists) {
 		console.log(`  ${DIM}○ assets/manifest.yaml no presente (opcional).${RESET}`);
 	} else {
 		console.log(`  Entradas analizadas: ${report.manifest.entries.length}`);
 		if (report.manifest.missingCount === 0 && report.manifest.placeholderCount === 0) {
-			console.log(`  ${GREEN}▲ 100% sincronizado: cero archivos faltantes ni placeholders.${RESET}`);
+			console.log(`  ${GREEN}✓ 100% sincronizado: cero archivos faltantes ni placeholders.${RESET}`);
 		} else {
 			if (report.manifest.missingCount > 0) {
-				console.log(`  ${RED}■ Archivos declarados no encontrados en disco: ${report.manifest.missingCount}${RESET}`);
+				console.log(`  ${RED}✗ Archivos declarados no encontrados en disco: ${report.manifest.missingCount}${RESET}`);
 				for (const missing of report.manifest.entries.filter((e) => !e.exists && !e.isPlaceholder).slice(0, 5)) {
 					console.log(`    - Falta: ${missing.declaredPath}`);
 				}
 			}
 			if (report.manifest.placeholderCount > 0) {
-				console.log(`  ${YELLOW}◈ Placeholders pendientes: ${report.manifest.placeholderCount}${RESET}`);
+				console.log(`  ${YELLOW}Placeholders pendientes: ${report.manifest.placeholderCount}${RESET}`);
 				for (const ph of report.manifest.entries.filter((e) => e.isPlaceholder).slice(0, 5)) {
 					console.log(`    - ${ph.key}: "${ph.declaredPath}"`);
 				}

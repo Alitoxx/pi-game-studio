@@ -396,7 +396,7 @@ export function renderSteamPagePreview(
 	const srcLabel = concept.sourceFile ? basename(concept.sourceFile) : "Auto-sintetizado";
 	lines.push(
 		`${BORDER}│${RESET} ${padAnsi(
-			`  ${DIM}Título:${RESET} ${WHITE}${BOLD}${concept.title}${RESET} ${DIM}│ Género:${RESET} ${SECONDARY}${concept.genre}${RESET} ${DIM}│ Fuente:${RESET} ${GRAY}${srcLabel}${RESET}`,
+			`  ${DIM}Título:${RESET} ${WHITE}${concept.title}${RESET} ${DIM}│ Género:${RESET} ${SECONDARY}${concept.genre}${RESET} ${DIM}│ Fuente:${RESET} ${GRAY}${srcLabel}${RESET}`,
 			innerWidth,
 		)} ${BORDER}│${RESET}`,
 	);
@@ -404,12 +404,12 @@ export function renderSteamPagePreview(
 
 	// Short Description Preview
 	const charStatus = page.shortDescPass
-		? `${GREEN}${BOLD}[PASS: ${page.shortDescLength}/300 chars]${RESET}`
-		: `${RED}${BOLD}[EXCEDIDO: ${page.shortDescLength}/300 chars]${RESET}`;
+		? `${GREEN}[PASS: ${page.shortDescLength}/300 chars]${RESET}`
+		: `${RED}[EXCEDIDO: ${page.shortDescLength}/300 chars]${RESET}`;
 
 	lines.push(
 		`${BORDER}│${RESET} ${padAnsi(
-			`${HEADING}${BOLD}SHORT DESCRIPTION (Gancho de conversión en tienda):${RESET} ${charStatus}`,
+			`${HEADING}SHORT DESCRIPTION (Gancho de conversión en tienda):${RESET} ${charStatus}`,
 			innerWidth,
 		)} ${BORDER}│${RESET}`,
 	);
@@ -424,12 +424,12 @@ export function renderSteamPagePreview(
 	// Key Features Preview
 	lines.push(
 		`${BORDER}│${RESET} ${padAnsi(
-			`${HEADING}${BOLD}KEY FEATURES (Verbos Activos de Jugabilidad):${RESET}`,
+			`${HEADING}KEY FEATURES (Verbos Activos de Jugabilidad):${RESET}`,
 			innerWidth,
 		)} ${BORDER}│${RESET}`,
 	);
 	for (const kf of page.keyFeatures) {
-		const line = `  ${SECONDARY}${BOLD}${kf.verb}${RESET} ${DIM}│${RESET} ${GRAY}${truncateAnsi(kf.description, innerWidth - 16)}${RESET}`;
+		const line = `  ${SECONDARY}${kf.verb}${RESET} ${DIM}│${RESET} ${GRAY}${truncateAnsi(kf.description, innerWidth - 16)}${RESET}`;
 		lines.push(`${BORDER}│${RESET} ${padAnsi(line, innerWidth)} ${BORDER}│${RESET}`);
 	}
 	lines.push(`${BORDER}├${"─".repeat(width - 2)}┤${RESET}`);
@@ -437,7 +437,7 @@ export function renderSteamPagePreview(
 	// BBCode Snapshot
 	lines.push(
 		`${BORDER}│${RESET} ${padAnsi(
-			`${HEADING}${BOLD}BBCODE GENERADO PARA STEAMWORKS ("About This Game"):${RESET}`,
+			`${HEADING}BBCODE GENERADO PARA STEAMWORKS ("About This Game"):${RESET}`,
 			innerWidth,
 		)} ${BORDER}│${RESET}`,
 	);
@@ -458,13 +458,13 @@ export function renderSteamPagePreview(
 	// Save confirmation
 	lines.push(
 		`${BORDER}│${RESET} ${padAnsi(
-			`${GREEN}${BOLD}[GUARDADO EXITOSO]${RESET} Documento completo exportado a:`,
+			`${GREEN}[GUARDADO EXITOSO]${RESET} Documento completo exportado a:`,
 			innerWidth,
 		)} ${BORDER}│${RESET}`,
 	);
 	lines.push(
 		`${BORDER}│${RESET} ${padAnsi(
-			`  ${WHITE}${BOLD}${outPath}${RESET}`,
+			`  ${WHITE}${outPath}${RESET}`,
 			innerWidth,
 		)} ${BORDER}│${RESET}`,
 	);

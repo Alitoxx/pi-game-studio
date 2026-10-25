@@ -8,7 +8,6 @@ import { readProducerState } from "./studio-start.ts";
 
 import {
 	RESET,
-	BOLD,
 	DIM,
 	GREEN,
 	YELLOW,
@@ -154,7 +153,7 @@ export function renderTasksWidgetCard(
 			titleColor = `${DIM}${GRAY}`;
 		} else if (task.status === "in_progress") {
 			icon = `${YELLOW}◐${RESET}`;
-			titleColor = `${BOLD}${WHITE}`;
+			titleColor = `${WHITE}`;
 		}
 
 		let rowText = `${icon} ${titleColor}${task.title}${RESET}`;

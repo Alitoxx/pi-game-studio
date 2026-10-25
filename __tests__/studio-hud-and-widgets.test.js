@@ -171,7 +171,7 @@ describe("Studio HUD and Live Tasks Widget", () => {
 		function renderStatusCard(gameTitle, engine, collapsed, width = 50) {
 			const cardWidth = Math.min(Math.max(width - 4, 46), 56);
 			if (collapsed) {
-				const rawTitle = `◈ System · ${gameTitle} (${engine}) [collapsed]`;
+				const rawTitle = `System · ${gameTitle} (${engine}) [collapsed]`;
 				const maxTitleLen = Math.max(10, cardWidth - 7);
 				const displayTitle = rawTitle.length > maxTitleLen ? rawTitle.slice(0, maxTitleLen - 1) + "…" : rawTitle;
 				const ruleLen = Math.max(0, cardWidth - displayTitle.length - 5);
@@ -180,8 +180,10 @@ describe("Studio HUD and Live Tasks Widget", () => {
 					`  ╰${"─".repeat(cardWidth - 2)}╯`,
 				];
 			}
+			const expandedTitle = `System`;
+			const expandedRule = Math.max(0, cardWidth - expandedTitle.length - 5);
 			return [
-				`  ╭─ ◈ System ${"─".repeat(cardWidth - 13)}╮`,
+				`  ╭─ ${expandedTitle} ${"─".repeat(expandedRule)}╮`,
 				`  │ Project: ${gameTitle} │`,
 				`  ╰${"─".repeat(cardWidth - 2)}╯`,
 			];
@@ -189,7 +191,7 @@ describe("Studio HUD and Live Tasks Widget", () => {
 
 		const collapsedOutput = renderStatusCard("Super Game", "Godot 4", true, 74);
 		expect(collapsedOutput.length).toBe(2);
-		expect(collapsedOutput[0]).toContain("◈ System · Super Game (Godot 4) [collapsed]");
+		expect(collapsedOutput[0]).toContain("System · Super Game (Godot 4) [collapsed]");
 		expect(collapsedOutput[0].startsWith("  ╭─")).toBe(true);
 		expect(collapsedOutput[0].endsWith("╮")).toBe(true);
 		expect(collapsedOutput[1].startsWith("  ╰")).toBe(true);
@@ -311,5 +313,15 @@ describe("Studio HUD and Live Tasks Widget", () => {
 		expect(statusSrc).toContain('trimmed === "collapse" || trimmed.startsWith("collapse")');
 		expect(statusSrc).toContain("setStatusCardCollapsed");
 		expect(statusSrc).toContain("updateStudioHUD");
+	});
+
+	test("the status card fixture mirrors the real renderer instead of drifting", () => {
+		const hudSource = fs.readFileSync(hudModulePath, "utf8");
+		// The local fixture above copies these two titles; if the real card
+		// changes them, the copy must change with it or it passes while lying.
+		expect(hudSource).toContain("System · ${gameTitle} (${engine}) [collapsed]");
+		expect(hudSource).toContain("const titleText = \`System\`");
+		// The real card carries no retired ornament glyph.
+		expect(hudSource).not.toMatch(/[◈▌✔●◆★▲■]/);
 	});
 });

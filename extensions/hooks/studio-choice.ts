@@ -525,8 +525,8 @@ export class StudioQuestionnaireComponent {
 			const isActive = idx === this.activeQuestion;
 
 			if (isActive) {
-				const check = isAnswered ? `${GREEN}✓ ${RESET}${ACCENT}${BOLD}` : "";
-				return `${ACCENT}${BOLD}▸ ${check}${header}${RESET}`;
+				const check = isAnswered ? `${GREEN}✓ ${RESET}${ACCENT}` : "";
+				return `${ACCENT}▸ ${check}${header}${RESET}`;
 			}
 			if (isAnswered) {
 				return `${GREEN}✓ ${RESET}${WHITE}${header}${RESET}`;
@@ -552,7 +552,7 @@ export class StudioQuestionnaireComponent {
 			const atCursor = draft[this.textCursor] || " ";
 			const afterCursor = draft.slice(this.textCursor + 1);
 
-			lines.push(`  ${SECONDARY}${BOLD}Respuesta personalizada:${RESET}`);
+			lines.push(`  ${SECONDARY}Respuesta personalizada:${RESET}`);
 			lines.push(`  ${BORDER}╭──────────────────────────────────────────────────────────╮${RESET}`);
 			lines.push(
 				`  ${BORDER}│${RESET} > ${WHITE}${beforeCursor}${RESET}\x1b[7m${atCursor}\x1b[27m${WHITE}${afterCursor}${RESET}`,
@@ -571,9 +571,9 @@ export class StudioQuestionnaireComponent {
 				this.answers[this.activeQuestion]?.answer === opt.label &&
 				!this.answers[this.activeQuestion]?.custom;
 
-			const cursorSymbol = isCursor ? `${SECONDARY}${BOLD}❯ ${RESET}` : "  ";
+			const cursorSymbol = isCursor ? `${SECONDARY}❯ ${RESET}` : "  ";
 			const titleText = isCursor
-				? `${ACCENT}${BOLD}${opt.label}${RESET}`
+				? `${ACCENT}${opt.label}${RESET}`
 				: `${WHITE}${opt.label}${RESET}`;
 			const selectedBadge = isSelected ? ` ${GREEN}✓${RESET}` : "";
 
@@ -590,9 +590,9 @@ export class StudioQuestionnaireComponent {
 			const isCustomAnswered = Boolean(this.answers[this.activeQuestion]?.custom);
 			const customAns = this.answers[this.activeQuestion]?.answer;
 
-			const cursorSymbol = isCustomCursor ? `${SECONDARY}${BOLD}❯ ${RESET}` : "  ";
+			const cursorSymbol = isCustomCursor ? `${SECONDARY}❯ ${RESET}` : "  ";
 			const labelText = isCustomCursor
-				? `${ACCENT}${BOLD}${OTHER_LABEL}${RESET}`
+				? `${ACCENT}${OTHER_LABEL}${RESET}`
 				: `${GRAY}${OTHER_LABEL}${RESET}`;
 
 			lines.push(`  ${cursorSymbol}${labelText}`);
@@ -821,7 +821,7 @@ export function registerAskUserQuestion(pi: ExtensionAPI): void {
 			const firstHeader = questions[0]?.header ? ` · ${questions[0].header}` : "";
 			const label = count > 1 ? `DECISIONES (${count})${firstHeader}` : `DECISIÓN${firstHeader}`;
 
-			const badge = fg("accent", "▌ ◈ STUDIO CHOICE");
+			const badge = fg("accent", "STUDIO CHOICE");
 			const line = `${badge} · ${bold(label)}`;
 			return new Text(line, 0, 0);
 		},
@@ -830,18 +830,18 @@ export function registerAskUserQuestion(pi: ExtensionAPI): void {
 			const bold = (text: string) => (theme?.bold ? theme.bold(text) : text);
 
 			if (options?.isPartial) {
-				return new Text(fg("accent", "▌ ◈ ESPERANDO RESPUESTA..."), 0, 0);
+				return new Text(fg("accent", "ESPERANDO RESPUESTA..."), 0, 0);
 			}
 
 			const answers = (result?.details as any)?.answers || [];
 			if (answers.length === 0) {
 				if (result?.details?.cancelled) {
-					return new Text(fg("muted", "▌ ◈ Cuestionario cancelado por el usuario"), 0, 0);
+					return new Text(fg("muted", "Cuestionario cancelado por el usuario"), 0, 0);
 				}
-				return new Text(fg("muted", "▌ ◈ Sin respuesta registrada"), 0, 0);
+				return new Text(fg("muted", "Sin respuesta registrada"), 0, 0);
 			}
 
-			const badge = fg("success", "▌ ◈ RESPUESTA CONFIRMADA");
+			const badge = fg("success", "RESPUESTA CONFIRMADA");
 			const answerLines = answers
 				.map((a: any) => `  ${fg("dim", `${a.question}`)}\n  → ${bold(a.answer)}`)
 				.join("\n");

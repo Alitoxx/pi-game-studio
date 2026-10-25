@@ -6,7 +6,7 @@ import { detectProjectEngine, formatEngineBadge } from "./engine-detector.ts";
 import { inspectSetup } from "./studio-setup.ts";
 import { readProducerState } from "./studio-start.ts";
 
-import { ACCENT as STUDIO_ACCENT, BOLD, DIM, GRAY as STUDIO_DIM, HEADING as STUDIO_HIGHLIGHT, RESET, SECONDARY as STUDIO_LABEL, WHITE as STUDIO_VALUE, YELLOW as STUDIO_GOLD, gradientEscape } from "./studio-palette.ts";
+import { BOLD, DIM, RESET, gradientEscape, resolveStudioTheme, type StudioThemeRoles } from "./studio-palette.ts";
 
 export function isArtEnabled(root: string): boolean {
 	try {
@@ -71,9 +71,11 @@ function fit(val: unknown, len: number): string {
 	return str.padEnd(len);
 }
 
-export function renderBanner(width = 80, cwd = process.cwd()): string[] {
+export function renderBanner(width = 80, cwd = process.cwd(), role?: StudioThemeRoles): string[] {
 	const lines: string[] = [];
 	const root = findStudioRoot(cwd) || cwd;
+	// Total by construction: without a theme handle the studio palette is used as-is.
+	const r = role ?? resolveStudioTheme();
 
 // Version: resolve dynamically; never hardcode a release number.
 // Order: studio repo root package.json (dev checkout), then the stamped
@@ -132,17 +134,17 @@ if (version === "dev") {
 
 	if (artOn && width >= 98) {
 		const rightLines: string[] = [
-			`${STUDIO_ACCENT}${BOLD}P I   G A M E   S T U D I O${RESET}   ${STUDIO_HIGHLIGHT}v${version}${RESET}`,
-			`${STUDIO_DIM}Autonomous Game Development Studio for Pi${RESET}`,
-			`${STUDIO_DIM}──────────────────────────────────────────────────────────${RESET}`,
-			`${STUDIO_LABEL}${fit("GIT:", 11)}${RESET}${STUDIO_VALUE}On branch ${gitBranch}${RESET}`,
-			`${STUDIO_LABEL}${fit("PATH:", 11)}${RESET}${STUDIO_VALUE}${shortPath}${RESET}`,
-			`${STUDIO_LABEL}${fit("ENGINE:", 11)}${RESET}${STUDIO_VALUE}${engineInfo}${RESET}`,
-			`${STUDIO_LABEL}${fit("AGENTS:", 11)}${RESET}${STUDIO_VALUE}${setup.agentsInstalled} activos (Directors, Leads, Devs)${RESET}`,
-			`${STUDIO_LABEL}${fit("STAGE:", 11)}${RESET}${STUDIO_VALUE}${stage}${RESET}`,
-			`${STUDIO_LABEL}${fit("SKILLS:", 11)}${RESET}${STUDIO_VALUE}6 ODD pipeline (/concept, /spec, /arch, /code, /test, /ship)${RESET}`,
-			`${STUDIO_LABEL}${fit("STORAGE:", 11)}${RESET}${STUDIO_VALUE}${engramStatus} (Persistent Memory)${RESET}`,
-			`${STUDIO_GOLD}${fit("TIPS:", 11)}${RESET}${STUDIO_DIM}/concept · /spec · /code · /studio · /studio:setup${RESET}`,
+			`${r.accent(BOLD + "P I   G A M E   S T U D I O")}${RESET}   ${r.text("v" + version)}${RESET}`,
+			`${r.muted("Autonomous Game Development Studio for Pi")}${RESET}`,
+			`${r.muted("──────────────────────────────────────────────────────────")}${RESET}`,
+			`${r.muted(fit("GIT:", 11))}${RESET}${r.text(`On branch ${gitBranch}`)}${RESET}`,
+			`${r.muted(fit("PATH:", 11))}${RESET}${r.text(shortPath)}${RESET}`,
+			`${r.muted(fit("ENGINE:", 11))}${RESET}${r.text(engineInfo)}${RESET}`,
+			`${r.muted(fit("AGENTS:", 11))}${RESET}${r.text(`${setup.agentsInstalled} activos (Directors, Leads, Devs)`)}${RESET}`,
+			`${r.muted(fit("STAGE:", 11))}${RESET}${r.text(stage)}${RESET}`,
+			`${r.muted(fit("SKILLS:", 11))}${RESET}${r.text("6 ODD pipeline (/concept, /spec, /arch, /code, /test, /ship)")}${RESET}`,
+			`${r.muted(fit("STORAGE:", 11))}${RESET}${r.text(`${engramStatus} (Persistent Memory)`)}${RESET}`,
+			`${r.warn(fit("TIPS:", 11))}${RESET}${r.muted("/concept · /spec · /code · /studio · /studio:setup")}${RESET}`,
 		];
 
 		const padStr = "  "; // Clean 2-space left margin, aligned with CLI
@@ -162,7 +164,7 @@ if (version === "dev") {
 
 		const titleRaw = `PI GAME STUDIO · v${version} · 8+1 agents / 6 ODD skills`;
 		const titlePad = Math.max(0, Math.floor((width - titleRaw.length) / 2));
-		lines.push(" ".repeat(titlePad) + `${STUDIO_ACCENT}${BOLD}PI GAME STUDIO${RESET} ${STUDIO_DIM}·${RESET} ${STUDIO_HIGHLIGHT}v${version}${RESET} ${STUDIO_DIM}· 8+1 agents / 6 ODD skills${RESET}`);
+		lines.push(" ".repeat(titlePad) + `${r.accent(BOLD + "PI GAME STUDIO")}${RESET} ${r.muted("·")} ${r.text("v" + version)}${RESET} ${r.muted("· 8+1 agents / 6 ODD skills")}${RESET}`);
 		lines.push("");
 
 		const lW = 10;
@@ -170,7 +172,7 @@ if (version === "dev") {
 		const narrowPad = Math.max(0, Math.floor((width - (lW + vW + 1)) / 2));
 		const padStr = " ".repeat(narrowPad);
 		const addNarrow = (label: string, value: string) => {
-			lines.push(`${padStr}${STUDIO_LABEL}${fit(label, lW)}${RESET} ${STUDIO_VALUE}${fit(value, vW)}${RESET}`);
+			lines.push(`${padStr}${r.muted(fit(label, lW))}${RESET} ${r.text(fit(value, vW))}${RESET}`);
 		};
 		addNarrow("GIT:", `On branch ${gitBranch}`);
 		addNarrow("PATH:", shortPath);
@@ -178,12 +180,12 @@ if (version === "dev") {
 		addNarrow("AGENTS:", `${setup.agentsInstalled} activos (8 Core + 1 Motor)`);
 		addNarrow("STAGE:", stage);
 		addNarrow("STORAGE:", engramStatus);
-		lines.push(`${padStr}${STUDIO_GOLD}${fit("TIPS:", lW)}${RESET} ${STUDIO_DIM}/concept · /spec · /code · /studio · /studio:setup${RESET}`);
+		lines.push(`${padStr}${r.warn(fit("TIPS:", lW))}${RESET} ${r.muted("/concept · /spec · /code · /studio · /studio:setup")}${RESET}`);
 	} else {
 		// Clean centered compact table
 		const titleRaw = `PI GAME STUDIO · v${version} · 8+1 agents / 6 ODD skills`;
 		const titlePad = Math.max(0, Math.floor((width - titleRaw.length) / 2));
-		lines.push(" ".repeat(titlePad) + `${STUDIO_ACCENT}${BOLD}PI GAME STUDIO${RESET} ${STUDIO_DIM}·${RESET} ${STUDIO_HIGHLIGHT}v${version}${RESET} ${STUDIO_DIM}· 8+1 agents / 6 ODD skills${RESET}`);
+		lines.push(" ".repeat(titlePad) + `${r.accent(BOLD + "PI GAME STUDIO")}${RESET} ${r.muted("·")} ${r.text("v" + version)}${RESET} ${r.muted("· 8+1 agents / 6 ODD skills")}${RESET}`);
 		lines.push("");
 
 		const lW = 10;
@@ -191,7 +193,7 @@ if (version === "dev") {
 		const narrowPad = Math.max(0, Math.floor((width - (lW + vW + 1)) / 2));
 		const padStr = " ".repeat(narrowPad);
 		const addNarrow = (label: string, value: string) => {
-			lines.push(`${padStr}${STUDIO_LABEL}${fit(label, lW)}${RESET} ${STUDIO_VALUE}${fit(value, vW)}${RESET}`);
+			lines.push(`${padStr}${r.muted(fit(label, lW))}${RESET} ${r.text(fit(value, vW))}${RESET}`);
 		};
 		addNarrow("GIT:", `On branch ${gitBranch}`);
 		addNarrow("PATH:", shortPath);
@@ -199,7 +201,7 @@ if (version === "dev") {
 		addNarrow("AGENTS:", `${setup.agentsInstalled} activos (8 Core + 1 Motor)`);
 		addNarrow("STAGE:", stage);
 		addNarrow("STORAGE:", engramStatus);
-		lines.push(`${padStr}${STUDIO_GOLD}${fit("TIPS:", lW)}${RESET} ${STUDIO_DIM}/concept · /spec · /code · /studio · /studio:setup${RESET}`);
+		lines.push(`${padStr}${r.warn(fit("TIPS:", lW))}${RESET} ${r.muted("/concept · /spec · /code · /studio · /studio:setup")}${RESET}`);
 	}
 
 	lines.push("");

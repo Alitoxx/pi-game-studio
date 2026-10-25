@@ -118,6 +118,8 @@ import {
 	BORDER,
 	truncateAnsi,
 	padAnsi,
+	resolveStudioTheme,
+	type StudioThemeRoles,
 } from "./studio-palette.ts";
 
 export interface ContextUsageInfo {
@@ -204,7 +206,10 @@ export function renderStudioStatusCard(
 	studioRoot: string,
 	width: number = 74,
 	collapsed?: boolean,
+	role?: StudioThemeRoles,
 ): string[] {
+	// Total by construction: without a theme handle the studio palette is used as-is.
+	const r = role ?? resolveStudioTheme();
 	const setup = inspectSetup(studioRoot);
 	const { state: prodState } = readProducerState(studioRoot);
 
@@ -222,7 +227,7 @@ export function renderStudioStatusCard(
 		const rawTitle = `System · ${gameTitle} (${engine}) [collapsed]`;
 		const maxTitleLen = Math.max(10, cardWidth - 7);
 		const displayTitle = rawTitle.length > maxTitleLen ? truncateAnsi(rawTitle, maxTitleLen) : rawTitle;
-		const titleStyled = `${BLUE}${BOLD}${displayTitle}${RESET}`;
+		const titleStyled = `${r.accent(BOLD + displayTitle)}${RESET}`;
 		const titleVisibleLen = displayTitle.replace(/\x1b\[[0-9;]*m/g, "").length;
 		const ruleLen = Math.max(0, cardWidth - titleVisibleLen - 5);
 		const lines: string[] = [];
@@ -232,22 +237,22 @@ export function renderStudioStatusCard(
 	}
 
 	const engramStr = setup.engramEnabled === true
-		? `${GREEN}✓ conectado${RESET}`
-		: `${GRAY}local Git${RESET}`;
+		? `${r.success("✓ conectado")}`
+		: `${r.muted("local Git")}`;
 
 	const lines: string[] = [];
 	const titleText = `System`;
-	const titleStyled = `${BLUE}${BOLD}${titleText}${RESET}`;
+	const titleStyled = `${r.accent(BOLD + titleText)}${RESET}`;
 	const ruleLen = Math.max(0, cardWidth - titleText.length - 5);
 	lines.push(`  ${BORDER}╭─${RESET} ${titleStyled} ${BORDER}${"─".repeat(ruleLen)}╮${RESET}`);
 
 	// Direct Project & Engine rows
 	const shortRoot = studioRoot.replace(process.env.HOME || "", "~");
-	const projectLine = truncateAnsi(`  ${WHITE}${gameTitle}${RESET} ${GRAY}(${shortRoot})${RESET}`, innerWidth);
+	const projectLine = truncateAnsi(`  ${r.text(gameTitle)}${RESET} ${r.muted(`(${shortRoot})`)}${RESET}`, innerWidth);
 	lines.push(`  ${BORDER}│${RESET} ${padAnsi(projectLine, innerWidth)} ${BORDER}│${RESET}`);
-	const engineLine = truncateAnsi(`  ${GRAY}Engine${RESET} ${BLUE}${engine}${RESET} ${GRAY}·${RESET} ${GRAY}Hito${RESET} ${WHITE}${milestone}${RESET}`, innerWidth);
+	const engineLine = truncateAnsi(`  ${r.muted("Engine")}${RESET} ${r.accent(engine)}${RESET} ${r.muted("·")}${RESET} ${r.muted("Hito")}${RESET} ${r.text(milestone)}${RESET}`, innerWidth);
 	lines.push(`  ${BORDER}│${RESET} ${padAnsi(engineLine, innerWidth)} ${BORDER}│${RESET}`);
-	const memLine = truncateAnsi(`  ${GRAY}Memory${RESET} · ${engramStr}`, innerWidth);
+	const memLine = truncateAnsi(`  ${r.muted("Memory")}${RESET} · ${engramStr}`, innerWidth);
 	lines.push(`  ${BORDER}│${RESET} ${padAnsi(memLine, innerWidth)} ${BORDER}│${RESET}`);
 
 	lines.push(`  ${BORDER}╰${"─".repeat(cardWidth - 2)}╯${RESET}`);
@@ -259,7 +264,10 @@ export function renderStudioFooterBar(
 	ctx: ExtensionContext,
 	width: number = 80,
 	footerData?: any,
+	role?: StudioThemeRoles,
 ): string {
+	// Total by construction: without a theme handle the studio palette is used as-is.
+	const r = role ?? resolveStudioTheme();
 	const studioRoot = (ctx && ctx.cwd) ? (findStudioRoot(ctx.cwd) || ctx.cwd) : process.cwd();
 	const setup = inspectSetup(studioRoot);
 	const { state: prodState } = readProducerState(studioRoot);
@@ -275,12 +283,12 @@ export function renderStudioFooterBar(
 	const gaugeLen = width < 60 ? 4 : 5;
 	const contextDisplay = usage
 		? `${renderContextGauge(usage.percent, gaugeLen)} ${getGaugeColor(usage.percent)}${usage.percent}%${RESET}`
-		: `${GREEN}100%${RESET}`;
+		: `${r.success("100%")}`;
 
 	const parts: string[] = [];
-	parts.push(`▎ ${BLUE}${engineDisplay}${RESET}`);
+	parts.push(`▎ ${r.accent(engineDisplay)}${RESET}`);
 	if (width >= 50) {
-		parts.push(`${WHITE}${modelStr}${RESET}`);
+		parts.push(`${r.text(modelStr)}${RESET}`);
 	}
 	parts.push(contextDisplay);
 
@@ -289,8 +297,8 @@ export function renderStudioFooterBar(
 		const { getActivePerfMetrics } = require("./studio-profile.ts");
 		const perf = getActivePerfMetrics?.();
 		if (perf && width >= 70) {
-			const perfCol = perf.status === "OK" ? GREEN : YELLOW;
-			parts.push(`${perfCol}⚡ ${perf.fps}fps${RESET}`);
+			const perfLine = `⚡ ${perf.fps}fps`;
+			parts.push(perf.status === "OK" ? r.success(perfLine) : r.warn(perfLine));
 		}
 	} catch {}
 
@@ -307,7 +315,8 @@ export function installStudioFooter(pi: ExtensionAPI, ctx: ExtensionContext): vo
 	}
 
 	try {
-		(ctx.ui as any).setFooter((tui: any, _theme: any, footerData: any) => {
+		(ctx.ui as any).setFooter((tui: any, theme: any, footerData: any) => {
+			const role = resolveStudioTheme(theme);
 			let uninstallSidebar: (() => void) | undefined;
 			if (tui && tui.terminal) {
 				try {
@@ -323,7 +332,7 @@ export function installStudioFooter(pi: ExtensionAPI, ctx: ExtensionContext): vo
 					if (!isStudioSidebarActive(tui)) {
 						try {
 							const tasks = studioAgentsRunner.listTasks();
-							const widgetLines = renderSubagentsWidgetCard(tasks, width);
+							const widgetLines = renderSubagentsWidgetCard(tasks, width, role);
 							if (widgetLines.length > 0) {
 								lines.push(...widgetLines);
 								lines.push(""); // Separador visual sobrio
@@ -331,7 +340,7 @@ export function installStudioFooter(pi: ExtensionAPI, ctx: ExtensionContext): vo
 						} catch {}
 					}
 
-					const barLine = renderStudioFooterBar(pi, ctx, width, footerData);
+					const barLine = renderStudioFooterBar(pi, ctx, width, footerData, role);
 					lines.push(barLine);
 					return lines;
 				},

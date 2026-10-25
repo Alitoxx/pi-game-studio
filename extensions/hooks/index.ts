@@ -1,4 +1,4 @@
-import { YELLOW } from "./studio-palette.ts";
+import { YELLOW, resolveStudioTheme } from "./studio-palette.ts";
 import type {
 	ExtensionAPI,
 	ExtensionContext,
@@ -368,12 +368,15 @@ export default function (pi: ExtensionAPI) {
 			const current = isArtEnabled(root);
 			setArtEnabled(root, !current);
 			const newState = !current ? "activada" : "desactivada";
-			ctx.ui?.setHeader?.((_tui: any, _theme: any) => ({
-				render(width: number) {
-					return renderBanner(width, ctx.cwd);
-				},
-				invalidate() {},
-			}));
+			ctx.ui?.setHeader?.((_tui: any, theme: any) => {
+				const role = resolveStudioTheme(theme);
+				return {
+					render(width: number) {
+						return renderBanner(width, ctx.cwd, role);
+					},
+					invalidate() {},
+				};
+			});
 			ctx.ui?.notify?.(`Ilustración de Gamepad ${newState}.`, "info");
 		},
 	});
@@ -386,12 +389,15 @@ export default function (pi: ExtensionAPI) {
 			const current = isArtEnabled(root);
 			setArtEnabled(root, !current);
 			const newState = !current ? "activada" : "desactivada";
-			ctx.ui?.setHeader?.((_tui: any, _theme: any) => ({
-				render(width: number) {
-					return renderBanner(width, ctx.cwd);
-				},
-				invalidate() {},
-			}));
+			ctx.ui?.setHeader?.((_tui: any, theme: any) => {
+				const role = resolveStudioTheme(theme);
+				return {
+					render(width: number) {
+						return renderBanner(width, ctx.cwd, role);
+					},
+					invalidate() {},
+				};
+			});
 			ctx.ui?.notify?.(`Ilustración de Gamepad ${newState}.`, "info");
 		},
 	});
@@ -1051,12 +1057,15 @@ export default function (pi: ExtensionAPI) {
 			if ((ctx as any).hasUI && (ctx as any).ui?.setHeader) {
 				setTimeout(() => {
 					try {
-						(ctx as any).ui?.setHeader?.((_tui: any, _theme: any) => ({
-							render(width: number) {
-								return renderBanner(width, studioRoot);
-							},
-							invalidate() {},
-						}));
+						(ctx as any).ui?.setHeader?.((_tui: any, theme: any) => {
+							const role = resolveStudioTheme(theme);
+							return {
+								render(width: number) {
+									return renderBanner(width, studioRoot, role);
+								},
+								invalidate() {},
+							};
+						});
 					} catch {}
 				}, 50);
 			}

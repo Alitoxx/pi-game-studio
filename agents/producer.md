@@ -200,6 +200,8 @@ When dispatching implementation or verification tasks to specialists via `subage
    Keep orchestration strictly in the parent session. Child subagents receive concrete atomic work (~400 lines) and must never recursively spawn further subagents.
 5. **Post-Return State Synchronization**:
    Specialist file modifications under `src/` and child subagent executions do not automatically update production state. Upon receiving a subagent's Return Contract, the Producer MUST immediately update `production/roadmap.md` (`<!-- PRODUCER_STATE -->` and task checkboxes) and announce the next concrete step.
+6. **Spot Check Before Delivery**:
+   The return contract validates the shape of evidence, never its truth: a specialist can write a result it never observed. Before reporting a delivery as complete, re-run one command the specialist reported in `validation` and compare it with the claimed result. A mismatch, or a command you cannot re-run, means the delivery is not verified: report it as `partial` and say what you re-ran. For a bash-less specialist, re-read one property it named under `structural:` instead.
 
 ### Market Intelligence & Commercial Governance (Steam Strategy)
 

@@ -1,3 +1,4 @@
+import { recordFailure } from "./studio-diagnostics.ts";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
@@ -66,7 +67,9 @@ export function recordFlowCompletion(cwd: string, receipt: FlowCompletionReceipt
 				content = newBlock + "\n\n" + content;
 			}
 			writeFileSync(roadmapPath, content, "utf8");
-		} catch {}
+		} catch (error) {
+			recordFailure("roadmap.write", error);
+		}
 	} else {
 		const initialRoadmap = [
 			`# Roadmap de Producción — ${gameTitle}`,

@@ -1,3 +1,4 @@
+import { recordFailure } from "./studio-diagnostics.ts";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -141,7 +142,9 @@ export function createLiveSpec(
 					"",
 				].join("\n");
 				writeFileSync(roadmapPath, current + sprintBlock, "utf8");
-			} catch {}
+			} catch (error) {
+				recordFailure("roadmap.write", error);
+			}
 		}
 
 		return { success: true, filePath };

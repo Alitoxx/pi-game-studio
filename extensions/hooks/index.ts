@@ -34,6 +34,7 @@ import { registerStudioSubagentTools } from "./studio-subagents.ts";
 import { formatStudioToolDiagnostics } from "./studio-tool-registry.ts";
 import { registerAskUserQuestion } from "./studio-choice.ts";
 import { studioAgentsRunner } from "./studio-agents-runner.ts";
+import { recordFailure } from "./studio-diagnostics.ts";
 import {
 	playSuccessChime,
 	playAlertChime,
@@ -102,6 +103,15 @@ export default function (pi: ExtensionAPI) {
 	(pi as any).on?.("agent_abort", (_event: any, ctx: any) => {
 		doubleEscapeGuard.handleEscape(ctx);
 		studioAgentsRunner.cancelAll("Agente abortado por el usuario (Escape)");
+	});
+
+	// Closing Pi normally is not an abort: without this hook a running specialist
+	// outlives the session that started it.
+	(pi as any).on?.("session_shutdown", () => {
+		const cancelled = studioAgentsRunner.cancelAll("Sesión del estudio cerrada");
+		if (cancelled > 0) {
+			console.log(`[studio] ${cancelled} especialista(s) cancelados al cerrar la sesión.`);
+		}
 	});
 
 	// ──────────────────────────────────────────────

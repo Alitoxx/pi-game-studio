@@ -50,6 +50,24 @@ process.stdin.on("data", (chunk) => {
 		return;
 	}
 
+	// FAKE_SPAWN_GRANDCHILD models a specialist that launches a build tool: the
+	// grandchild survives a plain SIGTERM to the direct child, so the runner must
+	// signal the whole process group.
+	if (process.env.FAKE_SPAWN_GRANDCHILD) {
+		const { spawn } = require("node:child_process");
+		const grandchild = spawn(process.execPath, ["-e", "setTimeout(() => {}, 60000)"], {
+			stdio: "ignore",
+		});
+		if (process.env.FAKE_GRANDCHILD_PID_FILE) {
+			require("node:fs").writeFileSync(process.env.FAKE_GRANDCHILD_PID_FILE, String(grandchild.pid));
+		}
+		emit({
+			type: "message_update",
+			assistantMessageEvent: { type: "text_delta", delta: `GRANDCHILD_PID=${grandchild.pid}` },
+		});
+		return; // stays alive: only cancellation can end this run
+	}
+
 	emit({
 		type: "message_update",
 		assistantMessageEvent: { type: "text_delta", delta: receipt },

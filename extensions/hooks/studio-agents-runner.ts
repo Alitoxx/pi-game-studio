@@ -2,6 +2,7 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { AgentManifest } from "./studio-agent-loader.ts";
+import { validateSpecialistReturn } from "./return-contract.ts";
 
 export interface TaskRecord {
 	id: string;
@@ -215,8 +216,8 @@ export class StudioAgentsRunner {
 				`\`\`\``,
 			].join("\n");
 
-			// Resolver binario de Pi
-			const piExecutable = process.execPath.includes("pi") ? process.execPath : "pi";
+			// Resolver binario de Pi (PI_PATH permite entornos aislados y tests herméticos)
+			const piExecutable = process.env.PI_PATH || (process.execPath.includes("pi") ? process.execPath : "pi");
 			
 			// Preparar flags de Pi en modo RPC bidireccional (idéntico a Gentle Shell)
 			const args: string[] = [
@@ -559,9 +560,22 @@ export class StudioAgentsRunner {
 				}
 
 				if (code === 0 || (agentSettled && code === null)) {
-					record.status = "completed";
-					record.result = resultText.trim() || "(el especialista no produjo salida)";
-					record.latestActivity = "Completado exitosamente";
+					const delivery = resultText.trim();
+					const contract = validateSpecialistReturn(delivery);
+
+					if (!contract.isValid) {
+						// El contrato de retorno es la puerta del Zero Bleed: una entrega que no
+						// lo cumple no se marca completada, se reporta como fallo con sus razones.
+						record.status = "failed";
+						record.error = `Return contract violation: ${contract.errors.join(" ")}`;
+						record.result = delivery || null;
+						record.latestActivity = "Contrato de retorno inválido";
+						record.logs.push(`        contract: ${contract.errors.length} violación(es)`);
+					} else {
+						record.status = "completed";
+						record.result = delivery || "(el especialista no produjo salida)";
+						record.latestActivity = "Completado exitosamente";
+					}
 				} else {
 					record.status = "failed";
 					record.error = stderr.trim() || `Subagent process exited with code ${code}`;

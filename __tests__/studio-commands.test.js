@@ -414,15 +414,43 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 		expect(source).toContain("ALERTA DRIFT");
 	});
 
-	test("return-contract exposes validator and detects conversational bleed", () => {
-		const source = fs.readFileSync(
-			path.join(__dirname, "..", "extensions", "hooks", "return-contract.ts"),
-			"utf8",
-		);
-		expect(source).toContain("export function validateSpecialistReturn");
-		expect(source).toContain("status:");
-		expect(source).toContain("summary:");
-		expect(source).toContain("FORBIDDEN_CONVERSATIONAL_PHRASES");
+	test("return-contract validator enforces schema, status enum and completion evidence", () => {
+		const script = `
+			const { validateSpecialistReturn } = await import("./extensions/hooks/return-contract.ts");
+
+			const valid = [
+				"status: completed",
+				"summary: Movimiento base implementado",
+				"files_changed:",
+				"  - src/player.rs",
+				"validation:",
+				"  - cargo test -p game",
+			].join("\\n");
+			const res = validateSpecialistReturn(valid);
+			if (!res.isValid) throw new Error("valid contract rejected: " + res.errors.join(" | "));
+			if (res.parsed?.status !== "completed") throw new Error("status not parsed");
+			if (!res.parsed?.files_changed?.includes("src/player.rs")) throw new Error("files_changed not parsed");
+
+			const noStatus = validateSpecialistReturn("summary: hice cosas");
+			if (noStatus.isValid) throw new Error("missing status accepted");
+			if (!noStatus.errors.some((e) => e.includes("status"))) throw new Error("missing status error not reported");
+
+			const badStatus = validateSpecialistReturn("status: done\\nsummary: ok");
+			if (badStatus.isValid) throw new Error("invalid status enum accepted");
+
+			const noEvidence = validateSpecialistReturn("status: completed\\nsummary: quedo lindo");
+			if (noEvidence.isValid) throw new Error("completed without observable evidence accepted");
+			if (!noEvidence.errors.some((e) => e.includes("evidencia"))) throw new Error("missing evidence error not reported");
+
+			const partialNoEvidence = validateSpecialistReturn("status: partial\\nsummary: avance parcial");
+			if (!partialNoEvidence.isValid) throw new Error("partial without evidence should stay valid");
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+			});
+		}).not.toThrow();
 	});
 
 	test("studio-tasks exposes task inspector and stale detector", () => {

@@ -117,3 +117,69 @@ describe("Studio Subagents & Isolated Execution Engine", () => {
 		expect(viewerSource).toContain('"end"');
 	});
 });
+
+describe("Runner enforces the specialist return contract", () => {
+	const repoRoot = path.join(__dirname, "..");
+
+	test("contract violation fails the task and preserves the raw report", () => {
+		const script = `
+			const fs = await import("node:fs");
+			const os = await import("node:os");
+			const path = await import("node:path");
+
+			const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "studio-runner-"));
+			const fakePi = path.join(tmp, "pi");
+			fs.copyFileSync("__tests__/fixtures/fake-pi-rpc.mjs", fakePi);
+			fs.chmodSync(fakePi, 0o755);
+
+			const previousPiPath = process.env.PI_PATH;
+			process.env.PI_PATH = fakePi;
+
+			const { studioAgentsRunner } = await import("./extensions/hooks/studio-agents-runner.ts");
+			const manifest = {
+				name: "gameplay-programmer",
+				title: "Gameplay Programmer",
+				tier: "leads",
+				model: "inherit",
+				tools: ["read"],
+				systemPrompt: "test",
+			};
+			const task = "Implementa el movimiento base.\\n\\n## Allowed edit surfaces\\n- src/";
+
+			process.env.FAKE_RECEIPT = ["status: completed", "summary: Todo listo"].join("\\n");
+			const bad = await studioAgentsRunner.run(manifest, task, tmp, "task");
+			if (bad.status !== "failed") {
+				throw new Error("contract violation should fail the task, got status: " + bad.status);
+			}
+			if (!/contrato|contract/i.test(bad.error || "")) {
+				throw new Error("failure must name the contract violation, got: " + bad.error);
+			}
+			if (!(bad.result || "").includes("summary: Todo listo")) {
+				throw new Error("raw specialist report must be preserved for the Producer");
+			}
+
+			process.env.FAKE_RECEIPT = [
+				"status: completed",
+				"summary: Movimiento base implementado",
+				"files_changed:",
+				"  - src/player.rs",
+				"validation:",
+				"  - cargo test -p game",
+			].join("\\n");
+			const good = await studioAgentsRunner.run(manifest, task, tmp, "task");
+			if (good.status !== "completed") {
+				throw new Error("valid contract should complete, got: " + good.status + " / " + good.error);
+			}
+
+			if (previousPiPath === undefined) delete process.env.PI_PATH;
+			else process.env.PI_PATH = previousPiPath;
+			fs.rmSync(tmp, { recursive: true, force: true });
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: repoRoot,
+			});
+		}).not.toThrow();
+	}, 30000);
+});

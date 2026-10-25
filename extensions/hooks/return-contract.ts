@@ -88,6 +88,18 @@ export function validateSpecialistReturn(rawText: string): ReturnValidationResul
 		next_recommended_specialist: nextMatch ? nextMatch[1].trim() : undefined,
 	} : undefined;
 
+	// Un 'completed' sin evidencia observable no es una entrega verificable:
+	// el especialista debe nombrar qué archivos tocó o qué validación corrió.
+	if (parsed && parsed.status === "completed") {
+		const hasFiles = (parsed.files_changed?.length ?? 0) > 0;
+		const hasValidation = (parsed.validation?.length ?? 0) > 0;
+		if (!hasFiles && !hasValidation) {
+			errors.push(
+				"Un 'status: completed' exige evidencia observable: agregá 'validation' (comandos/tests corridos) o 'files_changed' (archivos modificados).",
+			);
+		}
+	}
+
 	return {
 		isValid: errors.length === 0,
 		hasYamlBlock: !!yamlBlockMatch || (!!statusMatch && !!summaryMatch),

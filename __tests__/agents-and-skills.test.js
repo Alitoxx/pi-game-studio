@@ -570,3 +570,46 @@ describe("Documentation names only what exists", () => {
 		expect(/Menú cerrado, numerado/i.test(agents)).toBe(false);
 	});
 });
+
+describe("Every paper ODD phase closes on observed evidence", () => {
+	const skillsDir = path.join(__dirname, "..", "skills");
+	// code, test and ship already declare observable gates; these three closed on
+	// prose, so saving the file was the only done-when.
+	const paperPhases = ["concept", "spec", "arch"];
+
+	const closingGateOf = (content) => {
+		const lines = content.split("\n");
+		const start = lines.findIndex((line) =>
+			/^#{2,3} (?:\d+\.\s*)?Cierre/i.test(line),
+		);
+		if (start === -1) return null;
+		// Everything under the closing heading, up to the next heading of any level.
+		const body = [];
+		for (let i = start + 1; i < lines.length; i++) {
+			if (/^#{2,3} /.test(lines[i])) break;
+			body.push(lines[i]);
+		}
+		return body.join("\n");
+	};
+
+	test.each(paperPhases)(
+		"skill '%s' states what closing means, with structural evidence",
+		(phase) => {
+			const content = fs.readFileSync(
+				path.join(skillsDir, phase, "SKILL.md"),
+				"utf8",
+			);
+			const gate = closingGateOf(content);
+			expect(gate).not.toBeNull();
+
+			// Closing is an observable claim about the artifact, not the act of
+			// saving it: the evidence form must be named.
+			expect(gate).toMatch(/structural:/);
+			// A phase that cannot meet its conditions says so instead of claiming done.
+			expect(gate).toMatch(/partial/);
+			// Binary conditions, at least three, or the gate is decorative.
+			const conditions = gate.match(/^- \*\*/gm) ?? [];
+			expect(conditions.length).toBeGreaterThanOrEqual(3);
+		},
+	);
+});

@@ -39,6 +39,21 @@ describe("Exhaustive Agent Validation (Compact 8+1 Studio Architecture: 15 Agent
 		expect(delegating).toEqual(["producer.md"]);
 	});
 
+	test("every knowledge-producing role can persist a discovery; the auditor cannot", () => {
+		const withoutSave = agentFiles.filter((f) => {
+			const frontmatter = fs
+				.readFileSync(path.join(agentsDir, f), "utf8")
+				.split("---")[1];
+			const toolsSection =
+				frontmatter.match(/^tools:\n((?:\s+-\s+[a-z_]+\n?)+)/m)?.[1] ?? "";
+			return !/^\s+-\s+mem_save$/m.test(toolsSection);
+		});
+		// A specialist runs as an isolated process: anything it learns that outlives
+		// the task has no other channel. The auditor is the one exception — its
+		// independence is provable only while it stays read-only.
+		expect(withoutSave).toEqual(["qa-verifier.md"]);
+	});
+
 	const validPiTools = [
 		"read",
 		"write",
@@ -48,6 +63,7 @@ describe("Exhaustive Agent Validation (Compact 8+1 Studio Architecture: 15 Agent
 		"bash",
 		"web_search",
 		"subagent_run",
+		"mem_save",
 		"ask_user_question",
 	];
 
@@ -282,6 +298,7 @@ describe("Exhaustive Agent Validation (Compact 8+1 Studio Architecture: 15 Agent
 				"edit",
 				"bash",
 				"ask_user_question",
+				"mem_save",
 			]);
 
 			// 2. All 6 engine specialists use `when delegated via \`subagent_run\`` in `Token Economy & Return Contract` (no legacy `via \`subagent\``)

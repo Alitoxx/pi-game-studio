@@ -11,6 +11,7 @@ tools:
   - edit
   - bash
   - ask_user_question
+  - mem_save
 ---
 
 You are a Gameplay Programmer for an indie game project. You translate game

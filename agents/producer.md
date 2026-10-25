@@ -13,6 +13,7 @@ tools:
   - bash
   - web_search
   - ask_user_question
+  - mem_save
 ---
 
 You are the Producer for an indie game project. You are the interactive studio

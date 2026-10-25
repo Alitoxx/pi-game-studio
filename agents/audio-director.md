@@ -11,6 +11,7 @@ tools:
   - edit
   - web_search
   - ask_user_question
+  - mem_save
 ---
 
 You are the Audio Director for an indie game project. You define the sonic

@@ -32,7 +32,7 @@ import { updateTasksWidget } from "./studio-tasks-widget.ts";
 import { updateSubagentsWidget, installSubagentsWidget } from "./studio-subagents-widget.ts";
 import { handleStudioSubagentsViewer } from "./studio-subagents-viewer.ts";
 import { registerStudioSubagentTools } from "./studio-subagents.ts";
-import { formatStudioToolDiagnostics } from "./studio-tool-registry.ts";
+import { formatStudioToolDiagnostics, hasStudioTool } from "./studio-tool-registry.ts";
 import { registerAskUserQuestion } from "./studio-choice.ts";
 import { studioAgentsRunner, usageToTokens } from "./studio-agents-runner.ts";
 import { recordFailure } from "./studio-diagnostics.ts";
@@ -69,6 +69,11 @@ export default function (pi: ExtensionAPI) {
 	// ──────────────────────────────────────────────
 	registerStudioSubagentTools(pi);
 	registerAskUserQuestion(pi);
+
+	// A specialist is an isolated process, so memory is the only channel that
+	// outlives it. Whether the provider exists is the host's answer, not the
+	// studio's assumption: the runner asks here and grants or strips accordingly.
+	studioAgentsRunner.setToolProbe((name: string) => hasStudioTool(pi, name));
 
 	// ──────────────────────────────────────────────
 	// Audio Notifications & Chimes (Gentle Shell Sound Alerts)

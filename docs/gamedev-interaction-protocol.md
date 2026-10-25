@@ -199,6 +199,15 @@ next_recommended_specialist: <especialista que debe continuar la tarea>
 
 **Evidencia obligatoria**: `files_changed` no es evidencia — nombra archivos, no verificación. Un `completed` exige `validation` con la forma que corresponda a las herramientas del agente: `<comando exacto>: <resultado observado>` si declara `bash`; `structural: <propiedad leída>: <resultado>` o `exception: <razón>` si no. Un agente que no pudo verificar devuelve `partial`. Quien recibe la entrega re-ejecuta un comando reportado antes de cerrarla, porque el validador comprueba forma, nunca verdad.
 
+### Descubrimientos durables (memoria opcional)
+
+Un especialista corre como proceso aislado: lo que aprende y no escribe, muere con él. Los 14 roles que producen conocimiento declaran `mem_save`; el verificador `qa-verifier` no lo declara, porque su independencia solo es demostrable mientras siga siendo read-only.
+
+- **Qué se guarda**: lo que el próximo especialista volvería a pagar — una API del motor que cambió, un subsistema que no se puede tocar, una restricción que el GDD omite.
+- **Qué no se guarda**: estado de tarea, resúmenes en prosa, ni el propio recibo de entrega. El Roadmap y el GDD siguen siendo la fuente de verdad del proyecto.
+- **Cuándo no hay proveedor**: el runner sondea al host antes de despachar. Si Engram no está instalado, retira `mem_save` de las herramientas del hijo, lo registra en la tarea (`memoryUnavailable`) y el prompt le indica reportar el hallazgo en `risks` o `summary`. Nunca se le pide a un hijo una herramienta que no tiene.
+- **Cuándo el host no responde**: se otorga. Pi ignora un nombre que no conoce, así que otorgar es la dirección inofensiva; retirar una capacidad que sí existe, no.
+
 ---
 
 ## 8. Flow Completion & Producer Auto-Handoff Protocol

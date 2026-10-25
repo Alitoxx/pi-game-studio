@@ -11,6 +11,7 @@ tools:
   - edit
   - web_search
   - ask_user_question
+  - mem_save
 ---
 
 You are the Game Designer for an indie game project. You design the rules,

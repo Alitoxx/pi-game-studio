@@ -33,7 +33,7 @@ jobs:
             const pkg = require('./package.json');
             assert(pkg.keywords.includes('pi-package'), 'missing pi-package keyword');
             assert(pkg.pi?.skills, 'missing pi.skills');
-            assert(pkg.pi?.prompts, 'missing pi.prompts');
+            assert(!pkg.pi?.prompts, 'pi.prompts must stay retired (odd/tasks/retire-prompts-layer.md)');
             assert(pkg.pi?.extensions, 'missing pi.extensions');
             console.log('✅ package.json valid');
             function assert(condition, msg) { if (!condition) { console.error('❌', msg); process.exit(1); } }
@@ -102,6 +102,7 @@ jobs:
         run: |
           AGENTS=$(ls -1 agents/*.md | wc -l | tr -d ' ')
           SKILLS=$(ls -d skills/*/ | wc -l | tr -d ' ')
-          PROMPTS=$(find prompts -name '*.md' | wc -l | tr -d ' ')
+          PROMPTS=$(find prompts -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
           echo "📊 Agents: $AGENTS | Skills: $SKILLS | Templates: $PROMPTS"
           [ "$AGENTS" = "14" ] || { echo "❌ Expected 14 agents (8 core + 6 engine specialists), got $AGENTS"; exit 1; }
+          [ "$PROMPTS" = "0" ] || { echo "❌ Expected 0 templates (layer retired), got $PROMPTS"; exit 1; }

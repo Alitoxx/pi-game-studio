@@ -1,3 +1,4 @@
+import { ACCENT, GRAY, SECONDARY, WHITE } from "./studio-palette.ts";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -136,13 +137,13 @@ function printGroup(
 		ctx.ui.notify(lines.join("\n"), "info");
 	} else {
 		console.log("");
-		console.log(`\x1b[1m\x1b[38;2;167;139;250m${group.name}\x1b[0m`);
-		console.log("\x1b[38;2;107;114;128m" + "─".repeat(60) + "\x1b[0m");
+		console.log(`\x1b[1m${ACCENT}${group.name}\x1b[0m`);
+		console.log("" + GRAY + "" + "─".repeat(60) + "\x1b[0m");
 
 		for (const agentName of group.agents) {
 			const agentInfo = readAgentInfo(agentName, ctx.cwd, pkgRoot);
 			console.log(
-				`  \x1b[38;2;56;189;248m\x1b[1m${agentName.padEnd(28)}\x1b[0m \x1b[38;2;243;244;246m${agentInfo.title}\x1b[0m`,
+				`  ${SECONDARY}\x1b[1m${agentName.padEnd(28)}\x1b[0m ${WHITE}${agentInfo.title}\x1b[0m`,
 			);
 		}
 		console.log("");
@@ -161,8 +162,8 @@ function printAllAgents(ctx: ExtensionContext): void {
 		ctx.ui.notify(lines.join("\n"), "info");
 	} else {
 		console.log("");
-		console.log("\x1b[1m\x1b[38;2;167;139;250mPI GAME STUDIO — DOTACIÓN DE 13 AGENTES (8+1)\x1b[0m");
-		console.log("\x1b[38;2;107;114;128m" + "─".repeat(60) + "\x1b[0m");
+		console.log("\x1b[1m" + ACCENT + "PI GAME STUDIO — DOTACIÓN DE 13 AGENTES (8+1)\x1b[0m");
+		console.log("" + GRAY + "" + "─".repeat(60) + "\x1b[0m");
 
 		for (const group of AGENT_GROUPS) {
 			printGroup(group, ctx);

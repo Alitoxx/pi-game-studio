@@ -3,17 +3,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
 import { readProducerState } from "./studio-start.ts";
-import {
-	RESET,
-	BOLD,
-	DIM,
-	GREEN,
-	YELLOW,
-	CYAN,
-	ACCENT as BLUE,
-	BORDER,
-	padAnsi,
-} from "./studio-palette.ts";
+import { ACCENT, ACCENT as BLUE, BOLD, BORDER, CYAN, DIM, GRAY, GREEN, RESET, SECONDARY, WHITE, YELLOW, padAnsi } from "./studio-palette.ts";
 
 export interface PendingTaskInfo {
 	id: string;
@@ -107,21 +97,21 @@ export async function handleStudioContinuity(
 	const next = findNextPendingTask(studioRoot);
 
 	if (!next) {
-		console.log("\n\x1b[38;2;52;211;153m✔ No hay tareas atómicas pendientes en el Live Spec ni en el roadmap.\x1b[0m");
-		console.log("El sprint actual está 100% completado. Usa \x1b[38;2;56;189;248m/studio:start\x1b[0m o \x1b[38;2;56;189;248m/studio:feature\x1b[0m para planificar la siguiente etapa.\n");
+		console.log("\n" + GREEN + "✔ No hay tareas atómicas pendientes en el Live Spec ni en el roadmap.\x1b[0m");
+		console.log("El sprint actual está 100% completado. Usa " + SECONDARY + "/studio:start\x1b[0m o " + SECONDARY + "/studio:feature\x1b[0m para planificar la siguiente etapa.\n");
 		return;
 	}
 
 	console.log("");
-	console.log("\x1b[1m\x1b[38;2;167;139;250mSITUACIÓN ACTUAL:\x1b[0m");
-	console.log(`La tarea anterior se verificó con éxito. La siguiente tarea atómica en cola es:\n\x1b[38;2;243;244;246m${next.title}\x1b[0m (en \x1b[38;2;107;114;128m${next.sourceFile}\x1b[0m).`);
+	console.log("\x1b[1m" + ACCENT + "SITUACIÓN ACTUAL:\x1b[0m");
+	console.log(`La tarea anterior se verificó con éxito. La siguiente tarea atómica en cola es:\n${WHITE}${next.title}\x1b[0m (en ${GRAY}${next.sourceFile}\x1b[0m).`);
 	console.log("");
-	console.log("\x1b[1m\x1b[38;2;167;139;250mANÁLISIS DEL DILEMA:\x1b[0m");
+	console.log("\x1b[1m" + ACCENT + "ANÁLISIS DEL DILEMA:\x1b[0m");
 	console.log("- Avanzar de inmediato: Mantener la inercia de desarrollo y delegar al especialista sin perder foco.");
 	console.log("- Inspeccionar cambios: Auditar el diff y pruebas antes de abrir la siguiente unidad.");
 	console.log("- Pausar sprint: Salvar progreso actual y retomar más tarde.");
 	console.log("");
-	console.log("\x1b[1m\x1b[38;2;167;139;250mRECOMENDACIÓN DEL LEAD:\x1b[0m");
+	console.log("\x1b[1m" + ACCENT + "RECOMENDACIÓN DEL LEAD:\x1b[0m");
 	console.log("Si la compilación y los tests de la tarea previa están limpios, avanzar directo a la siguiente tarea atómica para cerrar el feature.");
 	console.log("");
 
@@ -154,7 +144,7 @@ export async function handleStudioContinuity(
 		const chosen = typeof answer === "string" ? answer : (answer as any)?.answers?.[0]?.answer || "";
 
 		if (chosen.includes("Ejecutar tarea") || chosen === "1") {
-			console.log(`\n\x1b[38;2;52;211;153m▶ Iniciando ejecución de:\x1b[0m ${next.title}\n`);
+			console.log(`\n${GREEN}▶ Iniciando ejecución de:\x1b[0m ${next.title}\n`);
 			if (typeof (ctx as any).sendMessage === "function") {
 				(ctx as any).sendMessage(`Por favor continúa e implementa la tarea: ${next.title} (según ${next.sourceFile})`);
 			}
@@ -162,9 +152,9 @@ export async function handleStudioContinuity(
 			const { handleStudioChanges } = await import("./studio-changes.ts");
 			await handleStudioChanges("", ctx);
 		} else {
-			console.log("\n\x1b[38;2;107;114;128mSprint pausado. El progreso está registrado en roadmap.md y Live Spec.\x1b[0m\n");
+			console.log("\n" + GRAY + "Sprint pausado. El progreso está registrado en roadmap.md y Live Spec.\x1b[0m\n");
 		}
 	} catch {
-		console.log(`\n\x1b[38;2;56;189;248mPróximo paso sugerido:\x1b[0m Implementar ${next.title}\n`);
+		console.log(`\n${SECONDARY}Próximo paso sugerido:\x1b[0m Implementar ${next.title}\n`);
 	}
 }

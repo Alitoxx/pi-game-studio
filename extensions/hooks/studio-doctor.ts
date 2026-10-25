@@ -1,3 +1,4 @@
+import { ACCENT, GRAY, GREEN, RED, SECONDARY, WHITE, YELLOW } from "./studio-palette.ts";
 import { formatStudioToolDiagnostics, getStudioToolRegistrations } from "./studio-tool-registry.ts";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { execSync } from "node:child_process";
@@ -568,23 +569,23 @@ export function formatAuditReport(report: EngineAuditReport, structureAudit?: Pr
 
 	lines.push("");
 	lines.push(
-		`\x1b[1m\x1b[38;2;167;139;250m[STUDIO DOCTOR] Diagnostico de Requisitos de Motor: ${report.engine}\x1b[0m`,
+		`\x1b[1m${ACCENT}[STUDIO DOCTOR] Diagnostico de Requisitos de Motor: ${report.engine}\x1b[0m`,
 	);
-	lines.push("\x1b[38;2;107;114;128m" + "─".repeat(70) + "\x1b[0m");
+	lines.push("" + GRAY + "" + "─".repeat(70) + "\x1b[0m");
 
 	for (const check of report.checks) {
 		const symbol = check.satisfied
-			? "\x1b[38;2;52;211;153m[OK]\x1b[0m"
+			? "" + GREEN + "[OK]\x1b[0m"
 			: check.required
-			? "\x1b[38;2;239;68;68m[FAIL]\x1b[0m"
-			: "\x1b[38;2;251;191;36m[INFO]\x1b[0m";
+			? "" + RED + "[FAIL]\x1b[0m"
+			: "" + YELLOW + "[INFO]\x1b[0m";
 
 		const namePadded = check.name.padEnd(42);
 		const statusText = check.satisfied
-			? `\x1b[38;2;52;211;153mOK\x1b[0m (${check.details})`
+			? `${GREEN}OK\x1b[0m (${check.details})`
 			: check.required
-			? `\x1b[38;2;239;68;68mFALTA\x1b[0m (${check.details})`
-			: `\x1b[38;2;251;191;36mOPCIONAL\x1b[0m (${check.details})`;
+			? `${RED}FALTA\x1b[0m (${check.details})`
+			: `${YELLOW}OPCIONAL\x1b[0m (${check.details})`;
 
 		lines.push(`  ${symbol} ${namePadded} ${statusText}`);
 
@@ -595,47 +596,47 @@ export function formatAuditReport(report: EngineAuditReport, structureAudit?: Pr
 					: process.platform === "win32"
 					? check.installHelp.windows
 					: check.installHelp.linux;
-			lines.push(`     \x1b[38;2;243;244;246m-> Para instalar: \x1b[38;2;56;189;248m${platformHelp}\x1b[0m`);
+			lines.push(`     ${WHITE}-> Para instalar: ${SECONDARY}${platformHelp}\x1b[0m`);
 		}
 	}
 
 	if (report.versionAudit) {
 		lines.push("");
 		lines.push(
-			`  \x1b[1m\x1b[38;2;56;189;248m[VERSION] Auditoria de Version y Base de Conocimiento:\x1b[0m`,
+			`  \x1b[1m${SECONDARY}[VERSION] Auditoria de Version y Base de Conocimiento:\x1b[0m`,
 		);
 		const va = report.versionAudit;
 		const sym = va.status === "ok"
-			? "\x1b[38;2;52;211;153m[OK]\x1b[0m"
+			? "" + GREEN + "[OK]\x1b[0m"
 			: va.status === "warning"
-			? "\x1b[38;2;239;68;68m[WARN]\x1b[0m"
-			: "\x1b[38;2;251;191;36m[INFO]\x1b[0m";
+			? "" + RED + "[WARN]\x1b[0m"
+			: "" + YELLOW + "[INFO]\x1b[0m";
 
 		lines.push(`     ${sym} ${va.summary}`);
 		if (va.referenceVersion) {
-			lines.push(`       \x1b[38;2;107;114;128mBase local de referencia: ${va.referenceVersion}\x1b[0m`);
+			lines.push(`       ${GRAY}Base local de referencia: ${va.referenceVersion}\x1b[0m`);
 		}
 		if (va.advice) {
-			lines.push(`       \x1b[38;2;251;191;36m* Recomendacion: ${va.advice}\x1b[0m`);
+			lines.push(`       ${YELLOW}* Recomendacion: ${va.advice}\x1b[0m`);
 		}
 	}
 
 	if (structureAudit) {
 		lines.push("");
 		lines.push(
-			`  \x1b[1m\x1b[38;2;56;189;248m[STRUCTURE] Integridad del Proyecto ODD:\x1b[0m`,
+			`  \x1b[1m${SECONDARY}[STRUCTURE] Integridad del Proyecto ODD:\x1b[0m`,
 		);
 		for (const check of structureAudit.checks) {
 			const sym = check.satisfied
-				? "\x1b[38;2;52;211;153m[OK]\x1b[0m"
+				? "" + GREEN + "[OK]\x1b[0m"
 				: check.required
-				? "\x1b[38;2;239;68;68m[FAIL]\x1b[0m"
-				: "\x1b[38;2;251;191;36m[INFO]\x1b[0m";
+				? "" + RED + "[FAIL]\x1b[0m"
+				: "" + YELLOW + "[INFO]\x1b[0m";
 			lines.push(`     ${sym} ${check.name.padEnd(42)} ${check.details}`);
 		}
 		if (structureAudit.assetStats && structureAudit.assetStats.placeholders > 0) {
 			lines.push(
-				`       \x1b[38;2;251;191;36m* Hay ${structureAudit.assetStats.placeholders} placeholders pendientes de reemplazo por assets finales.\x1b[0m`,
+				`       ${YELLOW}* Hay ${structureAudit.assetStats.placeholders} placeholders pendientes de reemplazo por assets finales.\x1b[0m`,
 			);
 		}
 	}
@@ -643,11 +644,11 @@ export function formatAuditReport(report: EngineAuditReport, structureAudit?: Pr
 	lines.push("");
 	if (isReady) {
 		lines.push(
-			`\x1b[38;2;52;211;153m[STATUS] Tu sistema cuenta con todas las herramientas necesarias para compilar y ejecutar ${report.engine}.\x1b[0m`,
+			`${GREEN}[STATUS] Tu sistema cuenta con todas las herramientas necesarias para compilar y ejecutar ${report.engine}.\x1b[0m`,
 		);
 	} else {
 		lines.push(
-			`\x1b[38;2;251;191;36m[STATUS] ATENCION: Tu sistema no tiene instaladas todas las herramientas para ${report.engine}.\x1b[0m`,
+			`${YELLOW}[STATUS] ATENCION: Tu sistema no tiene instaladas todas las herramientas para ${report.engine}.\x1b[0m`,
 		);
 		for (const rec of report.recommendations) {
 			lines.push(`   * ${rec}`);

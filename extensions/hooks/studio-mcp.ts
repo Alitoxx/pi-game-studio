@@ -1,3 +1,4 @@
+import { ACCENT } from "./studio-palette.ts";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { execSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
@@ -231,7 +232,7 @@ export async function handleStudioMcp(args: string, ctx: ExtensionContext): Prom
 
 function renderMcpTerminalSummary(cwd: string): void {
 	const statuses = getMcpServerStatuses(cwd);
-	console.log("\n\x1b[1m\x1b[38;2;167;139;250mPI GAME STUDIO — SERVIDORES MCP (10 ROLES)\x1b[0m");
+	console.log("\n\x1b[1m" + ACCENT + "PI GAME STUDIO — SERVIDORES MCP (10 ROLES)\x1b[0m");
 	console.log("\x1b[2mFilosofía: Files First, MCP Accelerated\x1b[0m\n");
 
 	for (const s of STUDIO_MCP_REGISTRY) {

@@ -1,3 +1,4 @@
+import { ACCENT, GRAY, GREEN, RED, SECONDARY, WHITE, YELLOW } from "./studio-palette.ts";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import {
 	existsSync,
@@ -146,20 +147,20 @@ export async function handleStudioNew(
 		} else {
 			console.log("");
 			console.log(
-				"\x1b[1m\x1b[38;2;167;139;250mPlantillas de Inicio Rápido Disponibles (Starters):\x1b[0m",
+				"\x1b[1m" + ACCENT + "Plantillas de Inicio Rápido Disponibles (Starters):\x1b[0m",
 			);
-			console.log("\x1b[38;2;107;114;128m" + "─".repeat(70) + "\x1b[0m");
+			console.log("" + GRAY + "" + "─".repeat(70) + "\x1b[0m");
 			starters.forEach((s, idx) => {
 				console.log(
-					`  \x1b[38;2;56;189;248m${idx + 1}. /studio:new ${s.id.padEnd(20)}\x1b[0m \x1b[38;2;243;244;246m${s.name}\x1b[0m`,
+					`  ${SECONDARY}${idx + 1}. /studio:new ${s.id.padEnd(20)}\x1b[0m ${WHITE}${s.name}\x1b[0m`,
 				);
 				console.log(
-					`     \x1b[38;2;107;114;128m${s.description} · Ejecutable con: ${s.runCommand}\x1b[0m`,
+					`     ${GRAY}${s.description} · Ejecutable con: ${s.runCommand}\x1b[0m`,
 				);
 			});
 			console.log("");
 			console.log(
-				"\x1b[38;2;251;191;36m💡 Ejemplo de uso:\x1b[0m /studio:new bevy  o  /studio:new raylib",
+				"" + YELLOW + "💡 Ejemplo de uso:\x1b[0m /studio:new bevy  o  /studio:new raylib",
 			);
 			console.log("");
 			return;
@@ -182,7 +183,7 @@ export async function handleStudioNew(
 
 	if (hasConflicts) {
 		console.log(
-			`\x1b[38;2;239;68;68m⚠️  El directorio actual (${basename(targetDir)}) ya contiene archivos de proyecto.\x1b[0m`,
+			`${RED}⚠️  El directorio actual (${basename(targetDir)}) ya contiene archivos de proyecto.\x1b[0m`,
 		);
 		console.log(
 			"Por seguridad, ejecuta este comando en un directorio vacío o una subcarpeta.",
@@ -193,7 +194,7 @@ export async function handleStudioNew(
 	// Scaffold files
 	console.log("");
 	console.log(
-		`\x1b[1m\x1b[38;2;167;139;250mCreando proyecto desde plantilla: ${selectedStarter.name}...\x1b[0m`,
+		`\x1b[1m${ACCENT}Creando proyecto desde plantilla: ${selectedStarter.name}...\x1b[0m`,
 	);
 
 	copyRecursive(selectedStarter.sourceDir, targetDir);
@@ -228,14 +229,14 @@ export async function handleStudioNew(
 		});
 	} catch {}
 
-	console.log("\x1b[38;2;107;114;128m" + "─".repeat(70) + "\x1b[0m");
-	console.log(`  \x1b[38;2;52;211;153m✔ Archivos base instalados en:\x1b[0m ${targetDir}`);
-	console.log(`  \x1b[38;2;52;211;153m✔ Motor detectado automáticamente:\x1b[0m ${formatEngineBadge(detection)}`);
-	console.log(`  \x1b[38;2;52;211;153m✔ Aislamiento de proyecto:\x1b[0m .pi/settings.json (no contamina otros proyectos)`);
-	console.log(`  \x1b[38;2;52;211;153m✔ Configuración persistida en:\x1b[0m project.yaml`);
+	console.log("" + GRAY + "" + "─".repeat(70) + "\x1b[0m");
+	console.log(`  ${GREEN}✔ Archivos base instalados en:\x1b[0m ${targetDir}`);
+	console.log(`  ${GREEN}✔ Motor detectado automáticamente:\x1b[0m ${formatEngineBadge(detection)}`);
+	console.log(`  ${GREEN}✔ Aislamiento de proyecto:\x1b[0m .pi/settings.json (no contamina otros proyectos)`);
+	console.log(`  ${GREEN}✔ Configuración persistida en:\x1b[0m project.yaml`);
 	console.log("");
-	console.log("\x1b[1m\x1b[38;2;251;191;36m👉 Siguiente paso para probar tu juego:\x1b[0m");
-	console.log(`   \x1b[38;2;56;189;248m\x1b[1m${selectedStarter.runCommand}\x1b[0m`);
+	console.log("\x1b[1m" + YELLOW + "👉 Siguiente paso para probar tu juego:\x1b[0m");
+	console.log(`   ${SECONDARY}\x1b[1m${selectedStarter.runCommand}\x1b[0m`);
 	console.log("");
 
 	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {

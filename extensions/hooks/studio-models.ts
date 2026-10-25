@@ -1,3 +1,4 @@
+import { ACCENT, GREEN, SECONDARY } from "./studio-palette.ts";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -120,10 +121,10 @@ export async function handleStudioModels(
 	// Fallback CLI
 	const list = formatModelsList(currentConfig);
 	console.log(list);
-	console.log("\x1b[38;2;167;139;250m\x1b[1mOpciones de configuración de modelos:\x1b[0m");
-	console.log("  \x1b[38;2;56;189;248m/studio:models default\x1b[0m  Aplica los modelos recomendados del estudio");
-	console.log("  \x1b[38;2;56;189;248m/studio:models inherit\x1b[0m  Todos los agentes usan el modelo de la sesión Pi");
-	console.log("  \x1b[38;2;56;189;248m/assign-models\x1b[0m          Flujo guiado para personalizar agente por agente");
+	console.log("" + ACCENT + "\x1b[1mOpciones de configuración de modelos:\x1b[0m");
+	console.log("  " + SECONDARY + "/studio:models default\x1b[0m  Aplica los modelos recomendados del estudio");
+	console.log("  " + SECONDARY + "/studio:models inherit\x1b[0m  Todos los agentes usan el modelo de la sesión Pi");
+	console.log("  " + SECONDARY + "/assign-models\x1b[0m          Flujo guiado para personalizar agente por agente");
 }
 
 function applyDefaultConfig(ctx: ExtensionContext): void {
@@ -140,7 +141,7 @@ function applyDefaultConfig(ctx: ExtensionContext): void {
 		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			ctx.ui.notify(msg, "info");
 		} else {
-			console.log(`\x1b[38;2;52;211;153m${msg}\x1b[0m`);
+			console.log(`${GREEN}${msg}\x1b[0m`);
 		}
 	}
 }
@@ -165,7 +166,7 @@ function applyInheritConfig(
 	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 		ctx.ui.notify(msg, "info");
 	} else {
-		console.log(`\x1b[38;2;52;211;153m${msg}\x1b[0m`);
+		console.log(`${GREEN}${msg}\x1b[0m`);
 	}
 }
 
@@ -178,7 +179,7 @@ function saveModelsConfig(ctx: ExtensionContext, cfg: Record<string, string>): v
 	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 		ctx.ui.notify(msg, "info");
 	} else {
-		console.log(`\x1b[38;2;52;211;153m${msg}\x1b[0m`);
+		console.log(`${GREEN}${msg}\x1b[0m`);
 	}
 }
 

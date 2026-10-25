@@ -1,3 +1,4 @@
+import { GREEN, YELLOW } from "./studio-palette.ts";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { renderBanner } from "./banner.ts";
 import { inspectSetup } from "./studio-setup.ts";
@@ -34,8 +35,8 @@ export async function handleStudioStatus(
 		} catch {}
 		console.log(
 			nextState
-				? "\x1b[38;2;251;191;36mTarjeta de estado colapsada [collapsed].\x1b[0m"
-				: "\x1b[38;2;52;211;153mTarjeta de estado expandida.\x1b[0m"
+				? "" + YELLOW + "Tarjeta de estado colapsada [collapsed].\x1b[0m"
+				: "" + GREEN + "Tarjeta de estado expandida.\x1b[0m"
 		);
 		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			ctx.ui.notify(

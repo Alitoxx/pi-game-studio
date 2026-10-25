@@ -1,3 +1,4 @@
+import { ACCENT, GRAY, GREEN, SECONDARY, YELLOW } from "./studio-palette.ts";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { existsSync, readFileSync, writeFileSync, mkdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
@@ -30,7 +31,7 @@ export async function handleStudioSettings(
 			if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 				ctx.ui.notify(`Motor configurado a: ${eng}`, "info");
 			}
-			console.log(`\x1b[38;2;52;211;153m✔ Motor de juego actualizado a: ${eng}\x1b[0m`);
+			console.log(`${GREEN}✔ Motor de juego actualizado a: ${eng}\x1b[0m`);
 			return;
 		}
 	}
@@ -99,13 +100,13 @@ export async function handleStudioSettings(
 					if (typeof (ctx.ui as any)?.notify === "function") {
 						ctx.ui.notify("🧹 Limpieza de terminal al iniciar: Desactivada", "info");
 					}
-					console.log("\x1b[38;2;251;191;36m🧹 Limpieza de terminal al iniciar: Desactivada\x1b[0m");
+					console.log("" + YELLOW + "🧹 Limpieza de terminal al iniciar: Desactivada\x1b[0m");
 				} else {
 					try { unlinkSync(noClearFlag); } catch {}
 					if (typeof (ctx.ui as any)?.notify === "function") {
 						ctx.ui.notify("🧹 Limpieza de terminal al iniciar: Activada", "info");
 					}
-					console.log("\x1b[38;2;52;211;153m✔ Limpieza de terminal al iniciar: Activada\x1b[0m");
+					console.log("" + GREEN + "✔ Limpieza de terminal al iniciar: Activada\x1b[0m");
 				}
 				break;
 			}
@@ -118,9 +119,9 @@ export async function handleStudioSettings(
 
 	// CLI Fallback
 	printYamlConfig(rootDir);
-	console.log("\x1b[38;2;167;139;250m\x1b[1mUso rápido:\x1b[0m");
-	console.log("  \x1b[38;2;56;189;248m/studio:settings engine=Godot\x1b[0m   (Godot | Unity | Unreal | Bevy)");
-	console.log("  \x1b[38;2;56;189;248m/settings\x1b[0m                        Asistente de configuración");
+	console.log("" + ACCENT + "\x1b[1mUso rápido:\x1b[0m");
+	console.log("  " + SECONDARY + "/studio:settings engine=Godot\x1b[0m   (Godot | Unity | Unreal | Bevy)");
+	console.log("  " + SECONDARY + "/settings\x1b[0m                        Asistente de configuración");
 }
 
 function setEngine(cwd: string, engineName: string): void {
@@ -181,12 +182,12 @@ export function setLanguage(cwd: string, lang: string): void {
 function printYamlConfig(cwd: string): void {
 	const projectYamlPath = join(cwd, "project.yaml");
 	console.log("");
-	console.log("\x1b[1m\x1b[38;2;167;139;250m⚙️ PI GAME STUDIO — CONFIGURACIÓN ACTUAL\x1b[0m");
-	console.log("\x1b[38;2;107;114;128m" + "─".repeat(60) + "\x1b[0m");
+	console.log("\x1b[1m" + ACCENT + "⚙️ PI GAME STUDIO — CONFIGURACIÓN ACTUAL\x1b[0m");
+	console.log("" + GRAY + "" + "─".repeat(60) + "\x1b[0m");
 	if (existsSync(projectYamlPath)) {
 		console.log(readFileSync(projectYamlPath, "utf8"));
 	} else {
-		console.log("\x1b[38;2;251;191;36mproject.yaml no encontrado en la raíz del proyecto.\x1b[0m");
+		console.log("" + YELLOW + "project.yaml no encontrado en la raíz del proyecto.\x1b[0m");
 	}
 	console.log("");
 }

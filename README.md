@@ -316,7 +316,6 @@ Or jump directly to a specific skill or template:
 
 - `/studio:new` — instantiate a ready-to-run starter (Bevy 2D ARPG, Godot 4 2D Character, Phaser Web 2D, Raylib C++20 EnTT, Unity 2D Platformer, or Unreal Engine 5 Third Person)
 - `/brainstorm` — explore game ideas from scratch
-- `/setup-engine godot 4.3` — configure your engine
 - `/studio:doctor` — audit your local toolchain, compilers, and SDKs
 - `/project-stage-detect` — analyze an existing project
 
@@ -445,9 +444,9 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
   - **Vinculación Consistente de Herramientas**: Garantía de que `/studio:settings`, `/studio:status`, la política de idioma (`es`) y la detección de gaps auditen la raíz del proyecto correspondiente.
 - **Token Economy & Gentle Shell Return Contract**:
   - **Modularización de Skills Pesadas (`setup-engine`)**:
-    - Separación de apéndices monolíticos en referencias cargadas bajo demanda (`skills/setup-engine/references/godot.md`, `bevy.md`, `raylib.md`), reduciendo el consumo base de tokens en más de ~2.500 tokens por invocación.
+    - Separación de apéndices monolíticos en referencias cargadas bajo demanda dentro de la skill de configuración de motor, reduciendo el consumo base de tokens en más de ~2.500 tokens por invocación. (Nota histórica: esa skill y sus archivos de referencia ya no se distribuyen; la configuración de motor vive hoy en `/setup` y `project.yaml`.)
   - **Return Contract Estandarizado (Inspirado en Gentle Shell)**:
-    - Formalización de la sección 6 en `docs/gamedev-interaction-protocol.md` y `AGENTS.md`: bloque estructurado YAML obligatorio (`status`, `summary`, `files_changed`, `validation`, `gameplay_impact`, `risks`, `next_recommended_specialist`) para tareas delegadas a especialistas vía `subagent`.
+    - Formalización de la sección 6 en `docs/gamedev-interaction-protocol.md` y `AGENTS.md`: bloque estructurado YAML obligatorio (`status`, `summary`, `files_changed`, `validation`, `gameplay_impact`, `risks`, `next_recommended_specialist`) para tareas delegadas a especialistas vía `subagent_run`.
     - Eliminación sistemática de preámbulos conversacionales, formalismos y tokens de cortesía en subagentes (`lead-programmer`, `gameplay-programmer`).
   - **Compactación de Ejemplos Few-Shot en Agentes Tier 1**:
     - Optimización y sintetización de diálogos de ejemplo en `agents/creative-director.md` preservando al 100% el rigor técnico y los árboles de decisión mientras se ahorran más de ~650 tokens por llamada de razonamiento.

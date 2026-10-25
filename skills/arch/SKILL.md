@@ -50,3 +50,19 @@ Soporte simétrico para los 6 motores oficiales con su arquitectura de shaders, 
 Cuando se ejecuta `/arch mcp` o `/studio:mcp`:
 - **Auditoría de Entorno**: Consultar el estado de los 10 servidores MCP disponibles (REA, Playwright, Context7, Codegraph, SQLite, Chroma/Vector, Blender, Image Gen, Audio SFX, Live Engine).
 - **Aceleración ODD**: Los servidores MCP no sustituyen los archivos en disco (`design/gdd/`), sino que aceleran las capacidades de inspección de los especialistas. Generar o actualizar `docs/architecture/mcp-ecosystem.md` con los servidores recomendados y activados para el proyecto.
+
+### 5. Cierre Verificable (Done When)
+
+Un presupuesto que no se puede medir **no es un presupuesto**: es una intención. La fase no cierra por declarar números.
+
+Cierra en `completed` solo si se cumplen estas cuatro condiciones binarias:
+- **Umbral numérico por presupuesto**: cada fila de FPS, RAM y VRAM declara número y unidad (`60 FPS`, `350 MB`, `1.5 GB`).
+- **Comando de medición por umbral**: cada presupuesto nombra el comando o la instrumentación que lo observa; `/test` es quien lo ejecuta en cada entrega, y `arch` no cierra con un número que nadie puede leer.
+- **ADR completo**: cada ADR en `docs/architecture/adr-<numero>-<titulo>.md` declara decisión, alternativa rechazada y consecuencia; un ADR sin alternativa rechazada es un anuncio, no una decisión.
+- **Toolchain probado**: el comando de build/check del motor activo corre al menos una vez y su resultado exacto entra en la evidencia.
+
+Evidencia que se reporta:
+
+`structural: docs/architecture/adr-001-ecs-vs-jerarquia.md: decisión + alternativa + consecuencia, 3 presupuestos con umbral y comando` más `cargo check -p game: 0 errors` (o el comando del motor activo) cuando el scaffold ya existe.
+
+Si un presupuesto no tiene comando de medición, la fase devuelve `partial`: declarar un límite sin forma de observarlo es exactamente la deuda que `/test` termina pagando sola.

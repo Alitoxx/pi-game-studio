@@ -37,3 +37,19 @@ Cuando se invoca `/concept` (o `/concept pitch`, `/concept jam`):
 ### 4. Entrega Viva
 - Guardar el documento vivo en `design/gdd/concept.md`.
 - Notificar el cierre de fase y sugerir el paso siguiente: `/spec` para detallar el primer sistema.
+
+### 5. Cierre Verificable (Done When)
+
+La fase **no cierra cuando el archivo se guarda**: guardar un documento vacío también guarda un archivo. Cierra cuando lo escrito se puede leer y afirmar.
+
+Cierra en `completed` solo si `design/gdd/concept.md` cumple estas cuatro condiciones binarias:
+- **Pilares contables**: hay entre 3 y 5 pilares, no uno ni ocho.
+- **Verbo por pilar**: cada pilar nombra un verbo repetible que el jugador ejecuta (correr, construir, negociar), nunca una sensación ni un adjetivo (divertido, inmersivo).
+- **Loop de tres pasos o menos**: el core loop se lee completo en ≤ 3 pasos, sin sub-loops escondidos dentro.
+- **Plataforma y dimensión explícitas**: el documento declara el target (PC, consola, web) y `2d` o `3d`, coherentes con `project.yaml`.
+
+Evidencia que se reporta (un agente sin `bash` no puede ejecutar comandos):
+
+`structural: design/gdd/concept.md: 4 pilares con verbo, loop de 3 pasos, target PC, dimensión 3d`
+
+Si una condición falla, la fase devuelve `partial` nombrando cuál falta. Un concepto hueco no se arrastra a `/spec`: la Live Spec es la fuente de verdad de todas las fases siguientes, así que su primera entrada hereda este vacío.

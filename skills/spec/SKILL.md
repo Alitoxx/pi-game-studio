@@ -41,3 +41,20 @@ La Live Spec debe contener obligatoriamente:
 
 ### 3. Resolución de Incertidumbre
 Si existe un dilema de diseño (e.g. tipo de control o fórmula de progresión), se presenta una **TRADE-OFF MATRIX** concisa y se resuelve interactivamente con `ask_user_question`.
+
+### 4. Cierre Verificable (Done When)
+
+La Live Spec **no cierra por estar escrita**: cierra cuando otro rol puede ejecutarla sin preguntar nada.
+
+Cierra en `completed` solo si `design/gdd/<feature>.md` cumple estas cinco condiciones binarias:
+- **Secciones completas**: las secciones obligatorias de arriba están todas presentes y ninguna vacía.
+- **Knobs con unidad y dueño**: cada parámetro numérico declara número, unidad (`px/s`, `ms`, `%`) y el archivo real que lo expone en `assets/data/`; ningún valor de balance vive en la prosa.
+- **Shader nombrado por efecto**: cada requisito de render nombra el efecto concreto (atenuación de luz, niebla, distorsión de agua, disolución), nunca el genérico "iluminación".
+- **Checklist cubre los mecanismos**: cada mecanismo de *Reglas del Sistema* tiene al menos una tarea `[ ]` en el checklist atómico.
+- **Assets registrados**: cada sprite, audio o shader nombrado aparece en `assets/manifest.yaml` con su estado (`placeholder` o `final`).
+
+Evidencia que se reporta:
+
+`structural: design/gdd/<feature>.md: 12/12 secciones, 7 knobs con unidad y archivo, checklist cubre 5 mecanismos, 4 assets en manifiesto`
+
+Si una condición falla, la fase devuelve `partial` con la lista exacta de lo que falta. Una Live Spec incompleta es peor que ninguna: se lee como verdad y la implementación la obedece.

@@ -1,3 +1,4 @@
+import { ACCENT, GREEN, SECONDARY, WHITE, YELLOW } from "./studio-palette.ts";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import {
 	existsSync,
@@ -284,10 +285,10 @@ export async function handleStudioSetup(
 	// Terminal fallback
 	const diag = formatSetupDiagnostic(status);
 	console.log(diag);
-	console.log("\x1b[38;2;167;139;250m\x1b[1mOpciones de instalación disponibles:\x1b[0m");
-	console.log("  \x1b[38;2;56;189;248m/studio:setup auto\x1b[0m    Instalación automática en 1 clic (recomendada)");
-	console.log("  \x1b[38;2;56;189;248m/studio:setup manual\x1b[0m  Instalación guiada paso a paso");
-	console.log("  \x1b[38;2;56;189;248m/start\x1b[0m                Inicio asistido por IA");
+	console.log("" + ACCENT + "\x1b[1mOpciones de instalación disponibles:\x1b[0m");
+	console.log("  " + SECONDARY + "/studio:setup auto\x1b[0m    Instalación automática en 1 clic (recomendada)");
+	console.log("  " + SECONDARY + "/studio:setup manual\x1b[0m  Instalación guiada paso a paso");
+	console.log("  " + SECONDARY + "/start\x1b[0m                Inicio asistido por IA");
 }
 
 /**
@@ -703,19 +704,19 @@ export function installStudioFiles(
 		ctx.ui.notify(summaryMsg, "info");
 	} else {
 		console.log("");
-		console.log("\x1b[1m\x1b[38;2;52;211;153m✔ ¡Pi Game Studio instalado con éxito!\x1b[0m");
-		console.log(`  \x1b[38;2;167;139;250m• Agentes:\x1b[0m    ${copiedCount} agentes en \x1b[38;2;243;244;246m.pi/agents/\x1b[0m`);
-		console.log(`  \x1b[38;2;167;139;250m• Motor:\x1b[0m      ${engine} en \x1b[38;2;243;244;246mproject.yaml\x1b[0m`);
-		console.log(`  \x1b[38;2;167;139;250m• Dimensión:\x1b[0m  ${dimension.toUpperCase()} en \x1b[38;2;243;244;246mproject.yaml\x1b[0m`);
-		console.log(`  \x1b[38;2;167;139;250m• Modelos:\x1b[0m    \x1b[38;2;243;244;246m.pi/game-studio/models.json\x1b[0m`);
+		console.log("\x1b[1m" + GREEN + "✔ ¡Pi Game Studio instalado con éxito!\x1b[0m");
+		console.log(`  ${ACCENT}• Agentes:\x1b[0m    ${copiedCount} agentes en ${WHITE}.pi/agents/\x1b[0m`);
+		console.log(`  ${ACCENT}• Motor:\x1b[0m      ${engine} en ${WHITE}project.yaml\x1b[0m`);
+		console.log(`  ${ACCENT}• Dimensión:\x1b[0m  ${dimension.toUpperCase()} en ${WHITE}project.yaml\x1b[0m`);
+		console.log(`  ${ACCENT}• Modelos:\x1b[0m    ${WHITE}.pi/game-studio/models.json\x1b[0m`);
 		if (launcherInstalled) {
-			console.log(`  \x1b[38;2;167;139;250m• Launcher:\x1b[0m   \x1b[1m\x1b[38;2;56;189;248mpi-studio\x1b[0m (disponible globalmente en ~/.local/bin/pi-studio)`);
+			console.log(`  ${ACCENT}• Launcher:\x1b[0m   \x1b[1m${SECONDARY}pi-studio\x1b[0m (disponible globalmente en ~/.local/bin/pi-studio)`);
 		}
-		console.log(`  \x1b[38;2;167;139;250m• Registro:\x1b[0m   \x1b[38;2;243;244;246m.pi/game-studio/install-log.md\x1b[0m`);
+		console.log(`  ${ACCENT}• Registro:\x1b[0m   ${WHITE}.pi/game-studio/install-log.md\x1b[0m`);
 		console.log("");
-		console.log("\x1b[38;2;251;191;36m💡 Siguiente paso sugerido:\x1b[0m");
-		console.log("  Abre tu juego con \x1b[1m\x1b[38;2;56;189;248mpi-studio\x1b[0m para un entorno 100% aislado sin agentes externos.");
-		console.log("  Luego escribe \x1b[1m\x1b[38;2;56;189;248m/studio:start\x1b[0m para dar inicio al onboarding de tu juego.");
+		console.log("" + YELLOW + "💡 Siguiente paso sugerido:\x1b[0m");
+		console.log("  Abre tu juego con \x1b[1m" + SECONDARY + "pi-studio\x1b[0m para un entorno 100% aislado sin agentes externos.");
+		console.log("  Luego escribe \x1b[1m" + SECONDARY + "/studio:start\x1b[0m para dar inicio al onboarding de tu juego.");
 		console.log("");
 	}
 }
@@ -759,7 +760,7 @@ export function installModelsConfig(ctx: ExtensionContext): void {
 		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			ctx.ui.notify(msg, "info");
 		} else {
-			console.log(`\x1b[38;2;52;211;153m${msg}\x1b[0m`);
+			console.log(`${GREEN}${msg}\x1b[0m`);
 		}
 	}
 }

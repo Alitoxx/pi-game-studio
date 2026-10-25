@@ -1,3 +1,4 @@
+import { ACCENT } from "./studio-palette.ts";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { execSync } from "node:child_process";
 import { promptSelectSafe } from "./studio-setup.ts";
@@ -246,7 +247,7 @@ export async function promptMediaToolsInstall(
 		}
 	} else {
 		// Terminal CLI fallback
-		console.log("\n\x1b[1m\x1b[38;2;167;139;250mDIAGNÓSTICO DE VIABILIDAD MULTIMEDIA (FOSS CLI)\x1b[0m");
+		console.log("\n\x1b[1m" + ACCENT + "DIAGNÓSTICO DE VIABILIDAD MULTIMEDIA (FOSS CLI)\x1b[0m");
 		for (const m of missing) {
 			console.log(`\n\x1b[33m[FALTA]\x1b[0m \x1b[1m${m.tool.name}\x1b[0m (${m.tool.category})`);
 			console.log(`  \x1b[2m• Utilidad:\x1b[0m ${m.tool.whyNeeded}`);

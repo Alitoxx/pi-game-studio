@@ -2,17 +2,7 @@ import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
-import {
-	RESET,
-	BOLD,
-	DIM,
-	GREEN,
-	YELLOW,
-	CYAN,
-	ACCENT as BLUE,
-	BORDER,
-	padAnsi,
-} from "./studio-palette.ts";
+import { ACCENT, ACCENT as BLUE, BOLD, BORDER, CYAN, DIM, GRAY, GREEN, RED, RESET, SECONDARY, WHITE, YELLOW, padAnsi } from "./studio-palette.ts";
 
 export interface TuningVar {
 	key: string;
@@ -193,7 +183,7 @@ export async function handleStudioTuning(
 	const vars = inspectStudioTuning(studioRoot);
 
 	if (vars.length === 0) {
-		console.log("\n\x1b[38;2;251;191;36m⚠ No se detectaron archivos de tuning ni balance en assets/data/ ni assets/.\x1b[0m");
+		console.log("\n" + YELLOW + "⚠ No se detectaron archivos de tuning ni balance en assets/data/ ni assets/.\x1b[0m");
 		console.log("Crea archivos de balance como assets/data/santuario.yaml o balance.yaml para ajustar parámetros de gameplay.\n");
 		return;
 	}
@@ -204,7 +194,7 @@ export async function handleStudioTuning(
 		const targetVar = vars.find((v) => v.key.toLowerCase() === keyToSet.toLowerCase());
 
 		if (!targetVar) {
-			console.log(`\n\x1b[38;2;248;113;113mVariable de tuning no encontrada:\x1b[0m ${keyToSet}\n`);
+			console.log(`\n${RED}Variable de tuning no encontrada:\x1b[0m ${keyToSet}\n`);
 			return;
 		}
 
@@ -214,13 +204,13 @@ export async function handleStudioTuning(
 
 		const success = updateTuningVariable(targetVar.filePath, targetVar.key, typedVal);
 		if (success) {
-			console.log(`\n\x1b[38;2;52;211;153m✔ Variable de tuning actualizada:\x1b[0m`);
-			console.log(`  • Clave:   \x1b[1m\x1b[38;2;243;244;246m${targetVar.key}\x1b[0m`);
-			console.log(`  • Antes:   \x1b[38;2;107;114;128m${targetVar.value}\x1b[0m`);
-			console.log(`  • Ahora:   \x1b[38;2;52;211;153m${typedVal}\x1b[0m`);
-			console.log(`  • Archivo: \x1b[38;2;167;139;250m${targetVar.relPath}\x1b[0m\n`);
+			console.log(`\n${GREEN}✔ Variable de tuning actualizada:\x1b[0m`);
+			console.log(`  • Clave:   \x1b[1m${WHITE}${targetVar.key}\x1b[0m`);
+			console.log(`  • Antes:   ${GRAY}${targetVar.value}\x1b[0m`);
+			console.log(`  • Ahora:   ${GREEN}${typedVal}\x1b[0m`);
+			console.log(`  • Archivo: ${ACCENT}${targetVar.relPath}\x1b[0m\n`);
 		} else {
-			console.log(`\n\x1b[38;2;248;113;113mFallo al guardar la variable en disco.\x1b[0m\n`);
+			console.log(`\n${RED}Fallo al guardar la variable en disco.\x1b[0m\n`);
 		}
 		return;
 	}
@@ -229,9 +219,9 @@ export async function handleStudioTuning(
 		const keyToGet = parts[1];
 		const targetVar = vars.find((v) => v.key.toLowerCase() === keyToGet.toLowerCase());
 		if (targetVar) {
-			console.log(`\n\x1b[1m${targetVar.key}\x1b[0m = \x1b[38;2;52;211;153m${targetVar.value}\x1b[0m \x1b[38;2;107;114;128m(${targetVar.relPath})\x1b[0m\n`);
+			console.log(`\n\x1b[1m${targetVar.key}\x1b[0m = ${GREEN}${targetVar.value}\x1b[0m ${GRAY}(${targetVar.relPath})\x1b[0m\n`);
 		} else {
-			console.log(`\n\x1b[38;2;248;113;113mVariable no encontrada:\x1b[0m ${keyToGet}\n`);
+			console.log(`\n${RED}Variable no encontrada:\x1b[0m ${keyToGet}\n`);
 		}
 		return;
 	}
@@ -252,13 +242,13 @@ export async function handleStudioTuning(
 	}
 
 	for (const [file, items] of byFile.entries()) {
-		console.log(`\x1b[1m\x1b[38;2;167;139;250m• ${file}\x1b[0m`);
+		console.log(`\x1b[1m${ACCENT}• ${file}\x1b[0m`);
 		for (const it of items) {
-			const typeColor = it.type === "number" ? "\x1b[38;2;56;189;248m" : it.type === "boolean" ? "\x1b[38;2;251;191;36m" : "\x1b[38;2;243;244;246m";
-			console.log(`    ${it.key.padEnd(32, " ")} = ${typeColor}${String(it.value)}\x1b[0m \x1b[38;2;107;114;128m(${it.type})\x1b[0m`);
+			const typeColor = it.type === "number" ? "" + SECONDARY + "" : it.type === "boolean" ? "" + YELLOW + "" : "" + WHITE + "";
+			console.log(`    ${it.key.padEnd(32, " ")} = ${typeColor}${String(it.value)}\x1b[0m " + GRAY + "(${it.type})\x1b[0m`);
 		}
 		console.log("");
 	}
 
-	console.log("\x1b[38;2;107;114;128mPara modificar un valor: /studio:tuning set <clave> <nuevo_valor>\x1b[0m\n");
+	console.log("" + GRAY + "Para modificar un valor: /studio:tuning set <clave> <nuevo_valor>\x1b[0m\n");
 }

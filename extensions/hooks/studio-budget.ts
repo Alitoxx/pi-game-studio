@@ -1,20 +1,5 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import {
-	RESET,
-	BOLD,
-	DIM,
-	GREEN,
-	YELLOW,
-	RED,
-	ACCENT as PURPLE,
-	SECONDARY as CYAN,
-	HEADING as LAVENDER,
-	WHITE,
-	GRAY,
-	BORDER,
-	padAnsi,
-	truncateAnsi,
-} from "./studio-palette.ts";
+import { ACCENT as PURPLE, BOLD, BORDER, DIM, GRAY, GREEN, HEADING as LAVENDER, RED, RESET, SECONDARY as CYAN, WHITE, YELLOW, padAnsi, truncateAnsi } from "./studio-palette.ts";
 
 export type DisciplineCategory = "Directors" | "Game Designer" | "Specialists" | "Other";
 
@@ -449,7 +434,7 @@ async function handleStudioBudgetImpl(
 		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			(ctx.ui as any).notify("Contador de presupuesto y tokens reiniciado.", "info");
 		}
-		console.log(`\x1b[38;2;167;243;208m✔ Presupuesto de sesión reiniciado.\x1b[0m`);
+		console.log(`${GREEN}✔ Presupuesto de sesión reiniciado.\x1b[0m`);
 		return;
 	}
 

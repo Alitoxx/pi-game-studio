@@ -1,3 +1,4 @@
+import { ACCENT, GRAY, SECONDARY, WHITE } from "./studio-palette.ts";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 
 export interface StudioCategory {
@@ -111,11 +112,11 @@ function renderCategory(cat: StudioCategory, ctx?: ExtensionContext): void {
 		ctx.ui.notify(msg, "info");
 	} else {
 		console.log("");
-		console.log(`\x1b[1m\x1b[38;2;167;139;250m${cat.name}\x1b[0m — \x1b[38;2;107;114;128m${cat.description}\x1b[0m`);
-		console.log("\x1b[38;2;107;114;128m" + "─".repeat(70) + "\x1b[0m");
+		console.log(`\x1b[1m${ACCENT}${cat.name}\x1b[0m — ${GRAY}${cat.description}\x1b[0m`);
+		console.log("" + GRAY + "" + "─".repeat(70) + "\x1b[0m");
 		for (const item of cat.commands) {
 			const cmdPadded = item.cmd.padEnd(26);
-			console.log(`  \x1b[38;2;56;189;248m\x1b[1m${cmdPadded}\x1b[0m \x1b[38;2;243;244;246m${item.desc}\x1b[0m`);
+			console.log(`  ${SECONDARY}\x1b[1m${cmdPadded}\x1b[0m ${WHITE}${item.desc}\x1b[0m`);
 		}
 		console.log("");
 	}
@@ -132,8 +133,8 @@ function renderAll(ctx?: ExtensionContext): void {
 		ctx.ui.notify(lines.join("\n"), "info");
 	} else {
 		console.log("");
-		console.log("\x1b[1m\x1b[38;2;167;139;250mPI GAME STUDIO — CATÁLOGO DE COMANDOS\x1b[0m");
-		console.log("\x1b[38;2;107;114;128mTodos los comandos del estudio llevan el prefijo [Studio] en el menú /\x1b[0m");
+		console.log("\x1b[1m" + ACCENT + "PI GAME STUDIO — CATÁLOGO DE COMANDOS\x1b[0m");
+		console.log("" + GRAY + "Todos los comandos del estudio llevan el prefijo [Studio] en el menú /\x1b[0m");
 		console.log("");
 
 		for (const cat of STUDIO_CATEGORIES) {

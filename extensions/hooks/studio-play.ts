@@ -4,18 +4,7 @@ import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "
 import { dirname, join } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
 import { detectProjectEngine } from "./engine-detector.ts";
-import {
-	RESET,
-	BOLD,
-	DIM,
-	GREEN,
-	YELLOW,
-	RED,
-	CYAN,
-	ACCENT as BLUE,
-	BORDER,
-	padAnsi,
-} from "./studio-palette.ts";
+import { ACCENT as BLUE, BOLD, BORDER, CYAN, DIM, GRAY, GREEN, RED, RESET, SECONDARY, YELLOW, padAnsi } from "./studio-palette.ts";
 
 export interface PlayCommandConfig {
 	engine: string;
@@ -166,12 +155,12 @@ export async function handleStudioPlay(
 		const running = isPlayProcessRunning(studioRoot);
 		if (running) {
 			const uptime = activeStartTime ? `${Math.floor((Date.now() - activeStartTime) / 1000)}s` : "activo";
-			console.log(`\n\x1b[38;2;52;211;153m● El juego está en ejecución\x1b[0m (tiempo activo: ${uptime}).`);
-			console.log(`Log de ejecución: \x1b[38;2;107;114;128m.pi/game-studio/play-output.log\x1b[0m`);
-			console.log(`Para detenerlo: \x1b[38;2;56;189;248m/studio:play stop\x1b[0m\n`);
+			console.log(`\n${GREEN}● El juego está en ejecución\x1b[0m (tiempo activo: ${uptime}).`);
+			console.log(`Log de ejecución: ${GRAY}.pi/game-studio/play-output.log\x1b[0m`);
+			console.log(`Para detenerlo: ${SECONDARY}/studio:play stop\x1b[0m\n`);
 		} else {
-			console.log("\n\x1b[38;2;107;114;128m○ El juego no se encuentra en ejecución actualmente.\x1b[0m");
-			console.log(`Usa \x1b[38;2;56;189;248m/studio:play\x1b[0m para lanzarlo.\n`);
+			console.log("\n" + GRAY + "○ El juego no se encuentra en ejecución actualmente.\x1b[0m");
+			console.log(`Usa ${SECONDARY}/studio:play\x1b[0m para lanzarlo.\n`);
 		}
 		return;
 	}
@@ -179,22 +168,22 @@ export async function handleStudioPlay(
 	if (trimmed === "stop") {
 		const stopped = stopPlayProcess(studioRoot);
 		if (stopped) {
-			console.log("\n\x1b[38;2;52;211;153m✔ Ejecución del juego detenida correctamente.\x1b[0m\n");
+			console.log("\n" + GREEN + "✔ Ejecución del juego detenida correctamente.\x1b[0m\n");
 		} else {
-			console.log("\n\x1b[38;2;107;114;128mNo se encontró ningún proceso del juego en ejecución.\x1b[0m\n");
+			console.log("\n" + GRAY + "No se encontró ningún proceso del juego en ejecución.\x1b[0m\n");
 		}
 		return;
 	}
 
 	if (isPlayProcessRunning(studioRoot)) {
-		console.log("\n\x1b[38;2;251;191;36m⚠ El juego ya está corriendo.\x1b[0m");
-		console.log(`Usa \x1b[38;2;56;189;248m/studio:play stop\x1b[0m para detenerlo o \x1b[38;2;56;189;248m/studio:play status\x1b[0m para ver el estado.\n`);
+		console.log("\n" + YELLOW + "⚠ El juego ya está corriendo.\x1b[0m");
+		console.log(`Usa ${SECONDARY}/studio:play stop\x1b[0m para detenerlo o ${SECONDARY}/studio:play status\x1b[0m para ver el estado.\n`);
 		return;
 	}
 
 	const config = resolveEnginePlayCommand(studioRoot);
 	if (config.command === "echo") {
-		console.log(`\n\x1b[38;2;248;113;113m${config.args[0]}\x1b[0m\n`);
+		console.log(`\n${RED}${config.args[0]}\x1b[0m\n`);
 		return;
 	}
 
@@ -252,17 +241,17 @@ export async function handleStudioPlay(
 				unlinkSync(getPidFilePath(studioRoot));
 			} catch {}
 			if (code !== 0 && code !== null) {
-				console.log(`\n\x1b[38;2;248;113;113m[Studio Play] El juego finalizó con código de error ${code}.\x1b[0m Revisa ${logPath}`);
+				console.log(`\n${RED}[Studio Play] El juego finalizó con código de error ${code}.\x1b[0m Revisa ${logPath}`);
 			}
 		});
 
 		// Don't keep parent waiting
 		child.unref();
 
-		console.log(`\x1b[38;2;52;211;153m✔ Proceso lanzado en background (PID ${child.pid}).\x1b[0m`);
-		console.log(`• Monitoreo de salida: \x1b[38;2;107;114;128m.pi/game-studio/play-output.log\x1b[0m`);
-		console.log(`• Para detener la ejecución: \x1b[38;2;56;189;248m/studio:play stop\x1b[0m\n`);
+		console.log(`${GREEN}✔ Proceso lanzado en background (PID ${child.pid}).\x1b[0m`);
+		console.log(`• Monitoreo de salida: ${GRAY}.pi/game-studio/play-output.log\x1b[0m`);
+		console.log(`• Para detener la ejecución: ${SECONDARY}/studio:play stop\x1b[0m\n`);
 	} catch (err: any) {
-		console.log(`\n\x1b[38;2;248;113;113mFallo al lanzar el juego:\x1b[0m ${err.message || String(err)}\n`);
+		console.log(`\n${RED}Fallo al lanzar el juego:\x1b[0m ${err.message || String(err)}\n`);
 	}
 }

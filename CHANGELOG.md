@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (Visual Identity)
+- **A sober palette with a single accent.** The studio shipped two palettes at once: `studio-palette.ts` (soft pastels) and hardcoded Tailwind-400 literals in seventeen other files. Nine of the fourteen colours sat at 90%+ brightness, so status competed with body text and nothing had visual rank; the error colour was pink and three different reds were in use.
+  - Hierarchy now comes from brightness, not hue: text 83% · states 69-76% · muted 56% · faint 36% · borders 25%.
+  - One brand accent (`#7A93C9`, slate blue); `SECONDARY` is the same family, quieter.
+  - States: sage `#7FB08A`, muted gold `#C2A15E`, clay `#C0736E` instead of neon mint, amber and pink.
+  - Every legacy export name still resolves, so no component changed its imports.
+- **`NO_COLOR` is honoured**: with it set, every escape becomes an empty string instead of the studio imposing its palette.
+- **Invariant**: no file outside `studio-palette.ts` may hardcode an RGB escape, and the test asserts the brightness order (text > states > borders) so a future palette cannot flatten it again.
+- **`scripts/palette-preview.js`** prints the live palette with saturation and brightness, plus a sample panel, reading the module itself — the swatches cannot drift from the code.
+
+
 ### Fixed (Runner Lifecycle & Observability)
 - **Specialist reasoning budget reaches the child** (`--thinking`): every agent template declared it and the runner never passed it, so all 14 ran at the session default. The loader now validates the value against Pi's vocabulary, so a typo falls back to the tier default instead of reaching the process.
 - **The RPC prompt response is read**: the prompt is sent with an id and its `success`/`disposition` is honoured. A rejected prompt fails the task immediately with the reason instead of burning the watchdog, and `agent_settled.aborted` is reported as cancelled rather than completed.

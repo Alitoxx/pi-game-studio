@@ -4,17 +4,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
 import { readProducerState } from "./studio-start.ts";
-import {
-	RESET,
-	BOLD,
-	DIM,
-	GREEN,
-	YELLOW,
-	CYAN,
-	ACCENT as BLUE,
-	BORDER,
-	padAnsi,
-} from "./studio-palette.ts";
+import { ACCENT, ACCENT as BLUE, BOLD, BORDER, CYAN, DIM, GRAY, GREEN, RED, RESET, SECONDARY, WHITE, YELLOW, padAnsi } from "./studio-palette.ts";
 
 export interface FeatureOptions {
 	premise?: string;
@@ -164,8 +154,8 @@ export async function handleStudioFeature(
 	const trimmed = (args || "").trim();
 
 	if (!trimmed) {
-		console.log("\n\x1b[38;2;251;191;36mUso:\x1b[0m /studio:feature <nombre-del-feature>");
-		console.log("Ejemplo: \x1b[38;2;56;189;248m/studio:feature combate-cuerpo-a-cuerpo\x1b[0m\n");
+		console.log("\n" + YELLOW + "Uso:\x1b[0m /studio:feature <nombre-del-feature>");
+		console.log("Ejemplo: " + SECONDARY + "/studio:feature combate-cuerpo-a-cuerpo\x1b[0m\n");
 		return;
 	}
 
@@ -174,13 +164,13 @@ export async function handleStudioFeature(
 
 	const result = createLiveSpec(studioRoot, trimmed);
 	if (!result.success) {
-		console.log(`\x1b[38;2;248;113;113mError:\x1b[0m ${result.error}\n`);
+		console.log(`${RED}Error:\x1b[0m ${result.error}\n`);
 		return;
 	}
 
-	console.log(`\x1b[38;2;52;211;153m✔ Live Spec generado con éxito:\x1b[0m`);
-	console.log(`  • Archivo: \x1b[1m\x1b[38;2;243;244;246m${result.filePath}\x1b[0m`);
-	console.log(`  • Tareas creadas: \x1b[38;2;167;139;250m6 tareas atómicas (T1 a T6)\x1b[0m`);
-	console.log(`  • Roadmap: Sincronizado en \x1b[38;2;107;114;128mproduction/roadmap.md\x1b[0m\n`);
-	console.log(`Siguiente paso: Revisa las reglas en \x1b[38;2;56;189;248m${result.filePath}\x1b[0m y arranca con \x1b[1m/code\x1b[0m o \x1b[1m/studio:next\x1b[0m.\n`);
+	console.log(`${GREEN}✔ Live Spec generado con éxito:\x1b[0m`);
+	console.log(`  • Archivo: \x1b[1m${WHITE}${result.filePath}\x1b[0m`);
+	console.log(`  • Tareas creadas: ${ACCENT}6 tareas atómicas (T1 a T6)\x1b[0m`);
+	console.log(`  • Roadmap: Sincronizado en ${GRAY}production/roadmap.md\x1b[0m\n`);
+	console.log(`Siguiente paso: Revisa las reglas en ${SECONDARY}${result.filePath}\x1b[0m y arranca con \x1b[1m/code\x1b[0m o \x1b[1m/studio:next\x1b[0m.\n`);
 }

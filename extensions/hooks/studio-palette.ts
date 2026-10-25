@@ -1,25 +1,41 @@
 // Studio Palette — Unified Nordic & Sober GameDev Theme
 // Inspired by Gentle Shell's sober aesthetic, tuned with Midnight Amethyst & Glacial Cyan for Pi Game Studio
 
-export const RESET = "\x1b[0m";
-export const BOLD = "\x1b[1m";
-export const DIM = "\x1b[2m";
+/** NO_COLOR disables every escape: the studio must not impose its palette. */
+const colorEnabled = !process.env.NO_COLOR;
 
-// Primary Accents
-export const ACCENT = "\x1b[38;2;167;139;250m";     // #A78BFA — Soft Amethyst / Violet (Brand core)
-export const SECONDARY = "\x1b[38;2;103;232;249m";  // #67E8F9 — Glacial Cyan / Tech Blue
-export const CYAN = SECONDARY;
-export const HEADING = "\x1b[38;2;196;181;253m";    // #C4B5FD — Light Lavender heading
+export const RESET = colorEnabled ? "\x1b[0m" : "";
+export const BOLD = colorEnabled ? "\x1b[1m" : "";
+export const DIM = colorEnabled ? "\x1b[2m" : "";
 
-// Status & Semantic Colors (Soft, desaturated pastel tones)
-export const GREEN = "\x1b[38;2;167;243;208m";      // #A7F3D0 — Soft Sage / Mint Green (Success)
-export const YELLOW = "\x1b[38;2;253;230;138m";     // #FDE68A — Warm Soft Gold / Amber (Warning)
-export const RED = "\x1b[38;2;244;114;182m";        // #F472B6 — Soft Rose / Crimson (Error)
+// ─── Roles ────────────────────────────────────────────────────────────────────
+// Hierarchy comes from BRIGHTNESS, not from hue: body text is the brightest
+// thing on screen, states sit below it, borders recede. One accent only.
+//
+//   text 83%  ·  states 69-76%  ·  muted 56%  ·  faint 36%  ·  borders 25%
 
-// Neutrals & Surface
-export const WHITE = "\x1b[38;2;243;244;246m";      // #F3F4F6 — Pearl White / Clean text
-export const GRAY = "\x1b[38;2;107;114;128m";       // #6B7280 — Muted Slate Gray
-export const BORDER = "\x1b[38;2;49;51;66m";        // #313342 — Subtle dark card border
+// Surfaces & text
+export const TEXT = colorEnabled ? "\x1b[38;2;200;204;212m" : ""; // #C8CCD4 body
+export const WHITE = TEXT; // legacy name
+export const HEADING = colorEnabled ? "\x1b[38;2;216;220;227m" : ""; // #D8DCE3 titles, one step above body
+export const MUTED = colorEnabled ? "\x1b[38;2;122;130;144m" : ""; // #7A8290 labels, units
+export const GRAY = MUTED; // legacy name
+export const FAINT = colorEnabled ? "\x1b[38;2;74;80;92m" : ""; // #4A505C separators, placeholders
+export const BORDER = colorEnabled ? "\x1b[38;2;51;54;63m" : ""; // #33363F frames
+
+// Brand: a single slate-blue accent. SECONDARY is the same family, quieter, so
+// structure can be distinguished from focus without introducing a second hue.
+export const ACCENT = colorEnabled ? "\x1b[38;2;122;147;201m" : ""; // #7A93C9
+export const SECONDARY = colorEnabled ? "\x1b[38;2;147;163;190m" : ""; // #93A3BE
+export const CYAN = SECONDARY; // legacy name
+
+// States
+export const SUCCESS = colorEnabled ? "\x1b[38;2;127;176;138m" : ""; // #7FB08A sage
+export const GREEN = SUCCESS; // legacy name
+export const WARNING = colorEnabled ? "\x1b[38;2;194;161;94m" : ""; // #C2A15E muted gold
+export const YELLOW = WARNING; // legacy name
+export const ERROR = colorEnabled ? "\x1b[38;2;192;115;110m" : ""; // #C0736E clay
+export const RED = ERROR; // legacy name
 
 /**
  * Truncates a string containing ANSI escape codes while preserving color formatting

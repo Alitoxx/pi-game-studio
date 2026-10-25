@@ -1,3 +1,4 @@
+import { ACCENT, GREEN, YELLOW } from "./studio-palette.ts";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
@@ -182,19 +183,19 @@ export async function handleStudioTasks(
 		if (action === "off" || action === "disable") {
 			setTasksWidgetEnabled(rootDir, false);
 			updateTasksWidget(ctx);
-			console.log("\x1b[38;2;251;191;36mWidget de tareas en pantalla desactivado.\x1b[0m");
+			console.log("" + YELLOW + "Widget de tareas en pantalla desactivado.\x1b[0m");
 			return;
 		}
 		if (action === "on" || action === "enable") {
 			setTasksWidgetEnabled(rootDir, true);
 			updateTasksWidget(ctx);
-			console.log("\x1b[38;2;52;211;153mWidget de tareas en pantalla activado.\x1b[0m");
+			console.log("" + GREEN + "Widget de tareas en pantalla activado.\x1b[0m");
 			return;
 		}
 		const current = isTasksWidgetEnabled(rootDir);
 		setTasksWidgetEnabled(rootDir, !current);
 		updateTasksWidget(ctx);
-		console.log(`\x1b[38;2;167;139;250mWidget de tareas en pantalla ${!current ? "activado" : "desactivado"}.\x1b[0m`);
+		console.log(`${ACCENT}Widget de tareas en pantalla ${!current ? "activado" : "desactivado"}.\x1b[0m`);
 		return;
 	}
 
@@ -215,8 +216,8 @@ export async function handleStudioTasks(
 		invalidateStudioSidebar();
 		console.log(
 			nextState
-				? "\x1b[38;2;251;191;36mTarjeta de tareas colapsada [collapsed].\x1b[0m"
-				: "\x1b[38;2;52;211;153mTarjeta de tareas expandida.\x1b[0m"
+				? "" + YELLOW + "Tarjeta de tareas colapsada [collapsed].\x1b[0m"
+				: "" + GREEN + "Tarjeta de tareas expandida.\x1b[0m"
 		);
 		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			ctx.ui.notify(

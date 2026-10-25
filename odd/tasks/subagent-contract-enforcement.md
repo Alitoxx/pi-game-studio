@@ -13,11 +13,11 @@ Close the three audit gaps between Pi Game Studio's written Gentle Shell discipl
 
 ## Tasks
 
-- T1 (S1-S3): Gate de contrato de retorno en el runner + tests de comportamiento — commit fix(subagents)
-- T2 (S4): Superficies de edición al proceso hijo + tests — commit fix(surfaces)
-- T3 (S5): Purga de `models.default.json` + test invariante — commit chore(models)
-- T4 (S6): Reconciliación de docs (`AGENTS.md`, `README.md`) — commit docs(agents)
-- T5: Suite completa verde (verificación; los fixes viajan en su unidad)
+- [x] T1 (S1-S3): Gate de contrato de retorno en el runner + tests de comportamiento — commit `6d02ce9` fix(subagents)
+- [x] T2 (S4): Superficies de edición al proceso hijo + tests — commit `f9f7a28` fix(surfaces)
+- [x] T3 (S5): Purga del roster legacy en `models.default.json` + test invariante — commit `ba42726` chore(models)
+- [x] T4 (S6): Reconciliación de docs (`AGENTS.md`, `README.md`) + picker de `/studio:models` — commit `3a00fe9` docs(agents)
+- [x] T5: Suite completa verde 176/176 (verificación; los fixes viajan en su unidad)
 
 ## Log
 
@@ -25,3 +25,5 @@ Close the three audit gaps between Pi Game Studio's written Gentle Shell discipl
 - L2: Contexto: autorización de las reparaciones 1-3 propuestas en la auditoría del turno anterior (hallazgos en Engram obs #4609). La reparación 4 (clasificación de riesgo + verificador independiente) quedó explícitamente fuera: es decisión de producto, no reparación.
 - L4: Corrección de alcance durante T3: la purga intentó dejar solo los tres tiers y rompió el test de simetría de motores (`__tests__/homologation.test.js`, requisito del feature Phaser: los 6 especialistas deben estar mapeados explícitamente). La decisión previa se respeta: los 6 especialistas se mantienen, mapeados al valor del tier `workhorse`, que es exactamente el default que ya declara `AGENTS.md`. Solo se elimina el roster legacy.
 - L3: Hallazgos que originan cada spec — S1/S2/S3: `validateSpecialistReturn` sin importadores y test que solo verifica la existencia del string (`__tests__/studio-commands.test.js:417`). S4: `boundedSurfacesGuard.setFromTask()` corre solo en el proceso padre (`extensions/hooks/index.ts:86`) y `studio-surfaces-guard.ts:109` permite todo con lista vacía. S5/S6: `models.default.json` conserva el roster legacy de 50+ agentes y contradice tanto `AGENTS.md` como el `model: inherit` real de los 14 templates.
+- L5: Check diferencial sobre la ruta compartida con `chains/` (que también llama a `studioAgentsRunner.run`). Base `4a53e5d` vs HEAD, mismo receipt y mismo task, hijo falso determinista: `validChain` idéntico (`completed`, sin superficies); `invalidChain` base `completed` → HEAD `failed` (gate de contrato, intencional); `scopedRun` base `SURFACES=<unset>` → HEAD `SURFACES=["src"]` (propagación al hijo, intencional). Sin diferencias no pedidas.
+- L6: Cierre: 176/176 tests verdes en `main`@`4a53e5d` → rama `fix/subagent-contract-enforcement`, 5 commits, 435 líneas autoradas. Este último slice cierra el feature. Push y PR quedan como decisión del usuario.

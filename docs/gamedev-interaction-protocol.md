@@ -187,6 +187,7 @@ files_changed:
   - <ruta/al/archivo>: <cambio concreto realizado>
 validation:
   - <comando de test o build ejecutado>: <resultado observado (e.g. PASS, 0 errors)>
+  # Agentes sin bash: 'structural: <propiedad leída>: <resultado>' o 'exception: <razón>'
 gameplay_impact:
   - <métrica o sensación de juego afectada (e.g. 60 FPS estables, cero allocs)>
 risks:
@@ -195,6 +196,8 @@ next_recommended_specialist: <especialista que debe continuar la tarea>
 ```
 
 **Regla de oro de tokens**: Si la tarea fue completada exitosamente, el especialista devuelve solo el bloque estructurado anterior. El Director o Lead sintetiza para el usuario sin duplicar información.
+
+**Evidencia obligatoria**: `files_changed` no es evidencia — nombra archivos, no verificación. Un `completed` exige `validation` con la forma que corresponda a las herramientas del agente: `<comando exacto>: <resultado observado>` si declara `bash`; `structural: <propiedad leída>: <resultado>` o `exception: <razón>` si no. Un agente que no pudo verificar devuelve `partial`. Quien recibe la entrega re-ejecuta un comando reportado antes de cerrarla, porque el validador comprueba forma, nunca verdad.
 
 ---
 

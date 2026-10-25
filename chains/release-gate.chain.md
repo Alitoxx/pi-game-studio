@@ -5,6 +5,7 @@ description: Pre-release verification gate auditing build stability, performance
 
 > Multi-agent studio pipeline auditing milestone builds before release.
 > Cada paso declara `surfaces:` para acotar lo que puede editar y `section:` cuando aporta una sección a un documento compartido; dos pasos que reemplacen el mismo archivo sin secciones distintas invalidan la cadena.
+> Ningún paso cierra sin un spot check: la cadena vuelve a correr un comando reportado en `validation`, o relee la propiedad declarada en `structural:`; el contrato valida forma, no verdad.
 
 ## qa-lead
 

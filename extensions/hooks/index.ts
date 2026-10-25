@@ -31,6 +31,7 @@ import { updateTasksWidget } from "./studio-tasks-widget.ts";
 import { updateSubagentsWidget, installSubagentsWidget } from "./studio-subagents-widget.ts";
 import { handleStudioSubagentsViewer } from "./studio-subagents-viewer.ts";
 import { registerStudioSubagentTools } from "./studio-subagents.ts";
+import { formatStudioToolDiagnostics } from "./studio-tool-registry.ts";
 import { registerAskUserQuestion } from "./studio-choice.ts";
 import { studioAgentsRunner } from "./studio-agents-runner.ts";
 import {
@@ -994,6 +995,17 @@ export default function (pi: ExtensionAPI) {
 
 		// Only run in the game-studio project context
 		if (!studioRoot) return;
+
+		// A studio tool replaced by another provider leaves the runner inert with
+		// no error at all. Say it at startup instead of looking healthy.
+		const toolDiagnostics = formatStudioToolDiagnostics();
+		if (toolDiagnostics.length > 0) {
+			for (const line of toolDiagnostics) console.log(line);
+			(ctx as any).ui?.notify?.(
+				"Herramientas del estudio reemplazadas por otro paquete. Revisa /studio:doctor.",
+				"warning",
+			);
+		}
 
 		// Raw terminal input listener for Double-Escape emergency guard
 		if ((ctx as any).hasUI && typeof (ctx as any).ui?.onTerminalInput === "function") {

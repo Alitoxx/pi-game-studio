@@ -1,3 +1,4 @@
+import { hasStudioTool, noteStudioToolFailure, noteStudioToolSkip } from "./studio-tool-registry.ts";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { playAlertChime } from "./studio-sound.ts";
 
@@ -630,21 +631,10 @@ export class StudioQuestionnaireComponent {
 }
 
 export function registerAskUserQuestion(pi: ExtensionAPI): void {
-	// If tool is already registered globally (e.g. by gentle-pi or host), don't register duplicate
-	const hasTool = (name: string) => {
-		try {
-			if (typeof (pi as any).hasTool === "function") return (pi as any).hasTool(name);
-			if (typeof (pi as any).getAllTools === "function") {
-				const tools = (pi as any).getAllTools();
-				return Array.isArray(tools) && tools.some((t: any) => t?.name === name);
-			}
-			return false;
-		} catch {
-			return false;
-		}
-	};
-
-	if (hasTool("ask_user_question")) {
+	// A host or another extension may already own this tool name. Skipping is
+	// correct, but it is recorded so session_start and /studio:doctor can say it.
+	if (hasStudioTool(pi as any, "ask_user_question")) {
+		noteStudioToolSkip("ask_user_question", "otro proveedor ya lo expone");
 		return;
 	}
 
@@ -896,5 +886,7 @@ export function registerAskUserQuestion(pi: ExtensionAPI): void {
 			};
 		},
 	});
-	} catch {}
+	} catch (error) {
+		noteStudioToolFailure("ask_user_question", error);
+	}
 }

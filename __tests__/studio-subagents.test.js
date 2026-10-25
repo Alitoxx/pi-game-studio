@@ -346,3 +346,74 @@ describe("Runner correlates the prompt response and the settlement flag", () => 
 		}
 	}, 30000);
 });
+
+describe("Studio tool registration is observable", () => {
+	const repoRoot = path.join(__dirname, "..");
+	const run = (body) => {
+		const { execFileSync } = require("child_process");
+		execFileSync(process.execPath, ["--experimental-strip-types", "-e", body], { cwd: repoRoot });
+	};
+
+	test("a tool provided by another provider is skipped AND reported, not silently dropped", () => {
+		expect(() => run(`
+			const { registerStudioSubagentTools, getStudioToolRegistrations } =
+				await import("./extensions/hooks/studio-subagents.ts");
+
+			const registered = [];
+			const fakePi = {
+				getAllTools: () => [{ name: "subagent_run" }],
+				registerTool: (t) => { registered.push(t.name); },
+			};
+			registerStudioSubagentTools(fakePi);
+
+			if (registered.includes("subagent_run")) throw new Error("subagent_run was registered twice");
+			if (!registered.includes("subagent_list")) throw new Error("non-conflicting tools must still register");
+
+			const regs = getStudioToolRegistrations();
+			const run = regs.find((r) => r.name === "subagent_run");
+			if (!run) throw new Error("the skipped tool left no record: it is still silent");
+			if (run.status !== "skipped") throw new Error("expected skipped, got " + run.status);
+			if (!run.reason) throw new Error("a skip must carry a reason");
+		`)).not.toThrow();
+	}, 30000);
+
+	test("a registration failure is recorded with its message instead of being swallowed", () => {
+		expect(() => run(`
+			const { registerStudioSubagentTools, getStudioToolRegistrations } =
+				await import("./extensions/hooks/studio-subagents.ts");
+
+			const fakePi = {
+				getAllTools: () => [],
+				registerTool: () => { throw new Error("host refused registration"); },
+			};
+			registerStudioSubagentTools(fakePi);
+
+			const regs = getStudioToolRegistrations();
+			const failed = regs.filter((r) => r.status === "failed");
+			if (failed.length !== 4) throw new Error("expected 4 failed registrations, got " + failed.length);
+			if (!/host refused registration/.test(failed[0].reason || "")) {
+				throw new Error("the failure message was lost: " + failed[0].reason);
+			}
+		`)).not.toThrow();
+	}, 30000);
+
+	test("diagnostics stay quiet when every tool registered, and name the culprit when not", () => {
+		expect(() => run(`
+			const mod = await import("./extensions/hooks/studio-subagents.ts");
+
+			mod.registerStudioSubagentTools({ getAllTools: () => [], registerTool: () => {} });
+			const quiet = mod.formatStudioToolDiagnostics();
+			if (quiet.length !== 0) throw new Error("clean registration must not warn: " + quiet.join(" / "));
+		`)).not.toThrow();
+
+		expect(() => run(`
+			const mod = await import("./extensions/hooks/studio-subagents.ts");
+			mod.registerStudioSubagentTools({ getAllTools: () => [{ name: "subagent_run" }], registerTool: () => {} });
+			const loud = mod.formatStudioToolDiagnostics();
+			if (loud.length === 0) throw new Error("a skipped tool must produce a diagnostic");
+			const text = loud.join(" ");
+			if (!text.includes("subagent_run")) throw new Error("the diagnostic must name the tool: " + text);
+			if (!text.includes("/studio:doctor")) throw new Error("the diagnostic must say where to look: " + text);
+		`)).not.toThrow();
+	}, 30000);
+});

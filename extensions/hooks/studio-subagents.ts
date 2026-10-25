@@ -51,7 +51,7 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 				timeout_seconds: {
 					type: "number",
 					description:
-						"Optional timeout limit in seconds (default is 300s for task mode, 900s for background mode).",
+						"Optional inactivity budget in seconds: the task is cancelled after this long without any sign of life from the specialist (default 300s in task mode, 900s in background mode). A tool in flight gets a larger allowance.",
 				},
 				allow_outside_studio: {
 					type: "boolean",

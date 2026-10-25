@@ -725,3 +725,136 @@ describe("Dispatch context", () => {
 		}).not.toThrow();
 	}, 40000);
 });
+
+describe("Inactivity watchdog", () => {
+	const scenario = (env, body) => {
+		const script = `
+			const fs = await import("node:fs");
+			const os = await import("node:os");
+			const path = await import("node:path");
+
+			const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "studio-idle-"));
+			const fakePi = path.join(tmp, "pi");
+			fs.copyFileSync("__tests__/fixtures/fake-pi-rpc.mjs", fakePi);
+			fs.chmodSync(fakePi, 0o755);
+			const previousPiPath = process.env.PI_PATH;
+			process.env.PI_PATH = fakePi;
+			process.env.FAKE_RECEIPT = "status: completed\\nsummary: ok\\nfiles_changed:\\n  - src/a.rs";
+			${Object.entries(env).map(([k, v]) => `process.env.${k} = ${JSON.stringify(String(v))};`).join("\n\t\t\t")}
+
+			const { studioAgentsRunner } = await import("./extensions/hooks/studio-agents-runner.ts");
+			const manifest = { name: "bevy-specialist", title: "BS", tier: "specialist", model: "inherit", thinking: "medium", tools: ["read"], systemPrompt: "t" };
+			const record = await studioAgentsRunner.run(manifest, "Tarea larga.", tmp, "task", undefined, ${body.timeout});
+			const elapsed = Date.now() - ${body.startedVar || "0"} + 0;
+
+			${body.assert}
+
+			if (previousPiPath === undefined) delete process.env.PI_PATH;
+			else process.env.PI_PATH = previousPiPath;
+			fs.rmSync(tmp, { recursive: true, force: true });
+		`;
+		return script;
+	};
+
+	test("a child that keeps producing activity outlives the idle budget", () => {
+		const script = scenario(
+			{ FAKE_KEEPALIVE_MS: 400, FAKE_KEEPALIVE_TICKS: 8 },
+			{
+				timeout: 1500,
+				assert: `
+			if (record.status !== "completed") {
+				throw new Error("a child that keeps reporting activity must not be killed by elapsed time: " + record.status + " / " + (record.error || ""));
+			}
+			if (typeof record.lastActivityAt !== "number") throw new Error("activity must be tracked on the record");`,
+			},
+		);
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+				timeout: 60000,
+			});
+		}).not.toThrow();
+	}, 70000);
+
+	test("a child that goes silent is cancelled naming inactivity, not elapsed time", () => {
+		const script = scenario(
+			{ FAKE_SILENT_AFTER_PROMPT: 1 },
+			{
+				timeout: 1200,
+				assert: `
+			if (record.status !== "cancelled") throw new Error("a silent child must be cancelled, got " + record.status);
+			if (!/sin actividad|inactiv/i.test(record.error || "")) {
+				throw new Error("the cancellation must name inactivity, got: " + record.error);
+			}`,
+			},
+		);
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+				timeout: 60000,
+			});
+		}).not.toThrow();
+	}, 70000);
+
+	test("a long running tool gets its own budget", () => {
+		const script = scenario(
+			{ FAKE_TOOL_THEN_SILENCE: 2000, PI_STUDIO_TOOL_IDLE_MS: 6000 },
+			{
+				timeout: 800,
+				assert: `
+			if (record.status !== "completed") {
+				throw new Error("a tool in flight must not be judged by the plain idle budget: " + record.status + " / " + (record.error || ""));
+			}`,
+			},
+		);
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+				timeout: 60000,
+			});
+		}).not.toThrow();
+	}, 70000);
+
+	test("concurrency is capped instead of unbounded", () => {
+		const script = `
+			const fs = await import("node:fs");
+			const os = await import("node:os");
+			const path = await import("node:path");
+
+			const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "studio-cap-"));
+			const fakePi = path.join(tmp, "pi");
+			fs.copyFileSync("__tests__/fixtures/fake-pi-rpc.mjs", fakePi);
+			fs.chmodSync(fakePi, 0o755);
+			const previousPiPath = process.env.PI_PATH;
+			process.env.PI_PATH = fakePi;
+			process.env.FAKE_SILENT_AFTER_PROMPT = "1";
+			process.env.PI_STUDIO_MAX_CONCURRENCY = "1";
+
+			const { studioAgentsRunner } = await import("./extensions/hooks/studio-agents-runner.ts");
+			const manifest = { name: "qa-lead", title: "QA", tier: "lead", model: "inherit", thinking: "medium", tools: ["read"], systemPrompt: "t" };
+			const first = await studioAgentsRunner.run(manifest, "uno", tmp, "background", undefined, 20000);
+			const second = await studioAgentsRunner.run(manifest, "dos", tmp, "background", undefined, 20000);
+
+			if (second.status !== "failed" || !/concurren/i.test(second.error || "")) {
+				throw new Error("the second dispatch must be refused naming the cap, got: " + second.status + " / " + (second.error || ""));
+			}
+
+			studioAgentsRunner.cancel(first.id, "fin del test");
+			if (previousPiPath === undefined) delete process.env.PI_PATH;
+			else process.env.PI_PATH = previousPiPath;
+			delete process.env.FAKE_SILENT_AFTER_PROMPT;
+			delete process.env.PI_STUDIO_MAX_CONCURRENCY;
+			fs.rmSync(tmp, { recursive: true, force: true });
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+				timeout: 60000,
+			});
+		}).not.toThrow();
+	}, 70000);
+});

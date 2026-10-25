@@ -71,13 +71,44 @@ process.stdin.on("data", (chunk) => {
 	// FAKE_STDERR models the diagnostic noise a real child writes while succeeding.
 	if (process.env.FAKE_STDERR) process.stderr.write(process.env.FAKE_STDERR + "\n");
 
-	emit({
-		type: "message_update",
-		assistantMessageEvent: { type: "text_delta", delta: receipt },
-	});
-	emit({
-		type: "agent_settled",
-		...(process.env.FAKE_SETTLED_ABORTED ? { aborted: true } : {}),
-	});
-	setTimeout(() => process.exit(0), 20);
+	// A child that keeps working is not a child that is stuck: the watchdog must
+	// see activity, not elapsed time.
+	if (process.env.FAKE_SILENT_AFTER_PROMPT) return;
+
+	const finish = () => {
+		emit({
+			type: "message_update",
+			assistantMessageEvent: { type: "text_delta", delta: receipt },
+		});
+		emit({
+			type: "agent_settled",
+			...(process.env.FAKE_SETTLED_ABORTED ? { aborted: true } : {}),
+		});
+		setTimeout(() => process.exit(0), 20);
+	};
+
+	// FAKE_TOOL_THEN_SILENCE: a long running tool emits one start and then works
+	// silently for a while, which deserves a larger budget than plain idle.
+	if (process.env.FAKE_TOOL_THEN_SILENCE) {
+		emit({ type: "tool_execution_start", toolCallId: "t1", toolName: "bash", args: { command: "cargo build" } });
+		setTimeout(finish, Number(process.env.FAKE_TOOL_THEN_SILENCE));
+		return;
+	}
+
+	const keepAliveMs = Number(process.env.FAKE_KEEPALIVE_MS || 0);
+	const ticks = Number(process.env.FAKE_KEEPALIVE_TICKS || 0);
+	if (keepAliveMs > 0 && ticks > 0) {
+		let sent = 0;
+		const beat = setInterval(() => {
+			sent += 1;
+			emit({ type: "status", message: "working " + sent });
+			if (sent >= ticks) {
+				clearInterval(beat);
+				finish();
+			}
+		}, keepAliveMs);
+		return;
+	}
+
+	finish();
 });

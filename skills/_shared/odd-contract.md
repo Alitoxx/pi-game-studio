@@ -41,7 +41,36 @@ risks:
 next_recommended_specialist: qa-lead
 ```
 
-`status` acepta `completed`, `partial`, `blocked` o `interaction_required`. Un `completed` exige evidencia observable: al menos un `files_changed` o un `validation` con el comando ejecutado y su resultado observado. Prosa sin evidencia no es una entrega verificable.
+`status` acepta `completed`, `partial`, `blocked` o `interaction_required`. Un `completed` exige `validation` no vacía: `files_changed` nombra archivos, no verificación, y no es evidencia por sí solo.
+
+Cada entrada de `validation` tiene una de tres formas, y la familia admisible depende de si el agente declara `bash`:
+
+| Forma | Quién la reporta | Qué prueba |
+|---|---|---|
+| `<comando exacto>: <resultado observado>` | agentes con `bash` | que algo se ejecutó, y qué devolvió |
+| `structural: <propiedad leída>: <resultado>` | agentes sin `bash` | que la propiedad documental existe y se leyó |
+| `exception: <razón>` | agentes sin `bash` | que no hay comando ejecutable, y por qué |
+
+Un agente con `bash` que no pudo verificar devuelve `status: partial`, nunca una forma pasiva. Un agente sin `bash` no reporta resultados de comandos: no los puede observar. El validador (`extensions/hooks/return-contract.ts`) aplica la regla con las herramientas que el runner le pasa, así que la familia no se elige a gusto.
+
+El validador comprueba forma, nunca verdad: un resultado inventado tiene la forma correcta. Por eso quien recibe la entrega re-ejecuta un comando reportado antes de darla por cerrada.
+
+Un especialista sin `bash` no puede ejecutar nada, y su entrega no vale menos por eso: cambia la forma de la evidencia, no la exigencia. Este es el mismo contrato en modo pasivo — el agente leyó el documento y nombra la propiedad que comprobó:
+
+```yaml
+status: completed
+summary: "Art bible con paleta, silueta y escala de valores cerrada"
+files_changed:
+  - "design/art/art-bible.md"
+validation:
+  - "structural: design/art/art-bible.md secciones obligatorias: presentes"
+gameplay_impact:
+  - "lectura de silueta a 1080p sin ambigüedad de clase"
+risks:
+  - "ninguno"
+```
+
+Si el trabajo no tiene ninguna propiedad comprobable, la entrega es `partial` con la razón, no un `completed` con una excusa.
 
 Un especialista despachado **no tiene UI**: no puede preguntar. Si la decisión está por encima de su rol, se detiene y la entrega como payload, que el padre releva como elección bloqueante:
 

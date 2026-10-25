@@ -2877,17 +2877,25 @@ describe("Shared ODD contract", () => {
 			const { validateSpecialistReturn } = await import("./extensions/hooks/return-contract.ts");
 
 			const doc = fs.readFileSync("skills/_shared/odd-contract.md", "utf8");
-			const block = /\\\`\\\`\\\`yaml\\s*\\n([\\s\\S]*?)\\n\\\`\\\`\\\`/.exec(doc);
-			if (!block) throw new Error("skills/_shared/odd-contract.md has no yaml example");
-			const sample = block[1];
+			// Every documented example must parse: one stale block teaches a delivery
+			// shape the runtime would reject.
+			const blocks = [...doc.matchAll(/\\\`\\\`\\\`yaml\\s*\\n([\\s\\S]*?)\\n\\\`\\\`\\\`/g)].map((m) => m[1]);
+			if (blocks.length === 0) throw new Error("skills/_shared/odd-contract.md has no yaml example");
 
-			const res = validateSpecialistReturn(sample);
-			if (!res.isValid) throw new Error("documented example rejected: " + res.errors.join(" | "));
-			if (!(res.parsed?.validation?.length)) {
-				throw new Error("documented example carries validation the parser drops");
-			}
-			if (!(res.parsed?.files_changed?.length)) {
-				throw new Error("documented example carries files_changed the parser drops");
+			for (const [index, sample] of blocks.entries()) {
+				const res = validateSpecialistReturn(sample);
+				if (!res.isValid) throw new Error("documented example #" + index + " rejected: " + res.errors.join(" | "));
+				if (res.parsed?.status === "completed") {
+					if (!(res.parsed?.validation?.length)) {
+						throw new Error("example #" + index + " carries validation the parser drops");
+					}
+					if (!(res.parsed?.files_changed?.length)) {
+						throw new Error("example #" + index + " carries files_changed the parser drops");
+					}
+				}
+				if (res.parsed?.status === "interaction_required" && !res.parsed?.interaction?.question) {
+					throw new Error("example #" + index + " documents an escalation without a parsable question");
+				}
 			}
 		`;
 		const { execFileSync } = require("child_process");
@@ -2951,6 +2959,45 @@ describe("Continuity hand-off", () => {
 			}
 			if (result.details?.fallback !== true) {
 				throw new Error("without a UI this must report the headless fallback, got: " + JSON.stringify(result.details));
+			}
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+			});
+		}).not.toThrow();
+	}, 30000);
+});
+
+describe("Interaction escalation contract", () => {
+	test("interaction_required carries a payload the parent can relay", () => {
+		const script = `
+			const { validateSpecialistReturn } = await import("./extensions/hooks/return-contract.ts");
+
+			const sample = [
+				"status: interaction_required",
+				'summary: "Dos arquitecturas válidas, la decisión no es técnica del especialista"',
+				'question: "¿ECS con sistemas o jerarquía de escenas?"',
+				"options:",
+				'  - "ECS con sistemas"',
+				'  - "Jerarquía de escenas"',
+				"blocking: true",
+			].join("\\n");
+
+			const res = validateSpecialistReturn(sample);
+			if (!res.isValid) throw new Error("a well formed escalation must be valid: " + res.errors.join(" | "));
+			const interaction = res.parsed?.interaction;
+			if (!interaction) throw new Error("the payload was dropped: interaction is undefined");
+			if (interaction.question !== "¿ECS con sistemas o jerarquía de escenas?") {
+				throw new Error("question lost: " + interaction.question);
+			}
+			if (interaction.options.length !== 2) throw new Error("options lost: " + JSON.stringify(interaction.options));
+			if (interaction.blocking !== true) throw new Error("blocking must default to true");
+
+			const noQuestion = validateSpecialistReturn('status: interaction_required\\nsummary: "necesito algo"\\n');
+			if (noQuestion.isValid) {
+				throw new Error("an escalation without a question is not actionable and must be rejected");
 			}
 		`;
 		const { execFileSync } = require("child_process");

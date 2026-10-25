@@ -549,3 +549,60 @@ describe("Child termination", () => {
 		}).not.toThrow();
 	}, 70000);
 });
+
+describe("Specialist escalation", () => {
+	test("a child escalates through interaction_required and cannot be granted ask_user_question", () => {
+		const script = `
+			const fs = await import("node:fs");
+			const os = await import("node:os");
+			const path = await import("node:path");
+
+			const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "studio-escalate-"));
+			const fakePi = path.join(tmp, "pi");
+			fs.copyFileSync("__tests__/fixtures/fake-pi-rpc.mjs", fakePi);
+			fs.chmodSync(fakePi, 0o755);
+			const previousPiPath = process.env.PI_PATH;
+			process.env.PI_PATH = fakePi;
+			process.env.FAKE_ECHO_ARGV = "1";
+			process.env.FAKE_RECEIPT = [
+				"status: interaction_required",
+				'summary: "Necesito una decisión de arquitectura"',
+				'question: "¿ECS o jerarquía?"',
+				"options:",
+				'  - "ECS"',
+				'  - "Jerarquía"',
+				"blocking: true",
+			].join("\\n");
+
+			const { studioAgentsRunner } = await import("./extensions/hooks/studio-agents-runner.ts");
+			const manifest = { name: "bevy-specialist", title: "BS", tier: "specialist", model: "inherit", thinking: "medium", tools: ["read", "ask_user_question"], systemPrompt: "test" };
+			const record = await studioAgentsRunner.run(manifest, "Diseña el sistema de combate.", tmp, "task");
+
+			if (record.status !== "interaction_required") {
+				throw new Error("expected interaction_required, got " + record.status + " (" + (record.error || "") + ")");
+			}
+			if (!record.interaction || record.interaction.question !== "¿ECS o jerarquía?") {
+				throw new Error("the payload did not reach the record: " + JSON.stringify(record.interaction));
+			}
+
+			const argv = /ARGV=(.*)/.exec(record.result || "")?.[1] || "";
+			if (argv.includes("ask_user_question")) {
+				throw new Error("a child has no UI: ask_user_question must not be granted, argv was " + argv);
+			}
+			if (!argv.includes("--tools read")) {
+				throw new Error("the other tools must still be granted, argv was " + argv);
+			}
+
+			if (previousPiPath === undefined) delete process.env.PI_PATH;
+			else process.env.PI_PATH = previousPiPath;
+			delete process.env.FAKE_ECHO_ARGV;
+			fs.rmSync(tmp, { recursive: true, force: true });
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+			});
+		}).not.toThrow();
+	}, 40000);
+});

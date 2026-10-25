@@ -1,3 +1,14 @@
+/**
+ * A specialist cannot show a UI: when a decision is genuinely above its role it
+ * stops with `interaction_required` and this payload, which the parent relays as
+ * a blocking choice. This is a real return channel, not an enum value.
+ */
+export interface InteractionRequest {
+	question: string;
+	options: string[];
+	blocking: boolean;
+}
+
 export interface SpecialistReturn {
 	status: "completed" | "partial" | "blocked" | "interaction_required";
 	summary: string;
@@ -6,6 +17,7 @@ export interface SpecialistReturn {
 	gameplay_impact?: string[];
 	risks?: string[];
 	next_recommended_specialist?: string;
+	interaction?: InteractionRequest;
 }
 
 export interface ReturnValidationResult {
@@ -68,6 +80,9 @@ export function validateSpecialistReturn(rawText: string): ReturnValidationResul
 	const impactMatch = textToParse.match(/gameplay_impact:\s*([\s\S]*?)(?=\n[a-z_]+:|$)/i);
 	const risksMatch = textToParse.match(/risks:\s*([\s\S]*?)(?=\n[a-z_]+:|$)/i);
 	const nextMatch = textToParse.match(/next_recommended_specialist:\s*([^\n]+)/i);
+	const questionMatch = textToParse.match(/(?:^|\n)\s*question:\s*([^\n]+)/i);
+	const optionsMatch = textToParse.match(/(?:^|\n)\s*options:\s*([\s\S]*?)(?=\n[a-z_]+:|$)/i);
+	const blockingMatch = textToParse.match(/(?:^|\n)\s*blocking:\s*(true|false)/i);
 
 	const parseList = (block?: string | null): string[] => {
 		if (!block) return [];
@@ -78,6 +93,16 @@ export function validateSpecialistReturn(rawText: string): ReturnValidationResul
 			.map((l) => l.replace(/^-\s*/, ""));
 	};
 
+	const interaction: InteractionRequest | undefined = questionMatch
+		? {
+				question: questionMatch[1].trim().replace(/^["']|["']$/g, ""),
+				options: parseList(optionsMatch ? optionsMatch[1] : null).map((o) =>
+					o.replace(/^["']|["']$/g, ""),
+				),
+				blocking: blockingMatch ? blockingMatch[1].toLowerCase() === "true" : true,
+			}
+		: undefined;
+
 	const parsed: SpecialistReturn | undefined = statusMatch && summaryMatch ? {
 		status: statusMatch[1].toLowerCase().trim() as any,
 		summary: summaryMatch[1].trim(),
@@ -86,6 +111,7 @@ export function validateSpecialistReturn(rawText: string): ReturnValidationResul
 		gameplay_impact: parseList(impactMatch ? impactMatch[1] : null),
 		risks: parseList(risksMatch ? risksMatch[1] : null),
 		next_recommended_specialist: nextMatch ? nextMatch[1].trim() : undefined,
+		interaction,
 	} : undefined;
 
 	// Un 'completed' sin evidencia observable no es una entrega verificable:
@@ -98,6 +124,14 @@ export function validateSpecialistReturn(rawText: string): ReturnValidationResul
 				"Un 'status: completed' exige evidencia observable: agregá 'validation' (comandos/tests corridos) o 'files_changed' (archivos modificados).",
 			);
 		}
+	}
+
+	// An escalation without a concrete question is not actionable: the parent
+	// would relay an empty choice and the child would stall anyway.
+	if (parsed && parsed.status === "interaction_required" && !parsed.interaction?.question) {
+		errors.push(
+			"Un 'status: interaction_required' exige 'question' con la decisión concreta y, preferentemente, 'options'.",
+		);
 	}
 
 	return {

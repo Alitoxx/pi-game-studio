@@ -181,7 +181,7 @@ NEXT STEPS:
 Debe retornar su resultado compactado bajo el siguiente esquema estándar:
 
 ```yaml
-status: completed | partial | blocked | interaction_required
+status: completed | partial | blocked | interaction_required   # interaction_required exige 'question'
 summary: <resumen en 1 oración de lo que se implementó o cambió y por qué>
 files_changed:
   - <ruta/al/archivo>: <cambio concreto realizado>

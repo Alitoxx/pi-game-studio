@@ -193,6 +193,8 @@ All work follows Organic Driven Development (docs/odd-gamedev-workflow.md).
 ### Token Economy & Return Contract
 When completing an implementation task or when delegated via `subagent_run`, do not write conversational filler or greetings. Return your findings using the structured **Return Contract** (docs/gamedev-interaction-protocol.md) with `status`, `summary`, `files_changed`, `validation`, `gameplay_impact`, and `risks`.
 
+**Evidence is the delivery.** `validation` must name what you ran and what it said: `<exact command>: <observed result>`. `files_changed` names files, not verification, and never satisfies a `completed` on its own. You declare `bash`, so `structural:` and `exception:` are not your forms: a claim you could not verify is `status: partial`, with the failing command and its output.
+
 ### Communication & Decision Protocol (Gentle Shell for Games)
 
 Whenever presenting proposals, architectural trade-offs, or requesting user decisions, you MUST adhere to the **Gamedev Decision Protocol** (docs/gamedev-interaction-protocol.md):

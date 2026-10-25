@@ -112,18 +112,18 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 		}
 	});
 
-	test("agent groups cover all 14 agents without duplicates", () => {
+	test("agent groups cover all 15 agents without duplicates", () => {
 		const agentsSource = fs.readFileSync(
 			path.join(__dirname, "..", "extensions", "hooks", "studio-agents.ts"),
 			"utf8",
 		);
 
 		const agentMatches = [
-			...agentsSource.matchAll(/["']([a-z0-9-]+-director|[a-z0-9-]+-programmer|[a-z0-9-]+-designer|[a-z0-9-]+-specialist|[a-z0-9-]+-lead|[a-z0-9-]+-engineer|[a-z0-9-]+-tester|[a-z0-9-]+-analyst|[a-z0-9-]+-manager|[a-z0-9-]+-artist|writer|world-builder|prototyper|producer)["']/g),
+			...agentsSource.matchAll(/["']([a-z0-9-]+-director|[a-z0-9-]+-programmer|[a-z0-9-]+-designer|[a-z0-9-]+-specialist|[a-z0-9-]+-lead|[a-z0-9-]+-engineer|[a-z0-9-]+-tester|[a-z0-9-]+-analyst|[a-z0-9-]+-manager|[a-z0-9-]+-artist|[a-z0-9-]+-verifier|writer|world-builder|prototyper|producer)["']/g),
 		].map((m) => m[1]);
 
 		const uniqueAgents = Array.from(new Set(agentMatches));
-		expect(uniqueAgents.length).toBe(14);
+		expect(uniqueAgents.length).toBe(15);
 	});
 
 	test("all interactive select handlers support Pi string return values", () => {
@@ -148,10 +148,10 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 		}
 	});
 
-	test("all 14 agents define structured YAML tools and thinking effort levels", () => {
+	test("all 15 agents define structured YAML tools and thinking effort levels", () => {
 		const agentsDir = path.join(__dirname, "..", "agents");
 		const agentFiles = fs.readdirSync(agentsDir).filter((f) => f.endsWith(".md"));
-		expect(agentFiles.length).toBe(14);
+		expect(agentFiles.length).toBe(15);
 
 		for (const f of agentFiles) {
 			const content = fs.readFileSync(path.join(agentsDir, f), "utf8");

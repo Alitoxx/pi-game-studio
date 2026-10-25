@@ -6,18 +6,19 @@
 3. `extensions/hooks/index.ts` - Single hook entrypoint.
 4. `chains/` - Declarative multi-agent pipelines (3 chains).
 5. `skills/` - Skill inventory; 6 ODD skills (`concept`, `spec`, `arch`, `code`, `test`, `ship`).
-6. `agents/` - 14 agent templates (Compact 8+1 Studio Architecture: 8 Core roles + 6 Engine Specialists).
+6. `agents/` - 15 agent templates (Compact 8+1+1 Studio Architecture: 8 Core roles + 6 Engine Specialists + 1 read-only verifier).
 7. `chains/` - 3 multi-agent workflow chains.
 8. `starters/` - 6 starters (Bevy, Godot, Phaser, Raylib, Unity, Unreal).
 
 ## Architecture
 - The package surface is organized into `agents/`, `skills/`, `extensions/`, `chains/`, and `starters/` via `package.json`.
-- Studio operates on the Compact 8+1 Architecture (8 Core roles + 1 active Engine Specialist per project).
+- Studio operates on the Compact 8+1+1 Architecture (8 Core roles + 1 active Engine Specialist per project + 1 always-installed read-only verifier).
 - Development strictly follows Organic Driven Development (ODD) across 6 lifecycle skills.
 
 ## Count Verification
 All file inventories and counts match the expected state:
-- `agents/`: 14 templates (8 Core + 6 Specialists)
+- `agents/`: 15 templates (8 Core + 6 Specialists + 1 Verifier)
+- `agents/` installed per project: 10 (8 Core + 1 active Engine Specialist + 1 Verifier)
 - `skills/`: 6 ODD skills
 - `chains/`: 3 multi-agent pipelines
 - `chains/`: 3 chains

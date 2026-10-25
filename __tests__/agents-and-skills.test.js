@@ -1,14 +1,27 @@
 const fs = require("fs");
 const path = require("path");
 
-describe("Exhaustive Agent Validation (Compact 8+1 Studio Architecture: 14 Agents)", () => {
+describe("Exhaustive Agent Validation (Compact 8+1 Studio Architecture: 15 Agents)", () => {
 	const agentsDir = path.join(__dirname, "..", "agents");
 	const agentFiles = fs
 		.readdirSync(agentsDir)
 		.filter((f) => f.endsWith(".md"));
 
-	test("exactly 14 agent files exist in agents/ directory", () => {
-		expect(agentFiles.length).toBe(14);
+	test("exactly 15 agent files exist in agents/ directory", () => {
+		expect(agentFiles.length).toBe(15);
+	});
+
+	test("qa-verifier is the read-only auditor: declares evidence tools and never write/edit", () => {
+		const content = fs.readFileSync(path.join(agentsDir, "qa-verifier.md"), "utf8");
+		const frontmatter = content.split("---")[1];
+		const toolsSection = frontmatter.match(/^tools:\n((?:\s+-\s+[a-z_]+\n?)+)/m);
+		expect(toolsSection).not.toBeNull();
+		const toolLines = [
+			...toolsSection[1].matchAll(/^\s+-\s+([a-z_]+)/gm),
+		].map((m) => m[1]);
+		// The read-only property lives in the frontmatter, not in prompt prose:
+		// it can run evidence commands (bash) but cannot modify what it audits.
+		expect(toolLines).toEqual(["read", "find", "grep", "bash"]);
 	});
 
 	const validPiTools = [

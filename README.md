@@ -11,12 +11,12 @@
 <p align="center">
   Turn a Pi session into a full game development studio.
   <br />
-  Compact AI Studio — 8 Core roles + 1 Engine Specialist (8+1). 6 ODD skills. ODD workflow.
+  Compact AI Studio — 8 Core roles + 1 Engine Specialist + 1 read-only verifier (8+1+1). 6 ODD skills. ODD workflow.
 </p>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
-  <a href="agents"><img src="https://img.shields.io/badge/architecture-8%2B1%20Compact-blueviolet" alt="8+1 Compact Studio"></a>
+  <a href="agents"><img src="https://img.shields.io/badge/architecture-8%2B1%2B1%20Compact-blueviolet" alt="8+1+1 Compact Studio"></a>
   <a href="skills"><img src="https://img.shields.io/badge/skills-6%20ODD-green" alt="6 ODD Skills"></a>
   <a href="chains"><img src="https://img.shields.io/badge/chains-3-yellow" alt="3 Chains"></a>
   <a href="starters"><img src="https://img.shields.io/badge/starters-6-cyan" alt="6 Starters"></a>
@@ -26,12 +26,12 @@
 
 ```text
                ⠐⢿⡿⠂                   P I   G A M E   S T U D I O   v1.9.0
-           ⢀⣤⣶⣶⣶⣾⣷⣶⣶⣶⣤⡀               Compact AI Game Studio for Pi (8+1 Architecture)
+           ⢀⣤⣶⣶⣶⣾⣷⣶⣶⣶⣤⡀               Compact AI Game Studio for Pi (8+1+1 Architecture)
            ⣿⡇⢸⡏⢩⡍⢩⡍⢹⡇⢸⣿               ──────────────────────────────────────────────────────────
            ⣿⡇⢸⣇⣐⣒⣒⣂⣸⡇⢸⣿               GIT:       On branch main
            ⠈⠛⠛⣛⣿⣿⣿⣿⣛⠛⠛⠁               PATH:      ~/Games/pi-game-studio
             ⣴⡟⠩⣿⠍⢉⣭⡉⢻⣦                ENGINE:    Godot · Unity · Unreal · Bevy · Raylib · Phaser
-            ⠙⢷⣤⣴⣶⣶⣯⣤⡾⠋                AGENTS:    9 activos (8 Core + 1 Motor)
+            ⠙⢷⣤⣴⣶⣶⣯⣤⡾⠋                AGENTS:   10 activos (8 Core + 1 Motor + 1 Verificador)
               ⣿⠉⣭⣭⠉⣿                  STAGE:     Entorno OK
              ⣿⣶    ⣶⣿                 SKILLS:    6 ODD pipeline (/concept, /spec, /arch, /code, /test, /ship)
            ⢾⣿⣿⡷  ⠸⣿⣿⣷⠆                STORAGE:   Local storage (Persistent Memory)
@@ -44,7 +44,7 @@
 
 Building a game solo with AI is powerful — but a single chat session has no structure. No one stops you from hardcoding magic numbers, skipping design docs, or writing spaghetti code. There's no QA pass, no design review, no one asking "does this actually fit the game's vision?"
 
-**Pi Game Studio** solves this by giving your AI session the structure of a real studio with the high-speed, lean execution of **Gentle Shell**. Instead of a slow monolithic assistant or an overwhelming roster of 50+ background processes, you get a compact, focused team of **8 Core roles + 1 Engine Specialist (8+1)**: directors who guard the vision, department leads who own their domains, and dedicated engine specialists who do the hands-on work.
+**Pi Game Studio** solves this by giving your AI session the structure of a real studio with the high-speed, lean execution of **Gentle Shell**. Instead of a slow monolithic assistant or an overwhelming roster of 50+ background processes, you get a compact, focused team of **8 Core roles + 1 Engine Specialist + 1 read-only verifier (8+1+1)**: directors who guard the vision, department leads who own their domains, and dedicated engine specialists who do the hands-on work.
 
 The result: you still make every decision, but now you have a fast, coordinated team that asks the right questions, catches mistakes early, and keeps your project organized from first brainstorm to launch without wasting tokens or stalling in background loops.
 
@@ -54,7 +54,7 @@ The result: you still make every decision, but now you have a fast, coordinated 
 
 - [What's Included](#whats-included)
 - [Key Mappings (CCGS → Pi)](#key-mappings-ccgs--pi)
-- [Studio Hierarchy (8+1)](#studio-hierarchy-81)
+- [Studio Hierarchy (8+1+1)](#studio-hierarchy-811)
 - [Architecture & Flowcharts](#architecture--flowcharts)
 - [Model Mapping](#model-mapping)
 - [Customizing Models](#customizing-models)
@@ -72,7 +72,7 @@ The result: you still make every decision, but now you have a fast, coordinated 
 
 | Category      | Count | Description                                                                                                              |
 | ------------- | ----- | ------------------------------------------------------------------------------------------------------------------------ |
-| **Agents**    | 8+1   | Compact active studio: 8 Core roles + 1 dedicated Engine Specialist per project                                           |
+| **Agents**    | 8+1+1 | Compact active studio: 8 Core roles + 1 dedicated Engine Specialist per project + 1 always-installed read-only verifier    |
 | **Subagents** | Native| Isolated child process execution via `subagent_run`, `subagent_list`, `subagent_status`, `subagent_result` & `subagent_steer`   |
 | **Interactive**| Native| Interactive terminal menus & batch questionnaires via `ask_user_question` (arrow keys & Enter)             |
 | **Skills**    | 6 ODD | Full lifecycle pipeline: `/concept`, `/spec`, `/arch`, `/code`, `/test`, `/ship`                                          |
@@ -94,7 +94,7 @@ The result: you still make every decision, but now you have a fast, coordinated 
 | `CLAUDE.md`                   | `package.json` (pi manifest)                          |
 | `.claude/settings.json`       | `models.default.json`                                 |
 
-## Studio Hierarchy (8+1)
+## Studio Hierarchy (8+1+1)
 
 Agents are organized into a lean hierarchy designed for maximum speed and token efficiency:
 
@@ -127,8 +127,8 @@ Tier 3 — Engine Specialist (+1 per project)
 | **Unreal Engine 5** | `unreal-specialist`  | C++, GAS, Blueprints, Replication, UMG |
 
 > 📖 **Manuales y Herramientas del Estudio**:
-> - [`AGENTS.md`](AGENTS.md): Directorio completo y responsabilidades del equipo oficial **8+1**.
-> - [`docs/architecture-flowcharts.md`](docs/architecture-flowcharts.md): **Diagramas de Flujo y Arquitectura Completa** — Visualización paso a paso del pipeline ODD de 6 fases, la jerarquía 8+1, subagentes en vivo, compilación Web/WASM, profiler y sintetizador procedural.
+> - [`AGENTS.md`](AGENTS.md): Directorio completo y responsabilidades del equipo oficial **8+1+1**.
+> - [`docs/architecture-flowcharts.md`](docs/architecture-flowcharts.md): **Diagramas de Flujo y Arquitectura Completa** — Visualización paso a paso del pipeline ODD de 6 fases, la jerarquía 8+1+1, subagentes en vivo, compilación Web/WASM, profiler y sintetizador procedural.
 > - [`docs/gamedev-interaction-protocol.md`](docs/gamedev-interaction-protocol.md): **Protocolo de Respuestas y Decisiones (Gentle Shell for Games)** — Bloque 0: *Executive Delivery & Zero Bleed*, Pillars Header, Trade-offs Matrix, Choice Envelopes, Radar, Return Contracts, **Gobernanza Comercial & Modelado Boxleiter** y **Flow Completion Protocol**.
 > - [`docs/skills-reference.md`](docs/skills-reference.md): Catálogo de las **6 skills ODD** y comandos `studio:*` organizados por fases.
 > - **Única Fuente de Verdad (Single Source of Truth)**: `design/gdd/` y `design/art/` exclusivos para diseño y arte; `production/` exclusivo para roadmaps y sprints.
@@ -144,7 +144,7 @@ Para una comprensión visual exhaustiva de cómo interactúan los agentes, motor
 
 Incluye diagramas detallados de:
 1. **Pipeline ODD Gamedev (6 Fases Oficiales)**
-2. **Jerarquía y Roles del Estudio (8+1)**
+2. **Jerarquía y Roles del Estudio (8+1+1)**
 3. **Subagentes Aislados & Visor en Vivo (`/studio:subagents`)**
 4. **WebAssembly / Web One-Click Build & Runner (`/studio:web`)**
 5. **Live Performance Profiler & Budget Tracker HUD (`/studio:profile`)**
@@ -232,7 +232,7 @@ Pi Game Studio opera con el pipeline de **6 Skills ODD (Organic Driven Developme
 
 - **`/studio`** (o **`/studio:start`**) — Menú principal y auditoría de estado del proyecto.
 - **`/studio:new`** — Asistente de creación de nuevo juego a partir de 6 starters (Bevy, Godot, Phaser, Raylib, Unity, Unreal).
-- **`/studio:setup`** — Instalación del roster 8+1 (9 agentes) en el proyecto.
+- **`/studio:setup`** — Instalación del roster 8+1+1 (10 agentes) en el proyecto.
 - **`/studio:models`** — Configuración interactiva de modelos de IA por rol o nivel.
 - **`/studio:doctor`** — Diagnóstico integral de toolchains, compiladores y estructura ODD.
 - **`/studio:tools`** — Verificación e instalación de herramientas multimedia CLI (FFmpeg, ImageMagick, free-tex-packer-cli, gltf-transform, gltfpack, oxipng, pngquant, wasm-opt, butler).
@@ -370,7 +370,7 @@ pi-game-studio/                     # Package root
 ├── LICENSE                         # MIT
 ├── AGENTS.md                       # Full agent roster
 ├── models.default.json             # Recommended 3-tier model mapping
-├── agents/                         # 14 source agents (8 Core + 6 Engine Specialists)
+├── agents/                         # 15 source agents (8 Core + 6 Engine Specialists + 1 Read-Only Verifier)
 ├── skills/                         # 6 ODD lifecycle skills (SKILL.md per directory)
 ├── extensions/                     # Hooks extension
 │   └── hooks/

@@ -21,8 +21,8 @@ describe("Utility Scripts", () => {
 				...TIERS.lightweight,
 			];
 			const uniqueAgents = new Set(allAgents);
-			expect(allAgents.length).toBe(14);
-			expect(uniqueAgents.size).toBe(14);
+			expect(allAgents.length).toBe(15);
+			expect(uniqueAgents.size).toBe(15);
 		});
 
 		test("each agent in TIERS exists as a file in agents/", () => {
@@ -73,7 +73,7 @@ describe("Utility Scripts", () => {
 			for (const agent of agentFiles) {
 				expect(uniqueAgents.has(agent)).toBe(true);
 			}
-			expect(agentFiles.length).toBe(14);
+			expect(agentFiles.length).toBe(15);
 		});
 
 		test("all 6 engine specialists must be in workhorse tier", () => {

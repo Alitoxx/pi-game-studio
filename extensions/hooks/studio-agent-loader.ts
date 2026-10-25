@@ -64,6 +64,7 @@ export function getAgentTier(name: string): "director" | "lead" | "specialist" {
 			"art-director",
 			"audio-director",
 			"qa-lead",
+			"qa-verifier",
 		].includes(name)
 	) {
 		return "lead";

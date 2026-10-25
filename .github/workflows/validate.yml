@@ -107,5 +107,5 @@ jobs:
           SKILLS=$(ls -d skills/*/ | wc -l | tr -d ' ')
           PROMPTS=$(find prompts -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
           echo "📊 Agents: $AGENTS | Skills: $SKILLS | Templates: $PROMPTS"
-          [ "$AGENTS" = "14" ] || { echo "❌ Expected 14 agents (8 core + 6 engine specialists), got $AGENTS"; exit 1; }
+          [ "$AGENTS" = "15" ] || { echo "❌ Expected 15 agents (8 core + 6 engine specialists + 1 read-only verifier), got $AGENTS"; exit 1; }
           [ "$PROMPTS" = "0" ] || { echo "❌ Expected 0 templates (layer retired), got $PROMPTS"; exit 1; }

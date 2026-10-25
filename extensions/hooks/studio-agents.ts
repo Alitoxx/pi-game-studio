@@ -45,6 +45,7 @@ export const AGENT_GROUPS: Array<{
 			"art-director",
 			"audio-director",
 			"qa-lead",
+			"qa-verifier",
 		],
 	},
 	{
@@ -85,7 +86,7 @@ export async function handleStudioAgents(
 			"1. Directores (Visión, Arquitectura y Producción)",
 			"2. Desarrolladores Core (Diseño, Gameplay, Arte, Audio, QA)",
 			"3. Especialistas de Motor (Bevy, Godot, Phaser, Raylib, Unity, Unreal)",
-			"4. Ver la dotación completa (14 agentes)",
+			"4. Ver la dotación completa (15 agentes)",
 		];
 
 		const selected = await (ctx.ui as any).select(
@@ -153,7 +154,7 @@ function printGroup(
 function printAllAgents(ctx: ExtensionContext): void {
 	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 		const lines = [
-			"PI GAME STUDIO — DOTACIÓN DE 13 AGENTES (8+1)",
+			"PI GAME STUDIO — DOTACIÓN COMPLETA (8 CORE + 6 ESPECIALISTAS + 1 VERIFICADOR)",
 			"─".repeat(50),
 			...AGENT_GROUPS.map((g) => `${g.name}: ${g.agents.length} agentes`),
 			"",
@@ -162,7 +163,7 @@ function printAllAgents(ctx: ExtensionContext): void {
 		ctx.ui.notify(lines.join("\n"), "info");
 	} else {
 		console.log("");
-		console.log("\x1b[1m" + ACCENT + "PI GAME STUDIO — DOTACIÓN DE 13 AGENTES (8+1)\x1b[0m");
+		console.log("\x1b[1m" + ACCENT + "PI GAME STUDIO — DOTACIÓN COMPLETA (8 CORE + 6 ESPECIALISTAS + 1 VERIFICADOR)\x1b[0m");
 		console.log("" + GRAY + "" + "─".repeat(60) + "\x1b[0m");
 
 		for (const group of AGENT_GROUPS) {

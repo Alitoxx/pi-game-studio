@@ -89,6 +89,7 @@ export function categorizeDiscipline(agent: string): DisciplineCategory {
 	}
 
 	if (
+		lower === "qa-verifier" ||
 		lower.endsWith("-specialist") ||
 		lower.endsWith("-programmer") ||
 		lower.endsWith("-engineer") ||

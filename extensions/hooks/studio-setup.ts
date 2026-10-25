@@ -102,6 +102,13 @@ export const CORE_STUDIO_AGENTS: string[] = [
 	"qa-lead",               // 8. Testing continuo, quality gates y bugs
 ];
 
+export const VERIFIER_AGENTS: string[] = [
+	// Auditor independiente read-only, siempre instalado junto al especialista
+	// de motor: cierra el canal de verificación bloqueante (chains/release-gate.chain.md)
+	// y es el único rol sin write/edit (lee, no modifica lo que audita).
+	"qa-verifier",
+];
+
 export const ENGINE_AGENTS_MAP: Record<string, string[]> = {
 	Godot: ["godot-specialist"],
 	Unity: ["unity-specialist"],
@@ -125,12 +132,12 @@ export function getEngineAgents(engineName: string): string[] {
 export function filterAgentsForEngine(engineName: string, all = false): string[] {
 	if (all) return [];
 	const engineAgents = getEngineAgents(engineName);
-	return [...CORE_STUDIO_AGENTS, ...engineAgents];
+	return [...CORE_STUDIO_AGENTS, ...engineAgents, ...VERIFIER_AGENTS];
 }
 
 export function inspectSetup(cwd: string): SetupStatus {
 	const pkgRoot = resolvePackageRoot();
-	let totalPackageAgents = 14;
+	let totalPackageAgents = 15;
 	try {
 		if (existsSync(join(pkgRoot, "agents"))) {
 			totalPackageAgents = readdirSync(join(pkgRoot, "agents")).filter((f) =>
@@ -413,7 +420,7 @@ export async function runGuidedSetup(
 		"RESUMEN DE INSTALACION PERSONALIZADA:",
 		`• Motor de juego:      ${selectedEngine}`,
 		`• Dimensión del juego: ${selectedDimension.toUpperCase()} (${selectedDimension === "2d" ? "Sprites & TileMaps" : "glTF/GLB & PBR"})`,
-		`• Agentes a desplegar: ${targetCount} agentes (8 Core + ${targetCount - 8} especialista de ${selectedEngine})`,
+		`• Agentes a desplegar: ${targetCount} agentes (8 Core + 1 especialista de ${selectedEngine} + 1 verificador read-only)`,
 		`• Idioma preferido:    ${selectedLang === "es" ? "Español (es)" : "English (en)"}`,
 		`• Modelos Directores: ${customModels.director || "gpt-5.4-mini"}`,
 		`• Modelos Workhorse:  ${customModels.workhorse || "gpt-oss-120b:free"}`,

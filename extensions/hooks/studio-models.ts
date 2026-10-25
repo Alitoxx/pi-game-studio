@@ -240,6 +240,7 @@ async function configureAgentModel(
 		"art-director",
 		"audio-director",
 		"qa-lead",
+		"qa-verifier",
 		"bevy-specialist",
 		"godot-specialist",
 		"phaser-specialist",
@@ -390,6 +391,7 @@ async function configureThinkingEffort(ctx: ExtensionContext): Promise<void> {
 		"art-director",
 		"audio-director",
 		"qa-lead",
+		"qa-verifier",
 	];
 	const TIER_3 = [
 		"bevy-specialist",

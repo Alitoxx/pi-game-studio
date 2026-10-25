@@ -32,7 +32,8 @@ const path = require("path");
 const PACKAGE_ROOT = path.resolve(__dirname, "..");
 const MODELS_FILE = path.join(PACKAGE_ROOT, "models.default.json");
 
-// ── Agent roster by tier (Compact 8+1 Studio Architecture: 14 agents total) ────
+// ── Agent roster by tier (Compact 8+1 Studio Architecture: 15 agents total) ────
+// 8 core roles + 6 engine specialists + 1 always-installed read-only verifier.
 // No agent defaults to the lightweight tier: the runtime (studio-models.ts) resolves
 // every non-director, non-engine agent to the workhorse tier, and art/audio directors
 // are Tier 2 leads with thinking: medium. The tier stays available as a model value.
@@ -46,6 +47,7 @@ const TIERS = {
 		"art-director",
 		"audio-director",
 		"qa-lead",
+		"qa-verifier",
 		"bevy-specialist",
 		"godot-specialist",
 		"phaser-specialist",

@@ -31,7 +31,7 @@ export async function handleStudioSettings(
 			if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 				ctx.ui.notify(`Motor configurado a: ${eng}`, "info");
 			}
-			console.log(`${GREEN}✔ Motor de juego actualizado a: ${eng}\x1b[0m`);
+			console.log(`${GREEN}✓ Motor de juego actualizado a: ${eng}\x1b[0m`);
 			return;
 		}
 	}
@@ -106,7 +106,7 @@ export async function handleStudioSettings(
 					if (typeof (ctx.ui as any)?.notify === "function") {
 						ctx.ui.notify("🧹 Limpieza de terminal al iniciar: Activada", "info");
 					}
-					console.log("" + GREEN + "✔ Limpieza de terminal al iniciar: Activada\x1b[0m");
+					console.log("" + GREEN + "✓ Limpieza de terminal al iniciar: Activada\x1b[0m");
 				}
 				break;
 			}

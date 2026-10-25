@@ -356,21 +356,21 @@ export function renderBudgetCard(report: BudgetReport, width: number = 74): stri
 	const innerWidth = cardWidth - 4;
 	const lines: string[] = [];
 
-	lines.push(`${BORDER}╭─${RESET} ${PURPLE}${BOLD}◈ ESTIMATED STUDIO BUDGET & TOKENS${RESET} ${BORDER}${"─".repeat(Math.max(0, cardWidth - 38))}╮${RESET}`);
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`${LAVENDER}${BOLD}Resumen de Sesión Activa${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`${BORDER}╭─${RESET} ${PURPLE}${BOLD}ESTIMATED STUDIO BUDGET & TOKENS${RESET} ${BORDER}${"─".repeat(Math.max(0, cardWidth - 38))}╮${RESET}`);
+	lines.push(`${BORDER}│${RESET} ${padAnsi(`${LAVENDER}Resumen de Sesión Activa${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 
 	// Total tokens row
 	const totalTokensStr = `${WHITE}${formatNumber(report.totalTokens)}${RESET} ${GRAY}tokens${RESET} (${GRAY}In:${RESET} ${CYAN}${formatNumber(report.totalInputTokens)}${RESET} ${GRAY}· Out:${RESET} ${GREEN}${formatNumber(report.totalOutputTokens)}${RESET} ${GRAY}· Cache:${RESET} ${YELLOW}${formatNumber(report.totalCacheTokens)}${RESET})`;
 	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${GRAY}Consumo Total:${RESET} ${totalTokensStr}`, innerWidth)} ${BORDER}│${RESET}`);
 
 	// Cost row
-	const costStr = `${GREEN}${BOLD}$${report.totalCostUsd.toFixed(4)} USD${RESET}`;
+	const costStr = `${GREEN}$${report.totalCostUsd.toFixed(4)} USD${RESET}`;
 	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${GRAY}Costo Estimado:${RESET} ${costStr} ${GRAY}(basado en tiers de modelos)${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${GRAY}Eventos registrados:${RESET} ${WHITE}${report.recordCount}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 	lines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
 
 	// Discipline Breakdown
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`${LAVENDER}${BOLD}Desglose por Disciplina de Estudio${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`${BORDER}│${RESET} ${padAnsi(`${LAVENDER}Desglose por Disciplina de Estudio${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 
 	const disciplines: { name: DisciplineCategory; color: string }[] = [
 		{ name: "Directors", color: PURPLE },
@@ -395,7 +395,7 @@ export function renderBudgetCard(report: BudgetReport, width: number = 74): stri
 	const agentKeys = Object.keys(report.byAgent);
 	if (agentKeys.length > 0) {
 		lines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
-		lines.push(`${BORDER}│${RESET} ${padAnsi(`${LAVENDER}${BOLD}Detalle por Agente (${agentKeys.length})${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+		lines.push(`${BORDER}│${RESET} ${padAnsi(`${LAVENDER}Detalle por Agente (${agentKeys.length})${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 
 		for (const key of agentKeys.slice(0, 8)) {
 			const a = report.byAgent[key];
@@ -435,7 +435,7 @@ async function handleStudioBudgetImpl(
 		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			(ctx.ui as any).notify("Contador de presupuesto y tokens reiniciado.", "info");
 		}
-		console.log(`${GREEN}✔ Presupuesto de sesión reiniciado.\x1b[0m`);
+		console.log(`${GREEN}✓ Presupuesto de sesión reiniciado.\x1b[0m`);
 		return;
 	}
 

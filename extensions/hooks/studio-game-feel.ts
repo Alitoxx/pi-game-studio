@@ -602,7 +602,7 @@ export async function handleStudioGameFeel(
 	const engineResult = detectProjectEngine(studioRoot);
 	const targetEngine = engineResult.engine || "Godot";
 
-	console.log(`\n${ACCENT}${BOLD}▌ ◈ GAME FEEL & MOVEMENT AUDITOR${RESET}`);
+	console.log(`\n${ACCENT}${BOLD}GAME FEEL & MOVEMENT AUDITOR${RESET}`);
 	console.log(`${DIM}Inspección estática de las 5 dinámicas estándar de Game Feel...${RESET}\n`);
 
 	let targetFile: ScriptCandidate | undefined;
@@ -629,7 +629,7 @@ export async function handleStudioGameFeel(
 		if (candidates.length === 0) {
 			console.log(`${YELLOW}No se encontraron scripts de movimiento/controlador en el proyecto.${RESET}`);
 			console.log(`\n${GRAY}Sugerencia: Puedes generar un sandbox interactivo listo para auditar ejecutando:${RESET}`);
-			console.log(`  ${SECONDARY}${BOLD}/studio:scaffold${RESET}  o  ${SECONDARY}${BOLD}godot / bevy / raylib / phaser${RESET}\n`);
+			console.log(`  ${SECONDARY}/studio:scaffold${RESET}  o  ${SECONDARY}godot / bevy / raylib / phaser${RESET}\n`);
 			return;
 		}
 		targetFile = candidates[0];
@@ -644,17 +644,17 @@ export async function handleStudioGameFeel(
 	audit.relPath = targetFile.relPath;
 
 	// Print File Header
-	console.log(`${BOLD}${WHITE}Script Inspeccionado:${RESET}  ${SECONDARY}${targetFile.relPath}${RESET} (${targetFile.language})`);
+	console.log(`${WHITE}Script Inspeccionado:${RESET}  ${SECONDARY}${targetFile.relPath}${RESET} (${targetFile.language})`);
 	console.log(`${BORDER}──────────────────────────────────────────────────────────────────────${RESET}`);
 
 	// Print Pillars
 	for (const p of audit.pillars) {
 		const statusBadge = p.detected
-			? `${GREEN}${BOLD}[OK]${RESET}`
-			: `${RED}${BOLD}[FALTA]${RESET}`;
+			? `${GREEN}[OK]${RESET}`
+			: `${RED}[FALTA]${RESET}`;
 
 		const nameColor = p.detected ? WHITE : GRAY;
-		console.log(`  ${statusBadge} ${BOLD}${nameColor}${p.name}${RESET}`);
+		console.log(`  ${statusBadge} ${nameColor}${p.name}${RESET}`);
 		console.log(`         ${DIM}${p.description}${RESET}`);
 
 		if (p.detected && p.evidence) {
@@ -665,13 +665,13 @@ export async function handleStudioGameFeel(
 	// Print Score & Verdict
 	console.log(`${BORDER}──────────────────────────────────────────────────────────────────────${RESET}`);
 	const scoreColor = audit.score >= 4 ? GREEN : audit.score >= 3 ? YELLOW : RED;
-	console.log(`${BOLD}${WHITE}Puntuación Game Feel:${RESET} ${scoreColor}${BOLD}${audit.rating}${RESET}`);
+	console.log(`${WHITE}Puntuación Game Feel:${RESET} ${scoreColor}${audit.rating}${RESET}`);
 
 	// Print Missing Snippets
 	if (audit.snippets.length > 0) {
-		console.log(`\n${HEADING}${BOLD}⚡ CÓDIGO IDIOMÁTICO LISTO PARA COPIAR (${audit.snippets.length} faltante${audit.snippets.length > 1 ? "s" : ""}):${RESET}\n`);
+		console.log(`\n${HEADING}⚡ CÓDIGO IDIOMÁTICO LISTO PARA COPIAR (${audit.snippets.length} faltante${audit.snippets.length > 1 ? "s" : ""}):${RESET}\n`);
 		for (const s of audit.snippets) {
-			console.log(`${SECONDARY}${BOLD}► ${s.title}:${RESET}`);
+			console.log(`${SECONDARY}► ${s.title}:${RESET}`);
 			console.log(`${DIM}${BORDER}┌${"─".repeat(68)}┐${RESET}`);
 			for (const line of s.code.split("\n")) {
 				console.log(`${DIM}${BORDER}│${RESET}  ${line}`);
@@ -679,7 +679,7 @@ export async function handleStudioGameFeel(
 			console.log(`${DIM}${BORDER}└${"─".repeat(68)}┘${RESET}\n`);
 		}
 	} else {
-		console.log(`\n${GREEN}${BOLD}★ ¡EXCELENTE! Todas las 5 dinámicas de Game Feel están implementadas.${RESET}`);
+		console.log(`\n${GREEN}✓ ¡EXCELENTE! Todas las 5 dinámicas de Game Feel están implementadas.${RESET}`);
 		console.log(`${DIM}El control cuenta con buffer, coyote time, salto variable, inercia y feedback visual/sonoro.${RESET}\n`);
 	}
 

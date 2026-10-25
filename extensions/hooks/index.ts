@@ -798,21 +798,21 @@ export default function (pi: ExtensionAPI) {
 			if (!perfRes.isClean && perfRes.allocationsCount > 0) {
 				if (jamActive) {
 					console.log(
-						`${YELLOW}◈ [JAM MODE] Soft Perf Warning: ${perfRes.allocationsCount} allocations detected in frame loop of ${filePath} (blocking bypassed for rapid prototyping)\x1b[0m`,
+						`${YELLOW}[JAM MODE] Soft Perf Warning: ${perfRes.allocationsCount} allocations detected in frame loop of ${filePath} (blocking bypassed for rapid prototyping)\x1b[0m`,
 					);
 					if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 						(ctx.ui as any).notify(
-							`◈ [JAM MODE] Soft Perf Warning: ${perfRes.allocationsCount} allocs en frame loop (no bloqueante)`,
+							`[JAM MODE] Soft Perf Warning: ${perfRes.allocationsCount} allocs en frame loop (no bloqueante)`,
 							"warning",
 						);
 					}
 				} else {
 					console.log(
-						`${YELLOW}◈ PERF ALERT: ${perfRes.allocationsCount} allocations detected in frame loop of ${filePath}\x1b[0m`,
+						`${YELLOW}PERF ALERT: ${perfRes.allocationsCount} allocations detected in frame loop of ${filePath}\x1b[0m`,
 					);
 					if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 						(ctx.ui as any).notify(
-							`◈ PERF ALERT: ${perfRes.allocationsCount} allocs en frame loop de ${filePath.split("/").pop()}`,
+							`PERF ALERT: ${perfRes.allocationsCount} allocs en frame loop de ${filePath.split("/").pop()}`,
 							"warning",
 						);
 					}

@@ -66,7 +66,7 @@ export function generateLiveSpecTemplate(
 		"┌───────────────┐          Trigger          ┌───────────────┐",
 		"│    Inactivo   │ ────────────────────────► │     Activo    │",
 		"└───────────────┘                           └───────────────┘",
-		"        ▲                                           │",
+		"        ↑                                           │",
 		"        │                 Reset                     │",
 		"        └───────────────────────────────────────────┘",
 		"```",
@@ -159,7 +159,7 @@ export async function handleStudioFeature(
 		return;
 	}
 
-	console.log(`\n${BLUE}▌ ◈ LIVE SPEC GENERATOR (/studio:feature)${RESET}`);
+	console.log(`\n${BLUE}${BOLD}LIVE SPEC GENERATOR (/studio:feature)${RESET}`);
 	console.log(`${DIM}Generando Live Spec atómico ODD en design/gdd/...${RESET}\n`);
 
 	const result = createLiveSpec(studioRoot, trimmed);
@@ -168,7 +168,7 @@ export async function handleStudioFeature(
 		return;
 	}
 
-	console.log(`${GREEN}✔ Live Spec generado con éxito:\x1b[0m`);
+	console.log(`${GREEN}✓ Live Spec generado con éxito:\x1b[0m`);
 	console.log(`  • Archivo: \x1b[1m${WHITE}${result.filePath}\x1b[0m`);
 	console.log(`  • Tareas creadas: ${ACCENT}6 tareas atómicas (T1 a T6)\x1b[0m`);
 	console.log(`  • Roadmap: Sincronizado en ${GRAY}production/roadmap.md\x1b[0m\n`);

@@ -42,6 +42,26 @@ describe("Studio palette", () => {
 		).not.toThrow();
 	}, 30000);
 
+	describe("ornament vocabulary", () => {
+		const read = (f) => fs.readFileSync(path.join(hooksDir, f), "utf8");
+
+		test("retired ornament glyphs do not come back", () => {
+			const retired = /[◈▌✔●◆★╔╗╚╝╠╣═║▲■]/;
+			const offenders = files
+				.filter((f) => f !== "studio-palette.ts")
+				.filter((f) => retired.test(read(f)))
+				.map((f) => `${f} (${(read(f).match(new RegExp(retired.source, "g")) || []).length})`);
+			expect(offenders).toEqual([]);
+		});
+
+		test("emphasis stays on the title", () => {
+			const total = files
+				.filter((f) => f !== "studio-palette.ts")
+				.reduce((n, f) => n + (read(f).match(/BOLD/g) || []).length, 0);
+			expect(total).toBeLessThanOrEqual(40);
+		});
+	});
+
 	test("NO_COLOR disables every escape instead of forcing the studio palette", () => {
 		const script = `
 			const p = await import("./extensions/hooks/studio-palette.ts");

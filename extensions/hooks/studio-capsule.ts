@@ -5,7 +5,6 @@ import { join, resolve, basename, extname, relative } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
 import {
 	RESET,
-	BOLD,
 	DIM,
 	BORDER,
 	ACCENT,
@@ -556,7 +555,7 @@ export function renderCapsuleReport(summary: CapsuleAuditSummary, termWidth = 80
 	lines.push(`${BORDER}┌${"─".repeat(width - 2)}┐${RESET}`);
 	lines.push(
 		`${BORDER}│${RESET} ${padAnsi(
-			`${ACCENT}${BOLD}STEAM STORE CAPSULE ART & COVER AUDIT${RESET} ${GRAY}(Steamworks Specs)${RESET}`,
+			`${ACCENT}STEAM STORE CAPSULE ART & COVER AUDIT${RESET} ${GRAY}(Steamworks Specs)${RESET}`,
 			innerWidth,
 		)} ${BORDER}│${RESET}`,
 	);
@@ -564,22 +563,22 @@ export function renderCapsuleReport(summary: CapsuleAuditSummary, termWidth = 80
 
 	// Section 1: Tooling status
 	const toolStatus = summary.hasMagick
-		? `${GREEN}${BOLD}[ACTIVO]${RESET} ImageMagick (${summary.magickBinary}) — Simulación 231x87 y contraste activados`
-		: `${YELLOW}${BOLD}[MODO BÁSICO]${RESET} Lectura binaria nativa. Falta 'magick' para simulación de contraste`;
+		? `${GREEN}[ACTIVO]${RESET} ImageMagick (${summary.magickBinary}) — Simulación 231x87 y contraste activados`
+		: `${YELLOW}[MODO BÁSICO]${RESET} Lectura binaria nativa. Falta 'magick' para simulación de contraste`;
 	lines.push(`${BORDER}│${RESET} ${padAnsi(toolStatus, innerWidth)} ${BORDER}│${RESET}`);
 	lines.push(`${BORDER}├${"─".repeat(width - 2)}┤${RESET}`);
 
 	// Section 2: Reference specifications header
 	lines.push(
 		`${BORDER}│${RESET} ${padAnsi(
-			`${HEADING}${BOLD}RESOLUCIONES OFICIALES STEAMWORKS:${RESET}`,
+			`${HEADING}RESOLUCIONES OFICIALES STEAMWORKS:${RESET}`,
 			innerWidth,
 		)} ${BORDER}│${RESET}`,
 	);
 
 	for (const spec of Object.values(STEAM_CAPSULE_SPECS)) {
-		const isCrit = spec.critical ? ` ${RED}${BOLD}[CRÍTICA: CTR Core]${RESET}` : "";
-		const specLine = `  ${WHITE}${BOLD}${spec.width}x${spec.height}${RESET} ${DIM}│${RESET} ${SECONDARY}${spec.name}${RESET}${isCrit} ${GRAY}— ${spec.steamworksRole}${RESET}`;
+		const isCrit = spec.critical ? ` ${RED}[CRÍTICA: CTR Core]${RESET}` : "";
+		const specLine = `  ${WHITE}${spec.width}x${spec.height}${RESET} ${DIM}│${RESET} ${SECONDARY}${spec.name}${RESET}${isCrit} ${GRAY}— ${spec.steamworksRole}${RESET}`;
 		lines.push(`${BORDER}│${RESET} ${padAnsi(specLine, innerWidth)} ${BORDER}│${RESET}`);
 	}
 	lines.push(`${BORDER}├${"─".repeat(width - 2)}┤${RESET}`);
@@ -601,7 +600,7 @@ export function renderCapsuleReport(summary: CapsuleAuditSummary, termWidth = 80
 	} else {
 		lines.push(
 			`${BORDER}│${RESET} ${padAnsi(
-				`${HEADING}${BOLD}IMÁGENES ANALIZADAS (${summary.targetFiles.length}):${RESET}`,
+				`${HEADING}IMÁGENES ANALIZADAS (${summary.targetFiles.length}):${RESET}`,
 				innerWidth,
 			)} ${BORDER}│${RESET}`,
 		);
@@ -614,7 +613,7 @@ export function renderCapsuleReport(summary: CapsuleAuditSummary, termWidth = 80
 				statusBadge = `${RED}[✗ DESVIACIÓN]${RESET}`;
 			}
 
-			const headerLine = `  ${statusBadge} ${WHITE}${BOLD}${item.fileName}${RESET} ${GRAY}(${item.width}x${item.height} px, ${item.fileSizeFormatted})${RESET}`;
+			const headerLine = `  ${statusBadge} ${WHITE}${item.fileName}${RESET} ${GRAY}(${item.width}x${item.height} px, ${item.fileSizeFormatted})${RESET}`;
 			lines.push(`${BORDER}│${RESET} ${padAnsi(headerLine, innerWidth)} ${BORDER}│${RESET}`);
 
 			const matchLine = `     ${DIM}Destino sugerido:${RESET} ${SECONDARY}${item.matchedSpec.name}${RESET} ${GRAY}(Oficial: ${item.matchedSpec.width}x${item.matchedSpec.height})${RESET}`;
@@ -636,7 +635,7 @@ export function renderCapsuleReport(summary: CapsuleAuditSummary, termWidth = 80
 			if (item.legibility) {
 				const leg = item.legibility;
 				const legColor = leg.rating === "excelente" ? GREEN : leg.rating === "adecuado" ? SECONDARY : leg.rating === "extremo" ? RED : YELLOW;
-				const legLine = `     ${DIM}Simulación 231x87:${RESET} ${legColor}${BOLD}${leg.rating.toUpperCase()}${RESET} ${GRAY}(Contraste: ${leg.contrastPercent}%, Brillo: ${leg.luminancePercent}%)${RESET}`;
+				const legLine = `     ${DIM}Simulación 231x87:${RESET} ${legColor}${leg.rating.toUpperCase()}${RESET} ${GRAY}(Contraste: ${leg.contrastPercent}%, Brillo: ${leg.luminancePercent}%)${RESET}`;
 				lines.push(`${BORDER}│${RESET} ${padAnsi(legLine, innerWidth)} ${BORDER}│${RESET}`);
 				lines.push(`${BORDER}│${RESET} ${padAnsi(`     ${DIM}Nota:${RESET} ${GRAY}${leg.comment}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 			}
@@ -649,7 +648,7 @@ export function renderCapsuleReport(summary: CapsuleAuditSummary, termWidth = 80
 	lines.push(`${BORDER}├${"─".repeat(width - 2)}┤${RESET}`);
 	lines.push(
 		`${BORDER}│${RESET} ${padAnsi(
-			`${HEADING}${BOLD}ESTADO DEL SET DE CÁPSULAS PARA STEAM:${RESET}`,
+			`${HEADING}ESTADO DEL SET DE CÁPSULAS PARA STEAM:${RESET}`,
 			innerWidth,
 		)} ${BORDER}│${RESET}`,
 	);
@@ -657,7 +656,7 @@ export function renderCapsuleReport(summary: CapsuleAuditSummary, termWidth = 80
 	for (const spec of Object.values(STEAM_CAPSULE_SPECS)) {
 		const isMissing = summary.missingSpecs.some((m) => m.id === spec.id);
 		const icon = isMissing ? `${RED}[FALTA]${RESET}` : `${GREEN}[LISTO]${RESET}`;
-		const critTag = spec.critical ? ` ${RED}${BOLD}(¡URGENTE PARA VISIBILIDAD!)${RESET}` : "";
+		const critTag = spec.critical ? ` ${RED}(¡URGENTE PARA VISIBILIDAD!)${RESET}` : "";
 		const line = `  ${icon} ${WHITE}${spec.name}${RESET} ${GRAY}(${spec.width}x${spec.height})${RESET}${critTag}`;
 		lines.push(`${BORDER}│${RESET} ${padAnsi(line, innerWidth)} ${BORDER}│${RESET}`);
 	}
@@ -667,7 +666,7 @@ export function renderCapsuleReport(summary: CapsuleAuditSummary, termWidth = 80
 	if (!summary.hasMagick) {
 		lines.push(
 			`${BORDER}│${RESET} ${padAnsi(
-				`${YELLOW}${BOLD}RECOMENDACIÓN TÉCNICA (Art Director):${RESET}`,
+				`${YELLOW}RECOMENDACIÓN TÉCNICA (Art Director):${RESET}`,
 				innerWidth,
 			)} ${BORDER}│${RESET}`,
 		);
@@ -686,7 +685,7 @@ export function renderCapsuleReport(summary: CapsuleAuditSummary, termWidth = 80
 	} else if (summary.missingSpecs.length > 0) {
 		lines.push(
 			`${BORDER}│${RESET} ${padAnsi(
-				`${HEADING}${BOLD}COMANDOS RÁPIDOS DE GENERACIÓN (ImageMagick):${RESET}`,
+				`${HEADING}COMANDOS RÁPIDOS DE GENERACIÓN (ImageMagick):${RESET}`,
 				innerWidth,
 			)} ${BORDER}│${RESET}`,
 		);
@@ -717,7 +716,7 @@ export function renderCapsuleReport(summary: CapsuleAuditSummary, termWidth = 80
 	} else {
 		lines.push(
 			`${BORDER}│${RESET} ${padAnsi(
-				`${GREEN}${BOLD}¡SET COMPLETO! Todas las cápsulas requeridas por Steamworks están validadas.${RESET}`,
+				`${GREEN}¡SET COMPLETO! Todas las cápsulas requeridas por Steamworks están validadas.${RESET}`,
 				innerWidth,
 			)} ${BORDER}│${RESET}`,
 		);

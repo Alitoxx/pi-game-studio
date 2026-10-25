@@ -2,7 +2,7 @@ import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
-import { ACCENT, ACCENT as BLUE, BOLD, BORDER, CYAN, DIM, GRAY, GREEN, RED, RESET, SECONDARY, WHITE, YELLOW, padAnsi } from "./studio-palette.ts";
+import { ACCENT, ACCENT as BLUE, BORDER, CYAN, DIM, GRAY, GREEN, RED, RESET, SECONDARY, WHITE, YELLOW, padAnsi } from "./studio-palette.ts";
 
 export interface TuningVar {
 	key: string;
@@ -204,7 +204,7 @@ export async function handleStudioTuning(
 
 		const success = updateTuningVariable(targetVar.filePath, targetVar.key, typedVal);
 		if (success) {
-			console.log(`\n${GREEN}✔ Variable de tuning actualizada:\x1b[0m`);
+			console.log(`\n${GREEN}✓ Variable de tuning actualizada:\x1b[0m`);
 			console.log(`  • Clave:   \x1b[1m${WHITE}${targetVar.key}\x1b[0m`);
 			console.log(`  • Antes:   ${GRAY}${targetVar.value}\x1b[0m`);
 			console.log(`  • Ahora:   ${GREEN}${typedVal}\x1b[0m`);

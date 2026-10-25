@@ -219,10 +219,10 @@ export function renderStudioStatusCard(
 
 	const isCollapsed = collapsed !== undefined ? collapsed : isStatusCardCollapsed(studioRoot);
 	if (isCollapsed) {
-		const rawTitle = `◈ System · ${gameTitle} (${engine}) [collapsed]`;
+		const rawTitle = `System · ${gameTitle} (${engine}) [collapsed]`;
 		const maxTitleLen = Math.max(10, cardWidth - 7);
 		const displayTitle = rawTitle.length > maxTitleLen ? truncateAnsi(rawTitle, maxTitleLen) : rawTitle;
-		const titleStyled = `${BLUE}${displayTitle}${RESET}`;
+		const titleStyled = `${BLUE}${BOLD}${displayTitle}${RESET}`;
 		const titleVisibleLen = displayTitle.replace(/\x1b\[[0-9;]*m/g, "").length;
 		const ruleLen = Math.max(0, cardWidth - titleVisibleLen - 5);
 		const lines: string[] = [];
@@ -236,14 +236,14 @@ export function renderStudioStatusCard(
 		: `${GRAY}local Git${RESET}`;
 
 	const lines: string[] = [];
-	const titleText = `◈ System`;
-	const titleStyled = `${BLUE}${titleText}${RESET}`;
+	const titleText = `System`;
+	const titleStyled = `${BLUE}${BOLD}${titleText}${RESET}`;
 	const ruleLen = Math.max(0, cardWidth - titleText.length - 5);
 	lines.push(`  ${BORDER}╭─${RESET} ${titleStyled} ${BORDER}${"─".repeat(ruleLen)}╮${RESET}`);
 
 	// Direct Project & Engine rows
 	const shortRoot = studioRoot.replace(process.env.HOME || "", "~");
-	const projectLine = truncateAnsi(`  ${WHITE}${BOLD}${gameTitle}${RESET} ${GRAY}(${shortRoot})${RESET}`, innerWidth);
+	const projectLine = truncateAnsi(`  ${WHITE}${gameTitle}${RESET} ${GRAY}(${shortRoot})${RESET}`, innerWidth);
 	lines.push(`  ${BORDER}│${RESET} ${padAnsi(projectLine, innerWidth)} ${BORDER}│${RESET}`);
 	const engineLine = truncateAnsi(`  ${GRAY}Engine${RESET} ${BLUE}${engine}${RESET} ${GRAY}·${RESET} ${GRAY}Hito${RESET} ${WHITE}${milestone}${RESET}`, innerWidth);
 	lines.push(`  ${BORDER}│${RESET} ${padAnsi(engineLine, innerWidth)} ${BORDER}│${RESET}`);

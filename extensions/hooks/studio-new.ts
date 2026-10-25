@@ -230,10 +230,10 @@ export async function handleStudioNew(
 	} catch {}
 
 	console.log("" + GRAY + "" + "─".repeat(70) + "\x1b[0m");
-	console.log(`  ${GREEN}✔ Archivos base instalados en:\x1b[0m ${targetDir}`);
-	console.log(`  ${GREEN}✔ Motor detectado automáticamente:\x1b[0m ${formatEngineBadge(detection)}`);
-	console.log(`  ${GREEN}✔ Aislamiento de proyecto:\x1b[0m .pi/settings.json (no contamina otros proyectos)`);
-	console.log(`  ${GREEN}✔ Configuración persistida en:\x1b[0m project.yaml`);
+	console.log(`  ${GREEN}✓ Archivos base instalados en:\x1b[0m ${targetDir}`);
+	console.log(`  ${GREEN}✓ Motor detectado automáticamente:\x1b[0m ${formatEngineBadge(detection)}`);
+	console.log(`  ${GREEN}✓ Aislamiento de proyecto:\x1b[0m .pi/settings.json (no contamina otros proyectos)`);
+	console.log(`  ${GREEN}✓ Configuración persistida en:\x1b[0m project.yaml`);
 	console.log("");
 	console.log("\x1b[1m" + YELLOW + "👉 Siguiente paso para probar tu juego:\x1b[0m");
 	console.log(`   ${SECONDARY}\x1b[1m${selectedStarter.runCommand}\x1b[0m`);
@@ -241,7 +241,7 @@ export async function handleStudioNew(
 
 	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 		ctx.ui.notify(
-			`✔ Proyecto ${selectedStarter.engine} creado exitosamente`,
+			`✓ Proyecto ${selectedStarter.engine} creado exitosamente`,
 			"info",
 		);
 	}

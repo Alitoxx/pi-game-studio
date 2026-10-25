@@ -137,7 +137,7 @@ function applyDefaultConfig(ctx: ExtensionContext): void {
 
 	if (existsSync(defaultsPath)) {
 		writeFileSync(destFile, readFileSync(defaultsPath));
-		const msg = "✔ Perfil recomendado guardado en .pi/game-studio/models.json";
+		const msg = "✓ Perfil recomendado guardado en .pi/game-studio/models.json";
 		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			ctx.ui.notify(msg, "info");
 		} else {
@@ -162,7 +162,7 @@ function applyInheritConfig(
 
 	writeFileSync(destFile, JSON.stringify(inheritConfig, null, 2), "utf8");
 
-	const msg = "✔ Modo inherit aplicado: todos los agentes usarán el modelo activo de tu sesión.";
+	const msg = "✓ Modo inherit aplicado: todos los agentes usarán el modelo activo de tu sesión.";
 	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 		ctx.ui.notify(msg, "info");
 	} else {
@@ -175,7 +175,7 @@ function saveModelsConfig(ctx: ExtensionContext, cfg: Record<string, string>): v
 	const destFile = join(destDir, "models.json");
 	mkdirSync(destDir, { recursive: true });
 	writeFileSync(destFile, JSON.stringify(cfg, null, 2), "utf8");
-	const msg = "✔ Configuración de modelos guardada en .pi/game-studio/models.json";
+	const msg = "✓ Configuración de modelos guardada en .pi/game-studio/models.json";
 	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 		ctx.ui.notify(msg, "info");
 	} else {
@@ -315,7 +315,7 @@ function formatModelsList(cfg: Record<string, string>): string {
 	];
 
 	if (allInherit && overrides.length === 0) {
-		lines.push("\n✔ Modo inherit: todos los agentes heredan el modelo activo de tu sesión.");
+		lines.push("\n✓ Modo inherit: todos los agentes heredan el modelo activo de tu sesión.");
 	} else if (overrides.length > 0) {
 		lines.push("\nAsignaciones específicas por agente:\n" + overrides.slice(0, 15).join("\n"));
 	}
@@ -418,7 +418,7 @@ async function configureThinkingEffort(ctx: ExtensionContext): Promise<void> {
 		affectedCount = updateAgentsThinking(agentsDirs, [agentName], level);
 	}
 
-	const msg = `✔ Presupuesto de razonamiento (thinking) actualizado a '${level}' (${affectedCount} archivos).`;
+	const msg = `✓ Presupuesto de razonamiento (thinking) actualizado a '${level}' (${affectedCount} archivos).`;
 	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 		ctx.ui.notify(msg, "info");
 	} else {

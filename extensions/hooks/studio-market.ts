@@ -635,17 +635,17 @@ export function renderMarketReport(analysis: MarketAnalysis, cardWidth = 76): st
 	// Verdict badge and colors
 	let verdictColored = "";
 	if (metrics.verdict === "RECHAZADO: CEMENTERIO DE STEAM") {
-		verdictColored = `${RED}${BOLD}[RECHAZADO: CEMENTERIO DE STEAM]${RESET}`;
+		verdictColored = `${RED}[RECHAZADO: CEMENTERIO DE STEAM]${RESET}`;
 	} else if (metrics.verdict === "PIVOTE OBLIGATORIO") {
-		verdictColored = `${YELLOW}${BOLD}[PIVOTE OBLIGATORIO]${RESET}`;
+		verdictColored = `${YELLOW}[PIVOTE OBLIGATORIO]${RESET}`;
 	} else {
-		verdictColored = `${GREEN}${BOLD}[LUZ VERDE]${RESET}`;
+		verdictColored = `${GREEN}[LUZ VERDE]${RESET}`;
 	}
 
 	// Saturation badge and colors
 	let satColored = "";
 	if (metrics.saturationLevel === "Saturación Extrema") {
-		satColored = `${RED}${BOLD}Saturación Extrema${RESET}`;
+		satColored = `${RED}Saturación Extrema${RESET}`;
 	} else if (metrics.saturationLevel === "Alta") {
 		satColored = `${RED}Alta${RESET}`;
 	} else if (metrics.saturationLevel === "Moderada") {
@@ -660,7 +660,7 @@ export function renderMarketReport(analysis: MarketAnalysis, cardWidth = 76): st
 	const titlePrefix = "STEAM REALITY CHECK: ";
 	const maxTitleLen = width - titlePrefix.length - 8;
 	const cleanTitle = truncateAnsi(query, maxTitleLen);
-	const headerTitle = `${ACCENT}${BOLD}${titlePrefix}${RESET}${WHITE}${BOLD}${cleanTitle}${RESET}`;
+	const headerTitle = `${ACCENT}${titlePrefix}${RESET}${WHITE}${cleanTitle}${RESET}`;
 	const headerBorderLen = Math.max(0, width - 4 - cleanTitle.length - titlePrefix.length);
 
 	lines.push(`${BORDER}┌──${RESET} ${headerTitle} ${BORDER}${"─".repeat(headerBorderLen)}┐${RESET}`);
@@ -681,7 +681,7 @@ export function renderMarketReport(analysis: MarketAnalysis, cardWidth = 76): st
 
 	// ── 2. Top Competitor Matrix ──
 	lines.push("");
-	const matrixHeader = `${SECONDARY}${BOLD}MATRIZ DE COMPETIDORES DIRECTOS EN STEAM (TOP RELEVANTES)${RESET}`;
+	const matrixHeader = `${SECONDARY}MATRIZ DE COMPETIDORES DIRECTOS EN STEAM (TOP RELEVANTES)${RESET}`;
 	const matrixBorderLen = Math.max(0, width - 60);
 	lines.push(`${BORDER}┌─${RESET} ${matrixHeader} ${BORDER}${"─".repeat(matrixBorderLen)}┐${RESET}`);
 
@@ -690,9 +690,9 @@ export function renderMarketReport(analysis: MarketAnalysis, cardWidth = 76): st
 	} else {
 		for (let i = 0; i < competitors.length; i++) {
 			const c = competitors[i];
-			const numBadge = `${SECONDARY}${BOLD}[${i + 1}]${RESET}`;
+			const numBadge = `${SECONDARY}[${i + 1}]${RESET}`;
 			const nameTrunc = truncateAnsi(c.name, 36);
-			const rowHeader = `  ${numBadge} ${WHITE}${BOLD}${nameTrunc}${RESET} ${GRAY}(AppID: ${c.id})${RESET}  ${GREEN}${c.priceFormatted}${RESET}`;
+			const rowHeader = `  ${numBadge} ${WHITE}${nameTrunc}${RESET} ${GRAY}(AppID: ${c.id})${RESET}  ${GREEN}${c.priceFormatted}${RESET}`;
 			lines.push(`${BORDER}│${RESET} ${padAnsi(rowHeader, innerWidth)} ${BORDER}│${RESET}`);
 
 			const statusBadge = c.isReleased ? `${GREEN}Lanzado${RESET}` : `${YELLOW}Próximo${RESET}`;
@@ -718,25 +718,25 @@ export function renderMarketReport(analysis: MarketAnalysis, cardWidth = 76): st
 	// ── 3. Análisis Financiero & Reglas del Productor ──
 	lines.push("");
 	const finRules = analysis.financialRules || generateProducerFinancialRules(query, metrics.saturationLevel);
-	const financialHeader = `${YELLOW}${BOLD}ANÁLISIS FINANCIERO & REGLAS DEL PRODUCTOR${RESET}`;
+	const financialHeader = `${YELLOW}ANÁLISIS FINANCIERO & REGLAS DEL PRODUCTOR${RESET}`;
 	const financialBorderLen = Math.max(0, width - 45);
 	lines.push(`${BORDER}┌─${RESET} ${financialHeader} ${BORDER}${"─".repeat(financialBorderLen)}┐${RESET}`);
 
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${YELLOW}${BOLD}PRESUPUESTO TEMPORAL MÁXIMO:${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${YELLOW}PRESUPUESTO TEMPORAL MÁXIMO:${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 	const devBudgetLines = wrapText(finRules.maxDevBudget, innerWidth - 6);
 	for (const bl of devBudgetLines) {
 		lines.push(`${BORDER}│${RESET} ${padAnsi(`    ${WHITE}${bl}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 	}
 
 	lines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${GREEN}${BOLD}UMBRAL DE WISHLISTS (ALGORITMO STEAM):${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${GREEN}UMBRAL DE WISHLISTS (ALGORITMO STEAM):${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 	const wishlistLines = wrapText(finRules.wishlistThreshold, innerWidth - 6);
 	for (const wl of wishlistLines) {
 		lines.push(`${BORDER}│${RESET} ${padAnsi(`    ${WHITE}${wl}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 	}
 
 	lines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${RED}${BOLD}VETO DE SCOPE PREVENTIVO (RUTHLESS DESCOPING):${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${RED}VETO DE SCOPE PREVENTIVO (RUTHLESS DESCOPING):${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 	const vetoLines = wrapText(finRules.scopeVeto, innerWidth - 6);
 	for (const vl of vetoLines) {
 		lines.push(`${BORDER}│${RESET} ${padAnsi(`    ${WHITE}${vl}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
@@ -745,18 +745,18 @@ export function renderMarketReport(analysis: MarketAnalysis, cardWidth = 76): st
 
 	// ── 4. Cero Filtro (Análisis Implacable de Dirección) ──
 	lines.push("");
-	const filtroHeader = `${RED}${BOLD}CERO FILTRO (ANÁLISIS IMPLACABLE DE DIRECCIÓN)${RESET}`;
+	const filtroHeader = `${RED}CERO FILTRO (ANÁLISIS IMPLACABLE DE DIRECCIÓN)${RESET}`;
 	const filtroBorderLen = Math.max(0, width - 50);
 	lines.push(`${BORDER}┌─${RESET} ${filtroHeader} ${BORDER}${"─".repeat(filtroBorderLen)}┐${RESET}`);
 
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${RED}${BOLD}CRÍTICA DE TROPOS GENÉRICOS:${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${RED}CRÍTICA DE TROPOS GENÉRICOS:${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 	const critiqueLines = wrapText(ceroFiltro.tropesCritique, innerWidth - 6);
 	for (const cl of critiqueLines) {
 		lines.push(`${BORDER}│${RESET} ${padAnsi(`    ${GRAY}${cl}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 	}
 
 	lines.push(`${BORDER}│${RESET} ${padAnsi("", innerWidth)} ${BORDER}│${RESET}`);
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${YELLOW}${BOLD}GANCHO MECÁNICO DIFERENCIADOR (USP OBLIGATORIO):${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${YELLOW}GANCHO MECÁNICO DIFERENCIADOR (USP OBLIGATORIO):${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 	const hookLines = wrapText(ceroFiltro.mandatoryHook, innerWidth - 6);
 	for (const hl of hookLines) {
 		lines.push(`${BORDER}│${RESET} ${padAnsi(`    ${WHITE}${hl}${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
@@ -765,7 +765,7 @@ export function renderMarketReport(analysis: MarketAnalysis, cardWidth = 76): st
 
 	// ── 5. Próximos Pasos ──
 	lines.push("");
-	const nextHeader = `${HEADING}${BOLD}PRÓXIMOS PASOS RECOMENDADOS${RESET}`;
+	const nextHeader = `${HEADING}PRÓXIMOS PASOS RECOMENDADOS${RESET}`;
 	const nextBorderLen = Math.max(0, width - 33);
 	lines.push(`${BORDER}┌─${RESET} ${nextHeader} ${BORDER}${"─".repeat(nextBorderLen)}┐${RESET}`);
 	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${WHITE}[1]${RESET} Definir pilares de diseño y ancla visual única    ${ACCENT}→ /concept${RESET}`, innerWidth)} ${BORDER}│${RESET}`);

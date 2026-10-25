@@ -258,7 +258,7 @@ export function formatChangesOutput(summary: ChangesSummary): string[] {
 		summary.other.length;
 
 	if (totalChanges === 0) {
-		lines.push("✔ Árbol de trabajo limpio. No hay cambios pendientes en git.");
+		lines.push("✓ Árbol de trabajo limpio. No hay cambios pendientes en git.");
 		return lines;
 	}
 

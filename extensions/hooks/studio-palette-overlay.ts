@@ -174,7 +174,7 @@ export class CommandPaletteOverlayComponent {
 		// Category tabs
 		const categoryTabs = PALETTE_CATEGORIES.map((cat, idx) => {
 			if (idx === this.selectedCategoryIndex) {
-				return `${BLUE}${BOLD}[${cat}]${RESET}`;
+				return `${BLUE}[${cat}]${RESET}`;
 			}
 			return `${GRAY}${cat}${RESET}`;
 		}).join("  ");
@@ -186,7 +186,7 @@ export class CommandPaletteOverlayComponent {
 		);
 
 		// Search input line
-		const searchPrompt = `${CYAN}${BOLD}> ${RESET}`;
+		const searchPrompt = `${CYAN}> ${RESET}`;
 		let searchDisplay = "";
 		if (this.query.length === 0) {
 			searchDisplay = `${GRAY}[Escribe para buscar comandos...]${RESET}`;

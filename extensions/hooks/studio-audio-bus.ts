@@ -780,7 +780,7 @@ export function renderAudioBusConfirmation(result: BusScaffoldResult, termWidth 
 	// Engine & target file
 	lines.push(
 		`${BORDER}│${RESET} ${padAnsi(
-			`  ${DIM}Motor activo:${RESET} ${WHITE}${BOLD}${result.engine}${RESET} ${DIM}│ Archivo:${RESET} ${SECONDARY}${result.relPath}${RESET}`,
+			`  ${DIM}Motor activo:${RESET} ${WHITE}${result.engine}${RESET} ${DIM}│ Archivo:${RESET} ${SECONDARY}${result.relPath}${RESET}`,
 			innerWidth,
 		)} ${BORDER}│${RESET}`,
 	);
@@ -789,11 +789,11 @@ export function renderAudioBusConfirmation(result: BusScaffoldResult, termWidth 
 	// Tree view
 	lines.push(
 		`${BORDER}│${RESET} ${padAnsi(
-			`${HEADING}${BOLD}JERARQUÍA DE BUSES Y SIDECHAIN DUCKING:${RESET}`,
+			`${HEADING}JERARQUÍA DE BUSES Y SIDECHAIN DUCKING:${RESET}`,
 			innerWidth,
 		)} ${BORDER}│${RESET}`,
 	);
-	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${WHITE}${BOLD}Master Bus${RESET} ${GRAY}(0.0 dB)${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
+	lines.push(`${BORDER}│${RESET} ${padAnsi(`  ${WHITE}Master Bus${RESET} ${GRAY}(0.0 dB)${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 	lines.push(
 		`${BORDER}│${RESET} ${padAnsi(
 			`    ${DIM}├──${RESET} ${SECONDARY}Music${RESET} ${GRAY}(-3.0 dB)${RESET} ${YELLOW}[Sidechain Ducking: se atenúa al hablar Voice]${RESET}`,
@@ -803,7 +803,7 @@ export function renderAudioBusConfirmation(result: BusScaffoldResult, termWidth 
 	lines.push(`${BORDER}│${RESET} ${padAnsi(`    ${DIM}├──${RESET} ${WHITE}SFX${RESET} ${GRAY}(0.0 dB)${RESET} ${DIM}— Efectos, armas, colisiones${RESET}`, innerWidth)} ${BORDER}│${RESET}`);
 	lines.push(
 		`${BORDER}│${RESET} ${padAnsi(
-			`    ${DIM}├──${RESET} ${GREEN}${BOLD}Voice${RESET} ${GRAY}(0.0 dB)${RESET} ${RED}[Trigger Ducking: baja Music -9dB durante diálogo]${RESET}`,
+			`    ${DIM}├──${RESET} ${GREEN}Voice${RESET} ${GRAY}(0.0 dB)${RESET} ${RED}[Trigger Ducking: baja Music -9dB durante diálogo]${RESET}`,
 			innerWidth,
 		)} ${BORDER}│${RESET}`,
 	);
@@ -814,7 +814,7 @@ export function renderAudioBusConfirmation(result: BusScaffoldResult, termWidth 
 	// Ducking configuration details
 	lines.push(
 		`${BORDER}│${RESET} ${padAnsi(
-			`${HEADING}${BOLD}CONFIGURACIÓN DEL COMPRESOR / DUCKING:${RESET}`,
+			`${HEADING}CONFIGURACIÓN DEL COMPRESOR / DUCKING:${RESET}`,
 			innerWidth,
 		)} ${BORDER}│${RESET}`,
 	);
@@ -829,7 +829,7 @@ export function renderAudioBusConfirmation(result: BusScaffoldResult, termWidth 
 	// Instructions
 	lines.push(
 		`${BORDER}│${RESET} ${padAnsi(
-			`${HEADING}${BOLD}CÓMO ENRUTAR REPRODUCTORES DE AUDIO (${result.engine}):${RESET}`,
+			`${HEADING}CÓMO ENRUTAR REPRODUCTORES DE AUDIO (${result.engine}):${RESET}`,
 			innerWidth,
 		)} ${BORDER}│${RESET}`,
 	);
@@ -842,7 +842,7 @@ export function renderAudioBusConfirmation(result: BusScaffoldResult, termWidth 
 	lines.push(`${BORDER}├${"─".repeat(width - 2)}┤${RESET}`);
 	lines.push(
 		`${BORDER}│${RESET} ${padAnsi(
-			`${GREEN}${BOLD}[CREACIÓN EXITOSA]${RESET} Jerarquía de audio profesional generada en disco.`,
+			`${GREEN}[CREACIÓN EXITOSA]${RESET} Jerarquía de audio profesional generada en disco.`,
 			innerWidth,
 		)} ${BORDER}│${RESET}`,
 	);

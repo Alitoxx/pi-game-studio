@@ -451,3 +451,101 @@ describe("Split view paging", () => {
 		}).not.toThrow();
 	}, 30000);
 });
+
+describe("Critical-path failures are recorded", () => {
+	test("a recorded failure is deduplicated in the log and surfaced in diagnostics", () => {
+		const script = `
+			const { recordFailure, getRecentFailures, formatFailureDiagnostics } =
+				await import("./extensions/hooks/studio-diagnostics.ts");
+
+			recordFailure("runner.spawn", new Error("ENOENT pi"));
+			recordFailure("runner.spawn", new Error("ENOENT pi"));
+			recordFailure("roadmap.write", "EACCES");
+
+			const failures = getRecentFailures();
+			if (failures.length !== 3) throw new Error("every failure must be recorded, got " + failures.length);
+			if (failures[0].area !== "runner.spawn") throw new Error("area lost");
+			const text = formatFailureDiagnostics().join(" ");
+			if (!text.includes("runner.spawn") || !text.includes("ENOENT pi")) {
+				throw new Error("diagnostics must name the area and the cause: " + text);
+			}
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+			});
+		}).not.toThrow();
+	}, 30000);
+});
+
+describe("Child termination", () => {
+	test("cancelling a run kills the whole process group, not just the direct child", () => {
+		const script = `
+			const fs = await import("node:fs");
+			const os = await import("node:os");
+			const path = await import("node:path");
+
+			const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "studio-tree-"));
+			const fakePi = path.join(tmp, "pi");
+			fs.copyFileSync("__tests__/fixtures/fake-pi-rpc.mjs", fakePi);
+			fs.chmodSync(fakePi, 0o755);
+			const previousPiPath = process.env.PI_PATH;
+			process.env.PI_PATH = fakePi;
+			process.env.FAKE_SPAWN_GRANDCHILD = "1";
+			const pidFile = path.join(tmp, "grandchild.pid");
+			process.env.FAKE_GRANDCHILD_PID_FILE = pidFile;
+
+			const { studioAgentsRunner } = await import("./extensions/hooks/studio-agents-runner.ts");
+			const manifest = { name: "bevy-specialist", title: "BS", tier: "specialist", model: "inherit", thinking: "medium", tools: ["read"], systemPrompt: "test" };
+
+			const record = await studioAgentsRunner.run(manifest, "Lanza el build.", tmp, "background", undefined, 60000);
+
+			const deadline = Date.now() + 15000;
+			const findPid = () => {
+				try {
+					const raw = fs.readFileSync(pidFile, "utf8").trim();
+					return raw ? Number(raw) : null;
+				} catch {
+					return null;
+				}
+			};
+			let gpid = null;
+			while (!gpid && Date.now() < deadline) {
+				await new Promise((r) => setTimeout(r, 100));
+				gpid = findPid();
+			}
+			if (!gpid) throw new Error("the child never reported a grandchild pid");
+
+			const alive = () => {
+				try { process.kill(gpid, 0); return true; } catch { return false; }
+			};
+			if (!alive()) throw new Error("the grandchild should be running before the cancel");
+
+			const startedCancel = Date.now();
+			studioAgentsRunner.cancel(record.id, "test cancel");
+
+			const killBy = Date.now() + 12000;
+			while (alive() && Date.now() < killBy) await new Promise((r) => setTimeout(r, 100));
+
+			const survived = alive();
+			if (survived) {
+				try { process.kill(gpid, "SIGKILL"); } catch {}
+				throw new Error("the grandchild survived cancellation after " + (Date.now() - startedCancel) + "ms: the runner signals only the direct child");
+			}
+
+			if (previousPiPath === undefined) delete process.env.PI_PATH;
+			else process.env.PI_PATH = previousPiPath;
+			delete process.env.FAKE_SPAWN_GRANDCHILD;
+			delete process.env.FAKE_GRANDCHILD_PID_FILE;
+			fs.rmSync(tmp, { recursive: true, force: true });
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+				timeout: 60000,
+			});
+		}).not.toThrow();
+	}, 70000);
+});

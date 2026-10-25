@@ -1,4 +1,5 @@
 import { spawn, type ChildProcess } from "node:child_process";
+import { recordFailure } from "./studio-diagnostics.ts";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { AgentManifest } from "./studio-agent-loader.ts";
@@ -58,6 +59,54 @@ export function formatRel(startedAt?: number | null): string {
 	return `+${sec.toFixed(1)}s`.padStart(6, " ");
 }
 
+/**
+ * Signals the child's whole process group. A specialist that shells out (a build
+ * tool, a test runner) leaves grandchildren that a plain SIGTERM to the direct
+ * child never reaches, so the group is the only reliable target.
+ */
+export function signalChildTree(child: ChildProcess, signal: NodeJS.Signals): boolean {
+	if (!child?.pid) return false;
+
+	if (process.platform !== "win32") {
+		try {
+			process.kill(-child.pid, signal);
+			return true;
+		} catch (error) {
+			recordFailure("runner.signal.group", error);
+		}
+	}
+
+	try {
+		return child.kill(signal);
+	} catch (error) {
+		recordFailure("runner.signal", error);
+		return false;
+	}
+}
+
+export const CHILD_TERM_GRACE_MS = 2500;
+export const CHILD_KILL_GRACE_MS = 2500;
+
+/**
+ * Cooperative first, then escalating signals to the whole group. Closing stdin is
+ * not enough: a child that ignores its own abort would live forever.
+ */
+export function terminateChild(child: ChildProcess): void {
+	try {
+		child.stdin?.write(`${JSON.stringify({ type: "abort" })}\n`);
+	} catch (error) {
+		recordFailure("runner.abort", error);
+	}
+
+	const alive = () => child.exitCode === null && child.signalCode === null;
+	setTimeout(() => {
+		if (alive()) signalChildTree(child, "SIGTERM");
+	}, CHILD_TERM_GRACE_MS);
+	setTimeout(() => {
+		if (alive()) signalChildTree(child, "SIGKILL");
+	}, CHILD_TERM_GRACE_MS + CHILD_KILL_GRACE_MS);
+}
+
 export class StudioAgentsRunner {
 	private tasks = new Map<string, TaskRecord>();
 	private liveProcesses = new Map<string, ChildProcess>();
@@ -98,9 +147,7 @@ export class StudioAgentsRunner {
 
 		const child = this.liveProcesses.get(id);
 		if (child) {
-			try {
-				child.kill("SIGTERM");
-			} catch {}
+			terminateChild(child);
 			this.liveProcesses.delete(id);
 		}
 
@@ -121,9 +168,7 @@ export class StudioAgentsRunner {
 	cancelAll(reason = "cancelled by user"): number {
 		let count = 0;
 		for (const [id, child] of this.liveProcesses.entries()) {
-			try {
-				child.kill("SIGTERM");
-			} catch {}
+			terminateChild(child);
 			this.liveProcesses.delete(id);
 			const task = this.tasks.get(id);
 			if (task && (task.status === "running" || task.status === "queued")) {
@@ -278,6 +323,8 @@ export class StudioAgentsRunner {
 						PI_GAME_STUDIO_AGENT: manifest.name,
 					}),
 					stdio: ["pipe", "pipe", "pipe"],
+					// Own process group, so termination can reach grandchildren.
+					detached: process.platform !== "win32",
 				});
 			} catch (err: any) {
 				record.status = "failed";
@@ -361,14 +408,14 @@ export class StudioAgentsRunner {
 								record.latestActivity = "Prompt rechazado";
 								record.logs.push(`${formatRel(record.startedAt)}  rpc   prompt rechazado`);
 								this.notifyListeners(record);
-								try { child.kill("SIGTERM"); } catch {}
+								signalChildTree(child, "SIGTERM");
 							} else if (disposition === "handled") {
 								superseded = true;
 								record.status = "failed";
 								record.error = "Prompt handled by a child extension command: no run started";
 								record.latestActivity = "Prompt consumido sin run";
 								this.notifyListeners(record);
-								try { child.kill("SIGTERM"); } catch {}
+								signalChildTree(child, "SIGTERM");
 							}
 						}
 
@@ -560,16 +607,16 @@ export class StudioAgentsRunner {
 							// Cerrar stdin para que el hijo termine solo
 							try {
 								child.stdin?.end();
-							} catch {}
+							} catch (error) {
+								recordFailure("runner.stdin.close", error);
+							}
 
 							// Timer de gracia: si tras 2.5s el proceso hijo no cerró, forzar cierre limpio con SIGTERM
 							setTimeout(() => {
-								if (this.liveProcesses.has(record.id)) {
-									try {
-										child.kill("SIGTERM");
-									} catch {}
+								if (this.liveProcesses.has(record.id) && child.exitCode === null) {
+									signalChildTree(child, "SIGTERM");
 								}
-							}, 2500);
+							}, CHILD_TERM_GRACE_MS);
 						}
 					} catch {
 						// Si la línea no es JSON puro, podría ser log estándar

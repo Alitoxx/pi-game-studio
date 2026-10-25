@@ -507,6 +507,16 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 			const cmdInNoBash = validateSpecialistReturn(receipt("completed", null, ["cargo test -p game: 5 passed"]), noBash);
 			if (cmdInNoBash.isValid) throw new Error("S5: a bash-less agent cannot report a command result it could not run");
 
+			// The quotes YAML allows are syntax, not evidence: a quoted passive entry must
+			// still be read as passive, or a bash-capable agent slips through them.
+			const quotedStructural = validateSpecialistReturn(
+				receipt("completed", null, ['"structural: art.md secciones: presentes"']),
+				withBash,
+			);
+			if (quotedStructural.isValid) throw new Error("S5: quoting a passive entry must not reclassify it as a command");
+			const quotedCmd = validateSpecialistReturn(receipt("completed", null, ['"cargo test -p game: 5 passed"']), withBash);
+			if (!quotedCmd.isValid) throw new Error("S2: a quoted command entry must still parse: " + quotedCmd.errors.join(" | "));
+
 			// Preserved: partial and blocked never required evidence.
 			if (!validateSpecialistReturn(receipt("partial", null, null), withBash).isValid) {
 				throw new Error("partial without evidence must stay valid");
@@ -2971,6 +2981,14 @@ describe("Shared ODD contract", () => {
 				}
 				if (res.parsed?.status === "interaction_required" && !res.parsed?.interaction?.question) {
 					throw new Error("example #" + index + " documents an escalation without a parsable question");
+				}
+				// The documented forms are not interchangeable: a passive example must be
+				// exactly what a bash-capable agent is rejected for, or the table lies.
+				if (sample.includes("structural:")) {
+					const inBash = validateSpecialistReturn(sample, { tools: ["read", "bash"] });
+					if (inBash.isValid) {
+						throw new Error("example #" + index + " is documented as passive but a bash-capable agent would pass");
+					}
 				}
 			}
 		`;

@@ -45,11 +45,22 @@ const splitPair = (value: string): { left: string; right: string } => {
 };
 
 /**
+ * YAML lets an entry be written as `"structural: ..."`. The quotes are syntax,
+ * not part of the evidence, so an unquoted-prefix check would classify a quoted
+ * passive entry as a command result and let a bash-capable agent slip through.
+ */
+const unquote = (value: string): string => {
+	const trimmed = value.trim();
+	const paired = trimmed.match(/^["']([\s\S]*)["']$/);
+	return paired ? paired[1].trim() : trimmed;
+};
+
+/**
  * A completion claim is evidence, not prose: every entry must name what was run
  * and what it said, or name the property that was read back instead.
  */
 function classifyEvidence(entry: string): { form: EvidenceForm } | { problem: string } {
-	const value = entry.trim();
+	const value = unquote(entry);
 
 	const structural = value.match(/^structural\s*:\s*(.*)$/i);
 	if (structural) {

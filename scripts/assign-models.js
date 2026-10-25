@@ -33,16 +33,18 @@ const PACKAGE_ROOT = path.resolve(__dirname, "..");
 const MODELS_FILE = path.join(PACKAGE_ROOT, "models.default.json");
 
 // ── Agent roster by tier (Compact 8+1 Studio Architecture: 14 agents total) ────
-const LIGHTWEIGHT_AGENTS = [
-	"art-director",
-	"audio-director",
-];
+// No agent defaults to the lightweight tier: the runtime (studio-models.ts) resolves
+// every non-director, non-engine agent to the workhorse tier, and art/audio directors
+// are Tier 2 leads with thinking: medium. The tier stays available as a model value.
+const LIGHTWEIGHT_AGENTS = [];
 
 const TIERS = {
 	director: ["creative-director", "technical-director", "producer"],
 	workhorse: [
 		"game-designer",
 		"gameplay-programmer",
+		"art-director",
+		"audio-director",
 		"qa-lead",
 		"bevy-specialist",
 		"godot-specialist",

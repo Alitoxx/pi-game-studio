@@ -834,13 +834,14 @@ export class StudioAgentsRunner {
 
 				if (code === 0 || (agentSettled && code === null)) {
 					let delivery = resultText.trim();
-					let contract = validateSpecialistReturn(delivery);
+					const contractOptions = { tools: manifest.tools };
+					let contract = validateSpecialistReturn(delivery, contractOptions);
 
 					// If the deltas did not survive (compaction truncation), fall back to the
 					// final message Pi already sent: a recoverable delivery must not be read
 					// as a contract violation.
 					if (!contract.isValid && lastAssistantText.trim()) {
-						const recovered = validateSpecialistReturn(lastAssistantText.trim());
+						const recovered = validateSpecialistReturn(lastAssistantText.trim(), contractOptions);
 						if (recovered.isValid) {
 							delivery = lastAssistantText.trim();
 							contract = recovered;

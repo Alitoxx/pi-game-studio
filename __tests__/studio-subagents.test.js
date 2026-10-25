@@ -164,7 +164,7 @@ describe("Runner enforces the specialist return contract", () => {
 				"files_changed:",
 				"  - src/player.rs",
 				"validation:",
-				"  - cargo test -p game",
+				"  - structural: src/player.rs movimiento base: presente",
 			].join("\\n");
 			const good = await studioAgentsRunner.run(manifest, task, tmp, "task");
 			if (good.status !== "completed") {
@@ -185,6 +185,24 @@ describe("Runner enforces the specialist return contract", () => {
 			const unscoped = await studioAgentsRunner.run(manifest, "Implementa el movimiento base.", tmp, "task");
 			if (!(unscoped.result || "").includes("<unset>")) {
 				throw new Error("undisclosed surfaces must stay unbounded: " + unscoped.result);
+			}
+
+			// The agent declares no bash, so a command result is not something it could
+			// have observed: the runner must forward its tools for the contract to tell.
+			process.env.FAKE_RECEIPT = [
+				"status: completed",
+				"summary: Movimiento base implementado",
+				"validation:",
+				"  - cargo test -p game: 5 passed",
+			].join("\\n");
+			const wrongFamily = await studioAgentsRunner.run(manifest, task, tmp, "task");
+			if (wrongFamily.status !== "failed") {
+				throw new Error(
+					"a bash-less agent must not report a command result, got status: " + wrongFamily.status,
+				);
+			}
+			if (!/sin 'bash'/.test(wrongFamily.error || "")) {
+				throw new Error("the violation must name the missing capability, got: " + wrongFamily.error);
 			}
 
 			if (previousPiPath === undefined) delete process.env.PI_PATH;
@@ -301,7 +319,7 @@ describe("Runner correlates the prompt response and the settlement flag", () => 
 			fs.chmodSync(fakePi, 0o755);
 			const previousPiPath = process.env.PI_PATH;
 			process.env.PI_PATH = fakePi;
-			process.env.FAKE_RECEIPT = "status: completed\\nsummary: ok\\nfiles_changed:\\n  - src/a.rs";
+			process.env.FAKE_RECEIPT = "status: completed\\nsummary: ok\\nfiles_changed:\\n  - src/a.rs\\nvalidation:\\n  - structural: src/a.rs: presente";
 
 			const { studioAgentsRunner } = await import("./extensions/hooks/studio-agents-runner.ts");
 			const manifest = { name: "gameplay-programmer", title: "GP", tier: "lead", model: "inherit", thinking: "medium", tools: ["read"], systemPrompt: "test" };
@@ -625,7 +643,7 @@ describe("Dispatch context", () => {
 			process.env.PI_PATH = fakePi;
 			process.env.FAKE_ECHO_ARGV = "1";
 			process.env.FAKE_STDERR = "warning: deprecated engine api";
-			process.env.FAKE_RECEIPT = "status: completed\\nsummary: ok\\nfiles_changed:\\n  - src/a.rs";
+			process.env.FAKE_RECEIPT = "status: completed\\nsummary: ok\\nfiles_changed:\\n  - src/a.rs\\nvalidation:\\n  - structural: src/a.rs: presente";
 
 			const { studioAgentsRunner } = await import("./extensions/hooks/studio-agents-runner.ts");
 			const manifest = { name: "bevy-specialist", title: "BS", tier: "specialist", model: "inherit", thinking: "medium", tools: ["read"], systemPrompt: "test" };
@@ -705,7 +723,7 @@ describe("Dispatch context", () => {
 			fs.chmodSync(fakePi, 0o755);
 			const previousPiPath = process.env.PI_PATH;
 			process.env.PI_PATH = fakePi;
-			process.env.FAKE_RECEIPT = "status: completed\\nsummary: ok\\nfiles_changed:\\n  - src/a.rs";
+			process.env.FAKE_RECEIPT = "status: completed\\nsummary: ok\\nfiles_changed:\\n  - src/a.rs\\nvalidation:\\n  - structural: src/a.rs: presente";
 
 			const { studioAgentsRunner } = await import("./extensions/hooks/studio-agents-runner.ts");
 			const manifest = { name: "qa-lead", title: "QA", tier: "lead", model: "inherit", thinking: "medium", tools: ["read"], systemPrompt: "test" };
@@ -742,7 +760,7 @@ describe("Inactivity watchdog", () => {
 			fs.chmodSync(fakePi, 0o755);
 			const previousPiPath = process.env.PI_PATH;
 			process.env.PI_PATH = fakePi;
-			process.env.FAKE_RECEIPT = "status: completed\\nsummary: ok\\nfiles_changed:\\n  - src/a.rs";
+			process.env.FAKE_RECEIPT = "status: completed\\nsummary: ok\\nfiles_changed:\\n  - src/a.rs\\nvalidation:\\n  - structural: src/a.rs: presente";
 			${Object.entries(env).map(([k, v]) => `process.env.${k} = ${JSON.stringify(String(v))};`).join("\n\t\t\t")}
 
 			const { studioAgentsRunner } = await import("./extensions/hooks/studio-agents-runner.ts");
@@ -875,7 +893,7 @@ describe("Token accounting", () => {
 			fs.chmodSync(fakePi, 0o755);
 			const previousPiPath = process.env.PI_PATH;
 			process.env.PI_PATH = fakePi;
-			process.env.FAKE_RECEIPT = "status: completed\\nsummary: ok\\nfiles_changed:\\n  - src/a.rs";
+			process.env.FAKE_RECEIPT = "status: completed\\nsummary: ok\\nfiles_changed:\\n  - src/a.rs\\nvalidation:\\n  - structural: src/a.rs: presente";
 			process.env.FAKE_USAGE_INPUT = "120";
 			process.env.FAKE_USAGE_OUTPUT = "40";
 			process.env.FAKE_USAGE_COST = "0.0025";
@@ -989,7 +1007,7 @@ describe("Compaction during a child run", () => {
 		fs.chmodSync(fakePi, 0o755);
 		const previousPiPath = process.env.PI_PATH;
 		process.env.PI_PATH = fakePi;
-		process.env.FAKE_RECEIPT = "status: completed\\nsummary: ok\\nfiles_changed:\\n  - src/a.rs";
+		process.env.FAKE_RECEIPT = "status: completed\\nsummary: ok\\nfiles_changed:\\n  - src/a.rs\\nvalidation:\\n  - structural: src/a.rs: presente";
 		${Object.entries(env).map(([k, v]) => `process.env.${k} = ${JSON.stringify(String(v))};`).join("\n\t\t")}
 
 		const { studioAgentsRunner } = await import("./extensions/hooks/studio-agents-runner.ts");

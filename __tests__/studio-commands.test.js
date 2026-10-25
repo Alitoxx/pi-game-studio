@@ -424,7 +424,7 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 				"files_changed:",
 				"  - src/player.rs",
 				"validation:",
-				"  - cargo test -p game",
+				"  - cargo test -p game: 5 passed",
 			].join("\\n");
 			const res = validateSpecialistReturn(valid);
 			if (!res.isValid) throw new Error("valid contract rejected: " + res.errors.join(" | "));
@@ -444,6 +444,82 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 
 			const partialNoEvidence = validateSpecialistReturn("status: partial\\nsummary: avance parcial");
 			if (!partialNoEvidence.isValid) throw new Error("partial without evidence should stay valid");
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+			});
+		}).not.toThrow();
+	});
+
+	test("return-contract types the evidence and gates each form by agent capability", () => {
+		// A completion claim is evidence, not prose: an agent with bash reports
+		// `<exact command>: <observed result>`, an agent without bash reports the
+		// property it read back. Each class has exactly one admissible family, so
+		// neither can borrow the other's escape hatch.
+		const script = `
+			const { validateSpecialistReturn } = await import("./extensions/hooks/return-contract.ts");
+
+			const withBash = { tools: ["read", "write", "edit", "bash", "grep"] };
+			const noBash = { tools: ["read", "write", "edit", "grep"] };
+			const receipt = (status, files, validation) => [
+				"status: " + status,
+				"summary: entrega de prueba",
+				...(files ? ["files_changed:", ...files.map((f) => "  - " + f)] : []),
+				...(validation ? ["validation:", ...validation.map((v) => "  - " + v)] : []),
+			].join("\\n");
+
+			// S1: naming the files you touched is not evidence that you verified them.
+			const filesOnly = validateSpecialistReturn(receipt("completed", ["design/gdd/art.md"], null), withBash);
+			if (filesOnly.isValid) throw new Error("S1: files_changed alone must not satisfy a completed status");
+
+			// S2: a command with no observed result is a claim, not a result.
+			const cmdForm = validateSpecialistReturn(receipt("completed", ["src/player.rs"], ["cargo test -p game: 5 passed"]), withBash);
+			if (!cmdForm.isValid) throw new Error("S2: cmd form rejected: " + cmdForm.errors.join(" | "));
+			const bareCmd = validateSpecialistReturn(receipt("completed", null, ["cargo test -p game"]), withBash);
+			if (bareCmd.isValid) throw new Error("S2: a command without an observed result must be rejected");
+
+			// S3: structural readback is the passive mode of an agent that cannot execute.
+			const structural = validateSpecialistReturn(
+				receipt("completed", ["design/gdd/art.md"], ["structural: design/gdd/art.md secciones obligatorias: presentes"]),
+				noBash,
+			);
+			if (!structural.isValid) throw new Error("S3: structural form rejected for a bash-less agent: " + structural.errors.join(" | "));
+			const malformedStructural = validateSpecialistReturn(receipt("completed", null, ["structural: art.md"]), noBash);
+			if (malformedStructural.isValid) throw new Error("S3: structural without a read-back result must be rejected");
+
+			// S4: an exception is a named reason, not an empty escape.
+			const exception = validateSpecialistReturn(
+				receipt("completed", ["design/gdd/audio.md"], ["exception: un audio bible no tiene comando ejecutable"]),
+				noBash,
+			);
+			if (!exception.isValid) throw new Error("S4: exception form rejected: " + exception.errors.join(" | "));
+			const emptyException = validateSpecialistReturn(receipt("completed", null, ["exception:"]), noBash);
+			if (emptyException.isValid) throw new Error("S4: an exception without a reason must be rejected");
+
+			// S5: one admissible family per class, in both directions.
+			const structuralInBash = validateSpecialistReturn(receipt("completed", null, ["structural: x: y"]), withBash);
+			if (structuralInBash.isValid) throw new Error("S5: structural from a bash-capable agent must be rejected");
+			if (!structuralInBash.errors.some((e) => e.includes("partial"))) {
+				throw new Error("S5: the rejection must point at status: partial");
+			}
+			const cmdInNoBash = validateSpecialistReturn(receipt("completed", null, ["cargo test -p game: 5 passed"]), noBash);
+			if (cmdInNoBash.isValid) throw new Error("S5: a bash-less agent cannot report a command result it could not run");
+
+			// Preserved: partial and blocked never required evidence.
+			if (!validateSpecialistReturn(receipt("partial", null, null), withBash).isValid) {
+				throw new Error("partial without evidence must stay valid");
+			}
+
+			// S8: neutral professional Spanish, never voseo.
+			const messages = [filesOnly, bareCmd, emptyException, structuralInBash, cmdInNoBash]
+				.flatMap((r) => r.errors)
+				.join(" ")
+				.toLowerCase();
+			if (/agreg[aá]|corr[eé]|fijate|ten[eé]s|pod[eé]s|hac[eé]/.test(messages)) {
+				throw new Error("S8: voseo in validator messages: " + messages);
+			}
 		`;
 		const { execFileSync } = require("child_process");
 		expect(() => {

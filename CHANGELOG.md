@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Fixed (Contract Enforcement & Sources of Truth)
+- **Return Contract gate**: `StudioAgentsRunner` validates every specialist delivery with the previously unused `return-contract.ts` validator. A delivery that breaks the contract marks the task as failed with each violation named, instead of reporting a green receipt; the raw report is preserved for the Producer. `status: completed` additionally requires `files_changed` or `validation`, because a delivery that names neither was never verified.
+  - Behavioral tests replace the source-grep assertion that only checked the validator existed. New end-to-end coverage drives the real runner over a fake RPC child.
+- **Bounded edit surfaces reach the specialist**: the task's `## Allowed edit surfaces` block is forwarded to the child process as `PI_STUDIO_ALLOWED_SURFACES` and loaded by the child-side guard on session start. The guard previously lived only in the parent session, so the declared scope was advisory. Tasks without declared surfaces keep the unbounded behavior.
+- **`target_dir` scoping** now also emits the canonical `## Allowed edit surfaces` block.
+- **`PI_PATH` is honored** by the runner, so isolated profiles and tests can pin the child binary instead of resolving `pi` from `PATH`.
+
+### Changed (Model Configuration)
+- `models.default.json` no longer ships the legacy 50+ agent roster (`narrative-director`, `release-manager`, `localization-lead`, per-engine sub-specialists). It keeps the `director`/`workhorse`/`lightweight` tiers plus the six engine specialists, all mapped to the defaults `AGENTS.md` documents.
+- `scripts/assign-models.js` classifies `art-director` and `audio-director` as `workhorse`, matching runtime resolution. The `lightweight` tier ships with no agent and remains available as a model value.
+- `/studio:models` agent picker includes `phaser-specialist`.
+- `AGENTS.md` and `README.md` describe the real resolution: templates declare `model: inherit`, tiers live in `models.default.json`, overrides land in `.pi/game-studio/models.json`.
+
+### Added (Guards)
+- Invariant test: every key in `models.default.json` is a known tier or a real agent of the 8+1 roster.
+
+---
+
 ## [1.10.0] - 2026-10-18
 
 ### Added & Expanded (Gamedev Pro Suite)

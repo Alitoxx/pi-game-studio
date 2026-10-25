@@ -167,7 +167,9 @@ The recommended model assignment lives in `models.default.json`:
 | **Workhorses** (Tier 2–3) | `openrouter/openai/gpt-oss-120b:free` | `medium`        | Balanced model for day-to-day design, implementation, and review              |
 | **Lightweight** (Special) | `openrouter/openai/gpt-oss-20b:free`  | `low`           | Fast model for simple, repetitive tasks, logs, and community updates          |
 
-After running `/setup`, the mapping is written to `.pi/gentle-ai/models.json`. You can edit it directly or use `/assign-models` to change models interactively.
+After running `/setup`, the mapping is written to `.pi/game-studio/models.json`. You can edit it directly or use `/assign-models` to change models interactively.
+
+Agents ship with `model: inherit`, so without overrides every agent uses the model of your active Pi session. `models.default.json` contributes only the three tier defaults (`director`, `workhorse`, `lightweight`).
 
 ## Customizing Models
 
@@ -186,18 +188,18 @@ The skill guides you through:
 
 ### Via `models.json` (manual)
 
-Edit `.pi/gentle-ai/models.json`:
+Edit `.pi/game-studio/models.json`:
 
 ```json
 {
-  "creative-director": "anthropic/claude-sonnet-4",
-  "technical-director": "anthropic/claude-sonnet-4",
-  "producer": "anthropic/claude-sonnet-4",
-  "game-designer": "openai/gpt-4o",
-  "lead-programmer": "openai/gpt-4o",
-  "community-manager": "ollama/llama3.2"
+  "director": "openai-codex/gpt-5.4-mini",
+  "workhorse": "openrouter/openai/gpt-oss-120b:free",
+  "lightweight": "openrouter/openai/gpt-oss-20b:free",
+  "creative-director": "anthropic/claude-sonnet-4"
 }
 ```
+
+Tier keys apply to every agent of that tier; a real agent name adds a single override on top of its tier default.
 
 Agents not listed use the session default.
 
@@ -336,7 +338,7 @@ Or jump directly to a specific skill or template:
 /assign-models
 ```
 
-Or edit `.pi/gentle-ai/models.json` directly.
+Or edit `.pi/game-studio/models.json` directly.
 
 ### Connect Engram (Optional Memory Accelerator)
 
@@ -390,7 +392,7 @@ Pi Game Studio is a **Pi package** (not a file copy). Everything lives in the pa
 4. **Templates** — available through Pi's prompt template expansion
 5. **Hooks** — loaded as a Pi extension; run automatically on relevant events
 
-Agents use `model: inherit` — they adopt the model from your Pi session configuration. The `models.default.json` provides a recommended tier-based mapping that gets installed to `.pi/gentle-ai/models.json` and can be customized per agent.
+Agents use `model: inherit` — they adopt the model from your Pi session configuration. The `models.default.json` provides a recommended tier-based mapping that gets installed to `.pi/game-studio/models.json` and can be customized per agent.
 
 Delegation between agents works through Pi's `subagent` tool. A director spawns a lead, a lead spawns specialists. Each agent returns structured results and passes decisions back up. Director gates enforce quality checkpoints.
 
@@ -521,7 +523,7 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
 
 ### v0.5.3 — 2026-09-25
 
-- **Clean Model Inheritance & Overrides Filtering**: When applying `inherit` mode or tier defaults, `.pi/gentle-ai/models.json` now stores a clean tier mapping instead of duplicating 50 redundant agent keys. False agent overrides are automatically filtered out from model listings, displaying `✔ Todos los agentes heredan el modelo activo de tu sesión.`
+- **Clean Model Inheritance & Overrides Filtering**: When applying `inherit` mode or tier defaults, `.pi/game-studio/models.json` now stores a clean tier mapping instead of duplicating 50 redundant agent keys. False agent overrides are automatically filtered out from model listings, displaying `✔ Todos los agentes heredan el modelo activo de tu sesión.`
 - **Pi TUI Render Safety**: Eliminated raw `console.log` invocations when `ctx.hasUI` is active across all studio commands, preventing screen smearing, duplicate printing, and collisions with Pi's interactive status bar / breadcrumbs.
 
 ### v0.5.2 — 2026-09-25
@@ -570,7 +572,7 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
   - 4 runtime hooks
 - **README provenance note** — added explicit source/origin and Pi-homologation notes for upstream parity tracking
 - **Regression coverage** — added inventory tests so README counts stay in sync with the actual file tree
-- **Setup completion** — generated `.pi/gentle-ai/models.json` from `models.default.json`
+- **Setup completion** — generated `.pi/game-studio/models.json` from `models.default.json`
 
 ### v0.2.0 — 2026-05-12
 

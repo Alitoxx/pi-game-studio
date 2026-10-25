@@ -25,11 +25,15 @@ Tier 3 — Engine Specialist (+1 dedicado según motor del proyecto)
 
 ## Model Mapping y Reasoning Budget
 
-| Tier | Default model | Thinking Budget | Rol Principal |
+Cada plantilla de agente declara `model: inherit`: hereda el modelo activo de la sesión de Pi. `models.default.json` no duplica una clave por agente; aporta únicamente los tres tiers que el runtime resuelve (`extensions/hooks/studio-models.ts`), y `/assign-models` o `/studio:models` escriben overrides por agente y por proyecto en `.pi/game-studio/models.json`.
+
+| Tier | Default en `models.default.json` | Thinking Budget | Rol Principal |
 |---|---|---|---|
-| **Directors** (Core) | `openai-codex/gpt-5.4-mini` | `high` | Visión de juego, arquitectura base, producción y coordinación |
-| **Leads** (Core) | `openai-codex/gpt-5.4-mini` | `medium` | Diseño de sistemas, arte, audio, gameplay y QA |
-| **Specialist** (Motor) | `openrouter/openai/gpt-oss-120b:free` | `medium` | Implementación idiomática en motor, build y shaders |
+| **`director`** (Core) | `openai-codex/gpt-5.4-mini` | `high` | Visión de juego, arquitectura base, producción y coordinación |
+| **`workhorse`** (Core + Motor) | `openrouter/openai/gpt-oss-120b:free` | `medium` | Diseño de sistemas, arte, audio, gameplay, QA e implementación idiomática en motor |
+| **`lightweight`** | `openrouter/openai/gpt-oss-20b:free` | `medium` | Consultas puntuales de bajo costo |
+
+Sin overrides explícitos, el modelo efectivo de cada agente es el de tu sesión de Pi. `/studio:models` muestra la asignación efectiva por tier y lista solo las excepciones por agente que difieren de su default de tier.
 
 ## Language Policy (Modo Neutro Profesional — Gentle Shell)
 

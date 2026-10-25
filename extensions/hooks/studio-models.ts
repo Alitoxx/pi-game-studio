@@ -241,6 +241,7 @@ async function configureAgentModel(
 		"qa-lead",
 		"bevy-specialist",
 		"godot-specialist",
+		"phaser-specialist",
 		"raylib-specialist",
 		"unity-specialist",
 		"unreal-specialist",

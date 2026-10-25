@@ -75,7 +75,24 @@ process.stdin.on("data", (chunk) => {
 	// see activity, not elapsed time.
 	if (process.env.FAKE_SILENT_AFTER_PROMPT) return;
 
+	// FAKE_USAGE_INPUT/OUTPUT/COST model the authoritative per-message usage Pi
+	// reports. Two turns are emitted so accumulation is observable.
+	const emitUsage = () => {
+		const usage = {
+			input: Number(process.env.FAKE_USAGE_INPUT || 0),
+			output: Number(process.env.FAKE_USAGE_OUTPUT || 0),
+			cacheRead: 0,
+			cacheWrite: 0,
+			cost: Number(process.env.FAKE_USAGE_COST || 0),
+		};
+		for (let turn = 0; turn < 2; turn++) {
+			emit({ type: "message_update", usage, assistantMessageEvent: { type: "text_delta", delta: "" } });
+			emit({ type: "message_end", usage, message: { role: "assistant", usage } });
+		}
+	};
+
 	const finish = () => {
+		if (process.env.FAKE_USAGE_INPUT) emitUsage();
 		emit({
 			type: "message_update",
 			assistantMessageEvent: { type: "text_delta", delta: receipt },

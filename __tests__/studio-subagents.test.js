@@ -858,3 +858,52 @@ describe("Inactivity watchdog", () => {
 		}).not.toThrow();
 	}, 70000);
 });
+
+describe("Token accounting", () => {
+	test("usage comes from what the child reported, not from character counts", () => {
+		const script = `
+			const fs = await import("node:fs");
+			const os = await import("node:os");
+			const path = await import("node:path");
+
+			const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "studio-usage-"));
+			const fakePi = path.join(tmp, "pi");
+			fs.copyFileSync("__tests__/fixtures/fake-pi-rpc.mjs", fakePi);
+			fs.chmodSync(fakePi, 0o755);
+			const previousPiPath = process.env.PI_PATH;
+			process.env.PI_PATH = fakePi;
+			process.env.FAKE_RECEIPT = "status: completed\\nsummary: ok\\nfiles_changed:\\n  - src/a.rs";
+			process.env.FAKE_USAGE_INPUT = "120";
+			process.env.FAKE_USAGE_OUTPUT = "40";
+			process.env.FAKE_USAGE_COST = "0.0025";
+
+			const { studioAgentsRunner, usageToTokens } = await import("./extensions/hooks/studio-agents-runner.ts");
+			const manifest = { name: "qa-lead", title: "QA", tier: "lead", model: "inherit", thinking: "medium", tools: ["read"], systemPrompt: "t" };
+			const record = await studioAgentsRunner.run(manifest, "Tarea.", tmp, "task");
+
+			if (!record.usage) throw new Error("the child reported usage and the record dropped it");
+			if (record.usage.input !== 240) throw new Error("two turns of 120 input tokens must sum to 240, got " + record.usage.input);
+			if (record.usage.output !== 80) throw new Error("two turns of 40 output tokens must sum to 80, got " + record.usage.output);
+			if (Math.abs(record.usage.cost - 0.005) > 1e-9) throw new Error("cost must accumulate, got " + record.usage.cost);
+
+			const tokens = usageToTokens(record);
+			if (tokens.input !== 240 || tokens.output !== 80) {
+				throw new Error("the accounting must use reported usage, not length/4: " + JSON.stringify(tokens));
+			}
+			if (tokens.estimated) throw new Error("reported usage must not be flagged as estimated");
+
+			if (previousPiPath === undefined) delete process.env.PI_PATH;
+			else process.env.PI_PATH = previousPiPath;
+			delete process.env.FAKE_USAGE_INPUT;
+			delete process.env.FAKE_USAGE_OUTPUT;
+			delete process.env.FAKE_USAGE_COST;
+			fs.rmSync(tmp, { recursive: true, force: true });
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+			});
+		}).not.toThrow();
+	}, 40000);
+});

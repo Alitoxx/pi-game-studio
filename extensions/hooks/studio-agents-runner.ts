@@ -37,6 +37,8 @@ export interface TaskRecord {
 	cwd: string;
 	/** Studio root the dispatch actually operated on: the receipt must prove it. */
 	resolvedRoot: string;
+	/** Real usage reported by the child, accumulated per completed message. */
+	usage?: { input: number; output: number; cacheRead: number; cacheWrite: number; cost: number };
 	/** Timestamp of the last sign of life from the child, for the idle watchdog. */
 	lastActivityAt?: number;
 	/** Last stderr lines, kept because children no longer persist a session. */
@@ -66,6 +68,22 @@ export function formatRel(startedAt?: number | null): string {
 	if (!startedAt) return "+0.0s";
 	const sec = Math.max(0, (Date.now() - startedAt) / 1000);
 	return `+${sec.toFixed(1)}s`.padStart(6, " ");
+}
+
+/**
+ * Token accounting for a finished task. Reported usage wins; the character
+ * heuristic survives only as a flagged estimate for a record that never received
+ * a message_end, so the budget widget stops inventing numbers for delegated work.
+ */
+export function usageToTokens(record: TaskRecord): { input: number; output: number; estimated: boolean } {
+	if (record.usage) {
+		return { input: record.usage.input, output: record.usage.output, estimated: false };
+	}
+	return {
+		input: Math.ceil((record.task?.length || 0) / 4),
+		output: Math.ceil(((record.result?.length || 0) + (record.logs?.join("\n").length || 0)) / 4),
+		estimated: true,
+	};
 }
 
 /**
@@ -458,6 +476,21 @@ export class StudioAgentsRunner {
 								record.latestActivity = "Prompt consumido sin run";
 								this.notifyListeners(record);
 								signalChildTree(child, "SIGTERM");
+							}
+						}
+
+						// 0b. Uso real reportado por Pi: un mensaje completado es la fuente
+						// autoritativa, y message_update es el mismo mensaje en curso.
+						if (event.type === "message_end") {
+							const usage = event.message?.usage || event.usage;
+							if (usage) {
+								const totals = record.usage ?? { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cost: 0 };
+								totals.input += Number(usage.input) || 0;
+								totals.output += Number(usage.output) || 0;
+								totals.cacheRead += Number(usage.cacheRead) || 0;
+								totals.cacheWrite += Number(usage.cacheWrite) || 0;
+								totals.cost += Number(usage.cost) || 0;
+								record.usage = totals;
 							}
 						}
 

@@ -33,7 +33,7 @@ import { handleStudioSubagentsViewer } from "./studio-subagents-viewer.ts";
 import { registerStudioSubagentTools } from "./studio-subagents.ts";
 import { formatStudioToolDiagnostics } from "./studio-tool-registry.ts";
 import { registerAskUserQuestion } from "./studio-choice.ts";
-import { studioAgentsRunner } from "./studio-agents-runner.ts";
+import { studioAgentsRunner, usageToTokens } from "./studio-agents-runner.ts";
 import { recordFailure } from "./studio-diagnostics.ts";
 import {
 	playSuccessChime,
@@ -76,9 +76,8 @@ export default function (pi: ExtensionAPI) {
 		if (task.status === "completed") {
 			playSuccessChime();
 			boundedSurfacesGuard.clear();
-			const inTokens = Math.ceil((task.task?.length || 0) / 4);
-			const outTokens = Math.ceil(((task.result?.length || 0) + (task.logs?.join("\n").length || 0)) / 4);
-			recordTokenUsage(task.agent, task.model || "inherit", inTokens, outTokens);
+			const tokens = usageToTokens(task);
+			recordTokenUsage(task.agent, task.model || "inherit", tokens.input, tokens.output);
 		} else if (task.status === "failed") {
 			playErrorChime();
 			boundedSurfacesGuard.clear();

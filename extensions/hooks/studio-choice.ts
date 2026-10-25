@@ -630,6 +630,171 @@ export class StudioQuestionnaireComponent {
 	}
 }
 
+/**
+ * Drives the question flow outside the tool surface, so the continuity hand-off
+ * shares one implementation with the registered tool instead of importing a
+ * function that never existed.
+ */
+export async function executeAskUserQuestion(
+	params: QuestionParams,
+	ctx: ExtensionContext,
+): Promise<{ content: any[]; details: any }> {
+	const questions: QuestionItem[] = Array.isArray(params?.questions)
+		? params.questions
+		: (params as any)?.question
+			? [
+					{
+						question: (params as any).question,
+						header: (params as any).header,
+						options: (params as any).options,
+						allowCustomResponse: (params as any).allowCustomResponse,
+					},
+				]
+			: [];
+
+	if (questions.length === 0) {
+		return {
+			content: [{ type: "text", text: "Error: No questions provided to ask_user_question." }],
+			details: { error: "empty_questions" },
+		};
+	}
+
+	// Trigger sound alert when user interaction is required
+	try {
+		playAlertChime();
+	} catch {}
+
+	// 1. Primary native UI: Pi's built-in select dialog (guaranteed arrow key & enter navigation)
+	if (Boolean(ctx?.hasUI) && typeof (ctx.ui as any)?.select === "function") {
+		const committedAnswers: CommittedAnswer[] = [];
+
+		for (let i = 0; i < questions.length; i++) {
+			const q = questions[i];
+			const title = formatQuestionPrompt(i, questions);
+
+			const labels = (q.options || []).map((opt, optIdx) => {
+				const desc = opt.description ? ` — ${opt.description}` : "";
+				return `${optIdx + 1}. ${opt.label}${desc}`;
+			});
+
+			const allowCustom = q.allowCustomResponse !== false;
+			if (allowCustom) {
+				labels.push(OTHER_LABEL);
+			}
+
+			const picked = await (ctx.ui as any).select(title, labels);
+
+			if (picked === undefined || picked === null) {
+				return {
+					content: [
+						{
+							type: "text",
+							text: `User cancelled the questionnaire at step ${i + 1}.`,
+						},
+					],
+					details: { cancelled: true, completedCount: i },
+				};
+			}
+
+			if (allowCustom && picked === OTHER_LABEL) {
+				let customText = "";
+				if (typeof (ctx.ui as any)?.input === "function") {
+					customText = await (ctx.ui as any).input(title, "");
+				}
+				committedAnswers.push({
+					questionIndex: i + 1,
+					question: q.question,
+					header: q.header,
+					answer: customText || "Otro",
+					custom: true,
+				});
+			} else {
+				const idx = typeof picked === "number" ? picked : labels.indexOf(picked);
+				const chosenOpt = q.options[idx] || q.options[0];
+
+				committedAnswers.push({
+					questionIndex: i + 1,
+					question: q.question,
+					header: q.header,
+					answer: chosenOpt?.label || String(picked),
+				});
+			}
+		}
+
+		const summaryLines = committedAnswers.map(
+			(a) => `${a.questionIndex}. ${a.question} -> ${a.answer}`,
+		);
+
+		return {
+			content: [
+				{
+					type: "text",
+					text: `The user answered the question(s):\n${summaryLines.join("\n")}`,
+				},
+			],
+			details: {
+				answers: committedAnswers,
+				selection: committedAnswers[0] || null,
+			},
+		};
+	}
+
+	// 2. Custom TUI component (for environments/tests where custom is provided)
+	const isInteractiveTui =
+		Boolean(ctx?.hasUI) &&
+		(ctx as any)?.mode === "tui" &&
+		typeof (ctx.ui as any)?.custom === "function";
+
+	if (isInteractiveTui) {
+		await getPiTuiModule();
+		const selection = await (ctx.ui as any).custom(
+			(
+				tui: any,
+				theme: any,
+				kb: any,
+				done: (res?: QuestionnaireResult) => void,
+			) => {
+				return new StudioQuestionnaireComponent(questions, tui, theme, done, kb);
+			},
+		);
+
+		if (!selection || selection.cancelled) {
+			return {
+				content: [
+					{
+						type: "text",
+						text: "User cancelled the questionnaire.",
+					},
+				],
+				details: { cancelled: true, completedCount: selection?.answers?.length || 0 },
+			};
+		}
+
+		const summaryLines = selection.answers.map(
+			(a: CommittedAnswer) => `${a.questionIndex}. ${a.question} -> ${a.answer}`,
+		);
+
+		return {
+			content: [
+				{
+					type: "text",
+					text: `The user answered the question(s):\n${summaryLines.join("\n")}`,
+				},
+			],
+			details: {
+				answers: selection.answers,
+				selection: selection.answers[0] || null,
+			},
+		};
+	}
+
+	// Fallback: Headless / Tests / Non-UI mode
+	return {
+		content: [{ type: "text", text: "Error: Interactive UI unavailable for questions." }],
+		details: { fallback: true },
+	};
+}
+
 export function registerAskUserQuestion(pi: ExtensionAPI): void {
 	// A host or another extension may already own this tool name. Skipping is
 	// correct, but it is recorded so session_start and /studio:doctor can say it.
@@ -730,160 +895,7 @@ export function registerAskUserQuestion(pi: ExtensionAPI): void {
 			_onUpdate: any,
 			ctx: ExtensionContext,
 		) {
-			const questions: QuestionItem[] = Array.isArray(params?.questions)
-				? params.questions
-				: (params as any)?.question
-					? [
-							{
-								question: (params as any).question,
-								header: (params as any).header,
-								options: (params as any).options,
-								allowCustomResponse: (params as any).allowCustomResponse,
-							},
-						]
-					: [];
-
-			if (questions.length === 0) {
-				return {
-					content: [{ type: "text", text: "Error: No questions provided to ask_user_question." }],
-					details: { error: "empty_questions" },
-				};
-			}
-
-			// Trigger sound alert when user interaction is required
-			try {
-				playAlertChime();
-			} catch {}
-
-			// 1. Primary native UI: Pi's built-in select dialog (guaranteed arrow key & enter navigation)
-			if (Boolean(ctx?.hasUI) && typeof (ctx.ui as any)?.select === "function") {
-				const committedAnswers: CommittedAnswer[] = [];
-
-				for (let i = 0; i < questions.length; i++) {
-					const q = questions[i];
-					const title = formatQuestionPrompt(i, questions);
-
-					const labels = (q.options || []).map((opt, optIdx) => {
-						const desc = opt.description ? ` — ${opt.description}` : "";
-						return `${optIdx + 1}. ${opt.label}${desc}`;
-					});
-
-					const allowCustom = q.allowCustomResponse !== false;
-					if (allowCustom) {
-						labels.push(OTHER_LABEL);
-					}
-
-					const picked = await (ctx.ui as any).select(title, labels);
-
-					if (picked === undefined || picked === null) {
-						return {
-							content: [
-								{
-									type: "text",
-									text: `User cancelled the questionnaire at step ${i + 1}.`,
-								},
-							],
-							details: { cancelled: true, completedCount: i },
-						};
-					}
-
-					if (allowCustom && picked === OTHER_LABEL) {
-						let customText = "";
-						if (typeof (ctx.ui as any)?.input === "function") {
-							customText = await (ctx.ui as any).input(title, "");
-						}
-						committedAnswers.push({
-							questionIndex: i + 1,
-							question: q.question,
-							header: q.header,
-							answer: customText || "Otro",
-							custom: true,
-						});
-					} else {
-						const idx = typeof picked === "number" ? picked : labels.indexOf(picked);
-						const chosenOpt = q.options[idx] || q.options[0];
-
-						committedAnswers.push({
-							questionIndex: i + 1,
-							question: q.question,
-							header: q.header,
-							answer: chosenOpt?.label || String(picked),
-						});
-					}
-				}
-
-				const summaryLines = committedAnswers.map(
-					(a) => `${a.questionIndex}. ${a.question} -> ${a.answer}`,
-				);
-
-				return {
-					content: [
-						{
-							type: "text",
-							text: `The user answered the question(s):\n${summaryLines.join("\n")}`,
-						},
-					],
-					details: {
-						answers: committedAnswers,
-						selection: committedAnswers[0] || null,
-					},
-				};
-			}
-
-			// 2. Custom TUI component (for environments/tests where custom is provided)
-			const isInteractiveTui =
-				Boolean(ctx?.hasUI) &&
-				(ctx as any)?.mode === "tui" &&
-				typeof (ctx.ui as any)?.custom === "function";
-
-			if (isInteractiveTui) {
-				await getPiTuiModule();
-				const selection = await (ctx.ui as any).custom(
-					(
-						tui: any,
-						theme: any,
-						kb: any,
-						done: (res?: QuestionnaireResult) => void,
-					) => {
-						return new StudioQuestionnaireComponent(questions, tui, theme, done, kb);
-					},
-				);
-
-				if (!selection || selection.cancelled) {
-					return {
-						content: [
-							{
-								type: "text",
-								text: "User cancelled the questionnaire.",
-							},
-						],
-						details: { cancelled: true, completedCount: selection?.answers?.length || 0 },
-					};
-				}
-
-				const summaryLines = selection.answers.map(
-					(a: CommittedAnswer) => `${a.questionIndex}. ${a.question} -> ${a.answer}`,
-				);
-
-				return {
-					content: [
-						{
-							type: "text",
-							text: `The user answered the question(s):\n${summaryLines.join("\n")}`,
-						},
-					],
-					details: {
-						answers: selection.answers,
-						selection: selection.answers[0] || null,
-					},
-				};
-			}
-
-			// Fallback: Headless / Tests / Non-UI mode
-			return {
-				content: [{ type: "text", text: "Error: Interactive UI unavailable for questions." }],
-				details: { fallback: true },
-			};
+			return executeAskUserQuestion(params, ctx);
 		},
 	});
 	} catch (error) {

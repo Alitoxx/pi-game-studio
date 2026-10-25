@@ -417,3 +417,37 @@ describe("Studio tool registration is observable", () => {
 		`)).not.toThrow();
 	}, 30000);
 });
+
+describe("Split view paging", () => {
+	test("the split view pages the log window instead of throwing", () => {
+		const script = `
+			const { renderSubagentSplitView } = await import("./extensions/hooks/studio-subagents-viewer.ts");
+
+			const logs = Array.from({ length: 60 }, (_, i) => "event line " + i);
+			const task = {
+				id: "t1", agent: "bevy-specialist", title: "run", task: "t", mode: "task", cwd: ".",
+				status: "running", result: null, error: null, startedAt: Date.now(), endedAt: null, logs,
+			};
+
+			const bottom = renderSubagentSplitView([task], 0, 100, 30, 0);
+			if (!Array.isArray(bottom) || bottom.length === 0) throw new Error("no lines rendered");
+			if (!bottom.join("\\n").includes("event line 59")) {
+				throw new Error("offset 0 must show the tail of the log");
+			}
+
+			const scrolled = renderSubagentSplitView([task], 0, 100, 30, 10);
+			if (!scrolled.join("\\n").includes("event line")) {
+				throw new Error("scrolled view lost the log lines");
+			}
+			if (scrolled.join("\\n").includes("event line 59")) {
+				throw new Error("scrolling back must move the window off the tail");
+			}
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+			});
+		}).not.toThrow();
+	}, 30000);
+});

@@ -2923,3 +2923,41 @@ describe("ask_user_question registration is observable", () => {
 		}).not.toThrow();
 	}, 30000);
 });
+
+describe("Continuity hand-off", () => {
+	test("executeAskUserQuestion exists and answers in headless mode instead of throwing", () => {
+		const script = `
+			const { executeAskUserQuestion } = await import("./extensions/hooks/studio-choice.ts");
+			if (typeof executeAskUserQuestion !== "function") {
+				throw new Error("studio-choice.ts must export the function the continuity flow imports");
+			}
+
+			const questions = {
+				questions: [
+					{
+						header: "Continuidad",
+						question: "¿Cómo deseas proceder?",
+						options: [
+							{ label: "Ejecutar", description: "seguir" },
+							{ label: "Pausar", description: "frenar" },
+						],
+					},
+				],
+			};
+
+			const result = await executeAskUserQuestion(questions, { hasUI: false });
+			if (!result || !Array.isArray(result.content) || result.content.length === 0) {
+				throw new Error("the hand-off must return a structured result, got: " + JSON.stringify(result));
+			}
+			if (result.details?.fallback !== true) {
+				throw new Error("without a UI this must report the headless fallback, got: " + JSON.stringify(result.details));
+			}
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+			});
+		}).not.toThrow();
+	}, 30000);
+});

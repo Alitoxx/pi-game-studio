@@ -158,13 +158,13 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 			if (filesMatch) {
 				files = filesMatch
 					.split(/\r?\n/)
-					.map((l) => l.replace(/^\s*-\s*["']?/, "").replace(/["']?\s*$/, "").trim())
-					.filter((f) => f && !f.startsWith("#") && !f.startsWith("["));
+					.map((l: string) => l.replace(/^\s*-\s*["']?/, "").replace(/["']?\s*$/, "").trim())
+					.filter((f: string) => f && !f.startsWith("#") && !f.startsWith("["));
 			}
 			if (files.length === 0) {
 				const boxFiles = raw.match(/(?:Archivos|Files):\s*([^\n│]+)/i)?.[1];
 				if (boxFiles) {
-					files = boxFiles.split(",").map((f) => f.trim()).filter(Boolean);
+					files = boxFiles.split(",").map((f: string) => f.trim()).filter(Boolean);
 				}
 			}
 			const filesStr = files.length > 0 ? files.join(", ") : "(ninguno)";

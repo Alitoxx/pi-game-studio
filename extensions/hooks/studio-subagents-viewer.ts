@@ -550,6 +550,12 @@ export function renderSubagentSplitView(
 		? targetTask.logs
 		: [`  ${DIM}(esperando primeros eventos de ejecución...)${RESET}`];
 
+	// The log pane gets whatever the header and footer leave of the body, so the
+	// budget must be derived here instead of borrowed from the stacked renderer.
+	const availableLogRows = targetBodyRows
+		? Math.max(3, targetBodyRows - (headerLines.length + 1 + footerRightLines.length))
+		: 12;
+
 	const totalLogs = allLogs.length;
 	const maxOffset = Math.max(0, totalLogs - availableLogRows);
 	const clampedOffset = Math.max(0, Math.min(scrollOffset, maxOffset));
@@ -897,7 +903,7 @@ export async function handleStudioSubagentsViewer(
 		setStudioSidebarSuppressed(true);
 		try {
 			await (ctx.ui as any).custom(
-				(tui: any, theme: any, _kb: any, done: () => void) => {
+				(tui: any, theme: any, _kb: any, done: (res?: any) => void) => {
 					const close = withOverlayRepaint(tui, (res?: any) => {
 						setStudioSidebarSuppressed(false, tui);
 						done(res);

@@ -287,7 +287,7 @@ export function auditEnginePrerequisites(engine: string, dir = process.cwd()): E
 			name: "Node.js (>= 18)",
 			required: true,
 			satisfied: nodeSatisfied,
-			version: nodeVersion,
+			version: nodeVersion ?? undefined,
 			details: nodeSatisfied
 				? `Node.js ${nodeVersion}`
 				: (hasNode ? `Versión ${nodeVersion} detectada, se recomienda >= 18` : "Node.js no instalado"),
@@ -305,7 +305,7 @@ export function auditEnginePrerequisites(engine: string, dir = process.cwd()): E
 			name: "npm (Gestor de dependencias)",
 			required: true,
 			satisfied: hasNpm,
-			version: npmVersion,
+			version: npmVersion ?? undefined,
 			details: hasNpm ? `npm ${npmVersion}` : "npm no detectado",
 			installHelp: {
 				macos: "brew install node",

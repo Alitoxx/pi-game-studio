@@ -25,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added (Guards)
 - Invariant test: every key in `models.default.json` is a known tier or a real agent of the 8+1 roster.
 
+### Removed (Orphaned Template Layer)
+- Retired the `prompts/` directory: game concept, GDD and ADR masters, art and sound bibles, release checklist, automation modes, and the three `collaborative-protocols` agent protocols. Nothing referenced the directory — no skill, agent, or extension — while the package still published it as prompt templates.
+- It was not neutral dead paper. `prompts/game-concept.md` closed with a checklist that told the user to run six commands that do not exist (`/design-review`, `/map-systems`, `/architecture-decision`, `/prototype`, `/playtest-report`, `/sprint-plan new`), and the collaboration protocols instructed per-file write approval ("May I write this to [filepath]?"), emoji pros/cons, and praise — the exact behaviours the ODD contract forbids.
+- The package manifest no longer registers prompt templates, README and `context.md` no longer advertise the layer, and an invariant test keeps it retired.
+
 ---
 
 ## [1.10.0] - 2026-10-18

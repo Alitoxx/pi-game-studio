@@ -976,3 +976,86 @@ describe("Live steering", () => {
 		}).not.toThrow();
 	}, 70000);
 });
+
+describe("Compaction during a child run", () => {
+	const scenario = (env) => `
+		const fs = await import("node:fs");
+		const os = await import("node:os");
+		const path = await import("node:path");
+
+		const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "studio-compact-"));
+		const fakePi = path.join(tmp, "pi");
+		fs.copyFileSync("__tests__/fixtures/fake-pi-rpc.mjs", fakePi);
+		fs.chmodSync(fakePi, 0o755);
+		const previousPiPath = process.env.PI_PATH;
+		process.env.PI_PATH = fakePi;
+		process.env.FAKE_RECEIPT = "status: completed\\nsummary: ok\\nfiles_changed:\\n  - src/a.rs";
+		${Object.entries(env).map(([k, v]) => `process.env.${k} = ${JSON.stringify(String(v))};`).join("\n\t\t")}
+
+		const { studioAgentsRunner } = await import("./extensions/hooks/studio-agents-runner.ts");
+		const manifest = { name: "bevy-specialist", title: "BS", tier: "specialist", model: "inherit", thinking: "medium", tools: ["read"], systemPrompt: "t" };
+		const record = await studioAgentsRunner.run(manifest, "Tarea larga.", tmp, "task");
+
+		const done = () => {
+			if (previousPiPath === undefined) delete process.env.PI_PATH;
+			else process.env.PI_PATH = previousPiPath;
+			${Object.keys(env).map((k) => `delete process.env.${k};`).join("\n\t\t\t")}
+			fs.rmSync(tmp, { recursive: true, force: true });
+		};
+	`;
+
+	test("a compaction inside the child is visible on the task", () => {
+		const script = scenario({ FAKE_COMPACTION: "threshold" }) + `
+			const entry = (record.compactions || [])[0];
+			if (!entry) throw new Error("compaction_start was ignored: the task reports nothing");
+			if (entry.reason !== "threshold") throw new Error("the reason was lost: " + JSON.stringify(entry));
+			if (entry.ok !== true) throw new Error("a successful compaction must be recorded as such: " + JSON.stringify(entry));
+			if (!(record.logs || []).some((l) => /compactaci/i.test(l))) {
+				throw new Error("the viewer log must show the compaction");
+			}
+			done();
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+				timeout: 60000,
+			});
+		}).not.toThrow();
+	}, 70000);
+
+	test("a failed compaction is recorded as a failure, not as a silent no-op", () => {
+		const script = scenario({ FAKE_COMPACTION: "overflow", FAKE_COMPACTION_FAILS: 1 }) + `
+			const entry = (record.compactions || [])[0];
+			if (!entry) throw new Error("compaction_start was ignored");
+			if (entry.ok !== false) throw new Error("a failed compaction must not be recorded as ok");
+			if (!(record.logs || []).some((l) => /fallid|context too large/i.test(l))) {
+				throw new Error("the failure reason must reach the log");
+			}
+			done();
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+				timeout: 60000,
+			});
+		}).not.toThrow();
+	}, 70000);
+
+	test("a delivery that only survives in the final message is not reported as a contract violation", () => {
+		const script = scenario({ FAKE_MESSAGE_END_ONLY: 1 }) + `
+			if (record.status !== "completed") {
+				throw new Error("the authoritative final message must be used when the deltas are gone: " + record.status + " / " + (record.error || ""));
+			}
+			done();
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+				timeout: 60000,
+			});
+		}).not.toThrow();
+	}, 70000);
+});

@@ -99,6 +99,32 @@ process.stdin.on("data", (chunk) => {
 
 	const finish = () => {
 		if (process.env.FAKE_USAGE_INPUT) emitUsage();
+
+		// FAKE_COMPACTION: the child compacts mid-run, as a long task does.
+		if (process.env.FAKE_COMPACTION) {
+			const reason = process.env.FAKE_COMPACTION;
+			emit({ type: "compaction_start", reason });
+			emit({
+				type: "compaction_end",
+				reason,
+				...(process.env.FAKE_COMPACTION_FAILS
+					? { aborted: false, errorMessage: "context too large" }
+					: { result: { summary: "resumen", tokensBefore: 150000, estimatedTokensAfter: 32000 }, aborted: false, willRetry: false }),
+			});
+		}
+
+		// FAKE_MESSAGE_END_ONLY: the deltas are lost, the authoritative final
+		// message is the only place the delivery survives.
+		if (process.env.FAKE_MESSAGE_END_ONLY) {
+			emit({
+				type: "message_end",
+				message: { role: "assistant", content: [{ type: "text", text: receipt }] },
+			});
+			emit({ type: "agent_settled" });
+			setTimeout(() => process.exit(0), 20);
+			return;
+		}
+
 		emit({
 			type: "message_update",
 			assistantMessageEvent: { type: "text_delta", delta: receipt },

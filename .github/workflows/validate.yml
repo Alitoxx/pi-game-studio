@@ -3,8 +3,9 @@ name: Validate
 on:
   push:
     branches: [main, master]
+  # No base-branch filter: a stacked pull request targets another feature
+  # branch, and filtering by base left those with no CI at all.
   pull_request:
-    branches: [main, master]
 
 jobs:
   validate:

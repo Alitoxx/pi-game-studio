@@ -1,10 +1,10 @@
 # Pi Game Studio Agents — Manual y Referencia Oficial
 
-Guía de referencia completa para la dotación compacta oficial **8+1** de Pi Game Studio.
+Guía de referencia completa para la dotación compacta oficial de Pi Game Studio: **8 roles Core + 1 especialista de motor + 1 verificador independiente read-only** (10 agentes activos, 15 plantillas).
 
-## Jerarquía del Estudio (Arquitectura Compacta 8+1)
+## Jerarquía del Estudio (Arquitectura Compacta 8+1+1)
 
-Pi Game Studio opera con **8 roles Core esenciales + 1 especialista dedicado del motor activo**, garantizando máxima velocidad, cero dispersión y bajo consumo de tokens:
+Pi Game Studio opera con **8 roles Core esenciales + 1 especialista dedicado del motor activo + 1 auditor independiente read-only instalado siempre**, garantizando máxima velocidad, cero dispersión y bajo consumo de tokens:
 
 ```text
 Tier 1 — Directors (Estrategia, Visión y Gobernanza)
@@ -21,6 +21,9 @@ Tier 2 — Department Leads & Core Devs
 
 Tier 3 — Engine Specialist (+1 dedicado según motor del proyecto)
   bevy-specialist | godot-specialist | phaser-specialist | raylib-specialist | unity-specialist | unreal-specialist
+
+Auditoría Independiente (siempre instalado, read-only)
+  qa-verifier (Canal de verificación bloqueante — read, find, grep, bash)
 ```
 
 ## Model Mapping y Reasoning Budget
@@ -47,17 +50,18 @@ Sin overrides explícitos, el modelo efectivo de cada agente es el de tu sesión
   - **Cero emojis:** Prohibidos los emojis decorativos (🙂, 🚀, 🎮) en chat, menús y encabezados. Terminal sobria, limpia y de alta densidad informativa.
   - **Captura estructurada de decisiones (`ask_user_question`) & Continuidad fluida:** Prohibido imprimir listas numeradas (1, 2, 3...) en texto plano para pedir números. Cuando se requiera una decisión o dilema real, se lanzan como selector de teclado navegable con flechas (↑/↓) y Enter. Para tareas secuenciales rutinarias ya acordadas en el roadmap, se avanza de forma fluida sin forzar menús innecesarios.
 
-## Política de Instalación Oficial (8 Core + 1 Motor = 9 Agentes Activos)
+## Política de Instalación Oficial (8 Core + 1 Motor + 1 Verificador = 10 Agentes Activos)
 
-El instalador (`/setup` o `/studio:setup`) despliega exactamente **9 agentes** en `.pi/agents/`:
+El instalador (`/setup` o `/studio:setup`) despliega exactamente **10 agentes** en `.pi/agents/`:
 - **8 Agentes Core**: `producer`, `creative-director`, `technical-director`, `game-designer`, `gameplay-programmer`, `art-director`, `audio-director`, `qa-lead`.
 - **1 Especialista del motor activo** definido en `project.yaml`:
-  - **Bevy (Rust)**: 8 + 1 = **9 agentes** (`bevy-specialist`).
-  - **Godot 4**: 8 + 1 = **9 agentes** (`godot-specialist`).
-  - **Phaser (TypeScript)**: 8 + 1 = **9 agentes** (`phaser-specialist`).
-  - **Raylib (C++ / EnTT)**: 8 + 1 = **9 agentes** (`raylib-specialist`).
-  - **Unity**: 8 + 1 = **9 agentes** (`unity-specialist`).
-  - **Unreal Engine 5**: 8 + 1 = **9 agentes** (`unreal-specialist`).
+  - **Bevy (Rust)**: 8 + 1 + 1 = **10 agentes** (`bevy-specialist`).
+  - **Godot 4**: 8 + 1 + 1 = **10 agentes** (`godot-specialist`).
+  - **Phaser (TypeScript)**: 8 + 1 + 1 = **10 agentes** (`phaser-specialist`).
+  - **Raylib (C++ / EnTT)**: 8 + 1 + 1 = **10 agentes** (`raylib-specialist`).
+  - **Unity**: 8 + 1 + 1 = **10 agentes** (`unity-specialist`).
+  - **Unreal Engine 5**: 8 + 1 + 1 = **10 agentes** (`unreal-specialist`).
+- **1 Verificador independiente (siempre instalado, read-only)**: `qa-verifier` — canal de verificación bloqueante del estudio. Declara únicamente `read, find, grep, bash` (sin `write` ni `edit`): es el único rol que no puede modificar lo que audita.
 
 ## Protocolo de Interacción y Decisiones (Gamedev Decision Protocol)
 
@@ -78,7 +82,7 @@ Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar 
 
 ---
 
-## Directorio Detallado de los 14 Agentes Oficiales (Arquitectura Compacta 8+1)
+## Directorio Detallado de los 15 Agentes Oficiales (Arquitectura Compacta 8+1+1)
 
 ### Tier 1: Directores
 
@@ -156,11 +160,18 @@ Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar 
 - **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, ask_user_question`
 - **Misión y Alcance:** The Unreal Specialist is the authority on all Unreal-specific patterns, C++, Blueprints, Gameplay Ability System (GAS), Enhanced Input, and Niagara.
 
+### Auditoría Independiente (Read-Only, Siempre Instalada)
+
+#### `qa-verifier`
+- **Archivo:** [`agents/qa-verifier.md`](agents/qa-verifier.md)
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, bash` (sin `write` ni `edit`)
+- **Misión y Alcance:** The Independent QA Verifier is the studio's read-only auditor. It derives its probes from the live spec and the original request (never from the implementer's report), executes the evidence commands itself, and issues a blocking go / no-go verdict through the studio return contract (`status`, `summary`, `validation`, `risks`). It closes the release-gate chain (`chains/release-gate.chain.md`) with a blocking verification step: a chain with a `blocked` verdict cannot be considered good.
+
 ---
 
 ## Notas de Uso
 
-- Los agentes se distribuyen como plantillas de origen en `agents/*.md` (14 agentes oficiales: 8 Core + 6 Especialistas de motor).
-- `/setup` o `/studio:setup` copia y activa los 9 agentes correspondientes (8 Core + 1 Motor activo) en `.pi/agents/` en tu proyecto.
+- Los agentes se distribuyen como plantillas de origen en `agents/*.md` (15 plantillas oficiales: 8 Core + 6 Especialistas de motor + 1 Verificador read-only).
+- `/setup` o `/studio:setup` copia y activa los 10 agentes correspondientes (8 Core + 1 Motor activo + 1 Verificador read-only) en `.pi/agents/` en tu proyecto.
 - `/assign-models` o `/studio:models` permite cambiar qué modelo ejecuta cada agente o nivel.
 - Gestión de paquetes Node/JS (`package.json`, `extensions/hooks`, `starters/phaser-web-2d`): usar `pnpm` (`pnpm install`, `pnpm run`) en lugar de `npm`.

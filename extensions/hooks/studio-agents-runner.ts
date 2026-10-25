@@ -37,6 +37,8 @@ export interface TaskRecord {
 	cwd: string;
 	/** Studio root the dispatch actually operated on: the receipt must prove it. */
 	resolvedRoot: string;
+	/** Compactions that happened inside the child, with their reason and outcome. */
+	compactions?: Array<{ reason: string; ok: boolean }>;
 	/** Real usage reported by the child, accumulated per completed message. */
 	usage?: { input: number; output: number; cacheRead: number; cacheWrite: number; cost: number };
 	/** Timestamp of the last sign of life from the child, for the idle watchdog. */
@@ -429,6 +431,9 @@ export class StudioAgentsRunner {
 			}
 
 			let resultText = "";
+			// The authoritative final message: compaction can leave the accumulated
+			// deltas truncated, but message_end carries the whole message.
+			let lastAssistantText = "";
 			let stderr = "";
 			let rpcBuffer = "";
 			let promptSent = false;
@@ -506,9 +511,43 @@ export class StudioAgentsRunner {
 							}
 						}
 
+						// 0a. Compactación: invisible hasta ahora, y capaz de truncar la
+						// entrega sin que nadie se entere.
+						if (event.type === "compaction_start") {
+							const reason = String(event.reason || "unknown");
+							record.compactions = [...(record.compactions ?? []), { reason, ok: false }];
+							record.logs.push(`        compactación inicio (${reason})`);
+							record.latestActivity = `Compactando contexto (${reason})`;
+							this.notifyListeners(record);
+						}
+
+						if (event.type === "compaction_end") {
+							const compactions = record.compactions ?? [];
+							const entry = compactions[compactions.length - 1];
+							if (entry) entry.ok = Boolean(event.result) && event.aborted !== true;
+							if (event.aborted === true) {
+								record.logs.push("        compactación abortada");
+							} else if (!event.result) {
+								record.logs.push(`        compactación fallida: ${event.errorMessage || "sin detalle"}`);
+								recordFailure("runner.compaction", event.errorMessage || "compaction failed");
+							} else {
+								const before = event.result.tokensBefore;
+								const after = event.result.estimatedTokensAfter;
+								record.logs.push(`        compactación ok (${before} -> ${after} tokens)`);
+							}
+							this.notifyListeners(record);
+						}
+
 						// 0b. Uso real reportado por Pi: un mensaje completado es la fuente
 						// autoritativa, y message_update es el mismo mensaje en curso.
 						if (event.type === "message_end") {
+							const blocks = Array.isArray(event.message?.content) ? event.message.content : [];
+							const messageText = blocks
+								.filter((b: any) => b?.type === "text" && typeof b.text === "string")
+								.map((b: any) => b.text)
+								.join("");
+							if (messageText.trim()) lastAssistantText = messageText;
+
 							const usage = event.message?.usage || event.usage;
 							if (usage) {
 								const totals = record.usage ?? { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cost: 0 };
@@ -794,8 +833,20 @@ export class StudioAgentsRunner {
 				}
 
 				if (code === 0 || (agentSettled && code === null)) {
-					const delivery = resultText.trim();
-					const contract = validateSpecialistReturn(delivery);
+					let delivery = resultText.trim();
+					let contract = validateSpecialistReturn(delivery);
+
+					// If the deltas did not survive (compaction truncation), fall back to the
+					// final message Pi already sent: a recoverable delivery must not be read
+					// as a contract violation.
+					if (!contract.isValid && lastAssistantText.trim()) {
+						const recovered = validateSpecialistReturn(lastAssistantText.trim());
+						if (recovered.isValid) {
+							delivery = lastAssistantText.trim();
+							contract = recovered;
+							record.logs.push("        entrega recuperada del mensaje final (deltas incompletos)");
+						}
+					}
 
 					if (!contract.isValid) {
 						// El contrato de retorno es la puerta del Zero Bleed: una entrega que no

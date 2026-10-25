@@ -208,6 +208,14 @@ Un especialista corre como proceso aislado: lo que aprende y no escribe, muere c
 - **Cuándo no hay proveedor**: el runner sondea al host antes de despachar. Si Engram no está instalado, retira `mem_save` de las herramientas del hijo, lo registra en la tarea (`memoryUnavailable`) y el prompt le indica reportar el hallazgo en `risks` o `summary`. Nunca se le pide a un hijo una herramienta que no tiene.
 - **Cuándo el host no responde**: se otorga. Pi ignora un nombre que no conoce, así que otorgar es la dirección inofensiva; retirar una capacidad que sí existe, no.
 
+### Borde declarado y deny baseline
+
+Una lista de permitidos dice qué recibe un rol; no dice nada sobre lo que nunca debe recibir. Por eso cada plantilla puede declarar una lista `deny:` opcional con nombres de herramientas o patrones (`subagent_*`), donde la entrada `"*"` significa default deny: todo lo que no esté permitido queda excluido. El runner traduce esa base a la bandera nativa `--exclude-tools`, que se aplica después de toda otra opción de selección, así que **deny gana sobre allow**: una herramienta nombrada en ambas listas queda excluida del hijo y la contradicción se registra en la tarea (`denyConflicts`), nunca se resuelve en silencio.
+
+La base también cierra un agujero que la lista de permitidos sola no puede: un manifiesto con lista vacía haría que el hijo herede las herramientas por defecto de Pi (`read`, `bash`, `edit`, `write`). Con `deny: ["*"]` el runner deriva el complemento del inventario real del host más una base fija de herramientas capaces de escribir, y resta todo lo que la lista de permitidos conceda — por eso `qa-verifier` conserva `bash` para ejecutar comandos de evidencia mientras `write` y `edit` no pueden llegarle nunca.
+
+Cada rol además declara el límite en prosa: una línea `**Boundary:**` al inicio de cada template, nombrando lo que el rol no debe hacer jamás al repositorio, al worktree, al estado de git o al dominio de otro rol. La declaración de herramientas la hace cumplir el runtime; la línea de borde es lo que leen los revisores.
+
 ---
 
 ## 8. Flow Completion & Producer Auto-Handoff Protocol

@@ -32,7 +32,7 @@ import { updateTasksWidget } from "./studio-tasks-widget.ts";
 import { updateSubagentsWidget, installSubagentsWidget } from "./studio-subagents-widget.ts";
 import { handleStudioSubagentsViewer } from "./studio-subagents-viewer.ts";
 import { registerStudioSubagentTools } from "./studio-subagents.ts";
-import { formatStudioToolDiagnostics, hasStudioTool } from "./studio-tool-registry.ts";
+import { formatStudioToolDiagnostics, hasStudioTool, listStudioTools } from "./studio-tool-registry.ts";
 import { registerAskUserQuestion } from "./studio-choice.ts";
 import { studioAgentsRunner, usageToTokens } from "./studio-agents-runner.ts";
 import { recordFailure } from "./studio-diagnostics.ts";
@@ -74,6 +74,11 @@ export default function (pi: ExtensionAPI) {
 	// outlives it. Whether the provider exists is the host's answer, not the
 	// studio's assumption: the runner asks here and grants or strips accordingly.
 	studioAgentsRunner.setToolProbe((name: string) => hasStudioTool(pi, name));
+
+	// The deny baseline needs the runtime's whole tool inventory to derive the
+	// complement of a `deny: ["*"]` template; same activation-time pattern as the
+	// tool probe above, because the singleton predates the extension API.
+	studioAgentsRunner.setToolInventory(() => listStudioTools(pi));
 
 	// ──────────────────────────────────────────────
 	// Audio Notifications & Chimes (Gentle Shell Sound Alerts)

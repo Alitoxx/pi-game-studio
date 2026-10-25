@@ -176,3 +176,9 @@ Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar 
 - `/setup` o `/studio:setup` copia y activa los 10 agentes correspondientes (8 Core + 1 Motor activo + 1 Verificador read-only) en `.pi/agents/` en tu proyecto.
 - `/assign-models` o `/studio:models` permite cambiar qué modelo ejecuta cada agente o nivel.
 - Gestión de paquetes Node/JS (`package.json`, `extensions/hooks`, `starters/phaser-web-2d`): usar `pnpm` (`pnpm install`, `pnpm run`) en lugar de `npm`.
+
+## Least-Privilege Deny Baseline
+
+Cada plantilla de agente puede declarar una lista `deny:` opcional en su frontmatter, junto a `tools:`, con nombres concretos de herramientas o patrones (`subagent_*`), donde la entrada `"*"` significa default deny: todo lo que no esté en la lista de permitidos queda excluido. El runner traduce esa base a la bandera nativa de Pi `--exclude-tools`, que se aplica después de cualquier otra selección, así que una herramienta denegada no llega al hijo aunque un template futuro o una ampliación del runtime la permita: **deny gana sobre allow**, y la contradicción queda registrada en la tarea (`denyConflicts`) en lugar de resolverse en silencio. Cada rol además declara su límite en una línea `**Boundary:**` al inicio de su template, de modo que la regla de mínimo privilegio se puede revisar por escrito y no solo en la declaración de herramientas.
+
+> Verificado contra el runtime, no asumido: `pi --print --tools read,bash --exclude-tools bash` deja al hijo sin `bash`, y el patrón `--exclude-tools 'ba*'` produce el mismo efecto.

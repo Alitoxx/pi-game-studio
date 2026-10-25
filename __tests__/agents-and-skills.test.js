@@ -352,6 +352,70 @@ describe("Exhaustive Agent Validation (Compact 8+1 Studio Architecture: 15 Agent
 	});
 });
 
+describe("Least-privilege deny baseline", () => {
+	const agentsDir = path.join(__dirname, "..", "agents");
+	const agentFiles = fs
+		.readdirSync(agentsDir)
+		.filter((f) => f.endsWith(".md"));
+
+	const frontmatterOf = (file) =>
+		fs.readFileSync(path.join(agentsDir, file), "utf8").split("---")[1];
+
+	const denyEntriesOf = (frontmatter) => {
+		const block = frontmatter.match(/^deny:\n((?:\s+-\s+.+\n?)+)/m);
+		if (!block) return null;
+		return block[1]
+			.split("\n")
+			.map((l) => l.replace(/^\s*-\s*/, "").trim())
+			// Quoted entries arrive stripped by the loader, so mirror that contract.
+			.map((t) => (t.startsWith('"') && t.endsWith('"')) || (t.startsWith("'") && t.endsWith("'")) ? t.slice(1, -1) : t)
+			.filter(Boolean);
+	};
+
+	test("a deny baseline backs every role that must not widen", () => {
+		// The auditor's whole independence is the default deny: everything not in
+		// its allow list is excluded, whatever the runtime grows later.
+		expect(denyEntriesOf(frontmatterOf("qa-verifier.md"))).toEqual(["*"]);
+
+		// Depth is one for every dispatched role, declared twice: absent from tools
+		// and denied in frontmatter, so a runtime addition cannot reopen the hole.
+		// qa-verifier's single "*" default-deny subsumes subagent_*; the producer is
+		// the orchestrator and declares no deny at all.
+		const missingSubagentDeny = agentFiles.filter((file) => {
+			if (file === "producer.md") return false;
+			const deny = denyEntriesOf(frontmatterOf(file)) ?? [];
+			return !(deny.includes("subagent_*") || deny.includes("*"));
+		});
+		expect(missingSubagentDeny).toEqual([]);
+
+		// The four document roles have no bash: they must not execute anything,
+		// not even by inheriting a tool the runtime adds.
+		for (const doc of [
+			"creative-director.md",
+			"art-director.md",
+			"audio-director.md",
+			"game-designer.md",
+		]) {
+			expect(denyEntriesOf(frontmatterOf(doc))).toContain("bash");
+		}
+
+		// The producer is the orchestrator: it dispatches, so nothing is denied.
+		expect(frontmatterOf("producer.md")).not.toMatch(/^deny:/m);
+	});
+
+	test("every role states the boundary it will not cross", () => {
+		for (const file of agentFiles) {
+			const body = fs
+				.readFileSync(path.join(agentsDir, file), "utf8")
+				.split("---")
+				.slice(2)
+				.join("---");
+			const matches = body.match(/^\*\*Boundary:\*\* .*\.$/gm) ?? [];
+			expect({ file, count: matches.length }).toEqual({ file, count: 1 });
+		}
+	});
+});
+
 describe("Exhaustive Skill Validation (Official 6 ODD Skills)", () => {
 	const skillsDir = path.join(__dirname, "..", "skills");
 	const skillFolders = fs

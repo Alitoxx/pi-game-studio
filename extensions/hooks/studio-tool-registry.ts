@@ -58,6 +58,26 @@ export function hasStudioTool(pi: any, name: string): boolean {
 	return false;
 }
 
+/**
+ * The documented `getAllTools()` probe, reduced to tool names. This is the
+ * runtime's whole tool inventory; the runner uses it to derive the complement
+ * a `deny: ["*"]` baseline must exclude. `[]` when the API is missing or
+ * throws: a deny baseline that cannot know the inventory still applies its
+ * fixed baseline, but never throws into dispatch.
+ */
+export function listStudioTools(pi: any): string[] {
+	if (typeof pi?.getAllTools !== "function") return [];
+	try {
+		const tools = pi.getAllTools();
+		if (!Array.isArray(tools)) return [];
+		return tools
+			.map((t: any) => t?.name)
+			.filter((name: any): name is string => typeof name === "string");
+	} catch {
+		return [];
+	}
+}
+
 export function noteStudioToolSkip(name: string, reason: string): void {
 	record(name, "skipped", reason);
 }

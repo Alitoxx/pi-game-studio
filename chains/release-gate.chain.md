@@ -4,12 +4,16 @@ description: Pre-release verification gate auditing build stability, performance
 ---
 
 > Multi-agent studio pipeline auditing milestone builds before release.
+> Cada paso declara `surfaces:` para acotar lo que puede editar y `section:` cuando aporta una sección a un documento compartido; dos pasos que reemplacen el mismo archivo sin secciones distintas invalidan la cadena.
 
 ## qa-lead
 
 reads: production/qa/bugs.md
 output: production/qa/bugs.md
 outputMode: file-only
+section: Bugs — QA
+surfaces:
+  - production/qa/bugs.md
 progress: true
 
 Execute comprehensive test regression triage for `{build}`. Audit open bug counts, blocker/critical defects, platform compliance, and crash logs. Issue a formal GO / NO-GO recommendation with defect severity breakdown.
@@ -19,6 +23,9 @@ Execute comprehensive test regression triage for `{build}`. Audit open bug count
 reads: production/qa/bugs.md
 output: production/qa/bugs.md
 outputMode: file-only
+section: Evaluación Técnica
+surfaces:
+  - production/qa/bugs.md
 progress: true
 
 Audit framerate stability (1% and 0.1% lows), frame-time consistency, memory leaks, draw call count, savegame integrity, and build stability for `{build}` across target hardware profiles.
@@ -28,6 +35,8 @@ Audit framerate stability (1% and 0.1% lows), frame-time consistency, memory lea
 reads: production/qa/bugs.md
 output: production/roadmap.md
 outputMode: file-only
+surfaces:
+  - production/roadmap.md
 progress: true
 
 Assemble the final release package manifest for `{build}`. Draft release notes, platform store checklist (Steam, itch.io, Consoles, Mobile), version bump confirmation, and deployment rollback plan.

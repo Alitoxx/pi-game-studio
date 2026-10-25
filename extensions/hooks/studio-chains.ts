@@ -28,8 +28,88 @@ export interface StudioChain {
 		agent: string;
 		reads?: string;
 		output?: string;
+		outputMode?: string;
+		/** Section this step owns inside a shared document. */
+		section?: string;
+		/** Bounded edit surfaces forwarded to the child as the canonical heading. */
+		surfaces?: string[];
 		instructions: string;
 	}>;
+}
+
+export interface ChainValidationReport {
+	errors: string[];
+	warnings: string[];
+}
+
+/**
+ * A chain is a multi-agent run nobody watches. Two steps that replace the same
+ * artifact silently erase each other, and a step with no declared surfaces can
+ * write anywhere in the worktree. The first is fatal, the second is reported.
+ */
+export function validateChain(chain: StudioChain): ChainValidationReport {
+	const errors: string[] = [];
+	const warnings: string[] = [];
+	const writersByOutput = new Map<string, Array<{ index: number; agent: string; section?: string }>>();
+
+	chain.steps.forEach((step, index) => {
+		if (!step.surfaces || step.surfaces.length === 0) {
+			warnings.push(
+				`El paso ${index + 1} (${step.agent}) no declara superficies de edición: corre con escritura libre en todo el worktree.`,
+			);
+		}
+		if (!step.output) return;
+		const writers = writersByOutput.get(step.output) ?? [];
+		writers.push({ index, agent: step.agent, section: step.section });
+		writersByOutput.set(step.output, writers);
+	});
+
+	for (const [output, writers] of writersByOutput) {
+		if (writers.length < 2) continue;
+		const sections = writers.map((w) => (w.section ?? "").trim().toLowerCase());
+		const allOwnASection = sections.every(Boolean);
+		const distinct = new Set(sections).size === sections.length;
+		if (allOwnASection && distinct) continue;
+		const names = writers.map((w) => `el paso ${w.index + 1} (${w.agent})`).join(" y ");
+		errors.push(
+			`${names} escriben "${output}" sin una sección distinta: el último sobrescribe a los anteriores. Declara 'section:' único por paso o reparte los destinos.`,
+		);
+	}
+
+	return { errors, warnings };
+}
+
+/**
+ * Step prompt with the two contracts a chain step was missing: the bounded edit
+ * surfaces the child enforces, and the section it owns inside a shared artifact.
+ */
+export function buildStepPrompt(
+	step: StudioChain["steps"][number],
+	targetFeature: string,
+	previousOutput: string | null,
+): string {
+	let prompt = `Objetivo de la cadena: ${targetFeature}\n\n`;
+	prompt += `Instrucciones para esta etapa:\n${step.instructions}\n\n`;
+
+	if (step.reads) {
+		prompt += `Archivos de contexto a leer:\n${step.reads}\n\n`;
+	}
+
+	if (step.output) {
+		prompt += step.section
+			? `Destino: ${step.output}\nEscribe únicamente tu contribución bajo el encabezado "## ${step.section}". No reescribas ni borres el contenido existente: los pasos anteriores ya aportaron el suyo.\n\n`
+			: `Destino: ${step.output}\n\n`;
+	}
+
+	if (step.surfaces && step.surfaces.length > 0) {
+		prompt += `## Allowed edit surfaces\n${step.surfaces.map((s) => `- ${s}`).join("\n")}\n\n`;
+	}
+
+	if (previousOutput) {
+		prompt += `Contexto de la etapa anterior:\n${previousOutput}\n\n`;
+	}
+
+	return prompt;
 }
 
 export function loadAvailableChains(cwd: string): StudioChain[] {
@@ -83,7 +163,17 @@ function parseChainFile(content: string, filename: string): StudioChain | null {
 
 		let reads: string | undefined;
 		let output: string | undefined;
+		let outputMode: string | undefined;
+		let section: string | undefined;
+		const surfaces: string[] = [];
 		const instructions: string[] = [];
+
+		const parseSurfaceValue = (raw: string): string[] =>
+			raw
+				.replace(/^\[|\]$/g, "")
+				.split(",")
+				.map((entry) => entry.trim().replace(/^["']|["']$/g, ""))
+				.filter(Boolean);
 
 		for (let i = 1; i < lines.length; i++) {
 			const line = lines[i];
@@ -91,7 +181,21 @@ function parseChainFile(content: string, filename: string): StudioChain | null {
 				reads = line.replace(/^reads:\s*/, "").trim();
 			} else if (line.startsWith("output:")) {
 				output = line.replace(/^output:\s*/, "").trim();
-			} else if (line.startsWith("outputMode:") || line.startsWith("progress:")) {
+			} else if (line.startsWith("outputMode:")) {
+				outputMode = line.replace(/^outputMode:\s*/, "").trim();
+			} else if (line.startsWith("section:")) {
+				section = line.replace(/^section:\s*/, "").trim().replace(/^["']|["']$/g, "");
+			} else if (line.startsWith("surfaces:")) {
+				const inline = line.replace(/^surfaces:\s*/, "").trim();
+				if (inline) {
+					surfaces.push(...parseSurfaceValue(inline));
+				} else {
+					while (i + 1 < lines.length && /^\s*-\s+/.test(lines[i + 1])) {
+						i++;
+						surfaces.push(lines[i].trim().replace(/^-\s+/, ""));
+					}
+				}
+			} else if (line.startsWith("progress:")) {
 				continue;
 			} else {
 				instructions.push(line);
@@ -102,6 +206,9 @@ function parseChainFile(content: string, filename: string): StudioChain | null {
 			agent,
 			reads,
 			output,
+			outputMode,
+			section,
+			surfaces: surfaces.length > 0 ? surfaces : undefined,
 			instructions: instructions.join("\n").trim(),
 		});
 	}
@@ -183,6 +290,17 @@ async function executeChain(ctx: ExtensionContext, chain: StudioChain, targetFea
 	const manifests = loadAllAgents(ctx.cwd);
 	
 	let previousOutput = "";
+	const validation = validateChain(chain);
+	for (const warning of validation.warnings) {
+		console.log(`[Chain ${chain.name}] aviso: ${warning}`);
+	}
+	if (validation.errors.length > 0) {
+		const message = `Cadena ${chain.name} inválida:\n- ${validation.errors.join("\n- ")}`;
+		console.error(message);
+		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") ctx.ui.notify(message, "error");
+		return;
+	}
+
 	const results = [];
 
 	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
@@ -202,16 +320,7 @@ async function executeChain(ctx: ExtensionContext, chain: StudioChain, targetFea
 			return;
 		}
 
-		let prompt = `Objetivo de la cadena: ${targetFeature}\n\n`;
-		prompt += `Instrucciones para esta etapa:\n${step.instructions}\n\n`;
-		
-		if (step.reads) {
-			prompt += `Archivos de contexto a leer:\n${step.reads}\n\n`;
-		}
-		
-		if (previousOutput) {
-			prompt += `Contexto de la etapa anterior:\n${previousOutput}\n\n`;
-		}
+		const prompt = buildStepPrompt(step, targetFeature, previousOutput);
 
 		console.log(`[Chain ${chain.name}] Step ${i + 1}/${chain.steps.length}: ${step.agent} — iniciando...`);
 		

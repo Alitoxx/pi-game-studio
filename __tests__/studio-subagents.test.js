@@ -671,6 +671,72 @@ describe("Specialist escalation", () => {
 			});
 		}).not.toThrow();
 	}, 40000);
+
+	test("memory is granted when a provider exists, stripped and announced when it does not", () => {
+		const script = `
+			const fs = await import("node:fs");
+			const os = await import("node:os");
+			const path = await import("node:path");
+
+			const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "studio-memory-"));
+			const fakePi = path.join(tmp, "pi");
+			fs.copyFileSync("__tests__/fixtures/fake-pi-rpc.mjs", fakePi);
+			fs.chmodSync(fakePi, 0o755);
+			const previousPiPath = process.env.PI_PATH;
+			process.env.PI_PATH = fakePi;
+			process.env.FAKE_ECHO_ARGV = "1";
+			process.env.FAKE_RECEIPT = "status: completed\\nsummary: ok\\nfiles_changed:\\n  - src/a.rs\\nvalidation:\\n  - structural: src/a.rs: presente";
+
+			const { StudioAgentsRunner } = await import("./extensions/hooks/studio-agents-runner.ts");
+			const manifest = { name: "bevy-specialist", title: "BS", tier: "specialist", model: "inherit", thinking: "medium", tools: ["read", "mem_save"], systemPrompt: "test" };
+			const promptOf = (file) => fs.readFileSync(file, "utf8");
+
+			const dispatch = async (runner, logName) => {
+				const log = path.join(tmp, logName);
+				process.env.FAKE_COMMAND_LOG = log;
+				const record = await runner.run(manifest, "Ajusta el sistema de colisiones.", tmp, "task");
+				if (record.status !== "completed") {
+					throw new Error("dispatch failed: " + record.status + " (" + (record.error || "") + ")");
+				}
+				const argv = /ARGV=(.*)/.exec(record.result || "")?.[1] || "";
+				return { record, argv, prompt: promptOf(log) };
+			};
+
+			// A project without a memory provider: the tool is not granted, the strip is
+			// recorded, and the prompt must not send the child after a tool it lacks.
+			const absent = await dispatch(new StudioAgentsRunner({ hasTool: () => false }), "absent.log");
+			if (/mem_save/.test(absent.argv)) throw new Error("mem_save must not be granted, argv was " + absent.argv);
+			if (!absent.argv.includes("--tools read")) throw new Error("the other tools must survive, argv was " + absent.argv);
+			if (JSON.stringify(absent.record.memoryUnavailable) !== JSON.stringify(["mem_save"])) {
+				throw new Error("the strip must be recorded, got " + JSON.stringify(absent.record.memoryUnavailable));
+			}
+			if (/mem_save/.test(absent.prompt)) throw new Error("the prompt must not name a tool the child does not have");
+			if (!/return contract|risks/i.test(absent.prompt)) throw new Error("the prompt must route the discovery to the return contract");
+
+			// A project with the provider installed: granted, and the prompt states the rule.
+			const present = await dispatch(new StudioAgentsRunner({ hasTool: () => true }), "present.log");
+			if (!/--tools read,mem_save/.test(present.argv)) throw new Error("mem_save must be granted, argv was " + present.argv);
+			if (present.record.memoryUnavailable) throw new Error("nothing was stripped, but the record says otherwise");
+			if (!/mem_save/.test(present.prompt)) throw new Error("the prompt must tell the child it can persist a discovery");
+
+			// No probe at all (a host that cannot answer): fail open. Pi ignores a name
+			// it does not know, so granting is the harmless direction.
+			const unprobed = await dispatch(new StudioAgentsRunner(), "unprobed.log");
+			if (!/--tools read,mem_save/.test(unprobed.argv)) throw new Error("an unanswered probe must grant, argv was " + unprobed.argv);
+
+			if (previousPiPath === undefined) delete process.env.PI_PATH;
+			else process.env.PI_PATH = previousPiPath;
+			delete process.env.FAKE_ECHO_ARGV;
+			delete process.env.FAKE_COMMAND_LOG;
+			fs.rmSync(tmp, { recursive: true, force: true });
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+			});
+		}).not.toThrow();
+	}, 60000);
 });
 
 describe("Dispatch context", () => {

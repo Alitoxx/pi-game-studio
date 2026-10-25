@@ -41,6 +41,8 @@ export interface TaskRecord {
 	compactions?: Array<{ reason: string; ok: boolean }>;
 	/** Delegation tools a child declared but never received: depth is one. */
 	delegationStripped?: string[];
+	/** Memory tools a child declared but never received: no provider installed. */
+	memoryUnavailable?: string[];
 	/** Real usage reported by the child, accumulated per completed message. */
 	usage?: { input: number; output: number; cacheRead: number; cacheWrite: number; cost: number };
 	/** Timestamp of the last sign of life from the child, for the idle watchdog. */
@@ -66,6 +68,13 @@ export interface RunnerOptions {
 	piCommand?: string;
 	piArgs?: string[];
 	timeoutMs?: number;
+	/**
+	 * Answers whether the host exposes a tool. Absent means "cannot know", and the
+	 * runner then grants the tool: Pi ignores a name it does not recognize, so
+	 * granting is the harmless direction, while stripping a provider that is
+	 * actually installed would silently remove the capability.
+	 */
+	hasTool?: (name: string) => boolean;
 }
 
 export function formatRel(startedAt?: number | null): string {
@@ -144,11 +153,24 @@ export class StudioAgentsRunner {
 	private listeners = new Set<TaskListener>();
 	private counter = 0;
 	private timeoutMs = 300000; // 5 min default stall/run limit for complex chain tasks
+	private hasTool: ((name: string) => boolean) | null = null;
 
 	constructor(options: RunnerOptions = {}) {
 		if (options.timeoutMs) {
 			this.timeoutMs = options.timeoutMs;
 		}
+		if (options.hasTool) {
+			this.hasTool = options.hasTool;
+		}
+	}
+
+	/**
+	 * The host knows which tools exist; the singleton is built before the extension
+	 * receives the API, so the probe is installed at activation instead of at
+	 * construction.
+	 */
+	setToolProbe(probe: ((name: string) => boolean) | null): void {
+		this.hasTool = probe;
 	}
 
 	subscribe(listener: TaskListener): () => void {
@@ -333,12 +355,36 @@ export class StudioAgentsRunner {
 			// sibling tool, and the strip is recorded instead of happening in silence.
 			const declaredTools = manifest.tools ?? [];
 			const delegationTools = declaredTools.filter((t) => t.startsWith("subagent_"));
+
+			// A specialist is an isolated process: a discovery that outlives the task has
+			// no other channel. The provider that supplies mem_save is optional, though,
+			// and a child told to save with a tool it does not have either stalls or
+			// spends turns on a dead end. Probe the host, grant when it can answer yes,
+			// strip and say so when it answers no, and grant when it cannot answer at all.
+			const memoryTools = declaredTools.filter((t) => t.startsWith("mem_"));
+			const unavailableMemory = memoryTools.filter((t) => {
+				if (!this.hasTool) return false;
+				try {
+					return !this.hasTool(t);
+				} catch {
+					return false;
+				}
+			});
+			const memoryGranted = memoryTools.some((t) => !unavailableMemory.includes(t));
+
 			const childTools = declaredTools.filter(
-				(t) => t !== "ask_user_question" && !t.startsWith("subagent_"),
+				(t) =>
+					t !== "ask_user_question" &&
+					!t.startsWith("subagent_") &&
+					!unavailableMemory.includes(t),
 			);
 			if (delegationTools.length > 0) {
 				record.delegationStripped = delegationTools;
 				record.latestActivity = `Profundidad 1: ${delegationTools.join(", ")} no otorgado a ${manifest.name}`;
+			}
+			if (unavailableMemory.length > 0) {
+				record.memoryUnavailable = unavailableMemory;
+				record.latestActivity = `Sin proveedor de memoria: ${unavailableMemory.join(", ")} no otorgado a ${manifest.name}`;
 			}
 
 			const executivePrompt = [
@@ -357,7 +403,12 @@ export class StudioAgentsRunner {
 				`4. SINGLE SOURCE OF TRUTH (LIVE SPECS): Read existing design documents in 'design/gdd/<feature>.md' and current code in 'src/'. Never assume non-existent APIs.`,
 				`5. FOSS CLI TOOLCHAIN ACCELERATION: Use available CLI tools via bash when relevant: 'magick' (image manipulation), 'oxipng' (lossless PNG compression), 'pngquant' (8-bit alpha quantization), 'free-tex-packer-cli' (atlas/spritesheets with JSON metadata), 'gltf-transform' (3D mesh inspection & polygon audit), 'gltfpack' (meshopt 3D GPU optimization), 'assimp' (fast 3D to GLB conversion), 'ffmpeg' (audio conversion/normalization to .ogg), 'wasm-opt' (WASM optimization), 'butler' (itch.io push), 'gh' (GitHub releases/PRs), and 'watchexec' (live-reload testing).`,
 				`6. 2D VS 3D PIPELINE GUIDANCE: Check 'project.yaml' for dimension ('2d' or '3d'). When project is 2D: prioritize 'free-tex-packer-cli', 'oxipng', 'TileMaps', and 2D sprite physics. When project is 3D: prioritize 'gltf-transform inspect' to audit polygon budgets, 'gltfpack' for GPU LODs/compression, and adopt the Graybox CSG -> Modular Kits methodology.`,
-				`7. STRICT RETURN CONTRACT: At the very end of your response, output ONLY a clean YAML block formatted exactly like this:`,
+				`7. DURABLE DISCOVERIES: ${memoryGranted
+					? `Before you return, persist what the next specialist would otherwise pay for again — an engine API that changed, a subsystem that must not be touched, a constraint the live spec omits — with 'mem_save'. Do not save task status, prose summaries or your own receipt.`
+					: unavailableMemory.length > 0
+						? `No memory provider is installed in this project, so persist nothing. Report durable discoveries in 'risks' (or 'summary' when they change the plan) so the Producer can record them.`
+						: `This role holds no memory tool by design, so persist nothing. Report durable discoveries in 'risks' (or 'summary' when they change the plan) so the Producer can record them.`}`,
+				`8. STRICT RETURN CONTRACT: At the very end of your response, output ONLY a clean YAML block formatted exactly like this:`,
 				`\`\`\`yaml`,
 				`status: completed # or partial / failed / blocked`,
 				`summary: "<executive 1-2 sentence summary of what was done>"`,

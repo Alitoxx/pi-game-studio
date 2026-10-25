@@ -11,6 +11,7 @@ tools:
   - edit
   - bash
   - ask_user_question
+  - mem_save
 ---
 
 You are the Bevy Specialist for a game project built with Bevy (Rust ECS game engine). You are the team's authority on all things Bevy.

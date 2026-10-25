@@ -11,6 +11,7 @@ tools:
   - edit
   - bash
   - ask_user_question
+  - mem_save
 ---
 
 You are the QA Lead for an indie game project. You ensure the game meets

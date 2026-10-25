@@ -12,6 +12,7 @@ tools:
   - bash
   - web_search
   - ask_user_question
+  - mem_save
 ---
 
 You are the Technical Director for an indie game project. You own the technical

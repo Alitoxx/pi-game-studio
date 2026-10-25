@@ -88,76 +88,76 @@ Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar 
 
 #### `producer`
 - **Archivo:** [`agents/producer.md`](agents/producer.md)
-- **Presupuesto de Razonamiento:** `high` | **Herramientas:** `read, find, grep, write, edit, bash, web_search, subagent_run, ask_user_question`
+- **Presupuesto de Razonamiento:** `high` | **Herramientas:** `read, find, grep, write, edit, bash, web_search, subagent_run, ask_user_question, mem_save`
 - **Misión y Alcance:** The Producer manages all production concerns: sprint planning, milestone tracking, risk management, scope negotiation, and cross-department coordination. This is the primary coordination agent.
 
 #### `creative-director`
 - **Archivo:** [`agents/creative-director.md`](agents/creative-director.md)
-- **Presupuesto de Razonamiento:** `high` | **Herramientas:** `read, find, grep, write, edit, web_search, ask_user_question`
+- **Presupuesto de Razonamiento:** `high` | **Herramientas:** `read, find, grep, write, edit, web_search, ask_user_question, mem_save`
 - **Misión y Alcance:** The Creative Director is the highest-level creative authority for the project. This agent makes binding decisions on game vision, tone, aesthetic direction, and resolves conflicts between design, art, narrative, and audio pillars.
 
 #### `technical-director`
 - **Archivo:** [`agents/technical-director.md`](agents/technical-director.md)
-- **Presupuesto de Razonamiento:** `high` | **Herramientas:** `read, find, grep, write, edit, bash, web_search, ask_user_question`
+- **Presupuesto de Razonamiento:** `high` | **Herramientas:** `read, find, grep, write, edit, bash, web_search, ask_user_question, mem_save`
 - **Misión y Alcance:** The Technical Director owns all high-level technical decisions including engine architecture, technology choices, performance strategy, and technical risk management.
 
 ### Tier 2: Leads & Core Devs
 
 #### `game-designer`
 - **Archivo:** [`agents/game-designer.md`](agents/game-designer.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, web_search, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, web_search, ask_user_question, mem_save`
 - **Misión y Alcance:** The Game Designer owns the mechanical and systems design of the game. This agent designs core loops, progression systems, combat mechanics, economy, and player-facing rules.
 
 #### `gameplay-programmer`
 - **Archivo:** [`agents/gameplay-programmer.md`](agents/gameplay-programmer.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, ask_user_question, mem_save`
 - **Misión y Alcance:** The Gameplay Programmer implements player controls, movement feel, mechanics, interactions, combat logic, and camera systems cleanly and performantly.
 
 #### `art-director`
 - **Archivo:** [`agents/art-director.md`](agents/art-director.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, web_search, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, web_search, ask_user_question, mem_save`
 - **Misión y Alcance:** The Art Director owns the visual identity of the game: style guides, art bible, asset standards, color palettes, UI/UX visual design, and shader aesthetic specs.
 
 #### `audio-director`
 - **Archivo:** [`agents/audio-director.md`](agents/audio-director.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, web_search, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, web_search, ask_user_question, mem_save`
 - **Misión y Alcance:** The Audio Director owns the sonic identity of the game: music direction, sound design philosophy, audio implementation strategy, audio buses, and mix balance.
 
 #### `qa-lead`
 - **Archivo:** [`agents/qa-lead.md`](agents/qa-lead.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, ask_user_question, mem_save`
 - **Misión y Alcance:** The QA Lead owns test strategy, bug triage, release quality gates, regression test planning, and release readiness evaluation.
 
 ### Tier 3: Especialistas de Motor
 
 #### `bevy-specialist`
 - **Archivo:** [`agents/bevy-specialist.md`](agents/bevy-specialist.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, ask_user_question, mem_save`
 - **Misión y Alcance:** The Bevy Specialist is the authority on all Bevy-specific patterns, APIs, Rust ECS, wgpu shaders, Cargo builds, and WASM web deployment.
 
 #### `godot-specialist`
 - **Archivo:** [`agents/godot-specialist.md`](agents/godot-specialist.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, ask_user_question, mem_save`
 - **Misión y Alcance:** The Godot Specialist is the authority on all Godot-specific patterns, GDScript/C#, SceneTree, GDExtension, and canvas_item shaders.
 
 #### `phaser-specialist`
 - **Archivo:** [`agents/phaser-specialist.md`](agents/phaser-specialist.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, ask_user_question, mem_save`
 - **Misión y Alcance:** The Phaser Specialist is the authority on Phaser 3 and 4 game development, modern TypeScript, HTML5 Canvas/WebGL pipelines, Arcade/Matter physics, scene lifecycles, and web game deployment.
 
 #### `raylib-specialist`
 - **Archivo:** [`agents/raylib-specialist.md`](agents/raylib-specialist.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, ask_user_question, mem_save`
 - **Misión y Alcance:** The Raylib Specialist is the authority on Raylib, modern C++ (C++17/20), EnTT ECS, GLSL shaders, CMake build pipelines, and game loops.
 
 #### `unity-specialist`
 - **Archivo:** [`agents/unity-specialist.md`](agents/unity-specialist.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, ask_user_question, mem_save`
 - **Misión y Alcance:** The Unity Specialist is the authority on all Unity-specific patterns, MonoBehaviour, DOTS/ECS, C# APIs, Shader Graph, and UI Toolkit.
 
 #### `unreal-specialist`
 - **Archivo:** [`agents/unreal-specialist.md`](agents/unreal-specialist.md)
-- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, ask_user_question`
+- **Presupuesto de Razonamiento:** `medium` | **Herramientas:** `read, find, grep, write, edit, bash, ask_user_question, mem_save`
 - **Misión y Alcance:** The Unreal Specialist is the authority on all Unreal-specific patterns, C++, Blueprints, Gameplay Ability System (GAS), Enhanced Input, and Niagara.
 
 ### Auditoría Independiente (Read-Only, Siempre Instalada)
@@ -172,6 +172,7 @@ Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar 
 ## Notas de Uso
 
 - Los agentes se distribuyen como plantillas de origen en `agents/*.md` (15 plantillas oficiales: 8 Core + 6 Especialistas de motor + 1 Verificador read-only).
+- **Memoria persistente (opcional, nunca implícita)**: 14 de las 15 plantillas declaran `mem_save` para que un descubrimiento sobreviva al proceso hijo; el `qa-verifier` no, porque su independencia depende de seguir siendo read-only. El paquete **no provee** memoria: la suministra un paquete externo (Engram). El runner sondea al host antes de despachar, retira la herramienta y lo registra cuando no hay proveedor, y otorga cuando no puede responder.
 - `/setup` o `/studio:setup` copia y activa los 10 agentes correspondientes (8 Core + 1 Motor activo + 1 Verificador read-only) en `.pi/agents/` en tu proyecto.
 - `/assign-models` o `/studio:models` permite cambiar qué modelo ejecuta cada agente o nivel.
 - Gestión de paquetes Node/JS (`package.json`, `extensions/hooks`, `starters/phaser-web-2d`): usar `pnpm` (`pnpm install`, `pnpm run`) en lugar de `npm`.

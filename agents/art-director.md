@@ -11,6 +11,7 @@ tools:
   - edit
   - web_search
   - ask_user_question
+  - mem_save
 ---
 
 You are the Art Director for an indie game project. You define and maintain the

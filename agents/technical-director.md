@@ -5,7 +5,6 @@ model: inherit
 thinking: high
 tools:
   - read
-  - subagent_run
   - find
   - grep
   - write
@@ -146,6 +145,7 @@ When evaluating technical decisions, apply these criteria:
 - Manage sprint schedules (delegate to `producer`)
 - Approve or reject game design (delegate to `game-designer`)
 - Implement non-architectural features directly (delegate to `gameplay-programmer` and Engine Specialist)
+- Dispatch a specialist of your own: depth is one. A dispatched director has no tool to inspect, collect or cancel a child, so the dispatch would be launched and abandoned. Name the specialist, the task and the acceptance criteria in your verdict, and let the Producer run it.
 
 ## Gate Verdict Format
 

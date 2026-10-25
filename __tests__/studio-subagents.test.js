@@ -626,6 +626,51 @@ describe("Specialist escalation", () => {
 			});
 		}).not.toThrow();
 	}, 40000);
+
+	test("a child is never granted a delegation tool, even when its manifest declares one", () => {
+		const script = `
+			const fs = await import("node:fs");
+			const os = await import("node:os");
+			const path = await import("node:path");
+
+			const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "studio-depth-"));
+			const fakePi = path.join(tmp, "pi");
+			fs.copyFileSync("__tests__/fixtures/fake-pi-rpc.mjs", fakePi);
+			fs.chmodSync(fakePi, 0o755);
+			const previousPiPath = process.env.PI_PATH;
+			process.env.PI_PATH = fakePi;
+			process.env.FAKE_ECHO_ARGV = "1";
+			process.env.FAKE_RECEIPT = "status: completed\\nsummary: ok\\nfiles_changed:\\n  - design/gdd/combat.md\\nvalidation:\\n  - structural: design/gdd/combat.md: presente";
+
+			const { studioAgentsRunner } = await import("./extensions/hooks/studio-agents-runner.ts");
+			// A template that still declares delegation must not open a second
+			// orchestration layer: the parent is the only one that dispatches.
+			const manifest = { name: "creative-director", title: "CD", tier: "director", model: "inherit", thinking: "high", tools: ["read", "subagent_run", "subagent_status", "subagent_result"], systemPrompt: "test" };
+			const record = await studioAgentsRunner.run(manifest, "Define los pilares del juego.", tmp, "task");
+
+			if (record.status !== "completed") {
+				throw new Error("dispatch should still succeed, got " + record.status + " (" + (record.error || "") + ")");
+			}
+			const argv = /ARGV=(.*)/.exec(record.result || "")?.[1] || "";
+			if (/subagent_/.test(argv)) {
+				throw new Error("a child must never be granted a delegation tool, argv was " + argv);
+			}
+			if (!argv.includes("--tools read")) {
+				throw new Error("the remaining tools must survive the strip, argv was " + argv);
+			}
+
+			if (previousPiPath === undefined) delete process.env.PI_PATH;
+			else process.env.PI_PATH = previousPiPath;
+			delete process.env.FAKE_ECHO_ARGV;
+			fs.rmSync(tmp, { recursive: true, force: true });
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+			});
+		}).not.toThrow();
+	}, 40000);
 });
 
 describe("Dispatch context", () => {

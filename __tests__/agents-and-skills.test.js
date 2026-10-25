@@ -24,6 +24,21 @@ describe("Exhaustive Agent Validation (Compact 8+1 Studio Architecture: 15 Agent
 		expect(toolLines).toEqual(["read", "find", "grep", "bash"]);
 	});
 
+	test("only the producer delegates: no dispatched role carries a delegation tool", () => {
+		const delegating = agentFiles.filter((f) => {
+			const frontmatter = fs
+				.readFileSync(path.join(agentsDir, f), "utf8")
+				.split("---")[1];
+			const toolsSection =
+				frontmatter.match(/^tools:\n((?:\s+-\s+[a-z_]+\n?)+)/m)?.[1] ?? "";
+			return /^\s+-\s+subagent_/m.test(toolsSection);
+		});
+		// Depth is one: a director or specialist runs as a child, so granting it
+		// subagent_run would let it launch work it has no tool to observe, cancel
+		// or collect. Escalation goes through the return contract instead.
+		expect(delegating).toEqual(["producer.md"]);
+	});
+
 	const validPiTools = [
 		"read",
 		"write",

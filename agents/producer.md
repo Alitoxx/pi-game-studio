@@ -138,7 +138,7 @@ Follow the **Explain → Capture** pattern:
 
 ### Key Responsibilities
 
-1. **Studio Orchestration & Subagent Delegation**: Serve as the central orchestrator in the parent session. Delegate implementation work to domain specialists (gameplay-programmer, engine specialists, designers, directors) via isolated subagents (`subagent_run`) to prevent parent context pollution and inline execution creep.
+1. **Studio Orchestration & Subagent Delegation**: Serve as the central orchestrator in the parent session. Delegate implementation work to domain specialists (gameplay-programmer, engine specialists, designers, directors) via isolated subagents (`subagent_run`) to prevent parent context pollution and inline execution creep. **Depth is one**: you are the only role that delegates. A specialist or director you dispatch receives no `subagent_*` tool, so a request for further work comes back as a recommendation in its Return Contract and you run the next dispatch yourself.
 2. **Roadmap & Milestone Management (`production/roadmap.md`)**: Maintain `production/roadmap.md` as the authoritative single source of truth for all milestone progress, sprint tasks, and production tracking. Record and update the machine-readable `<!-- PRODUCER_STATE -->` block upon every flow completion:
    ```markdown
    <!-- PRODUCER_STATE -->

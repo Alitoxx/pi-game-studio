@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { execSync } from "node:child_process";
 import { findStudioRoot } from "./studio-root.ts";
+import { runGit } from "./studio-exec.ts";
 import { detectProjectEngine, formatEngineBadge } from "./engine-detector.ts";
 import { inspectSetup } from "./studio-setup.ts";
 import { readProducerState } from "./studio-start.ts";
@@ -54,15 +54,8 @@ function getGradientArtLine(line: string, index: number, total: number): string 
 }
 
 function getGitBranch(cwd: string): string {
-	try {
-		const out = execSync("git rev-parse --abbrev-ref HEAD 2>/dev/null", {
-			cwd,
-			encoding: "utf8",
-			timeout: 500,
-		}).trim();
-		if (out) return out;
-	} catch {}
-	return "main";
+	const out = runGit(["rev-parse", "--abbrev-ref", "HEAD"], { cwd, timeoutMs: 500 });
+	return out || "main";
 }
 
 function fit(val: unknown, len: number): string {

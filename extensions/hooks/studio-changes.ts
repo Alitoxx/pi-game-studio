@@ -1,7 +1,7 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { execSync } from "child_process";
-import { existsSync, readdirSync, readFileSync } from "fs";
-import { join } from "path";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { runGit } from "./studio-exec.ts";
 import { findStudioRoot } from "./studio-root.ts";
 import { panelBottom, panelRow, panelTop } from "./studio-palette.ts";
 
@@ -101,34 +101,29 @@ export function classifyFile(filePath: string): ChangeCategory {
 export function getGitDiffStats(cwd: string): Map<string, { additions: number; deletions: number }> {
 	const stats = new Map<string, { additions: number; deletions: number }>();
 
-	const runNumstat = (cmd: string) => {
-		try {
-			const stdout = execSync(cmd, {
-				encoding: "utf-8",
-				cwd,
-				stdio: ["pipe", "pipe", "ignore"],
-			});
-			for (const line of stdout.trim().split("\n").filter(Boolean)) {
-				const parts = line.split(/\s+/);
-				if (parts.length >= 3) {
-					const adds = parseInt(parts[0], 10) || 0;
-					const dels = parseInt(parts[1], 10) || 0;
-					const file = parts.slice(2).join(" ");
-					const prev = stats.get(file);
-					if (prev) {
-						stats.set(file, { additions: prev.additions + adds, deletions: prev.deletions + dels });
-					} else {
-						stats.set(file, { additions: adds, deletions: dels });
-					}
+	const runNumstat = (args: string[]) => {
+		const stdout = runGit(args, { cwd });
+		if (stdout === null) return;
+		for (const line of stdout.split("\n").filter(Boolean)) {
+			const parts = line.split(/\s+/);
+			if (parts.length >= 3) {
+				const adds = parseInt(parts[0], 10) || 0;
+				const dels = parseInt(parts[1], 10) || 0;
+				const file = parts.slice(2).join(" ");
+				const prev = stats.get(file);
+				if (prev) {
+					stats.set(file, { additions: prev.additions + adds, deletions: prev.deletions + dels });
+				} else {
+					stats.set(file, { additions: adds, deletions: dels });
 				}
 			}
-		} catch {}
+		}
 	};
 
 	// Unstaged changes
-	runNumstat("git diff --numstat");
+	runNumstat(["diff", "--numstat"]);
 	// Staged changes
-	runNumstat("git diff --cached --numstat");
+	runNumstat(["diff", "--cached", "--numstat"]);
 
 	return stats;
 }
@@ -137,33 +132,18 @@ export function getGitDiffStats(cwd: string): Map<string, { additions: number; d
  * Retrieves unified diff for a single file.
  */
 export function getFileDiff(cwd: string, filePath: string): string {
-	try {
-		return execSync(`git diff HEAD -- "${filePath}"`, {
-			encoding: "utf-8",
-			cwd,
-			stdio: ["pipe", "pipe", "ignore"],
-		}).trim();
-	} catch {
-		try {
-			return execSync(`git diff -- "${filePath}"`, {
-				encoding: "utf-8",
-				cwd,
-				stdio: ["pipe", "pipe", "ignore"],
-			}).trim();
-		} catch {
-			return "";
-		}
-	}
+	return (
+		runGit(["diff", "HEAD", "--", filePath], { cwd }) ??
+		runGit(["diff", "--", filePath], { cwd }) ??
+		""
+	);
 }
 
 export function getGitStatus(cwd: string): FileChange[] {
-	try {
-		const stdout = execSync("git status --porcelain", {
-			encoding: "utf-8",
-			cwd,
-			stdio: ["pipe", "pipe", "ignore"],
-		});
+	const stdout = runGit(["status", "--porcelain"], { cwd });
+	if (stdout === null) return [];
 
+	try {
 		const diffStats = getGitDiffStats(cwd);
 		const lines = stdout.trim().split("\n").filter(Boolean);
 

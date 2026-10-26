@@ -1,8 +1,8 @@
 import { ACCENT } from "./studio-palette.ts";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { execSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
+import { runCommand } from "./studio-exec.ts";
 import { findStudioRoot } from "./studio-root.ts";
 
 export interface McpServerDef {
@@ -149,10 +149,7 @@ export function getMcpServerStatuses(cwd: string): Map<string, McpStatusInfo> {
 	const statuses = new Map<string, McpStatusInfo>();
 
 	// Get active CLI list if available
-	let cliOutput = "";
-	try {
-		cliOutput = execSync("pi mcp list 2>/dev/null", { encoding: "utf8", timeout: 4000 });
-	} catch {}
+	let cliOutput = runCommand("pi", ["mcp", "list"], { cwd, timeoutMs: 4000 }) ?? "";
 
 	for (const server of STUDIO_MCP_REGISTRY) {
 		const isConfiguredLocal = Boolean(localServers[server.id]);
@@ -183,28 +180,31 @@ export async function addMcpServer(cwd: string, serverId: string): Promise<boole
 	if (!server) return false;
 
 	const root = findStudioRoot(cwd) || cwd;
-	try {
-		// Run pi mcp add -l
-		const cmd = `pi mcp add ${server.id} -l -- ${server.command} ${server.args.join(" ")}`;
-		execSync(cmd, { cwd: root, stdio: ["ignore", "pipe", "pipe"], timeout: 10000 });
-		return true;
-	} catch {
-		// Fallback: direct write to .pi/mcp.json
-		const servers = readLocalMcpConfig(cwd);
-		servers[server.id] = {
-			command: server.command,
-			args: server.args,
-			...(server.env ? { env: server.env } : {}),
-		};
-		writeLocalMcpConfig(cwd, servers);
-		return true;
-	}
+	// Run pi mcp add -l
+	const ok = runCommand(
+		"pi",
+		["mcp", "add", server.id, "-l", "--", server.command, ...server.args],
+		{ cwd: root, timeoutMs: 10000 },
+	);
+	if (ok !== null) return true;
+
+	// Fallback: direct write to .pi/mcp.json
+	const servers = readLocalMcpConfig(cwd);
+	servers[server.id] = {
+		command: server.command,
+		args: server.args,
+		...(server.env ? { env: server.env } : {}),
+	};
+	writeLocalMcpConfig(cwd, servers);
+	return true;
 }
 
 export async function removeMcpServer(cwd: string, serverId: string): Promise<boolean> {
 	const root = findStudioRoot(cwd) || cwd;
 	try {
-		execSync(`pi mcp remove ${serverId} -l`, { cwd: root, stdio: ["ignore", "pipe", "pipe"], timeout: 5000 });
+		if (runCommand("pi", ["mcp", "remove", serverId, "-l"], { cwd: root, timeoutMs: 5000 }) === null) {
+			throw new Error("pi mcp remove failed");
+		}
 	} catch {
 		const servers = readLocalMcpConfig(cwd);
 		delete servers[serverId];

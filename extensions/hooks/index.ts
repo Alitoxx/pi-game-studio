@@ -4,10 +4,10 @@ import type {
 	ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
 import { isToolCallEventType } from "@earendil-works/pi-coding-agent";
-import { opendir, readFile, writeFile, mkdir } from "node:fs/promises";
+import { opendir, readFile, appendFile, mkdir } from "node:fs/promises";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { execSync } from "node:child_process";
+import { runGit } from "./studio-exec.ts";
 import { renderBanner, isArtEnabled, setArtEnabled } from "./banner.ts";
 import { findStudioRoot } from "./studio-root.ts";
 import { handleStudioCommand } from "./studio-command.ts";
@@ -1007,7 +1007,6 @@ export default function (pi: ExtensionAPI) {
 		} catch {}
 	};
 
-	pi.on("turn_start", handleAgentTurnStart);
 	pi.on("before_agent_start", handleAgentTurnStart);
 	pi.on("turn_end", async (event: any, ctx: any) => {
 		try {
@@ -1191,10 +1190,8 @@ async function handleGitCommit(
 	// Get staged files
 	let staged: string[] = [];
 	try {
-		const output = execSync("git diff --cached --name-only", {
-			encoding: "utf-8",
-			cwd: ctx.cwd,
-		});
+		const output = runGit(["diff", "--cached", "--name-only"], { cwd: ctx.cwd });
+		if (output === null) return; // Not a git repo or git failed
 		staged = output.trim().split("\n").filter(Boolean);
 	} catch {
 		return; // Not a git repo or no staged files
@@ -1263,10 +1260,9 @@ async function handleGitPush(event: any, cmd: string, ctx: ExtensionContext) {
 	// Get current branch
 	let currentBranch = "";
 	try {
-		currentBranch = execSync("git rev-parse --abbrev-ref HEAD", {
-			encoding: "utf-8",
-			cwd: ctx.cwd,
-		}).trim();
+		const out = runGit(["rev-parse", "--abbrev-ref", "HEAD"], { cwd: ctx.cwd });
+		if (out === null) return;
+		currentBranch = out;
 	} catch {
 		return;
 	}
@@ -1289,8 +1285,6 @@ async function handleGitPush(event: any, cmd: string, ctx: ExtensionContext) {
 // File append utility
 // ──────────────────────────────────────────────
 async function appendToFile(filePath: string, content: string): Promise<void> {
-	const existing = existsSync(filePath)
-		? await readFile(filePath, "utf-8")
-		: "";
-	await writeFile(filePath, existing + content, "utf-8");
+	// Append atomically: no read-modify-write race, so concurrent appends cannot lose lines.
+	await appendFile(filePath, content, "utf-8");
 }

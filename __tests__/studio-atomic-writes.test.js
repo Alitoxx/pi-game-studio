@@ -156,6 +156,25 @@ describe("Studio atomic writes", () => {
 		expect(fs.readFileSync(file, "utf8")).toBe('engine: "bevy"\n');
 	});
 
+	test("a leftover temp from an uncatchable kill is swept, a live one is not", () => {
+		// Issue #97: the writer removes its temp on a catchable failure, but a SIGKILL
+		// reaches neither path, so the hidden temp stayed in the project root forever.
+		// Age is the discriminator: a concurrent writer's temp is seconds old.
+		const dir = makeDir();
+		const file = path.join(dir, "project.yaml");
+		fs.writeFileSync(file, 'engine: "bevy"\n', "utf8");
+
+		const result = probe(
+			"sweep",
+			file,
+			".project.yaml.999.1.deadbeef.tmp",
+			".project.yaml.999.2.cafe1234.tmp",
+		);
+
+		expect(result.content).toBe("replaced");
+		expect(result.entries).toEqual([".project.yaml.999.2.cafe1234.tmp", "project.yaml"]);
+	});
+
 	test("a failed settings write is recorded instead of swallowed", () => {
 		const setupSource = fs.readFileSync(
 			path.join(repoRoot, "extensions", "hooks", "studio-setup.ts"),

@@ -3,6 +3,7 @@ import {
 	closeSync,
 	fsyncSync,
 	openSync,
+	readdirSync,
 	renameSync,
 	statSync,
 	unlinkSync,
@@ -42,6 +43,28 @@ function tempPathFor(target: string): string {
 	tempCounter += 1;
 	const suffix = randomBytes(4).toString("hex");
 	return join(dirname(target), `.${basename(target)}.${process.pid}.${tempCounter}.${suffix}.tmp`);
+}
+
+/** A temp older than this cannot belong to a writer that is still running. */
+export const STALE_TEMP_MS = 10 * 60 * 1000;
+
+/**
+ * Removes temp files a previous *uncatchable* kill (SIGKILL, power loss, container
+ * stop) left next to a target this writer is replacing. The age threshold is what
+ * makes it safe: a concurrent writer's temp is seconds old, never minutes.
+ */
+function sweepStaleTemps(target: string): void {
+	const directory = dirname(target);
+	const prefix = `.${basename(target)}.`;
+	try {
+		for (const entry of readdirSync(directory)) {
+			if (!entry.startsWith(prefix) || !entry.endsWith(".tmp")) continue;
+			const stale = join(directory, entry);
+			try {
+				if (Date.now() - statSync(stale).mtimeMs > STALE_TEMP_MS) unlinkSync(stale);
+			} catch {}
+		}
+	} catch {}
 }
 
 function existingMode(target: string): number | null {
@@ -91,6 +114,9 @@ export function writeFileAtomicSync(
 		fd = null;
 		if (mode !== null) chmodSync(temp, mode);
 		renameSync(temp, target);
+		// Housekeeping only: the write already succeeded, so a sweep failure is not an
+		// error the caller should hear about.
+		sweepStaleTemps(target);
 	} catch (error) {
 		if (fd !== null) {
 			try {

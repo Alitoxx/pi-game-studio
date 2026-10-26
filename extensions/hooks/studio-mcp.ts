@@ -1,9 +1,10 @@
 import { ACCENT } from "./studio-palette.ts";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { existsSync, readFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { runCommand } from "./studio-exec.ts";
 import { findStudioRoot } from "./studio-root.ts";
+import { writeJsonAtomicSync } from "./studio-fs.ts";
 
 export interface McpServerDef {
 	id: string;
@@ -141,7 +142,7 @@ export function writeLocalMcpConfig(cwd: string, servers: Record<string, any>): 
 		} catch {}
 	}
 	current.mcpServers = servers;
-	writeFileSync(mcpPath, JSON.stringify(current, null, 2), "utf8");
+	writeJsonAtomicSync(mcpPath, current);
 }
 
 export function getMcpServerStatuses(cwd: string): Map<string, McpStatusInfo> {

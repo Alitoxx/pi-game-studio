@@ -1,9 +1,9 @@
 import { ACCENT, GREEN, SECONDARY, WHITE, YELLOW } from "./studio-palette.ts";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import {
+	appendFileSync,
 	existsSync,
 	readFileSync,
-	writeFileSync,
 	mkdirSync,
 	readdirSync,
 	symlinkSync,
@@ -16,6 +16,8 @@ import {
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { promptModelForRole } from "./provider-resolver.ts";
+import { writeFileAtomicSync, writeJsonAtomicSync } from "./studio-fs.ts";
+import { recordFailure } from "./studio-diagnostics.ts";
 import { auditEnginePrerequisites, formatAuditReport } from "./studio-doctor.ts";
 import { detectProjectEngine } from "./engine-detector.ts";
 import { handleStudioMcp } from "./studio-mcp.ts";
@@ -593,7 +595,7 @@ export function installStudioFiles(
 			}
 			const srcPath = join(agentsSrc, file);
 			const destPath = join(destDir, file);
-			writeFileSync(destPath, readFileSync(srcPath));
+			writeFileAtomicSync(destPath, readFileSync(srcPath));
 			copiedCount++;
 		}
 	}
@@ -621,9 +623,9 @@ export function installStudioFiles(
 
 	// 3. Deploy models configuration
 	if (options.modelsConfig) {
-		writeFileSync(modelsDest, JSON.stringify(options.modelsConfig, null, 2), "utf8");
+		writeJsonAtomicSync(modelsDest, options.modelsConfig);
 	} else if (!existsSync(modelsDest) && existsSync(modelsSrc)) {
-		writeFileSync(modelsDest, readFileSync(modelsSrc));
+		writeFileAtomicSync(modelsDest, readFileSync(modelsSrc));
 	}
 
 	// 4. Configure engine and dimension in project.yaml
@@ -642,7 +644,7 @@ export function installStudioFiles(
 			yamlContent += `\ndimension: "${dimension}"\n`;
 		}
 	}
-	writeFileSync(projectYamlPath, yamlContent, "utf8");
+	writeFileAtomicSync(projectYamlPath, yamlContent, "utf8");
 
 	// 5. Establish standard project structure: design/ (GDDs & Art) and production/ (Tracking, Sprints, QA)
 	mkdirSync(join(ctx.cwd, "design", "gdd"), { recursive: true });
@@ -654,7 +656,7 @@ export function installStudioFiles(
 	if (!existsSync(bugsFilePath)) {
 		const bugsTemplatePath = join(pkgRoot, "templates", "production", "qa", "bugs.md");
 		if (existsSync(bugsTemplatePath)) {
-			writeFileSync(bugsFilePath, readFileSync(bugsTemplatePath));
+			writeFileAtomicSync(bugsFilePath, readFileSync(bugsTemplatePath));
 		} else {
 			const fallbackContent = [
 				"# Bug Triage Log",
@@ -673,7 +675,7 @@ export function installStudioFiles(
 				"|----|----------|--------|---------|------------|-------------|------|",
 				"",
 			].join("\n");
-			writeFileSync(bugsFilePath, fallbackContent, "utf8");
+			writeFileAtomicSync(bugsFilePath, fallbackContent, "utf8");
 		}
 	}
 
@@ -692,13 +694,17 @@ export function installStudioFiles(
 			changed = true;
 		}
 		if (changed) {
-			writeFileSync(settingsJsonPath, JSON.stringify(currentSettings, null, 2), "utf8");
+			writeJsonAtomicSync(settingsJsonPath, currentSettings);
 		}
-	} catch {}
+	} catch (error) {
+		// A settings failure must not hide: the install continues, but the cause is
+		// recorded for /studio:doctor instead of vanishing into an empty catch.
+		recordFailure("setup.settings", error);
+	}
 
 	// 6. Configure language preference
 	if (options.language) {
-		writeFileSync(join(studioDir, "language"), options.language, "utf8");
+		writeFileAtomicSync(join(studioDir, "language"), options.language, "utf8");
 	}
 
 	// 7. Ensure isolated pi-studio CLI launcher is installed
@@ -707,8 +713,12 @@ export function installStudioFiles(
 	// 8. Install log
 	const logPath = join(studioDir, "install-log.md");
 	const logEntry = `\n## Setup: ${new Date().toISOString()}\n- Agents installed: ${copiedCount}\n- Engine: ${engine}\n- Dimension: ${dimension}\n- Language: ${options.language || "es"}\n- Source: ${pkgRoot}\n- Launcher installed: ${launcherInstalled}\n`;
-	const currentLog = existsSync(logPath) ? readFileSync(logPath, "utf8") : "# Pi Game Studio Install Log\n";
-	writeFileSync(logPath, currentLog + logEntry, "utf8");
+	// The install log is append-only: reading it back and rewriting the whole file
+	// was both a read-modify-write race and a way to lose the previous entries.
+	if (!existsSync(logPath)) {
+		writeFileAtomicSync(logPath, "# Pi Game Studio Install Log\n", "utf8");
+	}
+	appendFileSync(logPath, logEntry, "utf8");
 
 	const summaryMsg = [
 		`✓ ¡Pi Game Studio instalado con éxito!`,
@@ -777,7 +787,7 @@ export function installModelsConfig(ctx: ExtensionContext): void {
 	mkdirSync(join(ctx.cwd, ".pi", "game-studio"), { recursive: true });
 
 	if (existsSync(modelsSrc)) {
-		writeFileSync(modelsDest, readFileSync(modelsSrc));
+		writeFileAtomicSync(modelsDest, readFileSync(modelsSrc));
 		const msg = "✓ Modelos recomendados aplicados en .pi/game-studio/models.json";
 		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			ctx.ui.notify(msg, "info");

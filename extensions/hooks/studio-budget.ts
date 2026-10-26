@@ -54,10 +54,113 @@ export interface BudgetReport {
 	byAgent: Record<string, AgentSummary>;
 	byModel: Record<string, { input: number; output: number; cache: number; total: number; costUsd: number }>;
 	recordCount: number;
+	/** Raw records still held in memory; the rest were folded into the totals above. */
+	retainedRecords: number;
 }
 
-// In-memory token storage for the current studio session
+/**
+ * Token telemetry is fed on every tool call and every message end, so the raw
+ * record array is the hottest unbounded structure in the extension. Only the
+ * newest records are kept for inspection; the older ones are folded into running
+ * totals, which keeps the report exact while memory stays flat.
+ */
+export const MAX_SESSION_RECORDS = 512;
+
+interface BudgetRollup {
+	totalInputTokens: number;
+	totalOutputTokens: number;
+	cacheTokens: number;
+	totalTokens: number;
+	totalCostUsd: number;
+	byDiscipline: Record<DisciplineCategory, DisciplineSummary>;
+	byAgent: Record<string, AgentSummary>;
+	byModel: Record<string, { input: number; output: number; cache: number; total: number; costUsd: number }>;
+}
+
+function emptyRollup(): BudgetRollup {
+	return {
+		totalInputTokens: 0,
+		totalOutputTokens: 0,
+		cacheTokens: 0,
+		totalTokens: 0,
+		totalCostUsd: 0,
+		byDiscipline: {
+			Directors: { discipline: "Directors", inputTokens: 0, outputTokens: 0, cacheTokens: 0, totalTokens: 0, costUsd: 0, percentage: 0 },
+			"Game Designer": { discipline: "Game Designer", inputTokens: 0, outputTokens: 0, cacheTokens: 0, totalTokens: 0, costUsd: 0, percentage: 0 },
+			Specialists: { discipline: "Specialists", inputTokens: 0, outputTokens: 0, cacheTokens: 0, totalTokens: 0, costUsd: 0, percentage: 0 },
+			Other: { discipline: "Other", inputTokens: 0, outputTokens: 0, cacheTokens: 0, totalTokens: 0, costUsd: 0, percentage: 0 },
+		},
+		byAgent: {},
+		byModel: {},
+	};
+}
+
+function cloneRollup(source: BudgetRollup): BudgetRollup {
+	return {
+		...source,
+		byDiscipline: {
+			Directors: { ...source.byDiscipline.Directors },
+			"Game Designer": { ...source.byDiscipline["Game Designer"] },
+			Specialists: { ...source.byDiscipline.Specialists },
+			Other: { ...source.byDiscipline.Other },
+		},
+		byAgent: Object.fromEntries(Object.entries(source.byAgent).map(([key, value]) => [key, { ...value }])),
+		byModel: Object.fromEntries(Object.entries(source.byModel).map(([key, value]) => [key, { ...value }])),
+	};
+}
+
+/** Folds records into a rollup. The only place the aggregation rule lives. */
+function foldRecords(rollup: BudgetRollup, records: TokenUsageRecord[]): void {
+	for (const rec of records) {
+		rollup.totalInputTokens += rec.inputTokens;
+		rollup.totalOutputTokens += rec.outputTokens;
+		rollup.cacheTokens += rec.cacheTokens;
+		rollup.totalTokens += rec.totalTokens;
+		rollup.totalCostUsd += rec.costUsd;
+
+		const disc = rollup.byDiscipline[rec.discipline] || rollup.byDiscipline.Other;
+		disc.inputTokens += rec.inputTokens;
+		disc.outputTokens += rec.outputTokens;
+		disc.cacheTokens += rec.cacheTokens;
+		disc.totalTokens += rec.totalTokens;
+		disc.costUsd = Math.round((disc.costUsd + rec.costUsd) * 100000) / 100000;
+
+		if (!rollup.byAgent[rec.agent]) {
+			rollup.byAgent[rec.agent] = {
+				agent: rec.agent,
+				discipline: rec.discipline,
+				model: rec.model,
+				inputTokens: 0,
+				outputTokens: 0,
+				cacheTokens: 0,
+				totalTokens: 0,
+				costUsd: 0,
+			};
+		}
+		const a = rollup.byAgent[rec.agent];
+		a.inputTokens += rec.inputTokens;
+		a.outputTokens += rec.outputTokens;
+		a.cacheTokens += rec.cacheTokens;
+		a.totalTokens += rec.totalTokens;
+		a.costUsd = Math.round((a.costUsd + rec.costUsd) * 100000) / 100000;
+
+		if (!rollup.byModel[rec.model]) {
+			rollup.byModel[rec.model] = { input: 0, output: 0, cache: 0, total: 0, costUsd: 0 };
+		}
+		const m = rollup.byModel[rec.model];
+		m.input += rec.inputTokens;
+		m.output += rec.outputTokens;
+		m.cache += rec.cacheTokens;
+		m.total += rec.totalTokens;
+		m.costUsd = Math.round((m.costUsd + rec.costUsd) * 100000) / 100000;
+	}
+}
+
+// Recent records (bounded) plus the totals of the ones already folded away.
 const sessionRecords: TokenUsageRecord[] = [];
+let archivedTotals = emptyRollup();
+let totalRecordCount = 0;
+
 
 /**
  * Categorizes an agent identifier into its studio discipline.
@@ -233,6 +336,11 @@ export function recordTokenUsage(
 	};
 
 	sessionRecords.push(record);
+	totalRecordCount++;
+	if (sessionRecords.length > MAX_SESSION_RECORDS) {
+		const overflow = sessionRecords.length - MAX_SESSION_RECORDS;
+		foldRecords(archivedTotals, sessionRecords.splice(0, overflow));
+	}
 	return record;
 }
 
@@ -241,74 +349,22 @@ export function recordTokenUsage(
  */
 export function resetBudget(): void {
 	sessionRecords.length = 0;
+	archivedTotals = emptyRollup();
+	totalRecordCount = 0;
 }
 
 /**
  * Generates aggregated budget report grouped by disciplines, agents, and models.
  */
 export function getBudgetReport(): BudgetReport {
-	let totalInput = 0;
-	let totalOutput = 0;
-	let totalCache = 0;
-	let totalTokens = 0;
-	let totalCost = 0;
+	const rollup = cloneRollup(archivedTotals);
+	foldRecords(rollup, sessionRecords);
 
-	const disciplineMap: Record<DisciplineCategory, DisciplineSummary> = {
-		Directors: { discipline: "Directors", inputTokens: 0, outputTokens: 0, cacheTokens: 0, totalTokens: 0, costUsd: 0, percentage: 0 },
-		"Game Designer": { discipline: "Game Designer", inputTokens: 0, outputTokens: 0, cacheTokens: 0, totalTokens: 0, costUsd: 0, percentage: 0 },
-		Specialists: { discipline: "Specialists", inputTokens: 0, outputTokens: 0, cacheTokens: 0, totalTokens: 0, costUsd: 0, percentage: 0 },
-		Other: { discipline: "Other", inputTokens: 0, outputTokens: 0, cacheTokens: 0, totalTokens: 0, costUsd: 0, percentage: 0 },
-	};
-
-	const agentMap: Record<string, AgentSummary> = {};
-	const modelMap: Record<string, { input: number; output: number; cache: number; total: number; costUsd: number }> = {};
-
-	for (const rec of sessionRecords) {
-		totalInput += rec.inputTokens;
-		totalOutput += rec.outputTokens;
-		totalCache += rec.cacheTokens;
-		totalTokens += rec.totalTokens;
-		totalCost += rec.costUsd;
-
-		// Discipline rollup
-		const disc = disciplineMap[rec.discipline] || disciplineMap.Other;
-		disc.inputTokens += rec.inputTokens;
-		disc.outputTokens += rec.outputTokens;
-		disc.cacheTokens += rec.cacheTokens;
-		disc.totalTokens += rec.totalTokens;
-		disc.costUsd = Math.round((disc.costUsd + rec.costUsd) * 100000) / 100000;
-
-		// Agent rollup
-		if (!agentMap[rec.agent]) {
-			agentMap[rec.agent] = {
-				agent: rec.agent,
-				discipline: rec.discipline,
-				model: rec.model,
-				inputTokens: 0,
-				outputTokens: 0,
-				cacheTokens: 0,
-				totalTokens: 0,
-				costUsd: 0,
-			};
-		}
-		const a = agentMap[rec.agent];
-		a.inputTokens += rec.inputTokens;
-		a.outputTokens += rec.outputTokens;
-		a.cacheTokens += rec.cacheTokens;
-		a.totalTokens += rec.totalTokens;
-		a.costUsd = Math.round((a.costUsd + rec.costUsd) * 100000) / 100000;
-
-		// Model rollup
-		if (!modelMap[rec.model]) {
-			modelMap[rec.model] = { input: 0, output: 0, cache: 0, total: 0, costUsd: 0 };
-		}
-		const m = modelMap[rec.model];
-		m.input += rec.inputTokens;
-		m.output += rec.outputTokens;
-		m.cache += rec.cacheTokens;
-		m.total += rec.totalTokens;
-		m.costUsd = Math.round((m.costUsd + rec.costUsd) * 100000) / 100000;
-	}
+	const disciplineMap = rollup.byDiscipline;
+	const agentMap = rollup.byAgent;
+	const modelMap = rollup.byModel;
+	const totalTokens = rollup.totalTokens;
+	const totalCache = rollup.cacheTokens;
 
 	// Calculate percentages
 	if (totalTokens > 0) {
@@ -318,16 +374,17 @@ export function getBudgetReport(): BudgetReport {
 	}
 
 	return {
-		totalInputTokens: totalInput,
-		totalOutputTokens: totalOutput,
+		totalInputTokens: rollup.totalInputTokens,
+		totalOutputTokens: rollup.totalOutputTokens,
 		cacheTokens: totalCache,
 		totalCacheTokens: totalCache,
 		totalTokens,
-		totalCostUsd: Math.round(totalCost * 100000) / 100000,
+		totalCostUsd: Math.round(rollup.totalCostUsd * 100000) / 100000,
 		byDiscipline: disciplineMap,
 		byAgent: agentMap,
 		byModel: modelMap,
-		recordCount: sessionRecords.length,
+		recordCount: totalRecordCount,
+		retainedRecords: sessionRecords.length,
 	};
 }
 
@@ -366,7 +423,7 @@ export function renderBudgetCard(report: BudgetReport, width: number = 74): stri
 	// Cost row
 	const costStr = `${GREEN}$${report.totalCostUsd.toFixed(4)} USD${RESET}`;
 	lines.push(panelRow(`  ${GRAY}Costo Estimado:${RESET} ${costStr} ${GRAY}(basado en tiers de modelos)${RESET}`, innerWidth + 2, BORDER));
-	lines.push(panelRow(`  ${GRAY}Eventos registrados:${RESET} ${WHITE}${report.recordCount}${RESET}`, innerWidth + 2, BORDER));
+	lines.push(panelRow(`  ${GRAY}Eventos registrados:${RESET} ${WHITE}${report.recordCount}${RESET} ${GRAY}(${report.retainedRecords} en memoria)${RESET}`, innerWidth + 2, BORDER));
 	lines.push(panelRow("", innerWidth + 2, BORDER));
 
 	// Discipline Breakdown

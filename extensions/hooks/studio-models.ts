@@ -1,8 +1,10 @@
 import { ACCENT, GREEN, SECONDARY } from "./studio-palette.ts";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, mkdirSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { promptModelForRole } from "./provider-resolver.ts";
+import { writeFileAtomicSync, writeJsonAtomicSync } from "./studio-fs.ts";
+import { recordFailure } from "./studio-diagnostics.ts";
 
 function resolvePackageRoot(): string {
 	try {
@@ -136,7 +138,7 @@ function applyDefaultConfig(ctx: ExtensionContext): void {
 	mkdirSync(destDir, { recursive: true });
 
 	if (existsSync(defaultsPath)) {
-		writeFileSync(destFile, readFileSync(defaultsPath));
+		writeFileAtomicSync(destFile, readFileSync(defaultsPath));
 		const msg = "✓ Perfil recomendado guardado en .pi/game-studio/models.json";
 		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			ctx.ui.notify(msg, "info");
@@ -160,7 +162,7 @@ function applyInheritConfig(
 		lightweight: "inherit",
 	};
 
-	writeFileSync(destFile, JSON.stringify(inheritConfig, null, 2), "utf8");
+	writeJsonAtomicSync(destFile, inheritConfig);
 
 	const msg = "✓ Modo inherit aplicado: todos los agentes usarán el modelo activo de tu sesión.";
 	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
@@ -174,7 +176,7 @@ function saveModelsConfig(ctx: ExtensionContext, cfg: Record<string, string>): v
 	const destDir = join(ctx.cwd, ".pi", "game-studio");
 	const destFile = join(destDir, "models.json");
 	mkdirSync(destDir, { recursive: true });
-	writeFileSync(destFile, JSON.stringify(cfg, null, 2), "utf8");
+	writeJsonAtomicSync(destFile, cfg);
 	const msg = "✓ Configuración de modelos guardada en .pi/game-studio/models.json";
 	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 		ctx.ui.notify(msg, "info");
@@ -450,11 +452,13 @@ function updateAgentsThinking(
 					updated = content.replace(/^---\n/, `---\nthinking: ${level}\n`);
 				}
 				if (updated !== content) {
-					writeFileSync(fullPath, updated, "utf8");
+					writeFileAtomicSync(fullPath, updated, "utf8");
 					count++;
 				}
 			}
-		} catch {}
+		} catch (error) {
+			recordFailure("models.thinkingFile", error);
+		}
 	}
 	return count;
 }

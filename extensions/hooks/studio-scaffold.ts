@@ -1,8 +1,9 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
 import { detectProjectEngine } from "./engine-detector.ts";
+import { writeFileAtomicSync } from "./studio-fs.ts";
 import { readProjectYaml, promptSelectSafe } from "./studio-setup.ts";
 import {
 	ACCENT,
@@ -886,7 +887,7 @@ export async function scaffoldPlayground(
 		}
 
 		mkdirSync(dirname(finalPath), { recursive: true });
-		writeFileSync(finalPath, plan.content, "utf8");
+		writeFileAtomicSync(finalPath, plan.content, "utf8");
 
 		files.push({
 			path: finalPath,

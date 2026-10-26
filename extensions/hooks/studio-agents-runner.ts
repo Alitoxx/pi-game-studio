@@ -65,7 +65,29 @@ export interface TaskRecord {
 	endedAt: number | null;
 	timeoutMs?: number;
 	logs: string[];
+	/** Log lines the ring buffer discarded, so a viewer never implies it sees all of them. */
+	logsDropped?: number;
 }
+
+/**
+ * The runner is long-lived: every specialist keeps pushing lines into its record,
+ * and a verbose child (27 push sites) grows the array for the whole session. Only
+ * the tail is ever rendered, so the buffer keeps the tail and counts the rest.
+ */
+export const MAX_TASK_LOG_LINES = 400;
+
+export function appendTaskLog(record: TaskRecord, line: string): void {
+	record.logs.push(line);
+	const overflow = record.logs.length - MAX_TASK_LOG_LINES;
+	if (overflow > 0) {
+		record.logs.splice(0, overflow);
+		record.logsDropped = (record.logsDropped ?? 0) + overflow;
+	}
+}
+
+/** Finished tasks are kept only while a user could still act on them. */
+export const DEFAULT_TASK_TTL_MS = 30 * 60 * 1000;
+export const DEFAULT_MAX_TASKS = 100;
 
 export type TaskListener = (task: TaskRecord) => void;
 
@@ -73,6 +95,10 @@ export interface RunnerOptions {
 	piCommand?: string;
 	piArgs?: string[];
 	timeoutMs?: number;
+	/** How many finished task records to keep before the oldest are dropped. */
+	maxTasks?: number;
+	/** How long a finished task record stays readable. */
+	taskTtlMs?: number;
 	/**
 	 * Answers whether the host exposes a tool. Absent means "cannot know", and the
 	 * runner then grants the tool: Pi ignores a name it does not recognize, so
@@ -164,12 +190,20 @@ export class StudioAgentsRunner {
 	private listeners = new Set<TaskListener>();
 	private counter = 0;
 	private timeoutMs = 300000; // 5 min default stall/run limit for complex chain tasks
+	private maxTasks = DEFAULT_MAX_TASKS;
+	private taskTtlMs = DEFAULT_TASK_TTL_MS;
 	private hasTool: ((name: string) => boolean) | null = null;
 	private toolInventory: (() => string[]) | null = null;
 
 	constructor(options: RunnerOptions = {}) {
 		if (options.timeoutMs) {
 			this.timeoutMs = options.timeoutMs;
+		}
+		if (options.maxTasks) {
+			this.maxTasks = options.maxTasks;
+		}
+		if (options.taskTtlMs) {
+			this.taskTtlMs = options.taskTtlMs;
 		}
 		if (options.hasTool) {
 			this.hasTool = options.hasTool;
@@ -211,7 +245,42 @@ export class StudioAgentsRunner {
 	}
 
 	listTasks(): TaskRecord[] {
+		this.pruneTasks();
 		return Array.from(this.tasks.values()).reverse();
+	}
+
+	/**
+	 * Drops finished task records past their TTL, then the oldest ones above the
+	 * cap. A queued or running task is never pruned: its record is the only handle
+	 * on a live child.
+	 */
+	pruneTasks(now: number = Date.now()): number {
+		const finished = (task: TaskRecord): boolean =>
+			task.status === "completed" || task.status === "failed" || task.status === "cancelled";
+		const endedAt = (task: TaskRecord): number => task.endedAt ?? task.startedAt ?? 0;
+		let pruned = 0;
+
+		for (const [id, task] of this.tasks) {
+			if (!finished(task)) continue;
+			const ended = endedAt(task);
+			if (ended > 0 && now - ended > this.taskTtlMs) {
+				this.tasks.delete(id);
+				pruned++;
+			}
+		}
+
+		if (this.tasks.size > this.maxTasks) {
+			const oldestFirst = Array.from(this.tasks.values())
+				.filter(finished)
+				.sort((a, b) => endedAt(a) - endedAt(b));
+			for (const task of oldestFirst) {
+				if (this.tasks.size <= this.maxTasks) break;
+				this.tasks.delete(task.id);
+				pruned++;
+			}
+		}
+
+		return pruned;
 	}
 
 	/**
@@ -233,7 +302,7 @@ export class StudioAgentsRunner {
 		}
 
 		task.lastActivityAt = Date.now();
-		task.logs.push(`        steer  ${text.slice(0, 80)}`);
+		appendTaskLog(task, `        steer  ${text.slice(0, 80)}`);
 		task.latestActivity = `Steering: ${text.slice(0, 35)}`;
 		this.notifyListeners(task);
 		return true;
@@ -325,6 +394,7 @@ export class StudioAgentsRunner {
 		};
 
 		this.tasks.set(taskId, record);
+		this.pruneTasks(now);
 		this.notifyListeners(record);
 
 		const executionPromise = this.executeSubprocess(record, manifest, signal);
@@ -620,7 +690,7 @@ export class StudioAgentsRunner {
 							clearTimeout(initTimer);
 							sendRpc({ id: promptRequestId, type: "prompt", message: executivePrompt });
 							record.latestActivity = "Especialista conectado";
-							record.logs.push(`${formatRel(record.startedAt)}  rpc   conexión establecida`);
+							appendTaskLog(record, `${formatRel(record.startedAt)}  rpc   conexión establecida`);
 							this.notifyListeners(record);
 						}
 
@@ -633,7 +703,7 @@ export class StudioAgentsRunner {
 								record.status = "failed";
 								record.error = `Prompt rejected by the child: ${event.error || "unknown reason"}`;
 								record.latestActivity = "Prompt rechazado";
-								record.logs.push(`${formatRel(record.startedAt)}  rpc   prompt rechazado`);
+								appendTaskLog(record, `${formatRel(record.startedAt)}  rpc   prompt rechazado`);
 								this.notifyListeners(record);
 								signalChildTree(child, "SIGTERM");
 							} else if (disposition === "handled") {
@@ -651,7 +721,7 @@ export class StudioAgentsRunner {
 						if (event.type === "compaction_start") {
 							const reason = String(event.reason || "unknown");
 							record.compactions = [...(record.compactions ?? []), { reason, ok: false }];
-							record.logs.push(`        compactación inicio (${reason})`);
+							appendTaskLog(record, `        compactación inicio (${reason})`);
 							record.latestActivity = `Compactando contexto (${reason})`;
 							this.notifyListeners(record);
 						}
@@ -661,14 +731,14 @@ export class StudioAgentsRunner {
 							const entry = compactions[compactions.length - 1];
 							if (entry) entry.ok = Boolean(event.result) && event.aborted !== true;
 							if (event.aborted === true) {
-								record.logs.push("        compactación abortada");
+								appendTaskLog(record, "        compactación abortada");
 							} else if (!event.result) {
-								record.logs.push(`        compactación fallida: ${event.errorMessage || "sin detalle"}`);
+								appendTaskLog(record, `        compactación fallida: ${event.errorMessage || "sin detalle"}`);
 								recordFailure("runner.compaction", event.errorMessage || "compaction failed");
 							} else {
 								const before = event.result.tokensBefore;
 								const after = event.result.estimatedTokensAfter;
-								record.logs.push(`        compactación ok (${before} -> ${after} tokens)`);
+								appendTaskLog(record, `        compactación ok (${before} -> ${after} tokens)`);
 							}
 							this.notifyListeners(record);
 						}
@@ -732,7 +802,7 @@ export class StudioAgentsRunner {
 
 							activeToolCalls.set(toolCallId, { toolName, detail, startedAt: Date.now() });
 							record.latestActivity = detail.slice(0, 45);
-							record.logs.push(logLine);
+							appendTaskLog(record, logLine);
 							this.notifyListeners(record);
 						}
 
@@ -759,32 +829,32 @@ export class StudioAgentsRunner {
 
 							if (event.isError) {
 								const errLine = (outputText.trim().split("\n")[0] || "error en ejecución").slice(0, 100);
-								record.logs.push(`        err (${durationStr}): ${errLine}`);
+								appendTaskLog(record, `        err (${durationStr}): ${errLine}`);
 							} else if (toolName === "bash") {
 								const outLines = outputText.trim().split("\n").filter((l: string) => l.trim().length > 0);
 								if (outLines.length > 0) {
-									record.logs.push(`        out (${durationStr}):`);
+									appendTaskLog(record, `        out (${durationStr}):`);
 									const previewCount = Math.min(outLines.length, 5);
 									for (let i = 0; i < previewCount; i++) {
-										record.logs.push(`          ${outLines[i]}`);
+										appendTaskLog(record, `          ${outLines[i]}`);
 									}
 									if (outLines.length > 5) {
-										record.logs.push(`          ... (${outLines.length - 5} líneas más)`);
+										appendTaskLog(record, `          ... (${outLines.length - 5} líneas más)`);
 									}
 								} else {
-									record.logs.push(`        ok (${durationStr})`);
+									appendTaskLog(record, `        ok (${durationStr})`);
 								}
 							} else if (toolName === "read") {
 								const lineCount = outputText.split("\n").length;
-								record.logs.push(`        ok (${durationStr}): ${lineCount} líneas`);
+								appendTaskLog(record, `        ok (${durationStr}): ${lineCount} líneas`);
 							} else if (toolName === "write" || toolName === "edit") {
-								record.logs.push(`        ok (${durationStr}): cambios guardados`);
+								appendTaskLog(record, `        ok (${durationStr}): cambios guardados`);
 							} else if (toolName === "find" || toolName === "grep") {
 								const matchLines = outputText.trim().split("\n").filter((l: string) => l.trim().length > 0);
-								record.logs.push(`        ok (${durationStr}): ${matchLines.length} coincidencia(s)`);
+								appendTaskLog(record, `        ok (${durationStr}): ${matchLines.length} coincidencia(s)`);
 							} else if (outputText.trim()) {
 								const firstLine = outputText.trim().split("\n")[0].slice(0, 80);
-								record.logs.push(`        ok (${durationStr}): ${firstLine}`);
+								appendTaskLog(record, `        ok (${durationStr}): ${firstLine}`);
 							}
 
 							if (toolCallId) {
@@ -808,7 +878,7 @@ export class StudioAgentsRunner {
 									const headline = lines.find((l: string) => l.length > 10 && !l.startsWith("-") && !l.startsWith("*")) || lines[0];
 									if (headline && !lastLoggedThinking.has(headline)) {
 										lastLoggedThinking.add(headline);
-										record.logs.push(`${formatRel(record.startedAt)}  think ${headline.slice(0, 90)}`);
+										appendTaskLog(record, `${formatRel(record.startedAt)}  think ${headline.slice(0, 90)}`);
 										this.notifyListeners(record);
 									}
 									thinkingBuffer = "";
@@ -819,7 +889,7 @@ export class StudioAgentsRunner {
 									const headline = thinkingBuffer.trim().split("\n")[0]?.trim();
 									if (headline && !lastLoggedThinking.has(headline)) {
 										lastLoggedThinking.add(headline);
-										record.logs.push(`${formatRel(record.startedAt)}  think ${headline.slice(0, 90)}`);
+										appendTaskLog(record, `${formatRel(record.startedAt)}  think ${headline.slice(0, 90)}`);
 									}
 									thinkingBuffer = "";
 									this.notifyListeners(record);
@@ -834,7 +904,7 @@ export class StudioAgentsRunner {
 									for (const chunk of chunks) {
 										const clean = chunk.trim();
 										if (clean && !clean.startsWith("{") && !clean.startsWith("```")) {
-											record.logs.push(`${formatRel(record.startedAt)}  text  ${clean.slice(0, 90)}`);
+											appendTaskLog(record, `${formatRel(record.startedAt)}  text  ${clean.slice(0, 90)}`);
 										}
 									}
 									this.notifyListeners(record);
@@ -875,12 +945,12 @@ export class StudioAgentsRunner {
 							if (thinkingBuffer.trim()) {
 								const headline = thinkingBuffer.trim().split("\n")[0]?.trim();
 								if (headline && !lastLoggedThinking.has(headline)) {
-									record.logs.push(`${formatRel(record.startedAt)}  think ${headline.slice(0, 90)}`);
+									appendTaskLog(record, `${formatRel(record.startedAt)}  think ${headline.slice(0, 90)}`);
 								}
 								thinkingBuffer = "";
 							}
 							record.latestActivity = "Sintetizando entrega...";
-							record.logs.push(`${formatRel(record.startedAt)}  done  entrega completada`);
+							appendTaskLog(record, `${formatRel(record.startedAt)}  done  entrega completada`);
 							this.notifyListeners(record);
 							// Cerrar stdin para que el hijo termine solo
 							try {
@@ -900,7 +970,7 @@ export class StudioAgentsRunner {
 						// Si la línea no es JSON puro, podría ser log estándar
 						if (line.length > 0 && !line.startsWith("{")) {
 							record.latestActivity = line.slice(0, 35);
-							record.logs.push(`${formatRel(record.startedAt)}  raw   ${line.slice(0, 90)}`);
+							appendTaskLog(record, `${formatRel(record.startedAt)}  raw   ${line.slice(0, 90)}`);
 							this.notifyListeners(record);
 						}
 					}
@@ -913,7 +983,7 @@ export class StudioAgentsRunner {
 				stderr += chunk;
 				const clean = chunk.trim();
 				if (clean) {
-					record.logs.push(`        stderr: ${clean.slice(0, 100)}`);
+					appendTaskLog(record, `        stderr: ${clean.slice(0, 100)}`);
 					for (const line of clean.split("\n")) {
 						if (!line.trim()) continue;
 						record.stderrTail!.push(line.trim());
@@ -980,7 +1050,7 @@ export class StudioAgentsRunner {
 						if (recovered.isValid) {
 							delivery = lastAssistantText.trim();
 							contract = recovered;
-							record.logs.push("        entrega recuperada del mensaje final (deltas incompletos)");
+							appendTaskLog(record, "        entrega recuperada del mensaje final (deltas incompletos)");
 						}
 					}
 
@@ -991,13 +1061,13 @@ export class StudioAgentsRunner {
 						record.error = `Return contract violation: ${contract.errors.join(" ")}`;
 						record.result = delivery || null;
 						record.latestActivity = "Contrato de retorno inválido";
-						record.logs.push(`        contract: ${contract.errors.length} violación(es)`);
+						appendTaskLog(record, `        contract: ${contract.errors.length} violación(es)`);
 					} else if (contract.parsed?.status === "interaction_required") {
 						record.status = "interaction_required";
 						record.interaction = contract.parsed.interaction ?? null;
 						record.result = delivery || null;
 						record.latestActivity = "Esperando decisión del usuario";
-						record.logs.push("        contract: interaction_required");
+						appendTaskLog(record, "        contract: interaction_required");
 					} else {
 						record.status = "completed";
 						record.result = delivery || "(el especialista no produjo salida)";

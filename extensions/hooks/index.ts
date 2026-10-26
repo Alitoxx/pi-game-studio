@@ -5,7 +5,7 @@ import type {
 } from "@earendil-works/pi-coding-agent";
 import { isToolCallEventType } from "@earendil-works/pi-coding-agent";
 import { opendir, readFile, appendFile, mkdir } from "node:fs/promises";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { runGit } from "./studio-exec.ts";
 import { renderBanner, isArtEnabled, setArtEnabled } from "./banner.ts";
@@ -36,6 +36,7 @@ import { formatStudioToolDiagnostics, hasStudioTool, listStudioTools } from "./s
 import { registerAskUserQuestion } from "./studio-choice.ts";
 import { studioAgentsRunner, usageToTokens } from "./studio-agents-runner.ts";
 import { recordFailure } from "./studio-diagnostics.ts";
+import { writeJsonAtomicSync } from "./studio-fs.ts";
 import {
 	playSuccessChime,
 	playAlertChime,
@@ -1104,9 +1105,11 @@ export default function (pi: ExtensionAPI) {
 						changed = true;
 					}
 					if (changed) {
-						writeFileSync(localSettingsPath, JSON.stringify(parsed, null, 2), "utf8");
+						writeJsonAtomicSync(localSettingsPath, parsed);
 					}
-				} catch {}
+				} catch (error) {
+					recordFailure("settings.tuiMode", error);
+				}
 			}
 		} catch {}
 

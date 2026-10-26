@@ -639,7 +639,6 @@ export class StudioAgentsRunner {
 			// The authoritative final message: compaction can leave the accumulated
 			// deltas truncated, but message_end carries the whole message.
 			let lastAssistantText = "";
-			let stderr = "";
 			let rpcBuffer = "";
 			let promptSent = false;
 			let agentSettled = false; // true tras agent_settled: un SIGTERM de gracia posterior no es un fallo
@@ -980,13 +979,14 @@ export class StudioAgentsRunner {
 			child.stderr?.setEncoding("utf8");
 			child.stderr?.on("data", (chunk: string) => {
 				record.lastActivityAt = Date.now();
-				stderr += chunk;
 				const clean = chunk.trim();
 				if (clean) {
 					appendTaskLog(record, `        stderr: ${clean.slice(0, 100)}`);
 					for (const line of clean.split("\n")) {
 						if (!line.trim()) continue;
-						record.stderrTail!.push(line.trim());
+						// Both dimensions are bounded: 20 lines, and each line capped, so one
+						// enormous line cannot become the whole error text either.
+						record.stderrTail!.push(line.trim().slice(0, 400));
 						if (record.stderrTail!.length > 20) record.stderrTail!.shift();
 					}
 				}
@@ -1075,7 +1075,10 @@ export class StudioAgentsRunner {
 					}
 				} else {
 					record.status = "failed";
-					record.error = stderr.trim() || `Subagent process exited with code ${code}`;
+					// The bounded tail is the diagnostic; the full stream was only ever read here.
+					record.error = record.stderrTail?.length
+						? record.stderrTail.join("\n")
+						: `Subagent process exited with code ${code}`;
 					record.result = resultText.trim() || null;
 					record.latestActivity = `Error al salir (código ${code})`;
 				}

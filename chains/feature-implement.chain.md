@@ -4,8 +4,8 @@ description: End-to-end game feature pipeline from design specification to engin
 ---
 
 > Multi-agent studio pipeline for turning designed features into working, verified engine code.
-> Cada paso declara `surfaces:` para acotar lo que puede editar y `section:` cuando aporta una sección a un documento compartido; dos pasos que reemplacen el mismo archivo sin secciones distintas invalidan la cadena.
-> Ningún paso cierra sin un spot check: la cadena vuelve a correr un comando reportado en `validation`, o relee la propiedad declarada en `structural:`; el contrato valida forma, no verdad.
+> Each step declares `surfaces:` to bound what it may edit, and `section:` when it contributes a section to a shared document; two steps replacing the same file without distinct sections invalidate the chain.
+> No step closes without a spot check: the chain re-runs a command reported in `validation`, or re-reads the property declared in `structural:`; the contract validates shape, not truth.
 
 ## game-designer
 

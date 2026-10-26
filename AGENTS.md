@@ -50,6 +50,18 @@ Sin overrides explícitos, el modelo efectivo de cada agente es el de tu sesión
   - **Cero emojis:** Prohibidos los emojis decorativos (🙂, 🚀, 🎮) en chat, menús y encabezados. Terminal sobria, limpia y de alta densidad informativa.
   - **Captura estructurada de decisiones (`ask_user_question`) & Continuidad fluida:** Prohibido imprimir listas numeradas (1, 2, 3...) en texto plano para pedir números. Cuando se requiera una decisión o dilema real, se lanzan como selector de teclado navegable con flechas (↑/↓) y Enter. Para tareas secuenciales rutinarias ya acordadas en el roadmap, se avanza de forma fluida sin forzar menús innecesarios.
 
+### Idioma por capa (no por gusto)
+
+El idioma de cada archivo se decide por quién lo consume, no por preferencia:
+
+| Capa | Idioma | Por qué |
+|---|---|---|
+| `agents/*.md`, `chains/*.chain.md`, `skills/**/*.md` | **Inglés** | Son instrucciones que el modelo carga y ejecuta: el inglés es más fiable para *instruction-following*, ocupa menos tokens para el mismo contenido y coincide con el resto del contrato (`subagent_run`, `validation:`, `## Allowed edit surfaces`, rutas). |
+| `docs/`, `AGENTS.md`, `README.md`, copy de CLI y chat | **Español** | Lo lee el humano; el inglés ahí no aporta nada y sí cuesta comprensión. |
+| Salida de los agentes (receipts, GDD, comentarios de producto) | **Idioma configurado** | `.pi/game-studio/language` + Neutral Protocol. Es un eje distinto del anterior y no lo reemplaza. |
+
+Consecuencia práctica: al editar un skill o una plantilla de agente no se traduce la prosa al español; al escribir documentación no se traduce al inglés. Los ejemplos de copy que muestran *qué diría* el agente a un usuario hispanohablante sí quedan en español, porque son salida de ejemplo, no instrucción.
+
 ## Política de Instalación Oficial (8 Core + 1 Motor + 1 Verificador = 10 Agentes Activos)
 
 El instalador (`/setup` o `/studio:setup`) despliega exactamente **10 agentes** en `.pi/agents/`:

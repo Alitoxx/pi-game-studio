@@ -1,6 +1,6 @@
 ---
 name: arch
-description: "[ODD Fase 3] Technical Boundaries. Role Owner: technical-director (Tier 1 Director). Registra Architecture Decision Records (ADRs), presupuestos de VRAM/RAM, target FPS, manifiesto de control y configuración de motor/MCP."
+description: "[ODD Phase 3] Technical Boundaries. Role Owner: technical-director (Tier 1 Director). Records Architecture Decision Records (ADRs), VRAM/RAM budgets, target FPS, the control manifest, and engine/MCP configuration."
 model: inherit
 inheritProjectContext: true
 tools:
@@ -13,30 +13,30 @@ tools:
   - ask_user_question
 ---
 
-## Fase 3 ODD: Architecture & Engine Boundaries
+## ODD Phase 3: Architecture & Engine Boundaries
 
 - **Role Owner**: `technical-director` (Tier 1 Director)
-- **Contrato ODD Compartido**: Consulta [`skills/_shared/odd-contract.md`](../_shared/odd-contract.md) para las reglas compartidas de tareas atómicas (~400 líneas), Live Specs en `design/gdd/`, límites de compilación (compiler bounds) y el formato del Return Contract en YAML.
+- **Shared ODD Contract**: See [`skills/_shared/odd-contract.md`](../_shared/odd-contract.md) for the shared rules on atomic tasks (~400 lines), Live Specs in `design/gdd/`, compiler bounds, and the YAML Return Contract format.
 
-Cuando se invoca `/arch` (o `/arch adr`, `/arch budget`, `/arch mcp`):
+When `/arch` is invoked (or `/arch adr`, `/arch budget`, `/arch mcp`):
 
-### 1. Establecer Límites Técnicos (Technical Boundaries)
-- Definir el target de FPS (e.g. 60 FPS estables) y budget máximo de memoria para la plataforma objetivo.
-- Declarar reglas de arquitectura estrictas (e.g. desacoplamiento de estado y render, cero asignaciones de memoria en bucles de frame).
+### 1. Set Technical Boundaries
+- Define the target FPS (e.g. a stable 60 FPS) and the maximum memory budget for the target platform.
+- Declare strict architecture rules (e.g. decoupling state from rendering, zero memory allocations in frame loops).
 
 ### 2. Architecture Decision Records (ADRs)
-Para cada decisión no trivial (patrón ECS, librería de audio, integración de red, formato de niveles):
-- Redactar un ADR conciso en `docs/architecture/adr-<numero>-<titulo>.md`.
-- Secciones: Contexto, Alternativas evaluadas, Decisión fundamentada y Consecuencias.
+For every non-trivial decision (ECS pattern, audio library, networking integration, level format):
+- Write a concise ADR in `docs/architecture/adr-<numero>-<titulo>.md`.
+- Sections: Context, Alternatives considered, Grounded decision, and Consequences.
 
-### 3. Integración con el Motor, Pipeline de Shaders y Subsistemas Base
-Soporte simétrico para los 6 motores oficiales con su arquitectura de shaders, audio, input y persistencia:
-- **Godot**: `project.godot`, GDScript, C#, GDExtension, shaders `canvas_item` / `spatial` (`.gdshader`) (`Appendix A — Godot`). Audio Buses en `default_bus_layout.tres` (Master/BGM/SFX/UI). InputMap nativo desacoplado. Serialización con `ConfigFile` o `ResourceFormatSaver`.
-- **Bevy**: `Cargo.toml`, Rust ECS idiomático, `wgpu`, shaders WGSL (`.wgsl`) integrados con `Material2d` / `MaterialPlugin` (`Appendix B — Bevy`). Audio reactivo con `bevy_kira_audio` o `bevy_audio` con canales aislados. Input con `leafwing-input-manager` o mapeo `ActionState`. Serialización RON / Serde.
-- **Raylib**: `CMakeLists.txt`, Modern C++, EnTT ECS, fragment/vertex shaders en GLSL (`.fs` / `.vs`) con `LoadShader()` y `BeginShaderMode()` (`Appendix C — Raylib`). Audio con miniaudio/raudio por canales. Mapeo de gamepad con `IsGamepadButtonDown()`. Serialización binaria o JSON.
-- **Unity**: MonoBehaviour / DOTS, Burst, URP/HDRP, Shader Graph y custom HLSL (`.shader`). AudioMixer con Snapshots y ducking. Input System (Actions). Serialización JSON/Binary.
-- **Unreal**: C++, GAS, Enhanced Input, Blueprints, Material Editor y Niagara. Sound Cues y MetaSounds con Submixes. SaveGame nativo.
-- **Phaser**: `package.json`, TypeScript, Vite, WebGL/Canvas pipelines, shaders GLSL personalizados vía `PostFXPipeline` (`Appendix D — Phaser`). Audio reactivo con Web Audio API / `Phaser.Sound` (canales Master/BGM/SFX desacoplados). Input con `Phaser.Input` (Keyboard, Pointer, Gamepad). Motor de física Arcade Physics o Matter.js. Serialización con `localStorage` / IndexedDB o JSON.
+### 3. Engine Integration, Shader Pipeline & Core Subsystems
+Symmetric support for the 6 official engines with their shader, audio, input and persistence architecture:
+- **Godot**: `project.godot`, GDScript, C#, GDExtension, `canvas_item` / `spatial` shaders (`.gdshader`) (`Appendix A — Godot`). Audio Buses in `default_bus_layout.tres` (Master/BGM/SFX/UI). Native decoupled InputMap. Serialization with `ConfigFile` or `ResourceFormatSaver`.
+- **Bevy**: `Cargo.toml`, idiomatic Rust ECS, `wgpu`, WGSL shaders (`.wgsl`) integrated with `Material2d` / `MaterialPlugin` (`Appendix B — Bevy`). Reactive audio with `bevy_kira_audio` or `bevy_audio` with isolated channels. Input via `leafwing-input-manager` or `ActionState` mapping. RON / Serde serialization.
+- **Raylib**: `CMakeLists.txt`, Modern C++, EnTT ECS, GLSL fragment/vertex shaders (`.fs` / `.vs`) with `LoadShader()` and `BeginShaderMode()` (`Appendix C — Raylib`). Audio via miniaudio/raudio by channels. Gamepad mapping with `IsGamepadButtonDown()`. Binary or JSON serialization.
+- **Unity**: MonoBehaviour / DOTS, Burst, URP/HDRP, Shader Graph and custom HLSL (`.shader`). AudioMixer with Snapshots and ducking. Input System (Actions). JSON/Binary serialization.
+- **Unreal**: C++, GAS, Enhanced Input, Blueprints, Material Editor and Niagara. Sound Cues and MetaSounds with Submixes. Native SaveGame.
+- **Phaser**: `package.json`, TypeScript, Vite, WebGL/Canvas pipelines, custom GLSL shaders via `PostFXPipeline` (`Appendix D — Phaser`). Reactive audio with Web Audio API / `Phaser.Sound` (decoupled Master/BGM/SFX channels). Input via `Phaser.Input` (Keyboard, Pointer, Gamepad). Physics engine: Arcade Physics or Matter.js. Serialization with `localStorage` / IndexedDB or JSON.
 
 #### Guided Mode, Stack Templates & Engine Routing
 - **Godot**: `godot-specialist` — Stack: GDScript / C#, SceneTree (`Appendix A — Godot`).
@@ -46,23 +46,23 @@ Soporte simétrico para los 6 motores oficiales con su arquitectura de shaders, 
 - **Unreal**: `unreal-specialist` — Stack: C++, GAS, Enhanced Input, Niagara.
 - **Phaser**: `phaser-specialist` — Stack: TypeScript, Vite, WebGL / Arcade Physics (`Appendix D — Phaser`).
 
-### 4. Ecosistema de Servidores MCP ("Files First, MCP Accelerated")
-Cuando se ejecuta `/arch mcp` o `/studio:mcp`:
-- **Auditoría de Entorno**: Consultar el estado de los 10 servidores MCP disponibles (REA, Playwright, Context7, Codegraph, SQLite, Chroma/Vector, Blender, Image Gen, Audio SFX, Live Engine).
-- **Aceleración ODD**: Los servidores MCP no sustituyen los archivos en disco (`design/gdd/`), sino que aceleran las capacidades de inspección de los especialistas. Generar o actualizar `docs/architecture/mcp-ecosystem.md` con los servidores recomendados y activados para el proyecto.
+### 4. MCP Server Ecosystem ("Files First, MCP Accelerated")
+When `/arch mcp` or `/studio:mcp` runs:
+- **Environment Audit**: Check the status of the 10 available MCP servers (REA, Playwright, Context7, Codegraph, SQLite, Chroma/Vector, Blender, Image Gen, Audio SFX, Live Engine).
+- **ODD Acceleration**: MCP servers do not replace files on disk (`design/gdd/`); they accelerate the specialists' inspection capabilities. Generate or update `docs/architecture/mcp-ecosystem.md` with the servers recommended and enabled for the project.
 
-### 5. Cierre Verificable (Done When)
+### 5. Verifiable Closure (Done When)
 
-Un presupuesto que no se puede medir **no es un presupuesto**: es una intención. La fase no cierra por declarar números.
+A budget that cannot be measured **is not a budget**: it is an intention. The phase does not close by declaring numbers.
 
-Cierra en `completed` solo si se cumplen estas cuatro condiciones binarias:
-- **Umbral numérico por presupuesto**: cada fila de FPS, RAM y VRAM declara número y unidad (`60 FPS`, `350 MB`, `1.5 GB`).
-- **Comando de medición por umbral**: cada presupuesto nombra el comando o la instrumentación que lo observa; `/test` es quien lo ejecuta en cada entrega, y `arch` no cierra con un número que nadie puede leer.
-- **ADR completo**: cada ADR en `docs/architecture/adr-<numero>-<titulo>.md` declara decisión, alternativa rechazada y consecuencia; un ADR sin alternativa rechazada es un anuncio, no una decisión.
-- **Toolchain probado**: el comando de build/check del motor activo corre al menos una vez y su resultado exacto entra en la evidencia.
+It closes in `completed` only if these four binary conditions hold:
+- **Numeric threshold per budget**: every FPS, RAM and VRAM row declares a number and a unit (`60 FPS`, `350 MB`, `1.5 GB`).
+- **Measurement command per threshold**: every budget names the command or instrumentation that observes it; `/test` is the one that runs it on every delivery, and `arch` does not close with a number nobody can read.
+- **Complete ADR**: every ADR in `docs/architecture/adr-<numero>-<titulo>.md` declares the decision, the rejected alternative and the consequence; an ADR without a rejected alternative is an announcement, not a decision.
+- **Proven toolchain**: the active engine's build/check command runs at least once and its exact result goes into the evidence.
 
-Evidencia que se reporta:
+Evidence reported:
 
-`structural: docs/architecture/adr-001-ecs-vs-jerarquia.md: decisión + alternativa + consecuencia, 3 presupuestos con umbral y comando` más `cargo check -p game: 0 errors` (o el comando del motor activo) cuando el scaffold ya existe.
+`structural: docs/architecture/adr-001-ecs-vs-jerarquia.md: decisión + alternativa + consecuencia, 3 presupuestos con umbral y comando` plus `cargo check -p game: 0 errors` (or the active engine's command) once the scaffold exists.
 
-Si un presupuesto no tiene comando de medición, la fase devuelve `partial`: declarar un límite sin forma de observarlo es exactamente la deuda que `/test` termina pagando sola.
+If a budget has no measurement command, the phase returns `partial`: declaring a limit with no way to observe it is exactly the debt `/test` ends up paying alone.

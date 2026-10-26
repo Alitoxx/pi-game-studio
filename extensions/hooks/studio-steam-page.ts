@@ -1,7 +1,8 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, mkdirSync, readdirSync } from "node:fs";
 import { join, resolve, basename, dirname, relative } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
+import { writeFileAtomicSync } from "./studio-fs.ts";
 import {
 	RESET,
 	BOLD,
@@ -472,7 +473,7 @@ export async function handleStudioSteamPage(
 	} catch {}
 
 	const targetPath = join(prodDir, "steam_store_page.md");
-	writeFileSync(targetPath, pageCopy.fullMarkdownDoc, "utf8");
+	writeFileAtomicSync(targetPath, pageCopy.fullMarkdownDoc, "utf8");
 
 	const relTarget = relative(rootDir, targetPath);
 	const termWidth = process.stdout.columns || 80;

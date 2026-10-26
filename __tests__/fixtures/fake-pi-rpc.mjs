@@ -77,6 +77,16 @@ process.stdin.on("data", (chunk) => {
 	// FAKE_STDERR models the diagnostic noise a real child writes while succeeding.
 	if (process.env.FAKE_STDERR) process.stderr.write(process.env.FAKE_STDERR + "\n");
 
+	// FAKE_STDERR_FLOOD models a child that fails noisily: N long lines on stderr and
+	// then a non-zero exit, so the error text the runner keeps can be bounded.
+	if (process.env.FAKE_STDERR_FLOOD) {
+		const lines = Number(process.env.FAKE_STDERR_FLOOD);
+		const pad = "y".repeat(180);
+		for (let i = 0; i < lines; i++) process.stderr.write(`flood-${i} ${pad}\n`);
+		setTimeout(() => process.exit(Number(process.env.FAKE_EXIT_CODE || 3)), 30);
+		return;
+	}
+
 	// A child that keeps working is not a child that is stuck: the watchdog must
 	// see activity, not elapsed time.
 	if (process.env.FAKE_SILENT_AFTER_PROMPT) return;

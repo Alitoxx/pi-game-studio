@@ -6,10 +6,11 @@ import {
 	readdirSync,
 	copyFileSync,
 	statSync,
-	writeFileSync,
 } from "node:fs";
 import { join, resolve, basename } from "node:path";
 import { detectProjectEngine, formatEngineBadge } from "./engine-detector.ts";
+import { writeJsonAtomicSync } from "./studio-fs.ts";
+import { recordFailure } from "./studio-diagnostics.ts";
 
 export interface StarterTemplate {
 	id: string;
@@ -207,12 +208,10 @@ export async function handleStudioNew(
 	const localSettings = join(targetDir, ".pi", "settings.json");
 	if (!existsSync(localSettings)) {
 		try {
-			writeFileSync(
-				localSettings,
-				JSON.stringify({ packages: [resolvePackageRoot()] }, null, 2),
-				"utf8",
-			);
-		} catch {}
+			writeJsonAtomicSync(localSettings, { packages: [resolvePackageRoot()] });
+		} catch (error) {
+			recordFailure("new.settings", error);
+		}
 	}
 
 	// Auto-detect engine to verify installation

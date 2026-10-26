@@ -1,6 +1,6 @@
 ---
 name: ship
-description: "[ODD Fase 6] Release & Ship. Role Owner: producer (Tier 1 Director) + qa-lead. Empaquetado final de builds para distribución, parches de emergencia (hotfix), changelogs y checklists de certificación."
+description: "[ODD Phase 6] Release & Ship. Role Owner: producer (Tier 1 Director) + qa-lead. Final build packaging for distribution, emergency hotfix patches, changelogs, and certification checklists."
 model: inherit
 inheritProjectContext: true
 tools:
@@ -13,33 +13,33 @@ tools:
   - ask_user_question
 ---
 
-## Fase 6 ODD: Release, Certification & Patching
+## ODD Phase 6: Release, Certification & Patching
 
 - **Role Owner**: `producer` (Tier 1 Director) + `qa-lead`
-- **Contrato ODD Compartido**: Consulta [`skills/_shared/odd-contract.md`](../_shared/odd-contract.md) para las reglas compartidas de tareas atómicas (~400 líneas), Live Specs en `design/gdd/`, límites de compilación (compiler bounds) y el formato del Return Contract en YAML.
+- **Shared ODD Contract**: See [`skills/_shared/odd-contract.md`](../_shared/odd-contract.md) for the shared rules on atomic tasks (~400 lines), Live Specs in `design/gdd/`, compiler bounds, and the YAML Return Contract format.
 
-Cuando se invoca `/ship` (o `/ship build`, `/ship patch`, `/ship release`):
+When `/ship` is invoked (or `/ship build`, `/ship patch`, `/ship release`):
 
 ### 1. Pre-Release Checklist & Asset Audit
-- Verificar que no existan bugs bloqueantes (P0/P1) abiertos en `production/qa/bugs.md`.
-- **Auditoría de Manifiesto de Assets**: Inspeccionar `assets/manifest.yaml` y certificar que ningún asset crítico de gameplay figure como `placeholder`.
-- Confirmar que el juego cumple con los presupuestos de memoria y framerate medidos en `/test`.
-- Asegurar que las cadenas de texto estén internacionalizadas si el juego soporta múltiples idiomas.
+- Verify there are no open blocking bugs (P0/P1) in `production/qa/bugs.md`.
+- **Asset Manifest Audit**: Inspect `assets/manifest.yaml` and certify that no critical gameplay asset is listed as `placeholder`.
+- Confirm the game meets the memory and framerate budgets measured in `/test`.
+- Ensure text strings are internationalized if the game supports multiple languages.
 
-### 2. Generación, Optimización y Empaquetado Multiplataforma
-- **Compilación Nativa**: Generar binarios limpios para las plataformas de escritorio (Windows, macOS, Linux).
-- **Target Web / WASM**: Compilar el build web para distribución en navegador / itch.io (`wasm32-unknown-unknown` + `wasm-bindgen` en Bevy/Rust, export HTML5 en Godot/Raylib). Asegurar que todas las rutas de assets sean relativas y que la configuración CORS y canvas sea correcta.
-- **Optimización de Bytecode WASM con `wasm-opt`**: Si existe `wasm-opt` en el sistema (`which wasm-opt`), ejecutar `wasm-opt -O3 dist/game.wasm -o dist/game.wasm` para reducir el tamaño de carga web hasta un 65%.
-- **Compresión Final de Assets con `oxipng`**: Ejecutar `oxipng -o 2 dist/assets/**/*.png` para asegurar un empaquetado mínimo.
-- Validar checksums y estructura de directorios de distribución (`dist/` o `releases/`).
+### 2. Multiplatform Build Generation, Optimization & Packaging
+- **Native Build**: Generate clean binaries for the desktop platforms (Windows, macOS, Linux).
+- **Web / WASM Target**: Build the web artifact for browser / itch.io distribution (`wasm32-unknown-unknown` + `wasm-bindgen` on Bevy/Rust, HTML5 export on Godot/Raylib). Ensure all asset paths are relative and the CORS and canvas configuration is correct.
+- **WASM Bytecode Optimization with `wasm-opt`**: If `wasm-opt` exists on the system (`which wasm-opt`), run `wasm-opt -O3 dist/game.wasm -o dist/game.wasm` to cut web load size by up to 65%.
+- **Final Asset Compression with `oxipng`**: Run `oxipng -o 2 dist/assets/**/*.png` to guarantee minimal packaging.
+- Validate checksums and the distribution directory structure (`dist/` or `releases/`).
 
-### 3. Publicación y Distribución Automatizada
-- **Itch.io con `butler`**: Si `butler` está disponible y configurado, publicar el build web o de escritorio mediante parches delta: `butler push dist/ <usuario>/<juego>:<canal>`.
-- **GitHub Releases con `gh`**: Crear el release formal, taggear la versión y adjuntar los binarios o zips empaquetados: `gh release create <version> dist/* --title "<version>" --notes-file CHANGELOG.md`.
+### 3. Automated Publishing & Distribution
+- **Itch.io with `butler`**: If `butler` is available and configured, publish the web or desktop build using delta patches: `butler push dist/ <usuario>/<juego>:<canal>`.
+- **GitHub Releases with `gh`**: Create the formal release, tag the version, and attach the packaged binaries or zips: `gh release create <version> dist/* --title "<version>" --notes-file CHANGELOG.md`.
 
-### 4. Registro de Versión y Changelog
-- Actualizar `CHANGELOG.md` con los cambios notables bajo el estándar Keep a Changelog.
-- Actualizar la versión semántica en el manifiesto del proyecto (`project.yaml`, `package.json` o `Cargo.toml`).
+### 4. Version Records & Changelog
+- Update `CHANGELOG.md` with the notable changes under the Keep a Changelog standard.
+- Update the semantic version in the project manifest (`project.yaml`, `package.json` or `Cargo.toml`).
 
-### 5. Soporte y Parches
-- En caso de errores en producción, ejecutar el flujo de hotfix atómico para generar un parche de emergencia focalizado.
+### 5. Support & Patching
+- For production errors, run the atomic hotfix flow to generate a focused emergency patch.

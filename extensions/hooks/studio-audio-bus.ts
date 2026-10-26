@@ -1,8 +1,9 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { existsSync, writeFileSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import { join, resolve, relative, dirname } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
 import { detectProjectEngine } from "./engine-detector.ts";
+import { writeFileAtomicSync } from "./studio-fs.ts";
 import {
 	RESET,
 	BOLD,
@@ -851,7 +852,9 @@ export async function handleStudioAudioBus(
 		mkdirSync(parentDir, { recursive: true });
 	} catch {}
 
-	writeFileSync(result.targetFilePath, result.content, "utf8");
+	// Generated engine source is non-trivial work the user would have to rewrite
+	// by hand if a crash left it truncated.
+	writeFileAtomicSync(result.targetFilePath, result.content, "utf8");
 
 	const termWidth = process.stdout.columns || 80;
 	const reportLines = renderAudioBusConfirmation(result, termWidth);

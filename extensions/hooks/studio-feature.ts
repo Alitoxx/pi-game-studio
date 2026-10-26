@@ -1,8 +1,9 @@
 import { recordFailure } from "./studio-diagnostics.ts";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
+import { writeFileAtomicSync } from "./studio-fs.ts";
 import { readProducerState } from "./studio-start.ts";
 import { ACCENT, ACCENT as BLUE, BOLD, BORDER, CYAN, DIM, GRAY, GREEN, RED, RESET, SECONDARY, WHITE, YELLOW, padAnsi } from "./studio-palette.ts";
 
@@ -118,7 +119,9 @@ export function createLiveSpec(
 	try {
 		mkdirSync(gddDir, { recursive: true });
 		const content = generateLiveSpecTemplate(rawName, options);
-		writeFileSync(filePath, content, "utf8");
+		// A truncated Live Spec is lost design work the user cannot rebuild, so it
+		// lands whole or not at all.
+		writeFileAtomicSync(filePath, content, "utf8");
 
 		// Sincronizar en roadmap si existe
 		const roadmapPath = join(studioRoot, "production", "roadmap.md");
@@ -131,7 +134,7 @@ export function createLiveSpec(
 					`- [ ] Feature ${slug}: implementar según design/gdd/${slug}.md`,
 					"",
 				].join("\n");
-				writeFileSync(roadmapPath, current + sprintBlock, "utf8");
+				writeFileAtomicSync(roadmapPath, current + sprintBlock, "utf8");
 			} catch (error) {
 				recordFailure("roadmap.write", error);
 			}

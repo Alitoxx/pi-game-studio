@@ -4,10 +4,6 @@ schema_version: 1
 engine: "Bevy"
 language: "es"
 
-framework:
-  version: 0.3.0
-  last_upgraded: 2026-09-24
-
 # NOTE: this template ships with no `modes:` block by default.
 # `/start` adds `modes.rigor` and `modes.automation` here during project setup.
 #

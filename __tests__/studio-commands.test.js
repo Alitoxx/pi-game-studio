@@ -1,47 +1,36 @@
 const fs = require("fs");
 const path = require("path");
+const { createRequire } = require("node:module");
+
+// Resolve @earendil-works/pi-tui through normal module resolution instead of
+// hardcoding host-specific install paths (mise / .gentle-shell layouts).
+const projectRequire = createRequire(__filename);
+const piTuiEntry = projectRequire.resolve("@earendil-works/pi-tui");
 
 describe("Pi Game Studio Extension Commands (studio:*)", () => {
-	// Helper to ensure @earendil-works/pi-tui is resolvable in child process scripts
+	// Neighbor project fixture, created by the tests that need it so the
+	// .pi boundary check runs unconditionally on every machine (never a
+	// host-dependent path). Removed in afterAll.
+	let neighborProject;
+	afterAll(() => {
+		if (neighborProject) {
+			fs.rmSync(neighborProject, { recursive: true, force: true });
+		}
+	});
+
+	// Helper to ensure @earendil-works/pi-tui is resolvable in child process scripts.
+	// The package entry is resolved through normal module resolution from the
+	// project root; if it cannot be resolved the suite fails to load, it never skips.
 	const tuiResolverHook = `
 		import { register } from "node:module";
 		import { pathToFileURL } from "node:url";
-		import { existsSync, readdirSync } from "node:fs";
-		import { homedir } from "node:os";
-		import { join } from "node:path";
 
-		const home = homedir();
-		function scanForPiTui() {
-			const directPaths = [
-				"/home/alexis/.local/share/mise/installs/node/25.9.0/lib/node_modules/gentle-pi/node_modules/@earendil-works/pi-tui/dist/index.js",
-				join(home, ".gentle-shell/versions/4.3.0-1.2.0/node_modules/.pnpm/@earendil-works+pi-tui@1.2.0/node_modules/@earendil-works/pi-tui/dist/index.js"),
-			];
-			for (const p of directPaths) {
-				if (existsSync(p)) return p;
-			}
-			// Search in .gentle-shell/versions
-			const versionsDir = join(home, ".gentle-shell", "versions");
-			if (existsSync(versionsDir)) {
-				try {
-					for (const v of readdirSync(versionsDir)) {
-						const p = join(versionsDir, v, "node_modules", "@earendil-works", "pi-tui", "dist", "index.js");
-						if (existsSync(p)) return p;
-					}
-				} catch {}
-			}
-			return null;
-		}
-
-		const candidateTui = scanForPiTui();
-
-		if (candidateTui) {
-			const targetUrl = pathToFileURL(candidateTui).href;
-			const loaderCode = "export async function resolve(specifier, context, nextResolve) {" +
-				"if (specifier === '@earendil-works/pi-tui') { return { url: '" + targetUrl + "', shortCircuit: true }; }" +
-				"return nextResolve(specifier, context);" +
-			"}";
-			register("data:text/javascript," + encodeURIComponent(loaderCode), import.meta.url);
-		}
+		const targetUrl = pathToFileURL(${JSON.stringify(piTuiEntry)}).href;
+		const loaderCode = "export async function resolve(specifier, context, nextResolve) {" +
+			"if (specifier === '@earendil-works/pi-tui') { return { url: '" + targetUrl + "', shortCircuit: true }; }" +
+			"return nextResolve(specifier, context);" +
+		"}";
+		register("data:text/javascript," + encodeURIComponent(loaderCode), import.meta.url);
 	`;
 
 	const hooksSource = fs.readFileSync(
@@ -228,6 +217,15 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 
 	test("findStudioRoot respects .pi boundaries and prevents inheriting parent studio root", () => {
 		const { execFileSync } = require("child_process");
+
+		// Neighbor project like mi-primer-juego (own .pi/agents): created by this
+		// test as a temp fixture outside the studio root, so the boundary check
+		// runs unconditionally on every machine instead of only where a host
+		// path happens to exist.
+		neighborProject = fs.mkdtempSync(path.join(require("os").tmpdir(), "studio-neighbor-project-"));
+		fs.mkdirSync(path.join(neighborProject, ".pi", "agents"), { recursive: true });
+		fs.mkdirSync(path.join(neighborProject, "production"), { recursive: true });
+
 		const script = `
 			const { findStudioRoot } = await import("./extensions/hooks/studio-root.ts");
 			const path = await import("node:path");
@@ -238,15 +236,16 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 				throw new Error("Failed to find studio root from root");
 			}
 
-			// Project like mi-primer-juego with .pi/agents or .pi/settings.json or .pi/extensions
-			const neighborProject = "/home/alexis/Games/mi-primer-juego";
-			if (fs.existsSync(neighborProject)) {
-				if (findStudioRoot(neighborProject) !== neighborProject) {
-					throw new Error("Failed to detect neighbor project as boundary: " + findStudioRoot(neighborProject));
-				}
-				if (findStudioRoot(path.join(neighborProject, "production")) !== neighborProject) {
-					throw new Error("Failed to detect neighbor project from subdir: " + findStudioRoot(path.join(neighborProject, "production")));
-				}
+			// Neighbor project fixture created by the test outside the studio root
+			const neighborProject = ${JSON.stringify(neighborProject)};
+			if (!fs.existsSync(neighborProject)) {
+				throw new Error("neighbor project fixture was not created");
+			}
+			if (findStudioRoot(neighborProject) !== neighborProject) {
+				throw new Error("Failed to detect neighbor project as boundary: " + findStudioRoot(neighborProject));
+			}
+			if (findStudioRoot(path.join(neighborProject, "production")) !== neighborProject) {
+				throw new Error("Failed to detect neighbor project from subdir: " + findStudioRoot(path.join(neighborProject, "production")));
 			}
 
 			// A directory with .pi must never traverse upwards to parent studio
@@ -2113,6 +2112,17 @@ Implement fuzzy command palette.
 		test("Block 3: Studio Budget Tracker records tokens and generates discipline report", () => {
 			const { execFileSync } = require("child_process");
 			const script = `
+				const fs = await import("node:fs");
+				const os = await import("node:os");
+				const pathMod = await import("node:path");
+
+				// The report flushes the day bucket to <studio root>/.pi/game-studio/budget.json.
+				// Running this from the repository would mix the test's records into the
+				// developer's real cost history, so the whole script runs in a sandbox.
+				const sandbox = fs.mkdtempSync(pathMod.join(os.tmpdir(), "studio-budget-"));
+				fs.mkdirSync(pathMod.join(sandbox, ".pi", "game-studio"), { recursive: true });
+				process.chdir(sandbox);
+
 				const {
 					recordTokenUsage,
 					getBudgetReport,

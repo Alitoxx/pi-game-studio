@@ -3,7 +3,7 @@
 // write path can be observed on a real filesystem, not a mocked one.
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { chmodSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { chmodSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const mod = await import(join(repoRoot, "extensions", "hooks", "studio-fs.ts"));
@@ -44,6 +44,18 @@ if (mode === "write") {
 	const bytes = Buffer.from([0x00, 0xff, 0x10, 0x7f]);
 	mod.writeFileAtomicSync(file, bytes);
 	out({ bytes: Array.from(readFileSync(file)), entries: readdirSync(dirname(file)).sort() });
+} else if (mode === "sweep") {
+	const [file, staleName, freshName] = rest;
+	const { utimesSync } = await import("node:fs");
+	const dir = dirname(file);
+	const twoHoursAgo = (Date.now() - 2 * 60 * 60 * 1000) / 1000;
+	const stale = join(dir, staleName);
+	writeFileSync(stale, "leftover", "utf8");
+	utimesSync(stale, twoHoursAgo, twoHoursAgo);
+	writeFileSync(join(dir, freshName), "concurrent writer", "utf8");
+
+	mod.writeFileAtomicSync(file, "replaced", "utf8");
+	out({ entries: readdirSync(dir).sort(), content: readFileSync(file, "utf8") });
 } else if (mode === "big") {
 	// A file-size rlimit makes one write return a short count instead of throwing,
 	// which is exactly how a "successful" atomic write can publish a prefix.

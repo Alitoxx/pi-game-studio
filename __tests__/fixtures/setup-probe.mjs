@@ -22,6 +22,8 @@ process.stdout.write(
 			agentsInstalled: setup.agentsInstalled,
 			isConfigured: setup.isConfigured,
 			missingAgents: setup.missingAgents ?? null,
+			engineSupported: setup.engineSupported,
+			supportedEngines: setup.supportedEngines ?? null,
 		},
 		null,
 		2,

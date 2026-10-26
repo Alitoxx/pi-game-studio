@@ -1,9 +1,10 @@
 import { ACCENT, GRAY, GREEN, SECONDARY, YELLOW } from "./studio-palette.ts";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { existsSync, readFileSync, writeFileSync, mkdirSync, unlinkSync } from "node:fs";
+import { existsSync, readFileSync, mkdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { auditEnginePrerequisites, formatAuditReport } from "./studio-doctor.ts";
 import { findStudioRoot } from "./studio-root.ts";
+import { writeFileAtomicSync } from "./studio-fs.ts";
 
 export async function handleStudioSettings(
 	args: string,
@@ -96,7 +97,7 @@ export async function handleStudioSettings(
 				const studioDir = join(rootDir, ".pi", "game-studio");
 				mkdirSync(studioDir, { recursive: true });
 				if (clearScreenActive) {
-					writeFileSync(noClearFlag, "true", "utf8");
+					writeFileAtomicSync(noClearFlag, "true", "utf8");
 					if (typeof (ctx.ui as any)?.notify === "function") {
 						ctx.ui.notify("🧹 Limpieza de terminal al iniciar: Desactivada", "info");
 					}
@@ -134,7 +135,7 @@ function setEngine(cwd: string, engineName: string): void {
 		content += `\nengine: "${engineName}"\n`;
 	}
 
-	writeFileSync(projectYamlPath, content, "utf8");
+	writeFileAtomicSync(projectYamlPath, content, "utf8");
 
 	// Update technical-preferences if present
 	const prefsPath = join(cwd, ".pi", "game-studio", "technical-preferences.md");
@@ -142,7 +143,7 @@ function setEngine(cwd: string, engineName: string): void {
 		try {
 			let prefs = readFileSync(prefsPath, "utf8");
 			prefs = prefs.replace(/Engine:\s*[^\n]+/i, `Engine: ${engineName}`);
-			writeFileSync(prefsPath, prefs, "utf8");
+			writeFileAtomicSync(prefsPath, prefs, "utf8");
 		} catch {}
 	}
 }
@@ -176,7 +177,7 @@ export function setLanguage(cwd: string, lang: string): void {
 	const studioDir = join(root, ".pi", "game-studio");
 	mkdirSync(studioDir, { recursive: true });
 	const langFile = join(studioDir, "language");
-	writeFileSync(langFile, lang, "utf8");
+	writeFileAtomicSync(langFile, lang, "utf8");
 }
 
 function printYamlConfig(cwd: string): void {

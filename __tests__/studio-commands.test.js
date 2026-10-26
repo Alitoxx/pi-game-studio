@@ -51,7 +51,7 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 
 	const registered = [
 		...hooksSource.matchAll(
-			/registerCommand\?\.\(\s*["\x27]([^"\x27]+)["\x27]\s*,\s*\{([^}]+)\}/gs,
+			/registerCommand\(\s*["\x27]([^"\x27]+)["\x27]\s*,\s*\{([^}]+)\}/gs,
 		),
 	].map((m) => {
 		const name = m[1];
@@ -1101,10 +1101,10 @@ Next: Level Design
 
 		// Assert handlers call handleStudioSubagentsViewer
 		expect(hooksSource).toMatch(
-			/registerCommand\?\.\(\s*["']agents["'][\s\S]*?handleStudioSubagentsViewer/,
+			/registerCommand\(\s*["']agents["'][\s\S]*?handleStudioSubagentsViewer/,
 		);
 		expect(hooksSource).toMatch(
-			/registerCommand\?\.\(\s*["']studio:agents["'][\s\S]*?handleStudioSubagentsViewer/,
+			/registerCommand\(\s*["']studio:agents["'][\s\S]*?handleStudioSubagentsViewer/,
 		);
 	});
 
@@ -1254,7 +1254,7 @@ Next: Level Design
 		expect(hooksSource).toContain("playErrorChime()");
 		expect(hooksSource).toContain("playAlertChime()");
 		expect(hooksSource).toContain("handleStudioSound");
-		expect(hooksSource).toMatch(/registerCommand\?\.\(\s*["']studio:sound["']/);
+		expect(hooksSource).toMatch(/registerCommand\(\s*["']studio:sound["']/);
 	});
 
 	test("Feature 3: studio-hud renders compact status bar telemetry with left accent bar ▎", () => {
@@ -1296,8 +1296,8 @@ Next: Level Design
 		expect(changesSource).toContain("deletions");
 
 		// Alias /changes registered in index.ts
-		expect(hooksSource).toMatch(/registerCommand\?\.\(\s*["']changes["']/);
-		expect(hooksSource).toMatch(/registerCommand\?\.\(\s*["']studio:changes["']/);
+		expect(hooksSource).toMatch(/registerCommand\(\s*["']changes["']/);
+		expect(hooksSource).toMatch(/registerCommand\(\s*["']studio:changes["']/);
 
 		// Diff formatting test
 		function formatStatRow(status, filePath, adds, dels) {
@@ -2025,9 +2025,9 @@ Implement fuzzy command palette.
 
 		test("Integration in index.ts wires palette, shortcuts, and safety guards", () => {
 			// Commands and shortcut registration
-			expect(hooksSource).toContain('registerCommand?.("palette"');
-			expect(hooksSource).toContain('registerShortcut?.("alt+k"');
-			expect(hooksSource).toContain('registerCommand?.("studio:commands"');
+			expect(hooksSource).toContain('pi.registerCommand("palette"');
+			expect(hooksSource).toContain('pi.registerShortcut("alt+k"');
+			expect(hooksSource).toContain('pi.registerCommand("studio:commands"');
 			expect(hooksSource).toContain("showCommandPalette");
 
 			// Double-Escape Guard wiring
@@ -2354,12 +2354,12 @@ Implement fuzzy command palette.
 
 		test("Integration in index.ts wires commands, token tracking, and jam mode bypass", () => {
 			// Commands registered
-			expect(hooksSource).toContain('registerCommand?.("studio:jam"');
-			expect(hooksSource).toContain('registerCommand?.("jam"');
-			expect(hooksSource).toContain('registerCommand?.("studio:budget"');
-			expect(hooksSource).toContain('registerCommand?.("budget"');
-			expect(hooksSource).toContain('registerCommand?.("studio:timeline"');
-			expect(hooksSource).toContain('registerCommand?.("timeline"');
+			expect(hooksSource).toContain('pi.registerCommand("studio:jam"');
+			expect(hooksSource).toContain('pi.registerCommand("jam"');
+			expect(hooksSource).toContain('pi.registerCommand("studio:budget"');
+			expect(hooksSource).toContain('pi.registerCommand("budget"');
+			expect(hooksSource).toContain('pi.registerCommand("studio:timeline"');
+			expect(hooksSource).toContain('pi.registerCommand("timeline"');
 
 			// Imports & Handlers
 			expect(hooksSource).toContain("handleStudioJam");

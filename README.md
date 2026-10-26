@@ -20,7 +20,7 @@
   <a href="skills"><img src="https://img.shields.io/badge/skills-6%20ODD-green" alt="6 ODD Skills"></a>
   <a href="chains"><img src="https://img.shields.io/badge/chains-3-yellow" alt="3 Chains"></a>
   <a href="starters"><img src="https://img.shields.io/badge/starters-6-cyan" alt="6 Starters"></a>
-  <a href="extensions"><img src="https://img.shields.io/badge/hooks-4-red" alt="4 Hooks"></a>
+  <a href="extensions"><img src="https://img.shields.io/badge/hooks-9-red" alt="9 Hooks"></a>
   <img src="https://img.shields.io/badge/built%20for-Pi-8B5CF6?logo=pinokio" alt="Built for Pi">
 </p>
 
@@ -78,7 +78,7 @@ The result: you still make every decision, but now you have a fast, coordinated 
 | **Skills**    | 6 ODD | Full lifecycle pipeline: `/concept`, `/spec`, `/arch`, `/code`, `/test`, `/ship`                                          |
 | **Chains**    | 3     | Multi-agent execution pipelines via native isolated subagents (`subagent_run`)                                           |
 | **Starters**  | 6     | Starter Kits for 6 major engines (Bevy, Godot, Phaser, Raylib, Unity, Unreal)                                                    |
-| **Hooks**     | 4     | Automated validation on commits, pushes, skill changes, and session audit/gap detection                                  |
+| **Hooks**     | 9     | Automated validation on commits, pushes, skill changes, and session audit/gap detection                                  |
 | **Engram**    | 1     | Optional persistent memory — decisions auto-save across sessions when Engram is connected, and specialists persist durable discoveries; without it the runner strips `mem_save` and records the gap instead of asking a child for a tool it lacks |
 | **Deny baseline** | — | Least-privilege `deny:` frontmatter per role (patterns or `"*"` default deny), forwarded as `--exclude-tools` so deny wins over allow, plus one `**Boundary:**` line per template stating what the role must never do |
 | **Setup**     | 2     | `/setup` — install agents and model config; `/assign-models` — customize models per agent                                |
@@ -375,7 +375,7 @@ pi-game-studio/                     # Package root
 ├── skills/                         # 6 ODD lifecycle skills (SKILL.md per directory)
 ├── extensions/                     # Hooks extension
 │   └── hooks/
-│       ├── index.ts                # 4 ported hooks
+│       ├── index.ts                # 9 hooks (typed event/command surface)
 │       └── package.json
 └── scripts/                        # Utility scripts
 ```

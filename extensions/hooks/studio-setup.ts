@@ -51,6 +51,10 @@ export interface SetupStatus {
 	isConfigured: boolean;
 	/** Expected roles whose agent file is not present under .pi/agents/. */
 	missingAgents: string[];
+	/** False when project.yaml names an engine the studio does not ship. */
+	engineSupported: boolean;
+	/** The engine names setup can install a specialist for. */
+	supportedEngines: string[];
 }
 
 export interface StudioInstallOptions {
@@ -122,15 +126,27 @@ export const ENGINE_AGENTS_MAP: Record<string, string[]> = {
 	Phaser: ["phaser-specialist"],
 };
 
+export const SUPPORTED_ENGINES: string[] = Object.keys(ENGINE_AGENTS_MAP);
+
+/**
+ * Resolves the engine specialist for a name. An unrecognised name returns none:
+ * falling back to Godot used to install an unrelated specialist for a typo in
+ * project.yaml, and nothing told the user their engine string was wrong.
+ */
 export function getEngineAgents(engineName: string): string[] {
-	const norm = engineName.toLowerCase();
+	const norm = (engineName || "").toLowerCase();
 	if (norm.includes("godot")) return ENGINE_AGENTS_MAP.Godot;
 	if (norm.includes("unity")) return ENGINE_AGENTS_MAP.Unity;
 	if (norm.includes("unreal")) return ENGINE_AGENTS_MAP.Unreal;
 	if (norm.includes("bevy")) return ENGINE_AGENTS_MAP.Bevy;
 	if (norm.includes("raylib")) return ENGINE_AGENTS_MAP.Raylib;
 	if (norm.includes("phaser")) return ENGINE_AGENTS_MAP.Phaser;
-	return ENGINE_AGENTS_MAP.Godot;
+	return [];
+}
+
+/** True when the engine string names one of the six shipped engines. */
+export function isSupportedEngine(engineName: string): boolean {
+	return getEngineAgents(engineName).length > 0;
 }
 
 export function filterAgentsForEngine(engineName: string, all = false): string[] {
@@ -190,6 +206,10 @@ export function inspectSetup(cwd: string): SetupStatus {
 
 	const expectedEngineAgents = filterAgentsForEngine(currentEngine);
 	const expectedAgents = expectedEngineAgents.length > 0 ? expectedEngineAgents.length : 9;
+	// An engine string this studio cannot resolve is a project.yaml error, not a
+	// reason to install someone else's specialist: setup is not ready until it holds
+	// one of the six shipped names.
+	const engineSupported = !hasProjectYaml || isSupportedEngine(currentEngine);
 
 	// Which expected roles never landed. qa-verifier is the release gate's only
 	// auditor, so its absence has to be visible, not averaged away.
@@ -203,8 +223,8 @@ export function inspectSetup(cwd: string): SetupStatus {
 	// with no local agents at all falls back to the package-level mode.
 	const hasLocalAgents = agentsInstalled > 0;
 	const isConfigured = hasLocalAgents
-		? agentsInstalled >= expectedAgents && hasGameStudioDir
-		: hasProjectYaml;
+		? agentsInstalled >= expectedAgents && hasGameStudioDir && engineSupported
+		: hasProjectYaml && engineSupported;
 
 	return {
 		agentsInstalled,
@@ -217,6 +237,8 @@ export function inspectSetup(cwd: string): SetupStatus {
 		currentEngine,
 		isConfigured,
 		missingAgents,
+		engineSupported,
+		supportedEngines: SUPPORTED_ENGINES,
 	};
 }
 
@@ -236,6 +258,17 @@ export async function handleStudioSetup(
 	if (query === "manual" || query === "guided") {
 		await runGuidedSetup(ctx, status);
 		return;
+	}
+
+	// An unknown engine is a project.yaml error worth naming once per invocation:
+	// silence is how a typo looks like a working studio.
+	if (!status.engineSupported) {
+		const warning = `project.yaml declara "${status.currentEngine}", que no es un motor soportado. Motores: ${status.supportedEngines.join(", ")}. Corregí el valor o elegí uno con /studio:settings engine=<Motor>.`;
+		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
+			ctx.ui.notify(warning, "warning");
+		} else {
+			console.log(`\n${YELLOW}${warning}\x1b[0m\n`);
+		}
 	}
 
 	if (query === "status" || query === "info") {

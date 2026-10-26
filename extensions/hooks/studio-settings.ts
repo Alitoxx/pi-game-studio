@@ -6,12 +6,16 @@ import { auditEnginePrerequisites, formatAuditReport } from "./studio-doctor.ts"
 import { findStudioRoot } from "./studio-root.ts";
 import { writeFileAtomicSync } from "./studio-fs.ts";
 import { recordFailure } from "./studio-diagnostics.ts";
+import { SUPPORTED_ENGINES } from "./studio-setup.ts";
 
 export async function handleStudioSettings(
 	args: string,
 	ctx: ExtensionContext,
 ): Promise<void> {
-	const query = args?.trim().toLowerCase() || "";
+	// Case matters in the value (`engine=Bevy`), and not in the key or the subcommand.
+	// Lowercasing the whole argument made /studio:settings write `engine: "bevy"`.
+	const rawArgs = args?.trim() || "";
+	const query = rawArgs.toLowerCase();
 	const rootDir = findStudioRoot(ctx.cwd) || ctx.cwd;
 	const projectYamlPath = join(rootDir, "project.yaml");
 	const studioDir = join(rootDir, ".pi", "game-studio");
@@ -27,7 +31,11 @@ export async function handleStudioSettings(
 	}
 
 	if (query.startsWith("engine=")) {
-		const eng = query.split("=")[1]?.trim();
+		const typed = rawArgs.slice(rawArgs.indexOf("=") + 1).trim();
+		// A known engine is stored in its canonical spelling; anything else survives as
+		// typed, so setup can name the value that it cannot resolve.
+		const canonical = SUPPORTED_ENGINES.find((name) => name.toLowerCase() === typed.toLowerCase());
+		const eng = canonical || typed;
 		if (eng) {
 			setEngine(rootDir, eng);
 			if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {

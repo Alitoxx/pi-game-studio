@@ -95,9 +95,13 @@ describe("Studio atomic writes", () => {
 	});
 
 	test("every module that owns user-facing config writes through the helper", () => {
-		// The list is the boundary of the fix, not the whole repository: these are
-		// the files a broken write leaves the project unable to read back, so a
-		// plain writeFileSync here is the regression this test exists to catch.
+		// The list is the boundary of the policy, not the whole repository: a plain
+		// writeFileSync here is the regression this test exists to catch.
+		// Policy: writes the user cannot rebuild if truncated go through the atomic
+		// helper — re-read user content (roadmap, Live Spec, tuning, steam page,
+		// generated source, play log header/pid) and config (.pi/settings.json).
+		// Direct writes stay outside on purpose: idempotent boolean flags, fresh
+		// transcripts under the OS temp dir, and append-only log lines.
 		const owned = [
 			"index.ts",
 			"studio-setup.ts",
@@ -105,6 +109,13 @@ describe("Studio atomic writes", () => {
 			"studio-models.ts",
 			"studio-mcp.ts",
 			"studio-scaffold.ts",
+			"studio-feature.ts",
+			"studio-start.ts",
+			"studio-tuning.ts",
+			"studio-steam-page.ts",
+			"studio-audio-bus.ts",
+			"studio-new.ts",
+			"studio-play.ts",
 		];
 
 		for (const name of owned) {

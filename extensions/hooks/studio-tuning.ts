@@ -1,7 +1,8 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
+import { writeFileAtomicSync } from "./studio-fs.ts";
 import { ACCENT, ACCENT as BLUE, BORDER, CYAN, DIM, GRAY, GREEN, RED, RESET, SECONDARY, WHITE, YELLOW, padAnsi } from "./studio-palette.ts";
 
 export interface TuningVar {
@@ -160,7 +161,9 @@ export function updateTuningVariable(
 		});
 
 		if (replaced) {
-			writeFileSync(filePath, updatedLines.join("\n"), "utf8");
+			// Tuning values are hand-balanced game feel knobs; a truncated file would
+			// wipe the player's calibration, so it is replaced atomically.
+			writeFileAtomicSync(filePath, updatedLines.join("\n"), "utf8");
 			return true;
 		}
 		return false;

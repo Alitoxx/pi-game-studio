@@ -1,8 +1,9 @@
 import { recordFailure } from "./studio-diagnostics.ts";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { inspectSetup, installStudioFiles, runGuidedSetup } from "./studio-setup.ts";
+import { writeFileAtomicSync } from "./studio-fs.ts";
 import { auditMediaTools, promptMediaToolsInstall } from "./studio-media-tools.ts";
 
 export interface ProducerState {
@@ -66,7 +67,9 @@ export function recordFlowCompletion(cwd: string, receipt: FlowCompletionReceipt
 			} else {
 				content = newBlock + "\n\n" + content;
 			}
-			writeFileSync(roadmapPath, content, "utf8");
+			// The roadmap is re-read on every command, so a half-written state block
+			// would silently reset the Producer's progress.
+			writeFileAtomicSync(roadmapPath, content, "utf8");
 		} catch (error) {
 			recordFailure("roadmap.write", error);
 		}
@@ -83,7 +86,7 @@ export function recordFlowCompletion(cwd: string, receipt: FlowCompletionReceipt
 			`- [/] ${next}`,
 			"",
 		].join("\n");
-		writeFileSync(roadmapPath, initialRoadmap, "utf8");
+		writeFileAtomicSync(roadmapPath, initialRoadmap, "utf8");
 	}
 }
 

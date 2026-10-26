@@ -1,8 +1,9 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { spawn, type ChildProcess } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, unlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
+import { writeFileAtomicSync } from "./studio-fs.ts";
 import { detectProjectEngine } from "./engine-detector.ts";
 import { ACCENT as BLUE, BORDER, CYAN, DIM, GRAY, GREEN, RED, RESET, SECONDARY, YELLOW, padAnsi } from "./studio-palette.ts";
 
@@ -197,7 +198,9 @@ export async function handleStudioPlay(
 	const logPath = getLogFilePath(studioRoot);
 	try {
 		mkdirSync(dirname(logPath), { recursive: true });
-		writeFileSync(logPath, `=== Studio Play Log: ${new Date().toISOString()} ===\n`, "utf8");
+		// The header truncates the log, so it must be atomic: a crash mid-write
+		// would leave a prefix that the next append silently extends.
+		writeFileAtomicSync(logPath, `=== Studio Play Log: ${new Date().toISOString()} ===\n`, "utf8");
 	} catch {}
 
 	try {
@@ -216,21 +219,23 @@ export async function handleStudioPlay(
 
 		if (child.pid) {
 			try {
-				writeFileSync(getPidFilePath(studioRoot), String(child.pid), "utf8");
+				// The pid file is re-read by stop/status, so it lands whole or not at
+				// all: a truncated pid would kill the wrong process.
+				writeFileAtomicSync(getPidFilePath(studioRoot), String(child.pid), "utf8");
 			} catch {}
 		}
 
+		// Appending is the right primitive for a log: the old read-modify-write
+		// rewrote the whole file per chunk and could lose data on interleaving.
 		child.stdout?.on("data", (data) => {
 			try {
-				const current = readFileSync(logPath, "utf8");
-				writeFileSync(logPath, current + data.toString(), "utf8");
+				appendFileSync(logPath, data.toString(), "utf8");
 			} catch {}
 		});
 
 		child.stderr?.on("data", (data) => {
 			try {
-				const current = readFileSync(logPath, "utf8");
-				writeFileSync(logPath, current + data.toString(), "utf8");
+				appendFileSync(logPath, data.toString(), "utf8");
 			} catch {}
 		});
 

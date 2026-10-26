@@ -4,6 +4,7 @@ import { findStudioRoot } from "./studio-root.ts";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import type { AgentManifest } from "./studio-agent-loader.ts";
+import { chooseModelForAgent } from "./studio-model-config.ts";
 import { validateSpecialistReturn } from "./return-contract.ts";
 import { parseAllowedSurfaces } from "./studio-surfaces-guard.ts";
 
@@ -292,10 +293,14 @@ export class StudioAgentsRunner {
 		const now = Date.now();
 		const taskId = `task-${now.toString(36)}-${this.counter.toString(36)}`;
 
-		// Si el modelo es inherit o no está definido, hereda el modelo activo de la sesión; si no, usa el manifest o fallback
-		const chosenModel = manifest.model && manifest.model !== "inherit"
-			? manifest.model
-			: activeModel || "inherit";
+		// Precedence: role contract (manifest.model) > per-agent/per-tier config in
+		// .pi/game-studio/models.json > the session's active model > literal inherit.
+		const chosenModel = chooseModelForAgent({
+			manifestModel: manifest.model,
+			projectRoot: cwd,
+			agentName: manifest.name,
+			activeModel,
+		});
 
 		const stderrTail: string[] = [];
 

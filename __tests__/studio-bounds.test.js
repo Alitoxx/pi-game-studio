@@ -120,8 +120,21 @@ describe("Studio bounded state", () => {
 
 	test("records are capped while the report totals stay exact", () => {
 		runScript(`
-			const { recordTokenUsage, getBudgetReport, resetBudget, MAX_SESSION_RECORDS } =
-				await import("./extensions/hooks/studio-budget.ts");
+			// Import before chdir: the specifier resolves against the repository.
+			const budget = await import("./extensions/hooks/studio-budget.ts");
+
+			const fs = await import("node:fs");
+			const os = await import("node:os");
+			const pathMod = await import("node:path");
+
+			// The report flushes the day bucket into <studio root>/.pi/game-studio;
+			// running from the repository would mix these test records into the real
+			// cost history, so the script runs in a sandbox project.
+			const sandbox = fs.mkdtempSync(pathMod.join(os.tmpdir(), "studio-bounds-budget-"));
+			fs.mkdirSync(pathMod.join(sandbox, ".pi", "game-studio"), { recursive: true });
+			process.chdir(sandbox);
+
+			const { recordTokenUsage, getBudgetReport, resetBudget, MAX_SESSION_RECORDS } = budget;
 
 			resetBudget();
 			const events = 5000;

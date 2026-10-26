@@ -1,4 +1,6 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { ACCENT as PURPLE, BOLD, BORDER, DIM, GRAY, GREEN, HEADING as LAVENDER, RED, RESET, SECONDARY as CYAN, WHITE, YELLOW, padAnsi, truncateAnsi, panelBottom, panelRow, panelTop } from "./studio-palette.ts";
 
 export type DisciplineCategory = "Directors" | "Game Designer" | "Specialists" | "Other";
@@ -43,6 +45,10 @@ export interface AgentSummary {
 	costUsd: number;
 }
 
+import { findStudioRoot } from "./studio-root.ts";
+import { recordFailure } from "./studio-diagnostics.ts";
+import { writeJsonAtomicSync } from "./studio-fs.ts";
+
 export interface BudgetReport {
 	totalInputTokens: number;
 	totalOutputTokens: number;
@@ -56,6 +62,39 @@ export interface BudgetReport {
 	recordCount: number;
 	/** Raw records still held in memory; the rest were folded into the totals above. */
 	retainedRecords: number;
+	/** Persisted per-day aggregates, or null when budget.json has no usable days. */
+	history: BudgetHistorySummary | null;
+}
+
+/** One persisted per-day aggregate bucket inside budget.json. */
+export interface BudgetDayBucket {
+	input: number;
+	output: number;
+	cache: number;
+	total: number;
+	costUsd: number;
+	events: number;
+}
+
+/** On-disk shape of `.pi/game-studio/budget.json`, versioned by `schema`. */
+export interface BudgetHistoryFile {
+	schema: number;
+	days: Record<string, BudgetDayBucket>;
+}
+
+export interface BudgetHistoryDay extends BudgetDayBucket {
+	date: string;
+}
+
+export interface BudgetHistoryTotals extends BudgetDayBucket {}
+
+export interface BudgetHistorySummary {
+	/** Persisted day rows, sorted ascending by date. */
+	days: BudgetHistoryDay[];
+	/** Totals across the 7 most recent persisted days. */
+	last7Days: BudgetHistoryTotals;
+	/** Totals across the 30 most recent persisted days. */
+	last30Days: BudgetHistoryTotals;
 }
 
 /**
@@ -160,6 +199,16 @@ function foldRecords(rollup: BudgetRollup, records: TokenUsageRecord[]): void {
 const sessionRecords: TokenUsageRecord[] = [];
 let archivedTotals = emptyRollup();
 let totalRecordCount = 0;
+
+const BUDGET_SCHEMA_VERSION = 1;
+
+/** The persisted history is bounded: only the most recent day buckets survive. */
+export const MAX_PERSISTED_DAYS = 30;
+
+// Pending per-day accumulator for persistence. recordTokenUsage only grows it
+// in memory; flushBudgetToDisk() folds it into budget.json.
+let currentDayKey: string | null = null;
+let currentDay: BudgetDayBucket | null = null;
 
 
 /**
@@ -335,6 +384,26 @@ export function recordTokenUsage(
 		timestamp: Date.now(),
 	};
 
+	// Persistence stays memory-only on this hot path: the day bucket is folded
+	// into budget.json by flushBudgetToDisk(), never written here.
+	const today = localDayKey();
+	if (currentDay === null || currentDayKey !== today) {
+		if (currentDay !== null) {
+			// First record after midnight: persist the previous day's bucket
+			// before the accumulator is reset for the new day.
+			flushBudgetToDisk();
+		}
+		currentDayKey = today;
+		currentDay = emptyDayBucket();
+	}
+	const day = currentDay ?? emptyDayBucket();
+	day.input += safeInput;
+	day.output += safeOutput;
+	day.cache += safeCache;
+	day.total += total;
+	day.costUsd = Math.round((day.costUsd + cost) * 100000) / 100000;
+	day.events++;
+
 	sessionRecords.push(record);
 	totalRecordCount++;
 	if (sessionRecords.length > MAX_SESSION_RECORDS) {
@@ -345,7 +414,8 @@ export function recordTokenUsage(
 }
 
 /**
- * Resets session token records.
+ * Resets session token records. This clears the session counters only: the
+ * persisted per-day history in budget.json is deliberately left untouched.
  */
 export function resetBudget(): void {
 	sessionRecords.length = 0;
@@ -353,10 +423,138 @@ export function resetBudget(): void {
 	totalRecordCount = 0;
 }
 
+function localDayKey(date: Date = new Date()): string {
+	const year = date.getFullYear();
+	const month = `${date.getMonth() + 1}`.padStart(2, "0");
+	const day = `${date.getDate()}`.padStart(2, "0");
+	return `${year}-${month}-${day}`;
+}
+
+function emptyDayBucket(): BudgetDayBucket {
+	return { input: 0, output: 0, cache: 0, total: 0, costUsd: 0, events: 0 };
+}
+
+function budgetFilePath(rootDir?: string): string {
+	const root = rootDir ?? findStudioRoot() ?? process.cwd();
+	return join(root, ".pi", "game-studio", "budget.json");
+}
+
+/**
+ * Reads the persisted per-day history. A missing file is an empty history; a
+ * unreadable or malformed one is recorded as a failure and reported as empty —
+ * a broken budget.json must never throw into the report path.
+ */
+export function readBudgetHistory(rootDir?: string): BudgetHistoryFile {
+	const file = budgetFilePath(rootDir);
+	if (!existsSync(file)) {
+		return { schema: BUDGET_SCHEMA_VERSION, days: {} };
+	}
+
+	try {
+		const raw = JSON.parse(readFileSync(file, "utf8")) as { schema?: unknown; days?: unknown };
+		if (typeof raw !== "object" || raw === null || typeof raw.days !== "object" || raw.days === null) {
+			throw new Error("budget.json has no days object");
+		}
+
+		const days: Record<string, BudgetDayBucket> = {};
+		for (const [key, value] of Object.entries(raw.days)) {
+			if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || typeof value !== "object" || value === null) continue;
+			const bucket = value as Record<string, unknown>;
+			days[key] = {
+				input: Number(bucket.input) || 0,
+				output: Number(bucket.output) || 0,
+				cache: Number(bucket.cache) || 0,
+				total: Number(bucket.total) || 0,
+				costUsd: Number(bucket.costUsd) || 0,
+				events: Number(bucket.events) || 0,
+			};
+		}
+
+		return {
+			schema: typeof raw.schema === "number" ? raw.schema : BUDGET_SCHEMA_VERSION,
+			days,
+		};
+	} catch (error) {
+		recordFailure("studio-budget", error);
+		return { schema: BUDGET_SCHEMA_VERSION, days: {} };
+	}
+}
+
+/**
+ * Folds the pending per-day accumulator into budget.json atomically, keeping at
+ * most the most recent 30 day buckets. Safe to call repeatedly: after a
+ * successful write the accumulator restarts empty, so totals never double-count.
+ * Exported so a shutdown path can flush the final bucket later.
+ */
+export function flushBudgetToDisk(rootDir?: string): void {
+	if (currentDay === null || currentDayKey === null) return;
+	const dayKey = currentDayKey;
+	const pending = currentDay;
+
+	try {
+		const file = budgetFilePath(rootDir);
+		const history = readBudgetHistory(rootDir);
+		const previous = history.days[dayKey] ?? emptyDayBucket();
+		history.days[dayKey] = {
+			input: previous.input + pending.input,
+			output: previous.output + pending.output,
+			cache: previous.cache + pending.cache,
+			total: previous.total + pending.total,
+			costUsd: Math.round((previous.costUsd + pending.costUsd) * 100000) / 100000,
+			events: previous.events + pending.events,
+		};
+
+		// Bound the file: drop every bucket older than the most recent 30 days.
+		const keys = Object.keys(history.days).sort();
+		for (const key of keys.slice(0, Math.max(0, keys.length - MAX_PERSISTED_DAYS))) {
+			delete history.days[key];
+		}
+
+		mkdirSync(dirname(file), { recursive: true });
+		writeJsonAtomicSync(file, { schema: BUDGET_SCHEMA_VERSION, days: history.days });
+		// Only clear the accumulator on success: a failed write is retried by the
+		// next flush instead of silently dropped.
+		currentDay = null;
+	} catch (error) {
+		recordFailure("studio-budget", error);
+	}
+}
+
+function buildHistorySummary(rootDir?: string): BudgetHistorySummary | null {
+	const { days } = readBudgetHistory(rootDir);
+	const keys = Object.keys(days).sort();
+	if (keys.length === 0) return null;
+
+	const rows: BudgetHistoryDay[] = keys.map((date) => ({ date, ...days[date] }));
+
+	const summarize = (subset: BudgetHistoryDay[]): BudgetHistoryTotals => {
+		const totals = emptyDayBucket();
+		for (const row of subset) {
+			totals.input += row.input;
+			totals.output += row.output;
+			totals.cache += row.cache;
+			totals.total += row.total;
+			totals.costUsd = Math.round((totals.costUsd + row.costUsd) * 100000) / 100000;
+			totals.events += row.events;
+		}
+		return totals;
+	};
+
+	return {
+		days: rows,
+		last7Days: summarize(rows.slice(-7)),
+		last30Days: summarize(rows.slice(-MAX_PERSISTED_DAYS)),
+	};
+}
+
 /**
  * Generates aggregated budget report grouped by disciplines, agents, and models.
  */
 export function getBudgetReport(): BudgetReport {
+	// A user asking for the number gets it current: fold the pending day bucket
+	// into budget.json before summarizing.
+	flushBudgetToDisk();
+
 	const rollup = cloneRollup(archivedTotals);
 	foldRecords(rollup, sessionRecords);
 
@@ -385,6 +583,7 @@ export function getBudgetReport(): BudgetReport {
 		byModel: modelMap,
 		recordCount: totalRecordCount,
 		retainedRecords: sessionRecords.length,
+		history: buildHistorySummary(),
 	};
 }
 
@@ -463,6 +662,22 @@ export function renderBudgetCard(report: BudgetReport, width: number = 74): stri
 			const row = `  ${WHITE}${agentName}${RESET} ${GRAY}${modelName}${RESET} ${tokens}  ${GREEN}${cost}${RESET}`;
 			lines.push(panelRow(row, innerWidth + 2, BORDER));
 		}
+	}
+
+	// Persisted history section: one row per persisted day, plus 7d/30d totals.
+	lines.push(panelRow("", innerWidth + 2, BORDER));
+	lines.push(panelRow(`${LAVENDER}Historial Persistido${RESET}`, innerWidth + 2, BORDER));
+	if (report.history == null || report.history.days.length === 0) {
+		lines.push(panelRow(`  ${GRAY}sin historial persistido${RESET}`, innerWidth + 2, BORDER));
+	} else {
+		for (const day of report.history.days.slice(-7)) {
+			const date = truncateAnsi(day.date, 12).padEnd(12, " ");
+			const tokens = `${formatNumber(day.total)} tkn`.padStart(12, " ");
+			const cost = `$${day.costUsd.toFixed(4)}`.padStart(9, " ");
+			lines.push(panelRow(`  ${GRAY}${date}${RESET} ${WHITE}${tokens}${RESET}  ${GREEN}${cost}${RESET}`, innerWidth + 2, BORDER));
+		}
+		const totalsLine = `7d: ${formatNumber(report.history.last7Days.total)} tkn / $${report.history.last7Days.costUsd.toFixed(4)}  ·  30d: ${formatNumber(report.history.last30Days.total)} tkn / $${report.history.last30Days.costUsd.toFixed(4)}`;
+		lines.push(panelRow(`  ${GRAY}${truncateAnsi(totalsLine, innerWidth - 4)}${RESET}`, innerWidth + 2, BORDER));
 	}
 
 	lines.push(panelBottom(cardWidth - 2, "rounded", BORDER));

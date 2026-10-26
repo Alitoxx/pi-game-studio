@@ -2112,6 +2112,17 @@ Implement fuzzy command palette.
 		test("Block 3: Studio Budget Tracker records tokens and generates discipline report", () => {
 			const { execFileSync } = require("child_process");
 			const script = `
+				const fs = await import("node:fs");
+				const os = await import("node:os");
+				const pathMod = await import("node:path");
+
+				// The report flushes the day bucket to <studio root>/.pi/game-studio/budget.json.
+				// Running this from the repository would mix the test's records into the
+				// developer's real cost history, so the whole script runs in a sandbox.
+				const sandbox = fs.mkdtempSync(pathMod.join(os.tmpdir(), "studio-budget-"));
+				fs.mkdirSync(pathMod.join(sandbox, ".pi", "game-studio"), { recursive: true });
+				process.chdir(sandbox);
+
 				const {
 					recordTokenUsage,
 					getBudgetReport,

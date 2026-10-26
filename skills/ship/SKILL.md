@@ -1,8 +1,6 @@
 ---
 name: ship
 description: "[ODD Phase 6] Release & Ship. Role Owner: producer (Tier 1 Director) + qa-lead. Final build packaging for distribution, emergency hotfix patches, changelogs, and certification checklists."
-model: inherit
-inheritProjectContext: true
 tools:
   - read
   - find

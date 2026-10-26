@@ -542,6 +542,21 @@ describe("Skills declare only what the runtime provides", () => {
 		expect({ skill: dir, unknown }).toEqual({ skill: dir, unknown: [] });
 	});
 
+	test.each(skillDirs)("skill '%s' declares no agent-only frontmatter", (dir) => {
+		// A skill is instructions the model reads, not an agent Pi dispatches: `model`,
+		// `inheritProjectContext`, `thinking` and `deny` mean nothing here, and the six
+		// skills carried the first two while agents-and-skills only forbade them in
+		// agents. The portable Agent Skills set is name, description, license,
+		// compatibility, metadata, allowed-tools and disable-model-invocation.
+		const file = path.join(skillsDir, dir, "SKILL.md");
+		if (!fs.existsSync(file)) return;
+		const content = fs.readFileSync(file, "utf8");
+		const agentOnly = ["model", "inheritProjectContext", "thinking", "deny"].filter((field) =>
+			new RegExp(`^${field}:`, "m").test(content),
+		);
+		expect({ skill: dir, agentOnly }).toEqual({ skill: dir, agentOnly: [] });
+	});
+
 	test.each(skillDirs)("skill '%s' does not reference a retired media binary", (dir) => {
 		const file = path.join(skillsDir, dir, "SKILL.md");
 		if (!fs.existsSync(file)) return;

@@ -1,8 +1,6 @@
 ---
 name: code
 description: "[ODD Phase 4] Implement Atomics. Role Owner: gameplay-programmer (Tier 2 Lead) + Active Engine Specialist (Tier 3). Pure in-engine code implementation (src/) in atomic ~400-line packages guided by direct tests and clean compilation."
-model: inherit
-inheritProjectContext: true
 tools:
   - read
   - find

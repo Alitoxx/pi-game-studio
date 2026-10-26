@@ -95,9 +95,29 @@ jobs:
         run: |
           node -e "
             const m = require('./models.default.json');
+            const fs = require('fs');
+            const tiers = ['director', 'workhorse', 'lightweight'];
+            const specialists = fs.readdirSync('agents')
+              .filter((f) => f.endsWith('-specialist.md'))
+              .map((f) => f.replace(/\.md$/, ''));
             const keys = Object.keys(m);
-            if (keys.length < 3) { console.error('❌ too few keys'); process.exit(1); }
-            console.log('✅ models.default.json with keys:', keys.join(', '));
+            const expected = [...tiers, ...specialists].sort();
+            const actual = [...keys].sort();
+            // The manifest is the source of truth for the tier mapping and AGENTS.md
+            // describes its key set: anything else is drift, not a rounding error.
+            if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+              console.error('❌ models.default.json keys drifted');
+              console.error('  expected:', expected.join(', '));
+              console.error('  actual:  ', actual.join(', '));
+              process.exit(1);
+            }
+            for (const key of keys) {
+              if (typeof m[key] !== 'string' || !m[key].trim()) {
+                console.error('❌ empty model for key', key);
+                process.exit(1);
+              }
+            }
+            console.log('✅ models.default.json matches the documented key set:', keys.join(', '));
           "
 
 

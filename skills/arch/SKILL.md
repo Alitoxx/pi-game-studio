@@ -1,8 +1,6 @@
 ---
 name: arch
 description: "[ODD Phase 3] Technical Boundaries. Role Owner: technical-director (Tier 1 Director). Records Architecture Decision Records (ADRs), VRAM/RAM budgets, target FPS, the control manifest, and engine/MCP configuration."
-model: inherit
-inheritProjectContext: true
 tools:
   - read
   - find

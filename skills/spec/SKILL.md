@@ -1,8 +1,6 @@
 ---
 name: spec
 description: "[ODD Phase 2] Live Specs. Role Owner: game-designer (Tier 2 Lead). Living design of mechanics, systems and formulas in design/gdd/<feature>.md with balance variables (tuning knobs) and acceptance criteria."
-model: inherit
-inheritProjectContext: true
 tools:
   - read
   - find

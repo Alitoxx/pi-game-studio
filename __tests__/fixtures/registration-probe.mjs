@@ -48,6 +48,13 @@ const pi = {
 const mod = await import(join(repoRoot, "extensions", "hooks", "index.ts"));
 mod.default(pi);
 
+// The catalog is what /studio advertises to the user: it must not list a
+// command the extension does not register.
+const { STUDIO_CATEGORIES } = await import(join(repoRoot, "extensions", "hooks", "studio-command.ts"));
+const catalog = STUDIO_CATEGORIES.flatMap((category) =>
+	category.commands.map(({ cmd }) => cmd.replace(/^\//, "")),
+);
+
 process.stdout.write(
-	JSON.stringify({ commands, tools, events, shortcuts }, null, 2) + "\n",
+	JSON.stringify({ commands, tools, events, shortcuts, catalog }, null, 2) + "\n",
 );

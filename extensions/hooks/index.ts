@@ -182,6 +182,14 @@ export default function (pi: ExtensionAPI) {
 		},
 	});
 
+	// /assign-models — Alias documentado de la configuración de modelos por agente
+	pi.registerCommand("assign-models", {
+		description: "[Studio] Alias de /studio:models — asignación interactiva de modelos por agente",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioModels(args, ctx);
+		},
+	});
+
 	// /studio:status — Dashboard y diagnóstico en vivo
 	pi.registerCommand("studio:status", {
 		description: "[Studio] Dashboard en vivo de estado, agentes y métricas del estudio",
@@ -195,6 +203,16 @@ export default function (pi: ExtensionAPI) {
 		description: "[Studio] Dashboard en vivo de estado, agentes y métricas del estudio",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioStatus(args, ctx);
+		},
+	});
+
+	// /studio:hud — Alternar barra de estado y widgets interactivos
+	// Shares the collapse path of /studio:status so the toggle has one implementation:
+	// flipping the persisted flag, re-rendering the HUD, the sidebar and the widgets.
+	pi.registerCommand("studio:hud", {
+		description: "[Studio] Alternar la barra de estado y los widgets interactivos de la terminal",
+		handler: async (_args: string, ctx: ExtensionContext) => {
+			await handleStudioStatus("collapse", ctx);
 		},
 	});
 

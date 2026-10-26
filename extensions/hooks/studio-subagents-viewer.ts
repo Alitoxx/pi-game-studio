@@ -257,11 +257,6 @@ export function openTaskInEditor(tui: any, task: TaskRecord): boolean {
 }
 
 /**
- * Renders an expansive, full-screen Live Stream Console of agent execution.
- * Dedicated 100% to displaying real-time tool calls, bash outputs, thinking stream,
- * test results, code changes and errors with interactive scrolling.
- */
-/**
  * Pruning can empty the task map, and every renderer here once assumed at least
  * one record existed: a stale viewer snapshot would throw instead of drawing.
  */
@@ -275,14 +270,17 @@ function renderNoTaskState(width: number): string[] {
 	];
 }
 
+/**
+ * Renders an expansive, full-screen Live Stream Console of agent execution.
+ * Dedicated 100% to displaying real-time tool calls, bash outputs, thinking stream,
+ * test results, code changes and errors with interactive scrolling.
+ */
 export function renderSubagentLiveConsoleView(
 	targetTask: TaskRecord,
 	width: number = 80,
 	height?: number,
 	scrollOffset: number = 0,
 ): string[] {
-	if (!targetTask) return renderNoTaskState(width);
-
 	if (!targetTask) return renderNoTaskState(width);
 
 	const cardWidth = Math.max(48, width);
@@ -384,6 +382,8 @@ export function renderSubagentModalView(
 	width: number = 80,
 	options?: { selectedIndex?: number; totalTasks?: number; height?: number; scrollOffset?: number },
 ): string[] {
+	if (!targetTask) return renderNoTaskState(width);
+
 	const cardWidth = Math.max(48, width);
 	const innerWidth = cardWidth - 4;
 	const lines: string[] = [];

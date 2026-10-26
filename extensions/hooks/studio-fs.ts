@@ -78,7 +78,11 @@ export function writeFileAtomicSync(
 		// guarantee; the count, not the call, is the proof.
 		let written = 0;
 		while (written < payload.length) {
-			written += writeSync(fd, payload, written, payload.length - written);
+			const accepted = writeSync(fd, payload, written, payload.length - written);
+			// An accept of zero with bytes still pending would spin forever, so an
+			// impossible answer fails loudly instead of hanging the install.
+			if (accepted <= 0) throw new Error(`write made no progress on ${target}`);
+			written += accepted;
 		}
 		// Durability before visibility: the rename must not be observable while the
 		// bytes are still only in the page cache.

@@ -28,7 +28,7 @@ Auditoría Independiente (siempre instalado, read-only)
 
 ## Model Mapping y Reasoning Budget
 
-Cada plantilla de agente declara `model: inherit`: hereda el modelo activo de la sesión de Pi. `models.default.json` no duplica una clave por agente; aporta únicamente los tres tiers que el runtime resuelve (`extensions/hooks/studio-models.ts`), y `/assign-models` o `/studio:models` escriben overrides por agente y por proyecto en `.pi/game-studio/models.json`.
+Cada plantilla de agente declara `model: inherit`: hereda el modelo activo de la sesión de Pi. `models.default.json` es la fuente de verdad del mapeo: aporta los tres tiers y una clave por cada uno de los seis especialistas de motor (`extensions/hooks/studio-models.ts`), que hoy resuelven al modelo workhorse. El panel de `/studio:models` se renderiza desde ese archivo, no desde una tabla paralela, y `/assign-models` o `/studio:models` escriben overrides por agente y por proyecto en `.pi/game-studio/models.json`.
 
 | Tier | Default en `models.default.json` | Thinking Budget | Rol Principal |
 |---|---|---|---|
@@ -192,5 +192,7 @@ Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar 
 ## Least-Privilege Deny Baseline
 
 Cada plantilla de agente puede declarar una lista `deny:` opcional en su frontmatter, junto a `tools:`, con nombres concretos de herramientas o patrones (`subagent_*`), donde la entrada `"*"` significa default deny: todo lo que no esté en la lista de permitidos queda excluido. El runner traduce esa base a la bandera nativa de Pi `--exclude-tools`, que se aplica después de cualquier otra selección, así que una herramienta denegada no llega al hijo aunque un template futuro o una ampliación del runtime la permita: **deny gana sobre allow**, y la contradicción queda registrada en la tarea (`denyConflicts`) en lugar de resolverse en silencio. Cada rol además declara su límite en una línea `**Boundary:**` al inicio de su template, de modo que la regla de mínimo privilegio se puede revisar por escrito y no solo en la declaración de herramientas.
+
+`producer` es la única plantilla sin bloque `deny:` y no es un olvido: `deny` acota la delegación de un hijo (profundidad uno), y el producer es la sesión raíz que delega, así que negarle `subagent_*` apagaría el estudio. Su límite vive en la línea `**Boundary:**` de su template, y el runner nunca lo despacha como hijo.
 
 > Verificado contra el runtime, no asumido: `pi --print --tools read,bash --exclude-tools bash` deja al hijo sin `bash`, y el patrón `--exclude-tools 'ba*'` produce el mismo efecto.

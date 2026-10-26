@@ -28,7 +28,7 @@ export const STUDIO_CATEGORIES: StudioCategory[] = [
 		description: "Asistentes interactivos, diagnóstico y gestión",
 		commands: [
 			{ cmd: "/studio:start", desc: "Asistente interactivo de inicio y diagnóstico en vivo" },
-			{ cmd: "/studio:setup", desc: "Instalación guiada de los 9 agentes oficiales (8+1)" },
+			{ cmd: "/studio:setup", desc: "Instalación guiada de los 10 agentes oficiales (8 Core + 1 Motor + 1 Verificador)" },
 			{ cmd: "/studio:doctor", desc: "Diagnóstico local de toolchains y compiladores del motor" },
 			{ cmd: "/studio:web", desc: "Compilar a WebAssembly y lanzar servidor con aislamiento COOP/COEP" },
 			{ cmd: "/studio:profile", desc: "Live Performance Profiler y monitor de presupuestos de FPS/Memoria" },

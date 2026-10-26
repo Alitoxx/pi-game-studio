@@ -39,7 +39,7 @@ Antes de proponer o escribir código, el especialista o lead lee el estado actua
 
 ### Paso 3: Resolve Uncertainty (Resolución de Incertidumbre)
 Si hay un conflicto real de diseño o arquitectura (e.g. *¿Cámara isométrica fija o rotacional?*, *¿Daño por porcentaje o plano?*):
-- Se resuelve mediante una matriz concisa de trade-offs (**TRADE-OFF MATRIX**) en el chat con un menú cerrado (**CHOICE REQUIRED: [1], [2], [3]**).
+- Se resuelve mediante una matriz concisa de trade-offs (**TRADE-OFF MATRIX**) en el chat, cerrada con un selector interactivo (**CHOICE REQUIRED** vía `ask_user_question`): opciones cerradas que el usuario navega con las flechas (↑/↓) y confirma con `Enter`. Nunca se le pide escribir un número.
 - No se hacen cuestionarios abiertos ni debates abstractos.
 
 ### Paso 4: Classify (Clasificación de Tarea)

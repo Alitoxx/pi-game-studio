@@ -1,6 +1,6 @@
 import { ACCENT } from "./studio-palette.ts";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { execSync } from "node:child_process";
+import { runCommand } from "./studio-exec.ts";
 import { promptSelectSafe } from "./studio-setup.ts";
 
 export interface MediaToolDef {
@@ -154,16 +154,12 @@ export interface ToolCheckResult {
 }
 
 export function checkToolInstalled(bin: string): { installed: boolean; path?: string } {
-	try {
-		// check with which or type
-		const out = execSync(`which ${bin} 2>/dev/null || which convert 2>/dev/null`, {
-			encoding: "utf8",
-			timeout: 2000,
-		}).trim();
-		return { installed: Boolean(out), path: out };
-	} catch {
-		return { installed: false };
-	}
+	// Probe with the requested binary first, keeping the legacy `convert` fallback.
+	const out =
+		runCommand("which", [bin], { timeoutMs: 2000 }) ??
+		runCommand("which", ["convert"], { timeoutMs: 2000 });
+	if (out === null || !out.trim()) return { installed: false };
+	return { installed: true, path: out };
 }
 
 export function auditMediaTools(): ToolCheckResult[] {
@@ -264,7 +260,7 @@ function executeBrewInstall(ctx: ExtensionContext, pkgs: string[]): void {
 	}
 	console.log(`\nEjecutando: ${cmd}\n`);
 	try {
-		execSync(cmd, { stdio: "inherit", timeout: 180000 });
+		runCommand("brew", ["install", ...pkgs], { timeoutMs: 180000, stdio: "inherit" });
 		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 			ctx.ui.notify("Herramientas multimedia instaladas con éxito.", "info");
 		}

@@ -1,6 +1,6 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { execSync } from "node:child_process";
 import { existsSync, readFileSync, statSync, readdirSync } from "node:fs";
+import { runCommand } from "./studio-exec.ts";
 import { join, resolve, basename, extname, relative } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
 import {
@@ -137,14 +137,8 @@ export interface CapsuleAuditSummary {
  * Checks if ImageMagick is installed and available in PATH.
  */
 export function detectMagickBinary(): string | null {
-	try {
-		execSync("magick -version", { stdio: "ignore", timeout: 2000 });
-		return "magick";
-	} catch {}
-	try {
-		execSync("identify -version", { stdio: "ignore", timeout: 2000 });
-		return "identify";
-	} catch {}
+	if (runCommand("magick", ["-version"], { timeoutMs: 2000 }) !== null) return "magick";
+	if (runCommand("identify", ["-version"], { timeoutMs: 2000 }) !== null) return "identify";
 	return null;
 }
 
@@ -249,19 +243,19 @@ export function getImageDimensions(
 	magickBin: string | null,
 ): { width: number; height: number } | null {
 	if (magickBin) {
-		try {
-			const output = execSync(`${magickBin} identify -format "%w %h" "${filePath}"`, {
-				encoding: "utf8",
-				stdio: ["ignore", "pipe", "ignore"],
-				timeout: 4000,
-			}).trim();
+		const output = runCommand(
+			magickBin,
+			["identify", "-format", "%w %h", filePath],
+			{ timeoutMs: 4000 },
+		);
+		if (output !== null) {
 			const [wStr, hStr] = output.split(/\s+/);
 			const w = parseInt(wStr, 10);
 			const h = parseInt(hStr, 10);
 			if (!isNaN(w) && !isNaN(h) && w > 0 && h > 0) {
 				return { width: w, height: h };
 			}
-		} catch {}
+		}
 	}
 	return extractBinaryDimensions(filePath);
 }
@@ -280,12 +274,18 @@ export function evaluateSmallCapsuleLegibility(
 	comment: string;
 } | null {
 	try {
-		const cmd = `${magickBin} "${filePath}" -resize 231x87! -colorspace Gray -format "%[fx:standard_deviation*100] %[fx:mean*100]" info:`;
-		const raw = execSync(cmd, {
-			encoding: "utf8",
-			stdio: ["ignore", "pipe", "ignore"],
-			timeout: 5000,
-		}).trim();
+		const raw = runCommand(
+			magickBin,
+			[
+				filePath,
+				"-resize", "231x87!",
+				"-colorspace", "Gray",
+				"-format", "%[fx:standard_deviation*100] %[fx:mean*100]",
+				"info:",
+			],
+			{ timeoutMs: 5000 },
+		);
+		if (raw === null) return null;
 
 		const [stdDevStr, meanStr] = raw.split(/\s+/);
 		const contrast = parseFloat(stdDevStr);

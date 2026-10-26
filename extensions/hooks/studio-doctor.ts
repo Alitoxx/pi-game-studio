@@ -1,8 +1,8 @@
 import { ACCENT, GRAY, GREEN, RED, SECONDARY, WHITE, YELLOW } from "./studio-palette.ts";
 import { formatStudioToolDiagnostics, getStudioToolRegistrations } from "./studio-tool-registry.ts";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { execSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
+import { runCommand } from "./studio-exec.ts";
 import { join, resolve } from "node:path";
 import { inspectSetup } from "./studio-setup.ts";
 import { findStudioRoot } from "./studio-root.ts";
@@ -51,16 +51,8 @@ export interface EngineAuditReport {
 	recommendations: string[];
 }
 
-function runCommandSilent(cmd: string): string | null {
-	try {
-		return execSync(cmd, {
-			encoding: "utf8",
-			stdio: ["ignore", "pipe", "ignore"],
-			timeout: 3000,
-		}).trim();
-	} catch {
-		return null;
-	}
+function runCommandSilent(command: string, args: string[]): string | null {
+	return runCommand(command, args, { timeoutMs: 3000 });
 }
 
 export function auditEnginePrerequisites(engine: string, dir = process.cwd()): EngineAuditReport {
@@ -70,7 +62,7 @@ export function auditEnginePrerequisites(engine: string, dir = process.cwd()): E
 
 	if (normalized.includes("bevy")) {
 		// 1. Rust Compiler (rustc)
-		const rustcOutput = runCommandSilent("rustc --version");
+		const rustcOutput = runCommandSilent("rustc", ["--version"]);
 		const hasRustc = !!rustcOutput;
 		checks.push({
 			name: "Rust Compiler (rustc)",
@@ -86,7 +78,7 @@ export function auditEnginePrerequisites(engine: string, dir = process.cwd()): E
 		});
 
 		// 2. Cargo
-		const cargoOutput = runCommandSilent("cargo --version");
+		const cargoOutput = runCommandSilent("cargo", ["--version"]);
 		const hasCargo = !!cargoOutput;
 		checks.push({
 			name: "Cargo (Package Manager)",
@@ -102,7 +94,7 @@ export function auditEnginePrerequisites(engine: string, dir = process.cwd()): E
 		});
 
 		// 3. C Toolchain / Clang / GCC
-		const clangOutput = runCommandSilent("clang --version") || runCommandSilent("gcc --version");
+		const clangOutput = runCommandSilent("clang", ["--version"]) || runCommandSilent("gcc", ["--version"]);
 		const hasCC = !!clangOutput;
 		checks.push({
 			name: "C/C++ Build Toolchain (para dependencias nativas)",
@@ -126,7 +118,7 @@ export function auditEnginePrerequisites(engine: string, dir = process.cwd()): E
 		}
 	} else if (normalized.includes("raylib")) {
 		// 1. CMake
-		const cmakeOutput = runCommandSilent("cmake --version");
+		const cmakeOutput = runCommandSilent("cmake", ["--version"]);
 		const hasCmake = !!cmakeOutput;
 		const cmakeVer = cmakeOutput ? cmakeOutput.split("\n")[0] : undefined;
 		checks.push({
@@ -143,7 +135,7 @@ export function auditEnginePrerequisites(engine: string, dir = process.cwd()): E
 		});
 
 		// 2. C++ Compiler (clang++ / g++)
-		const cxxOutput = runCommandSilent("clang++ --version") || runCommandSilent("g++ --version");
+		const cxxOutput = runCommandSilent("clang++", ["--version"]) || runCommandSilent("g++", ["--version"]);
 		const hasCxx = !!cxxOutput;
 		const cxxVer = cxxOutput ? cxxOutput.split("\n")[0] : undefined;
 		checks.push({
@@ -160,7 +152,7 @@ export function auditEnginePrerequisites(engine: string, dir = process.cwd()): E
 		});
 
 		// 3. Git
-		const gitOutput = runCommandSilent("git --version");
+		const gitOutput = runCommandSilent("git", ["--version"]);
 		const hasGit = !!gitOutput;
 		checks.push({
 			name: "Git (para FetchContent de Raylib y EnTT)",
@@ -182,7 +174,7 @@ export function auditEnginePrerequisites(engine: string, dir = process.cwd()): E
 		}
 	} else if (normalized.includes("godot")) {
 		// 1. Godot Binary
-		const godotCli = runCommandSilent("godot --version") || runCommandSilent("godot4 --version");
+		const godotCli = runCommandSilent("godot", ["--version"]) || runCommandSilent("godot4", ["--version"]);
 		let hasGodotApp = false;
 		if (process.platform === "darwin") {
 			hasGodotApp = existsSync("/Applications/Godot.app") ||
@@ -207,7 +199,7 @@ export function auditEnginePrerequisites(engine: string, dir = process.cwd()): E
 		});
 
 		// 2. .NET SDK (Requerido solo si se usa C#)
-		const dotnetOutput = runCommandSilent("dotnet --version");
+		const dotnetOutput = runCommandSilent("dotnet", ["--version"]);
 		const hasDotnet = !!dotnetOutput;
 		checks.push({
 			name: ".NET SDK (Opcional - solo requerido para Godot C#)",
@@ -279,7 +271,7 @@ export function auditEnginePrerequisites(engine: string, dir = process.cwd()): E
 		}
 	} else if (normalized.includes("phaser")) {
 		// 1. Node.js runtime
-		const nodeVersion = runCommandSilent("node --version");
+		const nodeVersion = runCommandSilent("node", ["--version"]);
 		const hasNode = !!nodeVersion;
 		const nodeMajor = nodeVersion ? parseInt(nodeVersion.replace(/^v/, "").split(".")[0], 10) : 0;
 		const nodeSatisfied = hasNode && nodeMajor >= 18;
@@ -300,7 +292,7 @@ export function auditEnginePrerequisites(engine: string, dir = process.cwd()): E
 		});
 
 		// 2. npm / package manager
-		const npmVersion = runCommandSilent("npm --version");
+		const npmVersion = runCommandSilent("npm", ["--version"]);
 		const hasNpm = !!npmVersion;
 		checks.push({
 			name: "npm (Gestor de dependencias)",

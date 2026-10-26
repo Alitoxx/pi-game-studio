@@ -1,8 +1,6 @@
 ---
 name: test
 description: "[ODD Phase 5] Validate & Feel. Role Owner: qa-lead (Tier 2 Lead). Quality verification, startup smoke checks, regression testing, memory leak detection, and bug triage."
-model: inherit
-inheritProjectContext: true
 tools:
   - read
   - find

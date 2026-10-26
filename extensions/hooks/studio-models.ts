@@ -277,7 +277,7 @@ async function configureAgentModel(
 	return config;
 }
 
-function formatModelsList(cfg: Record<string, string>): string {
+export function formatModelsList(cfg: Record<string, string>): string {
 	const dirModel = cfg.director || "openai-codex/gpt-5.4-mini";
 	const workModel = cfg.workhorse || "openrouter/openai/gpt-oss-120b:free";
 	const lightModel = cfg.lightweight || "openrouter/openai/gpt-oss-20b:free";
@@ -286,6 +286,18 @@ function formatModelsList(cfg: Record<string, string>): string {
 
 	const TIER_1 = ["producer", "creative-director", "technical-director"];
 	const TIER_3 = ["bevy-specialist", "godot-specialist", "phaser-specialist", "raylib-specialist", "unity-specialist", "unreal-specialist"];
+
+	// What the engine specialists actually run. The panel used to print the
+	// lightweight model for them, which no specialist resolves to: they carry their
+	// own key in models.default.json (the workhorse model) and fall back to the
+	// workhorse tier when they carry none.
+	const specialistModels = TIER_3.map((name) => cfg[name]).filter(Boolean);
+	const specialistsModel =
+		specialistModels.length === 0
+			? workModel
+			: specialistModels.every((model) => model === specialistModels[0])
+				? specialistModels[0]
+				: "por agente";
 
 	// An override is an agent explicitly configured with a model different from its role/tier default
 	const overrides = Object.entries(cfg)
@@ -307,7 +319,7 @@ function formatModelsList(cfg: Record<string, string>): string {
 		"┌── STUDIO MODELS: ASIGNACIÓN Y MONITOR DE CUOTAS POR TIER ──────┐",
 		`│ • Tier 1 (Directores - Visión & Gating):   ${dirModel.padEnd(27)} │`,
 		`│ • Tier 2 (Leads & Core Devs - Mecánicas):  ${workModel.padEnd(27)} │`,
-		`│ • Tier 3 (Especialistas de Motor):         ${lightModel.padEnd(27)} │`,
+		`│ • Tier 3 (Especialistas de Motor):         ${specialistsModel.padEnd(27)} │`,
 		"├─────────────────────────────────────────────────────────────────┤",
 		"│ PRESUPUESTO & REASONING BUDGET:                                 │",
 		"│ • Tier 1: Thinking 'high'   (Estrategia, arquitectura, triaje)  │",

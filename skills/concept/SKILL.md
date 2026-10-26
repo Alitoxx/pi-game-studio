@@ -1,8 +1,6 @@
 ---
 name: concept
 description: "[ODD Phase 1] Authorize & Vision. Role Owner: creative-director (Tier 1 Director). From the initial idea to an executable game vision: defines the core fantasy, the 3-5 unbreakable Pillars, the anti-pillars, and the visual anchor."
-model: inherit
-inheritProjectContext: true
 tools:
   - read
   - find

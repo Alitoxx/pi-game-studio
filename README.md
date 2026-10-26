@@ -25,7 +25,7 @@
 </p>
 
 ```text
-               ⠐⢿⡿⠂                   P I   G A M E   S T U D I O   v1.9.0
+               ⠐⢿⡿⠂                   P I   G A M E   S T U D I O   v1.10.0
            ⢀⣤⣶⣶⣶⣾⣷⣶⣶⣶⣤⡀               Compact AI Game Studio for Pi (8+1+1 Architecture)
            ⣿⡇⢸⡏⢩⡍⢩⡍⢹⡇⢸⣿               ──────────────────────────────────────────────────────────
            ⣿⡇⢸⣇⣐⣒⣒⣂⣸⡇⢸⣿               GIT:       On branch main
@@ -213,8 +213,6 @@ Agents not listed use the session default.
 | **Ollama** (local)   | `ollama/<model>`                | `ollama/llama3.2`                     |
 
 ## Slash Commands
- 
-## Slash Commands
 
 Pi Game Studio opera con el pipeline de **6 Skills ODD (Organic Driven Development)** y la suite de comandos de administración **`studio:*`**:
 
@@ -303,7 +301,7 @@ Inside `pi-studio` in your game folder, run the setup assistant:
 ```
 *(Or `/studio:setup manual` to interactively choose your engine, language, and AI models).*
 
-This deploys the 9 active agents to `.pi/agents/` (8 Core + 1 Motor activo), configures `.pi/game-studio/models.json`, and sets up `project.yaml`.
+This deploys the 10 active agents to `.pi/agents/` (8 Core + 1 Motor activo + 1 Verificador read-only), configures `.pi/game-studio/models.json`, and sets up `project.yaml`.
 
 ### Start Developing
 
@@ -391,7 +389,7 @@ Pi Game Studio is a **Pi package** (not a file copy). Everything lives in the pa
 
 Agents use `model: inherit` — they adopt the model from your Pi session configuration. The `models.default.json` provides a recommended tier-based mapping that gets installed to `.pi/game-studio/models.json` and can be customized per agent.
 
-Delegation between agents works through Pi's `subagent` tool. A director spawns a lead, a lead spawns specialists. Each agent returns structured results and passes decisions back up. Director gates enforce quality checkpoints.
+Delegation runs through Pi's native `subagent_run` tool and is **one level deep**: only the parent session (the Producer / orchestrator) dispatches specialists, and the runner strips the whole `subagent_*` family from every child, so a specialist can never spawn another. Each agent returns a structured YAML receipt and passes decisions back up. Director gates enforce quality checkpoints.
 
 ## Design Philosophy
 
@@ -405,193 +403,7 @@ Delegation between agents works through Pi's `subagent` tool. A director spawns 
 
 ## Changelog
 
-### v0.9.0 — 2026-10-01
-
-- **Suite Completa de 5 Starters y Creación de Juegos (`/studio:new`)**:
-  - Incorporados y testeados los 5 mini-juegos funcionales para los 5 motores oficiales: Bevy (`bevy-2d-arpg`), Godot 4 (`godot-2d-character`), Raylib C++20 (`raylib-cpp-entt`), Unity 2D (`unity-2d-platformer`) y Unreal Engine 5 (`ue5-third-person`).
-  - Suite de validación automatizada continua [`__tests__/game-creation-flows.test.js`](__tests__/game-creation-flows.test.js) que verifica scaffolding, archivos descriptores y detección automática de motor en entornos efímeros aislados.
-- **Nuevas Cadenas Multi-Agente (`chains/`)**:
-  - `audio-production.chain.md`: Cadena de dirección, diseño e implementación sonora.
-  - `level-pipeline.chain.md`: Cadena de diseño de niveles, narrativa y arte de escenarios.
-  - `narrative-flow.chain.md`: Cadena de arcos narrativos, diálogos y lore del mundo.
-  - `perf-audit.chain.md`: Cadena de auditoría de rendimiento, profiling y optimizaciones de game loop.
-- **Documentación de Referencia de Motores (`docs/engine-reference/`)**:
-  - Módulos de referencia completos para Godot, Raylib, Unity y Unreal con breaking changes y APIs deprecadas.
-- **Limpieza de CI/CD y Dependencias**:
-  - Eliminación completa de referencias obsoletas a Claude Code, CI/CD de GitHub Actions (`validate.yml`) reparado y scripts de utilidades (`assign-models.js`, `yaml-helper.sh`) testeados.
-
-### v0.8.2 — 2026-09-27
-
-- **Autodetección Proactiva de Motor y Versión (Zero-Config Sniffing)**:
-  - Detección automática en tiempo de ejecución de motor, versión y lenguaje (`extensions/hooks/engine-detector.ts`) mediante inspección de archivos clave (`Cargo.toml` para Bevy, `project.godot` para Godot, `CMakeLists.txt` para Raylib, `ProjectVersion.txt` para Unity y `*.uproject` para Unreal).
-  - Los banners del estudio y comandos adaptan automáticamente el contexto sin necesidad de configuración manual en `project.yaml`.
-- **Plantillas de Inicio Rápido (`/studio:new`)**:
-  - Nuevo comando para crear proyectos jugables desde plantillas preconfiguradas:
-    - `bevy-2d-arpg`: Starter 2D cenital/isométrico en Bevy 0.15 con cámara ortográfica y controles WASD/ataque.
-    - `raylib-cpp-entt`: Starter C++20 con arquitectura ECS EnTT y build pipeline CMake FetchContent.
-    - `godot-2d-character`: Escena 2D con CharacterBody2D en Godot 4.3 y GDScript estáticamente tipado.
-- **Auditoría de Versiones y Alertas de Conocimiento en `/studio:doctor`**:
-  - Auditoría cruzada entre la versión del proyecto y la base técnica del estudio (`docs/engine-reference/`).
-  - Alertas proactivas sobre breaking changes y soporte de versiones para Bevy, Godot, Raylib, Unity y Unreal.
-- **Inclusión Oficial de Raylib en Banner**:
-  - Banner actualizado con la lista simétrica de los 5 motores oficiales (`Godot · Unity · Unreal · Bevy · Raylib`) y métrica corregida a `52 especialistas & leads` (55 agentes en total).
-
-### v0.8.1 — 2026-09-27
-
-- **Subdirectory Workspace Resolution & TUI Banner Fix (`extensions/hooks/`)**:
-  - **Detección Jerárquica de Raíz (`findStudioRoot`)**: Búsqueda recursiva hacia arriba en el árbol de directorios para detectar `.pi/game-studio`, `project.yaml` o `AGENTS.md` cuando se ejecuta Pi desde subcarpetas (como `sandbox/`, `src/` o `design/`).
-  - **Montaje Robusto de Header en TUI**: Integración limpia en `ctx.ui.setHeader` cumpliendo el contrato de componente `{ render(width), invalidate() }` y notificación `ui.notify` en inicio de sesión.
-  - **Protección de Buffer Alternativo**: Eliminación de secuencias ANSI de borrado en crudo (`\x1b[2J\x1b[3J\x1b[H`) y logs en stdout durante modo interactivo TUI (`hasUI`), previniendo desincronizaciones de pantalla o pantallas en blanco.
-  - **Vinculación Consistente de Herramientas**: Garantía de que `/studio:settings`, `/studio:status`, la política de idioma (`es`) y la detección de gaps auditen la raíz del proyecto correspondiente.
-- **Token Economy & Gentle Shell Return Contract**:
-  - **Modularización de Skills Pesadas (`setup-engine`)**:
-    - Separación de apéndices monolíticos en referencias cargadas bajo demanda dentro de la skill de configuración de motor, reduciendo el consumo base de tokens en más de ~2.500 tokens por invocación. (Nota histórica: esa skill y sus archivos de referencia ya no se distribuyen; la configuración de motor vive hoy en `/setup` y `project.yaml`.)
-  - **Return Contract Estandarizado (Inspirado en Gentle Shell)**:
-    - Formalización de la sección 6 en `docs/gamedev-interaction-protocol.md` y `AGENTS.md`: bloque estructurado YAML obligatorio (`status`, `summary`, `files_changed`, `validation`, `gameplay_impact`, `risks`, `next_recommended_specialist`) para tareas delegadas a especialistas vía `subagent_run`.
-    - Eliminación sistemática de preámbulos conversacionales, formalismos y tokens de cortesía en subagentes (`lead-programmer`, `gameplay-programmer`).
-  - **Compactación de Ejemplos Few-Shot en Agentes Tier 1**:
-    - Optimización y sintetización de diálogos de ejemplo en `agents/creative-director.md` preservando al 100% el rigor técnico y los árboles de decisión mientras se ahorran más de ~650 tokens por llamada de razonamiento.
-
-### v0.8.0 — 2026-09-26
-
-- **GameForge Integration & Engine MCP Ecosystem (80 Skills & 44 Templates)**:
-  - **GameForge Tooling Integration**:
-    - `/jam` — Game Jam mode for 48–72h hackathons, relaxing rigid documentation while enforcing rapid 2h sprints and 30m commits.
-    - `/market-research` — Steam market intelligence, competitor comp mining, tag optimization, and pricing analysis.
-    - Enhanced `/reverse-document` — Full repository brownfield adoption and subsystem reverse-engineering from code to GDD.
-    - Formal Game Design Frameworks (master templates) — MDA Framework, Flow Theory, Self-Determination Theory (SDT), and Bartle Player Taxonomy. _Retired: the orphaned master-template layer was removed in favour of ODD live specs._
-  - **Live Engine MCP Layer ("Files First, MCP Accelerated")**:
-    - `/connect-engine-mcp` — Interactive diagnostic and connection hub for Godot, Unity, Unreal, and Bevy MCP servers.
-    - Updated engine leads (`godot-specialist`, `unity-specialist`, `unreal-specialist`, `bevy-specialist`) with real-time scene inspection and node tree query capabilities.
-  - **Toolchain & Engine Prerequisite Doctor (`/studio:doctor`)**:
-    - Automatic hardware and environment check for all 5 engines (compilers, build tools, SDKs, and editor binaries).
-    - Integrated gate into `/setup-engine`, `/studio:setup`, and `/studio:status` with exact installation commands for macOS, Linux, and Windows.
-  - **Studio Expansion**: Scaled studio toolset to **80 skills** and **49 templates** with full test coverage and automated symmetry validation.
-
-### v0.7.1 — 2026-09-26
-
-- **Raylib & C++ Engine Specialist Quintet (55 Agents)**:
-  - **Full Specialist Quintet for Raylib**: Completed the 5-agent specialized engine sub-team following the same architecture as Godot, Unity, and Unreal:
-    - `raylib-specialist` — Engine Lead (architecture, game loop, 2D/isometric camera math, batching).
-    - `raylib-entt-specialist` — ECS & Data (pure POD components, views, pools, cache locality, hordes).
-    - `raylib-shader-specialist` — GPU & Shaders (GLSL 2D/3D shaders, dynamic lighting, fog of war, VFX).
-    - `raylib-ui-specialist` — UI & Tooling (Raygui, health/mana globes, inventory grids, Dear ImGui / rlImGui debug tooling).
-    - `raylib-build-specialist` — CMake & Packaging (FetchContent, multi-platform, emscripten/WASM, optimization flags).
-  - **Studio Expansion**: Roster expanded from 51 to **55 agents** across the studio hierarchy with medium thinking effort and PoLP tool enforcement.
-  - **Engine Routing**: Updated `/setup-engine` file extension and specialist dispatch matrix for `.cpp`, `.hpp`, `.glsl`, CMake, and UI files.
-
-### v0.7.0 — 2026-09-25
-
-- **Pure C++ Engine Support & Raylib Specialist (`raylib-specialist`)**:
-  - **New Tier 3 Engine Specialist (`raylib-specialist`)**: Authority on Raylib, modern C++ (C++17/20), and EnTT ECS game development. Guides code-first architectures, 2D/isometric rendering, depth sorting (Y-sorting), custom GLSL shaders, Dear ImGui debug tooling, and CMake build pipelines.
-  - **Studio Expansion**: Roster expanded from 50 to **51 agents** across the studio hierarchy with full PoLP tool permissions and medium thinking effort.
-  - **Interactive Setup Engine Integration**: Added `Raylib (C++ / EnTT)` to `/setup`, `/studio:setup`, and `/setup-engine` with automatic specialist routing for `.cpp`, `.hpp`, `.h`, `CMakeLists.txt`, and shader files.
-  - **Complete Suite Homologation**: Updated `AGENTS.md`, `models.default.json`, `studio-agents.ts`, `studio-models.ts`, and startup banner to seamlessly support the new C++ stack.
-
-### v0.6.3 — 2026-09-25
-
-- **Automatic Language Policy & Full Bilingual Localization**:
-  - **Runtime Active Language Injection**: Enforced workspace language preference (`.pi/game-studio/language` or `project.yaml`) via runtime hook (`turn_start`). Agents and skills automatically adopt Spanish (`es`) or English (`en`) without requiring explicit user greetings in Spanish.
-  - **Bilingual Onboarding Prompts (`/start`)**: Added localized interactive options and prompts to `/start` phases (Phase 2, Phase 3b review modes, Phase 4 confirmation gates) matching the detected language.
-  - **Global Language Policy**: Established studio-wide language policy in `AGENTS.md` ensuring consistent dialogue while maintaining standard programming and engine API symbols.
-
-### v0.6.2 — 2026-09-25
-
-- **Modern Agent Architecture & Few-Shot Alignment**:
-  - **Principio de Menor Privilegio (PoLP)**: Realigned tool privileges across all 50 agents. Removed shell execution (`bash`) from purely documentation/linguistic roles (`localization-lead`), establishing 100% adherence to least-privilege tool security standards.
-  - **Domain Grounded Few-Shot Examples (`Example Interaction Pattern`)**: Enriched the core agents across all disciplines (Directors, Leads, Engine Specialists, Technical Specialists) with concrete multi-turn dialogue patterns demonstrating domain-specific trade-off analysis, architectural diagrams, and explicit user approval gates prior to file writing.
-  - **Comprehensive Agent Quality Audit**: Audited all 50 studio agents against modern LLM Context Engineering standards (Anthropic, LLM-as-a-Judge, PoLP), achieving a **10/10** benchmark score.
-
-### v0.6.1 — 2026-09-25
-
-- **Unified `/studio:start` Extension Command**: Introduced `/studio:start` as an interactive TypeScript extension command within the `studio:*` namespace. Provides instant project state auditing (engine, GDD count, source code, prototypes) and guided onboarding choices (Brainstorm, GDD, Settings, Adopt, or AI interview via `/start`) with no startup latency.
-
-### v0.6.0 — 2026-09-25
-
-- **Gentle Shell Architectural Homologation**:
-  - **Thinking Effort Hierarchy**: Structured all 50 studio agents with explicit `thinking:` frontmatter budgets (`high` for Tier 1 Directors, `medium` for Tier 2 Leads & Core Specialists, `low` for Tier 3 Lightweight tasks).
-  - **YAML List Tool Format**: Standardized `tools:` across all 50 agents to native YAML list format (`- read`, `- grep`, etc.) with normalized lowercase identifiers.
-  - **Studio Multi-Agent Chains (`chains/`)**: Added declarative multi-agent pipelines inspired by Gentle Shell:
-    - `chains/gdd-review.chain.md`: Full Game Design Document audit (`creative-director` ➔ `game-designer` ➔ `technical-director` ➔ `producer`).
-    - `chains/feature-implement.chain.md`: End-to-end feature pipeline (`game-designer` ➔ `lead-programmer` ➔ `gameplay-programmer` ➔ `qa-tester`).
-    - `chains/release-gate.chain.md`: Milestone and release audit (`qa-lead` ➔ `performance-analyst` ➔ `security-engineer` ➔ `release-manager`).
-  - **New Extension Command `/studio:chains`**: Interactive chain browser, step visualizer, and pipeline launcher in Pi TUI.
-  - **Interactive Thinking Effort Tuning in `/studio:models`**: Added direct reasoning effort adjuster (High, Medium, Low, Off) per tier or per individual agent.
-
-### v0.5.3 — 2026-09-25
-
-- **Clean Model Inheritance & Overrides Filtering**: When applying `inherit` mode or tier defaults, `.pi/game-studio/models.json` now stores a clean tier mapping instead of duplicating 50 redundant agent keys. False agent overrides are automatically filtered out from model listings, displaying `✔ Todos los agentes heredan el modelo activo de tu sesión.`
-- **Pi TUI Render Safety**: Eliminated raw `console.log` invocations when `ctx.hasUI` is active across all studio commands, preventing screen smearing, duplicate printing, and collisions with Pi's interactive status bar / breadcrumbs.
-
-### v0.5.2 — 2026-09-25
-
-- **Clean Terminal Startup & Scrollback Wiping**: Automatically clears previous terminal scrollback and visible viewport on `session_start` and in `/studio:status`, giving a clean, distraction-free arcade dashboard experience.
-- **Configurable Terminal Clear Toggle**: Added interactive toggle in `/studio:settings` (`🧹 Limpiar terminal al iniciar: Activado/Desactivado`) for developer preference.
-
-### v0.5.1 — 2026-09-25
-
-- **Studio Suite Extension Commands (`studio:*`)**: Implemented dedicated TypeScript extension command namespace inspired by Gentle Shell:
-  - `/studio:setup` — Interactive studio installation (Automatic 1-click or Manual guided wizard), updates, and diagnostics.
-  - `/studio:models` — Interactive AI model configuration by tier or individual agents with dynamic provider discovery.
-  - `/studio:status` — Live dashboard and diagnostic health check for studio files and dependencies.
-  - `/studio:agents` — Interactive directory and role browser for all 50 studio agents.
-  - `/studio:settings` — Interactive project configuration manager for game engine and language.
-  - `/studio:help` / `/studio` — Comprehensive studio command palette and category navigator.
-- **Dynamic Provider & Model Discovery Engine**: Automatic detection of configured providers from Pi runtime (`ctx.modelRegistry`, `~/.pi/agent/models-store.json`, `auth.json`) with role-tailored model recommendations (Directors, Workhorses, Lightweight).
-- **Dual Setup Mode (Automatic vs Manual)**: Choose between 1-click instant setup or step-by-step customization of game engine (Godot, Unity, Unreal, Bevy, Raylib), language (es/en), and model assignments per tier or agent.
-- **Pi TUI Compatibility**: Fixed `ctx.ui.select` string return handling and integrated `ctx.ui.notify` for visual feedback in Pi TUI mode.
-
-### v0.5.0 — 2026-09-25
-
-- **Studio Command Visual Identity**: Added `🎮 [Studio]` prefix to all 77 skill descriptions in autocomplete menu.
-- **Studio Command Palette (`/studio`)**: Added interactive category browsing and command cheatsheets.
-- **Retro Gaming Startup Banner & Dashboard**: ASCII art logo with mathematical centering and dynamic studio status in Pi TUI header (`ctx.ui.setHeader`).
-- **Guided & Interactive Setup Flow**: Redesigned `/setup` and `/assign-models` with bilingual prompt flow and confirmation gates.
-- **Decoupled Engram ("Files First, Memory Accelerated")**: Removed hard `engram_mem_save` dependencies across all skills; local Git Markdown files are the single source of truth; refactored `/connect-engram` as an optional diagnostic assistant.
-
-### v0.4.0 — 2026-09-24
-
-- **Dual Upstream Homologation Pass** — synchronized with CCGS (Donchitos v1.1.1) and OCGS (striderZA v0.13.0):
-  - **50 agents** (+`bevy-specialist` covering Bevy 0.19 / Rust ECS, wgpu 2D/3D, bevy_ui, audio, input, Cargo/WASM)
-  - **77 skills** (+`/vertical-slice` for pre-production loop validation; +`/settings` for project configuration; updated `/prototype` with `--spike` mode; updated `/setup-engine`)
-  - **43 templates** (+`game-brief.md`, `prototype-report.md`, `vertical-slice-report.md`, `session-state.md`, `SKILL-CONTRACT-TEMPLATE.md`)
-  - **4 runtime hooks**
-- **Unified Configuration**: added `project.yaml` support with `/settings` and `scripts/yaml-helper.sh`
-- **Prototype Overhaul**: `/prototype` updated with concept validation, `--spike` mode (4-hour technical spikes), and updated `prototyper` agent
-- **Engine Reference & Support**: Added Bevy Engine reference docs (`docs/engine-reference/bevy/`) and specialist routing in `/setup-engine`
-
-### v0.3.0 — 2026-05-16
-
-- **Homologation pass** — aligned the Pi inventory with the current tree and normalized the public counts:
-  - 49 agents
-  - 75 skills
-  - 38 templates
-  - 4 runtime hooks
-- **README provenance note** — added explicit source/origin and Pi-homologation notes for upstream parity tracking
-- **Regression coverage** — added inventory tests so README counts stay in sync with the actual file tree
-- **Setup completion** — generated `.pi/game-studio/models.json` from `models.default.json`
-
-### v0.2.0 — 2026-05-12
-
-- **`/brainstorm`** — rewritten with professional studio ideation structure:
-  - Assigned to `creative-director` agent for vision-aligned brainstorming
-  - **Engram checkpoints** at each phase (Creative Discovery, Concept Generation, Core Loop, Pillars) — if a session is interrupted, `/brainstorm` detects the last checkpoint and offers to resume
-  - **Smart resume** — checks both `game-concept.md` and Engram memory, then asks: resume, start fresh with backup, or overwrite
-  - **Auto-backup** existing `game-concept.md` with timestamp before overwriting
-
-- **`/start`** — smarter first-run detection:
-  - **Silent Engram availability check** — detects if Engram CLI is installed and connected without cluttering the output
-  - **Context snapshot** — saves user's onboarding state to Engram for continuity across sessions
-
-### v0.1.0 — 2026-05-11
-
-- Initial release. Port of CCGS (49 agents, 75 skills) to Pi package format.
-  - 49 agents with `model: inherit` architecture
-  - 75 skills covering design → production → release
-  - 38 document templates
-  - 4 hooks extension
-  - SDD agents for structured development
-  - Optional Engram integration
+El historial completo de versiones (desde v0.1.0) vive en [`CHANGELOG.md`](CHANGELOG.md).
 
 ---
 
@@ -623,7 +435,7 @@ This project is a migration of **Claude Code Game Studios** to run natively on P
 
 ### Homologation note
 
-- Imported counts were normalized to the current Pi tree: 14 agents, 6 skills, 4 runtime hooks. The legacy master-template layer was later retired.
+- Imported counts were normalized to the current Pi tree: 15 agent templates (10 installed per project: 8 core + 1 engine specialist + 1 read-only verifier), 6 skills, 4 runtime hooks. The legacy master-template layer was later retired.
 - `extensions/hooks/index.ts` remains the single hook entrypoint; hook behavior is split across four handlers.
 
 Este port no existiría sin el trabajo fundacional de Donchitos y striderZA. Gracias.

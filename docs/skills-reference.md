@@ -34,9 +34,11 @@ Pi Game Studio opera bajo el flujo **Organic Driven Development (ODD)**:
 
 ## 2. Detalle de Operación por Skill
 
+Las filas **Herramientas declaradas** reflejan la lista declarativa `tools:` del frontmatter de cada `skills/<skill>/SKILL.md`: documentan el conjunto de trabajo de la fase, no son concesiones de capacidad que Pi lea en runtime.
+
 ### `/concept` — Authorize & Vision (Fase 1)
 - **Sub-acciones:** `/concept`, `/concept pitch`, `/concept jam`.
-- **Herramientas activas:** `read, glob, grep, write, edit, ask_user_question`.
+- **Herramientas declaradas:** `read, find, grep, write, edit, ask_user_question`.
 - **Contrato:**
   - Extrae la fantasía central del jugador en 1-2 oraciones.
   - Formula 3 a 5 pilares con test de diseño accionable.
@@ -45,7 +47,7 @@ Pi Game Studio opera bajo el flujo **Organic Driven Development (ODD)**:
 
 ### `/spec` — Live Specs & Design (Fase 2)
 - **Sub-acciones:** `/spec <feature>`, `/spec review`.
-- **Herramientas activas:** `read, glob, grep, write, edit, ask_user_question`.
+- **Herramientas declaradas:** `read, find, grep, write, edit, ask_user_question`.
 - **Contrato:**
   - Redacta la Live Spec única en `design/gdd/<feature>.md`.
   - Excluye valores mágicos; expone tuning knobs para `assets/data/`.
@@ -55,7 +57,7 @@ Pi Game Studio opera bajo el flujo **Organic Driven Development (ODD)**:
 
 ### `/arch` — Technical Boundaries & Engine (Fase 3)
 - **Sub-acciones:** `/arch`, `/arch adr`, `/arch budget`, `/arch mcp`.
-- **Herramientas activas:** `read, glob, grep, write, edit, bash, ask_user_question`.
+- **Herramientas declaradas:** `read, find, grep, write, edit, bash, ask_user_question`.
 - **Contrato:**
   - Redacta ADRs concisos en `docs/architecture/adr-<num>-<titulo>.md`.
   - Define presupuestos estrictos de memoria y framerate por plataforma.
@@ -64,7 +66,7 @@ Pi Game Studio opera bajo el flujo **Organic Driven Development (ODD)**:
 
 ### `/code` — Idiomatic Implementation (Fase 4)
 - **Sub-acciones:** `/code <feature>`, `/code review`.
-- **Herramientas activas:** `read, glob, grep, write, edit, bash, subagent`.
+- **Herramientas declaradas:** `read, find, grep, write, edit, bash, subagent_run, ask_user_question`.
 - **Contrato:**
   - Delega implementación a paquetes atómicos de ~400 líneas vía `subagent_run`.
   - Cero asignaciones de memoria o recolecciones de basura en el bucle principal de render.
@@ -72,7 +74,7 @@ Pi Game Studio opera bajo el flujo **Organic Driven Development (ODD)**:
 
 ### `/test` — Quality, Smoke & Feel (Fase 5)
 - **Sub-acciones:** `/test`, `/test smoke`, `/test regression`, `/test bugs`.
-- **Herramientas activas:** `read, glob, grep, write, edit, bash, ask_user_question`.
+- **Herramientas declaradas:** `read, find, grep, write, edit, bash, ask_user_question`.
 - **Contrato:**
   - Smoke checks rápidos headless por motor (`godot --headless`, `cargo check`, etc.).
   - Soak test de memoria de al menos 60 segundos con consumo plano (sin fugas sostenidas > 1 MB/min).
@@ -80,7 +82,7 @@ Pi Game Studio opera bajo el flujo **Organic Driven Development (ODD)**:
 
 ### `/ship` — Release & Certification (Fase 6)
 - **Sub-acciones:** `/ship`, `/ship build`, `/ship patch`, `/ship release`.
-- **Herramientas activas:** `read, glob, grep, write, edit, bash, ask_user_question`.
+- **Herramientas declaradas:** `read, find, grep, write, edit, bash, ask_user_question`.
 - **Contrato:**
   - Auditoría de cero bugs P0/P1 y cero assets marcados como `placeholder` en `assets/manifest.yaml`.
   - Empaquetado multiplataforma y generación de binarios WASM (`wasm-opt`) o nativos.
@@ -96,12 +98,12 @@ Comandos integrados en la terminal para administración del estudio, configuraci
 |---|---|
 | **`/studio`** o **`/studio:start`** | Panel principal e inicio guiado con auditoría de estado del proyecto. |
 | **`/studio:new`** | Asistente interactivo para crear un nuevo juego a partir de 6 starters (Bevy, Godot, Phaser, Raylib, Unity, Unreal). |
-| **`/studio:setup`** | Instalación y despliegue del roster 8+1 (9 agentes) en el proyecto. |
+| **`/studio:setup`** | Instalación y despliegue del roster 8+1+1 (10 agentes: 8 Core + 1 especialista de motor + 1 verificador read-only) en el proyecto. |
 | **`/studio:models`** | Configuración interactiva de proveedores y modelos de IA por rol o nivel. |
 | **`/studio:doctor`** | Diagnóstico técnico integral del entorno, herramientas CLI y estructura del proyecto. |
 | **`/studio:tools`** | Verificación e instalación de herramientas multimedia FOSS (ImageMagick, oxipng, pngquant, FFmpeg, Assimp, wasm-opt, gltf-transform, gltfpack, butler). |
 | **`/studio:mcp`** | Inspección y gestión de servidores MCP del ecosistema. |
-| **`/studio:chains`** | Ejecutor de cadenas multi-agente (`feature-implement`, `gdd-review`, `perf-audit`, etc.). |
+| **`/studio:chains`** | Ejecutor de cadenas multi-agente (`feature-implement`, `gdd-review`, `release-gate`). |
 | **`/studio:subagents`** | Visor en vivo de tareas ejecutadas por especialistas en subprocesos aislados. |
 | **`/studio:web`** | Compilador y servidor local para prototipos Web/WASM. |
 | **`/studio:hud`** | Alternar visibilidad de widgets y barra de estado en terminal. |

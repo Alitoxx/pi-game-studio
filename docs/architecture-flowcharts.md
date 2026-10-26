@@ -22,14 +22,17 @@ flowchart TD
 
 ---
 
-## 2. Gobernanza y Jerarquía de Agentes (Arquitectura 8+1)
+## 2. Gobernanza y Jerarquía de Agentes (Arquitectura 8+1+1)
 
-Estructura compacta de directores, jefes de departamento y especialista dedicado del motor activo.
+Estructura compacta de directores, jefes de departamento, especialista dedicado del motor activo y verificador independiente read-only. La delegación tiene **profundidad uno**: solo la sesión padre (el Producer / orquestador) despacha especialistas mediante `subagent_run`; el runner retira la familia completa `subagent_*` de cada proceso hijo, así que ningún agente delegado puede spawnear a otro.
 
 ```mermaid
 flowchart TD
+    subgraph ParentSession ["Sesión Padre Pi (Productor / Orquestador)"]
+        Producer["producer<br/>(Único delegador: subagent_run)"]
+    end
+
     subgraph Directors ["Tier 1: Directores (Visión y Estrategia)"]
-        Producer["producer<br/>(Coordinador & Sprints)"]
         CD["creative-director<br/>(Game Vision & Tone)"]
         TD["technical-director<br/>(Arquitectura & Budgets)"]
     end
@@ -46,11 +49,14 @@ flowchart TD
         Spec["bevy-specialist / godot-specialist / phaser-specialist<br/>raylib-specialist / unity-specialist / unreal-specialist"]
     end
 
+    subgraph IndependentAudit ["Auditoría Independiente (Read-Only, Siempre Instalada)"]
+        QA["qa-verifier<br/>(read, find, grep, bash)"]
+    end
+
     Producer --> CD & TD
-    TD --> GP
-    CD --> GD & AD & AudioD
-    GP --> Spec
-    QALead --> Producer
+    Producer --> GD & GP & AD & AudioD & QALead
+    Producer --> Spec
+    Producer --> QA
 ```
 
 ---

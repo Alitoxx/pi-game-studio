@@ -78,6 +78,51 @@ describe("Studio per-agent model configuration", () => {
 		expect(probe(makeProject({ "bevy-specialist": 42 })).resolved["bevy-specialist"]).toBeNull();
 	});
 
+	test("the tier panel renders the model the manifest gives the engine specialists", () => {
+		// AGENTS.md names models.default.json as the source of truth for the mapping,
+		// and the panel printed the lightweight model for Tier 3 while every specialist
+		// key in the manifest is the workhorse model. Rendering from the manifest is the
+		// only version of that line that can stay true.
+		const script = `
+			const fs = await import("node:fs");
+			const { formatModelsList } = await import("./extensions/hooks/studio-models.ts");
+
+			const manifest = JSON.parse(fs.readFileSync("models.default.json", "utf8"));
+			const card = formatModelsList(manifest);
+			const tierRow = (text) => text.split("\\n").find((line) => line.includes("Tier 3"));
+			const tier3 = tierRow(card);
+			if (!tier3) throw new Error("the panel must show a Tier 3 row");
+
+			const specialists = Object.keys(manifest).filter((key) => key.endsWith("-specialist"));
+			if (specialists.length !== 6) throw new Error("expected six specialist keys, got " + specialists.length);
+
+			const shared = manifest[specialists[0]];
+			if (!specialists.every((key) => manifest[key] === shared)) {
+				throw new Error("the specialists disagree in the manifest, so the row must say so");
+			}
+			if (!tier3.includes(shared)) {
+				throw new Error("Tier 3 must show " + shared + ", got: " + tier3);
+			}
+			if (tier3.includes(manifest.lightweight) && shared !== manifest.lightweight) {
+				throw new Error("Tier 3 must not show the lightweight model: " + tier3);
+			}
+
+			// A mixed configuration cannot be summarised by one model.
+			const mixed = formatModelsList({ ...manifest, "bevy-specialist": "openrouter/x/other:free" });
+			const mixedTier3 = tierRow(mixed);
+			if (!mixedTier3.includes("por agente")) {
+				throw new Error("a mixed specialist configuration must say so, got: " + mixedTier3);
+			}
+		`;
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: repoRoot,
+				encoding: "utf8",
+				timeout: 60000,
+			});
+		}).not.toThrow();
+	});
+
 	test("keeps the documented precedence: manifest, config, session, inherit", () => {
 		const result = probe(
 			makeProject({

@@ -176,7 +176,7 @@ NEXT STEPS:
 ## 7. Return Contract de Especialistas (Economía Extrema de Tokens)
 
 > **Inspirado en el Return Contract de Gentle Shell / Gentle AI**:
-> Cuando un especialista (Tier 2 o 3) es delegado mediante `subagent` o ejecuta una tarea puntual de implementación, **tiene estrictamente prohibido emitir prosa conversacional innecesaria o saludos**.
+> Cuando un especialista (Tier 2 o 3) es delegado mediante `subagent_run` o ejecuta una tarea puntual de implementación, **tiene estrictamente prohibido emitir prosa conversacional innecesaria o saludos**.
 
 Debe retornar su resultado compactado bajo el siguiente esquema estándar:
 

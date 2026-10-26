@@ -155,9 +155,12 @@ if (version === "dev") {
 		}
 		lines.push("");
 
-		const titleRaw = `PI GAME STUDIO · v${version} · 8+1 agents / 6 ODD skills`;
+		// Derived, never literal: the roster grew to 8 core + 1 engine + 1 verifier and
+		// a hardcoded "8+1" kept claiming the old shape on the first screen.
+		const rosterLabel = `${setup.expectedAgents} agents / 6 ODD skills`;
+		const titleRaw = `PI GAME STUDIO · v${version} · ${rosterLabel}`;
 		const titlePad = Math.max(0, Math.floor((width - titleRaw.length) / 2));
-		lines.push(" ".repeat(titlePad) + `${r.accent(BOLD + "PI GAME STUDIO")}${RESET} ${r.muted("·")} ${r.text("v" + version)}${RESET} ${r.muted("· 8+1 agents / 6 ODD skills")}${RESET}`);
+		lines.push(" ".repeat(titlePad) + `${r.accent(BOLD + "PI GAME STUDIO")}${RESET} ${r.muted("·")} ${r.text("v" + version)}${RESET} ${r.muted("· " + rosterLabel)}${RESET}`);
 		lines.push("");
 
 		const lW = 10;
@@ -170,15 +173,16 @@ if (version === "dev") {
 		addNarrow("GIT:", `On branch ${gitBranch}`);
 		addNarrow("PATH:", shortPath);
 		addNarrow("ENGINE:", engineInfo);
-		addNarrow("AGENTS:", `${setup.agentsInstalled} activos (8 Core + 1 Motor)`);
+		addNarrow("AGENTS:", `${setup.agentsInstalled} de ${setup.expectedAgents} activos`);
 		addNarrow("STAGE:", stage);
 		addNarrow("STORAGE:", engramStatus);
 		lines.push(`${padStr}${r.warn(fit("TIPS:", lW))}${RESET} ${r.muted("/concept · /spec · /code · /studio · /studio:setup")}${RESET}`);
 	} else {
 		// Clean centered compact table
-		const titleRaw = `PI GAME STUDIO · v${version} · 8+1 agents / 6 ODD skills`;
+		const rosterLabel = `${setup.expectedAgents} agents / 6 ODD skills`;
+		const titleRaw = `PI GAME STUDIO · v${version} · ${rosterLabel}`;
 		const titlePad = Math.max(0, Math.floor((width - titleRaw.length) / 2));
-		lines.push(" ".repeat(titlePad) + `${r.accent(BOLD + "PI GAME STUDIO")}${RESET} ${r.muted("·")} ${r.text("v" + version)}${RESET} ${r.muted("· 8+1 agents / 6 ODD skills")}${RESET}`);
+		lines.push(" ".repeat(titlePad) + `${r.accent(BOLD + "PI GAME STUDIO")}${RESET} ${r.muted("·")} ${r.text("v" + version)}${RESET} ${r.muted("· " + rosterLabel)}${RESET}`);
 		lines.push("");
 
 		const lW = 10;

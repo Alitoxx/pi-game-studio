@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { auditEnginePrerequisites, formatAuditReport } from "./studio-doctor.ts";
 import { findStudioRoot } from "./studio-root.ts";
 import { writeFileAtomicSync } from "./studio-fs.ts";
+import { recordFailure } from "./studio-diagnostics.ts";
 
 export async function handleStudioSettings(
 	args: string,
@@ -144,7 +145,9 @@ function setEngine(cwd: string, engineName: string): void {
 			let prefs = readFileSync(prefsPath, "utf8");
 			prefs = prefs.replace(/Engine:\s*[^\n]+/i, `Engine: ${engineName}`);
 			writeFileAtomicSync(prefsPath, prefs, "utf8");
-		} catch {}
+		} catch (error) {
+			recordFailure("settings.technicalPreferences", error);
+		}
 	}
 }
 

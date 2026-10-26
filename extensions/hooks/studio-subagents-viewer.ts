@@ -261,12 +261,30 @@ export function openTaskInEditor(tui: any, task: TaskRecord): boolean {
  * Dedicated 100% to displaying real-time tool calls, bash outputs, thinking stream,
  * test results, code changes and errors with interactive scrolling.
  */
+/**
+ * Pruning can empty the task map, and every renderer here once assumed at least
+ * one record existed: a stale viewer snapshot would throw instead of drawing.
+ */
+function renderNoTaskState(width: number): string[] {
+	const cardWidth = Math.max(48, width);
+	const innerWidth = cardWidth - 4;
+	return [
+		panelTop(cardWidth - 2, `${BLUE}INSPECTOR DE ESPECIALISTA${RESET}`, "rounded", BORDER),
+		panelRow(`  ${DIM}No hay subagentes en la sesión actual.${RESET}`, innerWidth + 2, BORDER),
+		panelBottom(cardWidth - 2, "rounded", BORDER),
+	];
+}
+
 export function renderSubagentLiveConsoleView(
 	targetTask: TaskRecord,
 	width: number = 80,
 	height?: number,
 	scrollOffset: number = 0,
 ): string[] {
+	if (!targetTask) return renderNoTaskState(width);
+
+	if (!targetTask) return renderNoTaskState(width);
+
 	const cardWidth = Math.max(48, width);
 	const innerWidth = cardWidth - 4;
 	const lines: string[] = [];
@@ -488,6 +506,7 @@ export function renderSubagentSplitView(
 	const rightWidth = totalWidth - leftWidth - 1;
 
 	const targetTask = tasks[selectedIndex] || tasks[0];
+	if (!targetTask) return renderNoTaskState(width);
 
 	// Target body height to fill 100% terminal screen
 	const requestedHeight = height ? Math.max(16, height) : undefined;

@@ -120,6 +120,31 @@ describe("Studio atomic writes", () => {
 		}
 	});
 
+	test("a short write never publishes a truncated file", () => {
+		// The kernel may accept fewer bytes than writeSync was given. Retrying is the
+		// whole difference between "the file lands whole or not at all" and silently
+		// publishing a prefix of it — reproduced here with a 2 KiB file-size rlimit
+		// against an 8 KiB payload.
+		const dir = makeDir();
+		const file = path.join(dir, "project.yaml");
+		fs.writeFileSync(file, 'engine: "bevy"\n', "utf8");
+
+		const output = execFileSync(
+			"bash",
+			[
+				"-c",
+				`ulimit -f 4; exec "${process.execPath}" --experimental-strip-types "${probePath}" big "${file}" 8192`,
+			],
+			{ cwd: repoRoot, encoding: "utf8", timeout: 60000 },
+		);
+		const result = JSON.parse(output);
+
+		// The kernel accepted only part of the payload, so the write must report the
+		// failure instead of publishing the prefix it managed to write.
+		expect(result.error).toBe("EFBIG");
+		expect(fs.readFileSync(file, "utf8")).toBe('engine: "bevy"\n');
+	});
+
 	test("a failed settings write is recorded instead of swallowed", () => {
 		const setupSource = fs.readFileSync(
 			path.join(repoRoot, "extensions", "hooks", "studio-setup.ts"),

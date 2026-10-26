@@ -44,6 +44,17 @@ if (mode === "write") {
 	const bytes = Buffer.from([0x00, 0xff, 0x10, 0x7f]);
 	mod.writeFileAtomicSync(file, bytes);
 	out({ bytes: Array.from(readFileSync(file)), entries: readdirSync(dirname(file)).sort() });
+} else if (mode === "big") {
+	// A file-size rlimit makes one write return a short count instead of throwing,
+	// which is exactly how a "successful" atomic write can publish a prefix.
+	const [file, bytes] = rest;
+	let error = null;
+	try {
+		mod.writeFileAtomicSync(file, "z".repeat(Number(bytes)), "utf8");
+	} catch (e) {
+		error = e?.code || e?.message || String(e);
+	}
+	out({ error, length: readFileSync(file, "utf8").length, head: readFileSync(file, "utf8").slice(0, 4) });
 } else {
 	out({ error: `unknown mode: ${mode}` });
 	process.exit(2);

@@ -26,6 +26,14 @@ import { basename, dirname, join } from "node:path";
  *
  * Every module that owns config the studio re-reads goes through here; the
  * `studio-atomic-writes` suite fails if one of them calls `writeFileSync`.
+ *
+ * Two semantics follow from the rename, both accepted on purpose:
+ * - A symlinked target is replaced by a regular file; `rename` does not follow the
+ *   link (a hard link is severed the same way). These paths are project-owned
+ *   state, not dotfile aliases, so the guarantee outranks link preservation.
+ * - A temp file left by an uncatchable kill (SIGKILL, power loss) is never swept.
+ *   It is hidden and ends in `.tmp`, and every reader here opens an exact
+ *   filename, so it is untracked noise at worst — never a misread config.
  */
 
 let tempCounter = 0;
@@ -64,7 +72,14 @@ export function writeFileAtomicSync(
 	try {
 		fd = openSync(temp, "wx", mode ?? 0o644);
 		const payload = typeof data === "string" ? Buffer.from(data, encoding) : data;
-		writeSync(fd, payload);
+		// `writeSync` returns how many bytes the kernel accepted, which can be fewer
+		// than it was given (a file-size rlimit, an interrupted syscall). Writing once
+		// and trusting it publishes a prefix with no error at all, so the loop is the
+		// guarantee; the count, not the call, is the proof.
+		let written = 0;
+		while (written < payload.length) {
+			written += writeSync(fd, payload, written, payload.length - written);
+		}
 		// Durability before visibility: the rename must not be observable while the
 		// bytes are still only in the page cache.
 		fsyncSync(fd);

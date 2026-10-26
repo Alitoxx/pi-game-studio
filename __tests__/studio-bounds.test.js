@@ -112,8 +112,7 @@ describe("Studio bounded state", () => {
 			if (!stalled.getTask(live.id)) throw new Error("the running task must still be readable");
 
 			stalled.cancelAll();
-			capped.clearFinishedTasks();
-			if (capped.listTasks().length !== 0) throw new Error("clearFinishedTasks must leave nothing finished behind");
+			if (capped.listTasks().length !== 0) throw new Error("every finished task aged out, so the map must be empty");
 			fs.rmSync(tmp, { recursive: true, force: true });
 			process.exit(0);
 		`);
@@ -121,7 +120,7 @@ describe("Studio bounded state", () => {
 
 	test("records are capped while the report totals stay exact", () => {
 		runScript(`
-			const { recordTokenUsage, getBudgetReport, resetBudget, getRetainedRecordCount, MAX_SESSION_RECORDS } =
+			const { recordTokenUsage, getBudgetReport, resetBudget, MAX_SESSION_RECORDS } =
 				await import("./extensions/hooks/studio-budget.ts");
 
 			resetBudget();
@@ -131,7 +130,7 @@ describe("Studio bounded state", () => {
 				recordTokenUsage("bevy-specialist", "openrouter/openai/gpt-oss-120b:free", 100, 10, 0);
 			}
 
-			const retained = getRetainedRecordCount();
+			const retained = getBudgetReport().retainedRecords;
 			if (retained > MAX_SESSION_RECORDS) {
 				throw new Error("retained records must stay capped at " + MAX_SESSION_RECORDS + ", got " + retained);
 			}
@@ -157,7 +156,7 @@ describe("Studio bounded state", () => {
 			}
 
 			resetBudget();
-			if (getRetainedRecordCount() !== 0) throw new Error("reset must clear the retained records");
+			if (getBudgetReport().retainedRecords !== 0) throw new Error("reset must clear the retained records");
 			if (getBudgetReport().totalTokens !== 0) throw new Error("reset must clear the archived totals too");
 		`);
 	});

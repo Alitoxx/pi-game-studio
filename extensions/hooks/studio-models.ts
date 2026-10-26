@@ -4,6 +4,7 @@ import { existsSync, readFileSync, mkdirSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { promptModelForRole } from "./provider-resolver.ts";
 import { writeFileAtomicSync, writeJsonAtomicSync } from "./studio-fs.ts";
+import { recordFailure } from "./studio-diagnostics.ts";
 
 function resolvePackageRoot(): string {
 	try {
@@ -455,7 +456,9 @@ function updateAgentsThinking(
 					count++;
 				}
 			}
-		} catch {}
+		} catch (error) {
+			recordFailure("models.thinkingFile", error);
+		}
 	}
 	return count;
 }

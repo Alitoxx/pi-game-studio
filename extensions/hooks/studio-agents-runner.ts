@@ -283,17 +283,6 @@ export class StudioAgentsRunner {
 		return pruned;
 	}
 
-	/** Drops every finished record now, leaving the live ones untouched. */
-	clearFinishedTasks(): number {
-		let cleared = 0;
-		for (const [id, task] of this.tasks) {
-			if (task.status === "running" || task.status === "queued") continue;
-			this.tasks.delete(id);
-			cleared++;
-		}
-		return cleared;
-	}
-
 	/**
 	 * Delivers a steering message to a running child. Pi queues it and applies it
 	 * after the current tool calls, before the next model call — the alternative is

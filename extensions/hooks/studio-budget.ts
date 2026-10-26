@@ -54,6 +54,8 @@ export interface BudgetReport {
 	byAgent: Record<string, AgentSummary>;
 	byModel: Record<string, { input: number; output: number; cache: number; total: number; costUsd: number }>;
 	recordCount: number;
+	/** Raw records still held in memory; the rest were folded into the totals above. */
+	retainedRecords: number;
 }
 
 /**
@@ -159,10 +161,6 @@ const sessionRecords: TokenUsageRecord[] = [];
 let archivedTotals = emptyRollup();
 let totalRecordCount = 0;
 
-/** How many raw records are held for inspection; the report itself is exact. */
-export function getRetainedRecordCount(): number {
-	return sessionRecords.length;
-}
 
 /**
  * Categorizes an agent identifier into its studio discipline.
@@ -386,6 +384,7 @@ export function getBudgetReport(): BudgetReport {
 		byAgent: agentMap,
 		byModel: modelMap,
 		recordCount: totalRecordCount,
+		retainedRecords: sessionRecords.length,
 	};
 }
 
@@ -424,7 +423,7 @@ export function renderBudgetCard(report: BudgetReport, width: number = 74): stri
 	// Cost row
 	const costStr = `${GREEN}$${report.totalCostUsd.toFixed(4)} USD${RESET}`;
 	lines.push(panelRow(`  ${GRAY}Costo Estimado:${RESET} ${costStr} ${GRAY}(basado en tiers de modelos)${RESET}`, innerWidth + 2, BORDER));
-	lines.push(panelRow(`  ${GRAY}Eventos registrados:${RESET} ${WHITE}${report.recordCount}${RESET}`, innerWidth + 2, BORDER));
+	lines.push(panelRow(`  ${GRAY}Eventos registrados:${RESET} ${WHITE}${report.recordCount}${RESET} ${GRAY}(${report.retainedRecords} en memoria)${RESET}`, innerWidth + 2, BORDER));
 	lines.push(panelRow("", innerWidth + 2, BORDER));
 
 	// Discipline Breakdown

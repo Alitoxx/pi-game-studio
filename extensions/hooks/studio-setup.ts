@@ -47,6 +47,8 @@ export interface SetupStatus {
 	hasProjectYaml: boolean;
 	currentEngine: string;
 	isConfigured: boolean;
+	/** Expected roles whose agent file is not present under .pi/agents/. */
+	missingAgents: string[];
 }
 
 export interface StudioInstallOptions {
@@ -187,8 +189,20 @@ export function inspectSetup(cwd: string): SetupStatus {
 	const expectedEngineAgents = filterAgentsForEngine(currentEngine);
 	const expectedAgents = expectedEngineAgents.length > 0 ? expectedEngineAgents.length : 9;
 
-	// Configured if project.yaml exists (package-level agents available) OR local agents are installed
-	const isConfigured = hasProjectYaml || (agentsInstalled >= (expectedAgents - 1) && hasGameStudioDir);
+	// Which expected roles never landed. qa-verifier is the release gate's only
+	// auditor, so its absence has to be visible, not averaged away.
+	const missingAgents = expectedEngineAgents.filter(
+		(name) => !existsSync(join(cwd, ".pi", "agents", `${name}.md`)),
+	);
+
+	// Configured means ready, not started. A partial local roster is unfinished
+	// setup even when project.yaml already exists — the old `expectedAgents - 1`
+	// tolerance reported a project missing its verifier as ready. Only a project
+	// with no local agents at all falls back to the package-level mode.
+	const hasLocalAgents = agentsInstalled > 0;
+	const isConfigured = hasLocalAgents
+		? agentsInstalled >= expectedAgents && hasGameStudioDir
+		: hasProjectYaml;
 
 	return {
 		agentsInstalled,
@@ -200,6 +214,7 @@ export function inspectSetup(cwd: string): SetupStatus {
 		hasProjectYaml,
 		currentEngine,
 		isConfigured,
+		missingAgents,
 	};
 }
 

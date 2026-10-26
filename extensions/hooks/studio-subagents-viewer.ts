@@ -183,6 +183,17 @@ export function withOverlayRepaint<T>(tui: any, done: (result?: T) => void): (re
 }
 
 /**
+ * The runner keeps only the tail of a task's log (MAX_TASK_LOG_LINES). A pane
+ * that renders that tail as if it were the whole run lies by omission, so the
+ * drop count the ring buffer recorded becomes the first visible line.
+ */
+function withDroppedMarker(task: TaskRecord, logs: string[]): string[] {
+	const dropped = task.logsDropped ?? 0;
+	if (dropped <= 0) return logs;
+	return [`${DIM}... ${dropped} línea(s) anteriores descartadas por el tope del búfer${RESET}`, ...logs];
+}
+
+/**
  * Opens task details and live event transcript in external editor or pager ($VISUAL / $EDITOR),
  * suspending TUI cleanly like Gentle Shell.
  */
@@ -212,7 +223,9 @@ export function openTaskInEditor(tui: any, task: TaskRecord): boolean {
 		"",
 		"---",
 		"## Eventos y Llamadas de Herramientas (En Vivo)",
-		...(task.logs.length > 0 ? task.logs.map((l) => `- ${l}`) : ["*(sin eventos registrados)*"]),
+		...(task.logs.length > 0
+			? withDroppedMarker(task, task.logs).map((l) => `- ${l}`)
+			: ["*(sin eventos registrados)*"]),
 		"",
 		"---",
 		"## Resultado / Entrega Final",
@@ -288,9 +301,12 @@ export function renderSubagentLiveConsoleView(
 	const requestedHeight = height ? Math.max(16, height) : 24;
 	const availableRows = Math.max(4, requestedHeight - 6);
 
-	const allLogs = targetTask.logs && targetTask.logs.length > 0
-		? targetTask.logs
-		: [`${DIM}(esperando primeros eventos de ejecución en tiempo real...)${RESET}`];
+	const allLogs = withDroppedMarker(
+		targetTask,
+		targetTask.logs && targetTask.logs.length > 0
+			? targetTask.logs
+			: [`${DIM}(esperando primeros eventos de ejecución en tiempo real...)${RESET}`],
+	);
 
 	const totalLogs = allLogs.length;
 	const maxOffset = Math.max(0, totalLogs - availableRows);
@@ -414,9 +430,12 @@ export function renderSubagentModalView(
 	const requestedHeight = options?.height ? Math.max(16, options.height) : undefined;
 	const availableLogRows = requestedHeight ? Math.max(3, requestedHeight - fixedCount) : 12;
 
-	const allLogs = targetTask.logs && targetTask.logs.length > 0
-		? targetTask.logs
-		: [`  ${DIM}(esperando primeros eventos de ejecución...)${RESET}`];
+	const allLogs = withDroppedMarker(
+		targetTask,
+		targetTask.logs && targetTask.logs.length > 0
+			? targetTask.logs
+			: [`  ${DIM}(esperando primeros eventos de ejecución...)${RESET}`],
+	);
 
 	const scrollOffset = options?.scrollOffset ?? 0;
 	const totalLogs = allLogs.length;
@@ -549,9 +568,12 @@ export function renderSubagentSplitView(
 		footerRightLines.push(`  ${YELLOW}◐ Ejecución activa en segundo plano...${RESET}`);
 	}
 
-	const allLogs = targetTask.logs && targetTask.logs.length > 0
-		? targetTask.logs
-		: [`  ${DIM}(esperando primeros eventos de ejecución...)${RESET}`];
+	const allLogs = withDroppedMarker(
+		targetTask,
+		targetTask.logs && targetTask.logs.length > 0
+			? targetTask.logs
+			: [`  ${DIM}(esperando primeros eventos de ejecución...)${RESET}`],
+	);
 
 	// The log pane gets whatever the header and footer leave of the body, so the
 	// budget must be derived here instead of borrowed from the stacked renderer.

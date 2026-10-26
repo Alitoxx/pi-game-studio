@@ -26,6 +26,16 @@ describe("Cross-References Validation", () => {
 				// production/roadmap.md is created at runtime, ignore it
 				if (ref === "production/roadmap.md") continue;
 
+				// A `structural:` line declares an artifact the phase must PRODUCE and
+				// then verify; it is not a link to something that already ships.
+				const declaringLine =
+					content
+						.split("\n")
+						.find((candidate) => candidate.includes(ref)) || "";
+				if (/structural:/.test(declaringLine.slice(0, declaringLine.indexOf(ref)))) {
+					continue;
+				}
+
 				const fullPath = path.join(__dirname, "..", ref);
 				if (!fs.existsSync(fullPath)) {
 					brokenRefs.push({ skill: d.name, ref });
@@ -33,17 +43,9 @@ describe("Cross-References Validation", () => {
 			}
 		}
 
-		if (brokenRefs.length > 0) {
-			console.warn(
-				"Broken references found (these might be generated at runtime):\n" +
-					brokenRefs.map((b) => `- ${b.skill}: ${b.ref}`).join("\n"),
-			);
-		}
-		
-		// The prompt says "Report any broken references".
-		// We log them above. We do not strictly fail the test because
-		// some files like docs/consistency-failures.md are dynamic ("if it exists").
-		expect(true).toBe(true);
+		// A skill that points at a file the repository does not ship is a broken
+		// promise to the agent reading it, so this fails instead of warning.
+		expect(brokenRefs).toEqual([]);
 	});
 
 	test("No references to .claude/ paths remain in any skill", () => {

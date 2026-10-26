@@ -1,31 +1,31 @@
 # ODD Universal Protocol & Return Contracts
 
-Este archivo define los contratos y estándares compartidos para las **6 Skills ODD de Pi Game Studio**.
+This file defines the shared contracts and standards for the **6 ODD Skills of Pi Game Studio**.
 
 ## 1. Zero Bleed & Executive Delivery (Gentle Shell Neutral Protocol)
-- Queda terminantemente prohibido imprimir llamadas a herramientas crudas (`ask_user_question`, `subagent_run`), trazas internas de pipelines, o monólogos de razonamiento en el chat del usuario.
-- Toda interacción humana se realiza mediante modales interactivos en la terminal (`ctx.ui.select` / `ask_user_question`).
-- **Modo Neutro Profesional:** Toda salida conversacional, explicación o síntesis de las skills opera bajo el protocolo neutro de Gentle Shell: tuteo estándar (`tú tienes`, `haz`, `revisa`), sin voseo ni regionalismos, cero adulación inicial (*"Buena pregunta"*), cero paternalismo (*"en lenguaje llano"*) y cero emojis decorativos.
+- Printing raw tool calls (`ask_user_question`, `subagent_run`), internal pipeline traces, or reasoning monologues into the user's chat is strictly forbidden.
+- All human interaction happens through interactive terminal modals (`ctx.ui.select` / `ask_user_question`).
+- **Professional Neutral Mode:** All conversational output, explanations and summaries from the skills operate under the Gentle Shell neutral protocol: standard informal address (`tú tienes`, `haz`, `revisa` — output examples kept in the project's configured language), no voseo or regionalisms, zero opening flattery (*"Buena pregunta"*), zero condescension (*"en lenguaje llano"*), and zero decorative emojis.
 
 ## 2. Live Specs Single Source of Truth
-- Todo diseño de sistema o mecánica reside exclusivamente en `design/gdd/<feature>.md`.
-- El seguimiento de producción y sprints vive exclusivamente en `production/roadmap.md`.
-- **Higiene de Tareas y Cero Checkbox Bloat:** En `production/roadmap.md` cada sprint lleva **1 solo checkbox principal** para la tarea macro. Las notas de verificación (`cargo check limpio`, `tests verdes`, constraints) van como viñetas simples (`-`), nunca con `[ ]` o `[x]`. Prohibido duplicar colas de tareas futuras que ya existen en el GDD.
-- Cero archivos de especificación muertos o burocracia de documentos intermedios.
+- All system or mechanic design lives exclusively in `design/gdd/<feature>.md`.
+- Production and sprint tracking lives exclusively in `production/roadmap.md`.
+- **Task Hygiene & Zero Checkbox Bloat:** In `production/roadmap.md` each sprint carries **a single main checkbox** for the macro task. Verification notes (`cargo check limpio`, `tests verdes` — example note text in the project's configured language, constraints) go as plain bullets (`-`), never as `[ ]` or `[x]`. Duplicating future task queues that already exist in the GDD is forbidden.
+- Zero dead specification files or intermediate-document bureaucracy.
 
-## 3. Atomic Scoping & Execution Budgets (~400 Líneas)
-- Toda implementación delegada a un subagente se realiza en paquetes atómicos de **~400 líneas** (código + tests/datos).
-- Prohibido delegar monolitos de 800+ líneas en una sola pasada. Si una mecánica es más grande, se implementa el núcleo funcional primero, se reporta `status: partial` y se continúa en el siguiente ciclo.
-- **Cero Diálogos Intermedios en Ejecución**: Las tareas delegadas ya están autorizadas por el usuario/productor. El especialista no debe formular preguntas conversacionales ni pedir confirmaciones intermedias; ejecuta directamente sobre disco.
+## 3. Atomic Scoping & Execution Budgets (~400 Lines)
+- All implementation delegated to a subagent is done in atomic packages of **~400 lines** (code + tests/data).
+- Delegating 800+ line monoliths in a single pass is forbidden. If a mechanic is bigger, implement the functional core first, report `status: partial`, and continue in the next cycle.
+- **Zero Intermediate Dialogues during Execution**: Delegated tasks are already authorized by the user/producer. The specialist must not ask conversational questions or request intermediate confirmations; it executes directly on disk.
 
-## 4. Scoped Engine Validation (Protección contra Monolitos de Build)
-- En motores compilados o web (Rust/Bevy, C++/Raylib, C++/Unreal, TypeScript/Phaser, Godot):
-  - Tareas de lógica pura o crates desacoplados (e.g. `crates/radio-core`) **deben** validarse exclusivamente con comandos acotados (`cargo test -p radio-core`, `cargo check -p radio-core`).
-  - **Prohibido** ejecutar builds globales del workspace o suites completas que fuercen recompilaciones del motor (como Bevy en modo test) dentro de un subagente con timeout acotado.
-  - La compilación del juego completo o smoke test visual se reserva para el paso de integración del orquestador o la skill `/test`.
+## 4. Scoped Engine Validation (Protection against Build Monoliths)
+- In compiled or web engines (Rust/Bevy, C++/Raylib, C++/Unreal, TypeScript/Phaser, Godot):
+  - Pure-logic tasks or decoupled crates (e.g. `crates/radio-core`) **must** be validated exclusively with scoped commands (`cargo test -p radio-core`, `cargo check -p radio-core`).
+  - Running global workspace builds or full suites that force engine recompilation (such as Bevy in test mode) inside a subagent with a bounded timeout is **forbidden**.
+  - Building the complete game or visual smoke testing is reserved for the orchestrator's integration step or the `/test` skill.
 
 ## 5. Compact YAML Return Contract
-Cuando una sub-tarea o skill delega la ejecución a un especialista de motor, este devuelve exclusivamente un bloque YAML compacto. La forma es única y es la que valida el runtime (`extensions/hooks/return-contract.ts`); el ejemplo de abajo es el contrato, y un test lo corre por el validador para que documento y parser no puedan separarse.
+When a sub-task or skill delegates execution to an engine specialist, the specialist returns exclusively a compact YAML block. The shape is unique and is the one the runtime validates (`extensions/hooks/return-contract.ts`); the example below is the contract, and a test runs it through the validator so the document and the parser cannot drift apart.
 
 ```yaml
 status: completed
@@ -41,21 +41,21 @@ risks:
 next_recommended_specialist: qa-lead
 ```
 
-`status` acepta `completed`, `partial`, `blocked` o `interaction_required`. Un `completed` exige `validation` no vacía: `files_changed` nombra archivos, no verificación, y no es evidencia por sí solo.
+`status` accepts `completed`, `partial`, `blocked` or `interaction_required`. A `completed` requires non-empty `validation`: `files_changed` names files, not verification, and is not evidence by itself.
 
-Cada entrada de `validation` tiene una de tres formas, y la familia admisible depende de si el agente declara `bash`:
+Each `validation` entry takes one of three shapes, and the admissible family depends on whether the agent declares `bash` (the shapes below are shown verbatim: the runtime matches the `structural:` and `exception:` prefixes literally):
 
-| Forma | Quién la reporta | Qué prueba |
+| Shape | Who reports it | What it proves |
 |---|---|---|
-| `<comando exacto>: <resultado observado>` | agentes con `bash` | que algo se ejecutó, y qué devolvió |
-| `structural: <propiedad leída>: <resultado>` | agentes sin `bash` | que la propiedad documental existe y se leyó |
-| `exception: <razón>` | agentes sin `bash` | que no hay comando ejecutable, y por qué |
+| `<comando exacto>: <resultado observado>` | agents with `bash` | that something ran, and what it returned |
+| `structural: <propiedad leída>: <resultado>` | agents without `bash` | that the documented property exists and was read |
+| `exception: <razón>` | agents without `bash` | that there is no runnable command, and why |
 
-Un agente con `bash` que no pudo verificar devuelve `status: partial`, nunca una forma pasiva. Un agente sin `bash` no reporta resultados de comandos: no los puede observar. El validador (`extensions/hooks/return-contract.ts`) aplica la regla con las herramientas que el runner le pasa, así que la familia no se elige a gusto.
+A `bash`-capable agent that could not verify returns `status: partial`, never a passive shape. An agent without `bash` does not report command results: it cannot observe them. The validator (`extensions/hooks/return-contract.ts`) applies the rule with the tools the runner passes it, so the family is not chosen at will.
 
-El validador comprueba forma, nunca verdad: un resultado inventado tiene la forma correcta. Por eso quien recibe la entrega re-ejecuta un comando reportado antes de darla por cerrada.
+The validator checks shape, never truth: a fabricated result has the correct shape. That is why whoever receives the delivery re-runs a reported command before considering it closed.
 
-Un especialista sin `bash` no puede ejecutar nada, y su entrega no vale menos por eso: cambia la forma de la evidencia, no la exigencia. Este es el mismo contrato en modo pasivo — el agente leyó el documento y nombra la propiedad que comprobó:
+A specialist without `bash` cannot run anything, and its delivery is worth no less for that: the evidence form changes, not the bar. This is the same contract in passive mode — the agent read the document and names the property it checked:
 
 ```yaml
 status: completed
@@ -70,9 +70,9 @@ risks:
   - "ninguno"
 ```
 
-Si el trabajo no tiene ninguna propiedad comprobable, la entrega es `partial` con la razón, no un `completed` con una excusa.
+If the work has no checkable property at all, the delivery is `partial` with the reason, not a `completed` with an excuse.
 
-Un especialista despachado **no tiene UI**: no puede preguntar. Si la decisión está por encima de su rol, se detiene y la entrega como payload, que el padre releva como elección bloqueante:
+A dispatched specialist **has no UI**: it cannot ask. If the decision is above its role, it stops and delivers the payload, which the parent relays as a blocking choice:
 
 ```yaml
 status: interaction_required
@@ -84,24 +84,22 @@ options:
 blocking: true
 ```
 
-`question` es obligatorio en una escalada; `options` y `blocking` son recomendados. Un `interaction_required` sin pregunta se considera entrega inválida: no es accionable y el hijo se colgaría igual.
+`question` is mandatory in an escalation; `options` and `blocking` are recommended. An `interaction_required` without a question counts as an invalid delivery: it is not actionable, and the child would hang anyway.
 
 ## 6. FOSS CLI Media & Distribution Toolchain
-Los agentes y especialistas con herramienta `bash` ejecutan tareas de transformación de assets y distribución usando los binarios auditados del estudio (`/studio:tools`):
-- **Sprites & Texturas 2D**:
-  - `magick`: Generación de atlas/spritesheets (`magick montage *.png -tile 4x4 -geometry +0+0 atlas.png`) y recortes de transparencia.
-  - `free-tex-packer-cli`: Empaquetado algorítmico de spritesheets (MaxRects), recorte de transparencias y exportación de descriptores JSON/Godot/Raylib.
-  - `oxipng`: Optimización lossless inmediata tras guardar o regenerar sprites (`oxipng -o 2 -strip safe assets/**/*.png`).
+Agents and specialists with the `bash` tool run asset transformation and distribution tasks using the studio's audited binaries (`/studio:tools`):
+- **2D Sprites & Textures**:
+  - `magick`: Atlas/spritesheet generation (`magick montage *.png -tile 4x4 -geometry +0+0 atlas.png`) and transparency trims.
+  - `free-tex-packer-cli`: Algorithmic spritesheet packing (MaxRects), transparency trimming, and JSON/Godot/Raylib descriptor export.
+  - `oxipng`: Immediate lossless optimization after saving or regenerating sprites (`oxipng -o 2 -strip safe assets/**/*.png`).
 - **Audio & SFX**:
-  - `ffmpeg`: Normalización y conversión de masters WAV a formatos comprimidos de runtime (`ffmpeg -i input.wav -c:a libvorbis -q:a 4 output.ogg`).
-- **Modelos 3D**:
-  - `assimp`: Conversión ultra rápida a formato estándar GLTF/GLB sin sobrecarga (`assimp export model.obj model.glb`).
-  - `gltfpack`: Optimización de mallas glTF/GLB para GPU, simplificación con LODs y compresión meshopt (`gltfpack -i model.glb -o model_opt.glb -cc`).
-- **WebAssembly & Distribución**:
-  - `wasm-opt`: Optimización de bytecode WASM en builds web (`wasm-opt -O3 input.wasm -o output.wasm`).
-  - `butler`: Despliegue delta a itch.io (`butler push dist/ user/game:web`).
-  - `gh`: Releases y versionado de binarios (`gh release create <tag> ./dist/*`).
+  - `ffmpeg`: Normalization and conversion of WAV masters into compressed runtime formats (`ffmpeg -i input.wav -c:a libvorbis -q:a 4 output.ogg`).
+- **3D Models**:
+  - `assimp`: Ultra-fast conversion to the standard GLTF/GLB format without overhead (`assimp export model.obj model.glb`).
+  - `gltfpack`: glTF/GLB mesh optimization for GPU, LOD simplification, and meshopt compression (`gltfpack -i model.glb -o model_opt.glb -cc`).
+- **WebAssembly & Distribution**:
+  - `wasm-opt`: WASM bytecode optimization in web builds (`wasm-opt -O3 input.wasm -o output.wasm`).
+  - `butler`: Delta deployment to itch.io (`butler push dist/ user/game:web`).
+  - `gh`: Releases and binary versioning (`gh release create <tag> ./dist/*`).
 - **Live-Reload & Watcher**:
-  - `watchexec`: Monitoreo y pruebas continuas ante cambios (`watchexec -e rs,gd,cpp,ts,fs -- <test-command>`).
-
-
+  - `watchexec`: Continuous monitoring and testing on change (`watchexec -e rs,gd,cpp,ts,fs -- <test-command>`).

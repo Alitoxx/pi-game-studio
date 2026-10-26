@@ -577,10 +577,13 @@ describe("Every paper ODD phase closes on observed evidence", () => {
 	// prose, so saving the file was the only done-when.
 	const paperPhases = ["concept", "spec", "arch"];
 
+	// The property is "this phase has a closing gate", not "the heading says Cierre":
+	// the skill layer is an instruction for the model and is written in English, so
+	// the finder accepts either name and still fails when the section is absent.
 	const closingGateOf = (content) => {
 		const lines = content.split("\n");
 		const start = lines.findIndex((line) =>
-			/^#{2,3} (?:\d+\.\s*)?Cierre/i.test(line),
+			/^#{2,3} (?:\d+\.\s*)?(?:Cierre|Verifiable Closure|Closing Gate)/i.test(line),
 		);
 		if (start === -1) return null;
 		// Everything under the closing heading, up to the next heading of any level.

@@ -1,6 +1,6 @@
 ---
 name: test
-description: "[ODD Fase 5] Validate & Feel. Role Owner: qa-lead (Tier 2 Lead). Verificación de calidad, smoke checks de arranque, pruebas de regresión, detección de memory leaks y triaje de bugs."
+description: "[ODD Phase 5] Validate & Feel. Role Owner: qa-lead (Tier 2 Lead). Quality verification, startup smoke checks, regression testing, memory leak detection, and bug triage."
 model: inherit
 inheritProjectContext: true
 tools:
@@ -13,33 +13,33 @@ tools:
   - ask_user_question
 ---
 
-## Fase 5 ODD: Quality, Smoke Checks & Feel
+## ODD Phase 5: Quality, Smoke Checks & Feel
 
 - **Role Owner**: `qa-lead` (Tier 2 Lead)
-- **Contrato ODD Compartido**: Consulta [`skills/_shared/odd-contract.md`](../_shared/odd-contract.md) para las reglas compartidas de tareas atómicas (~400 líneas), Live Specs en `design/gdd/`, límites de compilación (compiler bounds) y el formato del Return Contract en YAML.
+- **Shared ODD Contract**: See [`skills/_shared/odd-contract.md`](../_shared/odd-contract.md) for the shared rules on atomic tasks (~400 lines), Live Specs in `design/gdd/`, compiler bounds, and the YAML Return Contract format.
 
-Cuando se invoca `/test` (o `/test smoke`, `/test regression`, `/test bugs`):
+When `/test` is invoked (or `/test smoke`, `/test regression`, `/test bugs`):
 
-### 1. Smoke Checks y Arranque Rápido por Motor
-Ejecutar el juego en modo headless, timeout acotado o verificación rápida para validar arranque sin crashes ni panics:
+### 1. Smoke Checks & Fast Startup per Engine
+Run the game headless, with a bounded timeout, or as a quick verification to validate startup without crashes or panics:
 - **Godot**: `godot --headless`
 - **Unity**: `Unity.exe -batchmode`
 - **Unreal**: `UnrealEditor-Cmd.exe`
-- **Bevy**: `cargo check` (validación estática instantánea) o `cargo test -p <crate>` para lógica pura. Para smoke de runtime con ventana: `cargo run` sólo con el usuario presente o mediante flag de timeout/headless para no bloquear procesos automatizados.
-- **Raylib**: `./build/game` (o compilación previa con `cmake --build build`)
+- **Bevy**: `cargo check` (instant static validation) or `cargo test -p <crate>` for pure logic. For runtime smoke with a window: `cargo run` only with the user present, or via a timeout/headless flag so automated processes are not blocked.
+- **Raylib**: `./build/game` (or a prior build with `cmake --build build`)
 - **Phaser**: `npm test` / `vitest run` / `npx vite build`
-Comprobar que los sistemas esenciales (player loop, render básico, inputs) responden.
+Check that the essential systems (player loop, basic render, inputs) respond.
 
-### 2. Suites de Regresión y Pruebas Unitarias
-- Ejecutar la suite de pruebas automatizadas del motor (e.g. GUT para Godot, `cargo test` para Bevy, CTest para Raylib, `npm test` / `vitest run` para Phaser).
-- Confirmar que ningún cambio reciente rompió mecánicas previamente validadas.
+### 2. Regression Suites & Unit Tests
+- Run the engine's automated test suite (e.g. GUT for Godot, `cargo test` for Bevy, CTest for Raylib, `npm test` / `vitest run` for Phaser).
+- Confirm that no recent change broke previously validated mechanics.
 
-### 3. Evaluación de Game Feel, Rendimiento y Fugas de Memoria (Soak Test)
-- **Framerate Benchmark**: Verificar que el framerate se mantiene en el target (e.g. 60 FPS estables) bajo carga máxima de entidades y partículas.
-- **Soak Test de Memoria (Detección de Leaks)**: Ejecutar una sesión continua de al menos 60 segundos y monitorizar la memoria RAM (RSS) y VRAM. La retención de memoria debe ser plana; cualquier crecimiento monotónico sostenido (> 1 MB/min sin retorno del GC o allocator) se clasifica como fuga de memoria crítica.
-- **Budget Gate Estricto**: Si el consumo excede el presupuesto técnico fijado en `/arch` (e.g. > 350 MB RAM o caídas bajo 60 FPS), el test se marca como FALLIDO (`BLOCKED`) impidiendo avanzar hacia release hasta su optimización.
+### 3. Game Feel, Performance & Memory Leak Evaluation (Soak Test)
+- **Framerate Benchmark**: Verify the framerate holds at target (e.g. a stable 60 FPS) under maximum entity and particle load.
+- **Memory Soak Test (Leak Detection)**: Run a continuous session of at least 60 seconds and monitor RAM (RSS) and VRAM. Memory retention must be flat; any sustained monotonic growth (> 1 MB/min with no GC or allocator recovery) is classified as a critical memory leak.
+- **Strict Budget Gate**: If consumption exceeds the technical budget set in `/arch` (e.g. > 350 MB RAM or drops below 60 FPS), the test is marked FAILED (`BLOCKED`), preventing progress toward release until it is optimized.
 
-### 4. Triaje de Bugs y Registro
-Si se detecta un defecto o regresión de rendimiento:
-- Registrar en `production/qa/bugs.md` con severidad (P0 Crítico a P3 Menor), pasos de reproducción y comportamiento observado vs. esperado.
-- Notificar el estado al Producer para priorizar la corrección atómica inmediata.
+### 4. Bug Triage & Logging
+If a defect or a performance regression is detected:
+- Log it in `production/qa/bugs.md` with severity (P0 Critical to P3 Minor), reproduction steps, and observed vs. expected behavior.
+- Notify the Producer to prioritize the immediate atomic fix.

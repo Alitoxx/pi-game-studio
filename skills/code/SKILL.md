@@ -1,6 +1,6 @@
 ---
 name: code
-description: "[ODD Fase 4] Implement Atomics. Role Owner: gameplay-programmer (Tier 2 Lead) + Active Engine Specialist (Tier 3). Implementación pura de código en motor (src/) en paquetes atómicos de ~400 líneas guiadas por tests directos y compilación limpia."
+description: "[ODD Phase 4] Implement Atomics. Role Owner: gameplay-programmer (Tier 2 Lead) + Active Engine Specialist (Tier 3). Pure in-engine code implementation (src/) in atomic ~400-line packages guided by direct tests and clean compilation."
 model: inherit
 inheritProjectContext: true
 tools:
@@ -14,45 +14,45 @@ tools:
   - ask_user_question
 ---
 
-## Fase 4 ODD: Code & Mechanics Implementation
+## ODD Phase 4: Code & Mechanics Implementation
 
 - **Role Owner**: `gameplay-programmer` (Tier 2 Lead) + Active Engine Specialist (Tier 3)
-- **Contrato ODD Compartido**: Consulta [`skills/_shared/odd-contract.md`](../_shared/odd-contract.md) para las reglas compartidas de tareas atómicas (~400 líneas), Live Specs en `design/gdd/`, límites de compilación (compiler bounds) y el formato del Return Contract en YAML.
+- **Shared ODD Contract**: See [`skills/_shared/odd-contract.md`](../_shared/odd-contract.md) for the shared rules on atomic tasks (~400 lines), Live Specs in `design/gdd/`, compiler bounds, and the YAML Return Contract format.
 
-Cuando se invoca `/code <feature>` (o `/code review`):
+When `/code <feature>` is invoked (or `/code review`):
 
-### 1. Lectura de Tareas Pendientes
-- Abrir la Live Spec correspondiente en `design/gdd/<feature>.md`.
-- Identificar la siguiente tarea atómica pendiente (`[ ]`).
+### 1. Read the Pending Tasks
+- Open the corresponding Live Spec in `design/gdd/<feature>.md`.
+- Identify the next pending atomic task (`[ ]`).
 
-### 2. Implementación en Motor
-- Modificar o crear los archivos de código fuente en `src/`.
-- **Implementación de Shaders y Materiales**: Si la tarea involucra efectos visuales, iluminación, niebla o distorsión, crear los archivos de shader correspondientes en `assets/shaders/` (.wgsl, .gdshader, .fs) con sus bindings/uniforms limpios, en lugar de intentar emularlos con lógica pesada en CPU.
-- **Debug Overlay & Gizmos en Dev (`F3`)**: En la primera tarea de scaffold o subsistema (`TASK-01` o `02`), habilitar una capa de depuración activable con tecla `F3` o `~` que proyecte FPS reales, métricas de gameplay, estados de IA y gizmos de colisión/visión en pantalla.
-- **Mapeo de Acciones Desacoplado**: Usar siempre acciones virtuales (`ActionState` o `InputMap`) que soporten Teclado/Ratón y Gamepad de forma nativa sin `hardcoding` de teclas individuales en los controladores.
-- **Micro-retroalimentación de Game Feel**: Aplicar los valores de sacudida de cámara, hitstop y curvas de easing definidos en la Live Spec en lugar de saltos o movimientos secos.
-- **Transformación & Optimización de Assets por CLI**:
-  - Si la tarea introduce nuevos sprites o atlas 2D: utilizar `magick` para armar spritesheets y `oxipng` para comprimir PNGs sin pérdida.
-  - Si la tarea introduce efectos de audio: convertir a `.ogg` con `ffmpeg` y aplicar reverberación/ecualización con los filtros de audio de `ffmpeg` (`aecho`, `equalizer`).
-  - Si la tarea importa modelos 3D: convertir formatos propietarios o `.obj` a `.glb` optimizados con `assimp`.
-  - Durante desarrollo iterativo: utilizar `watchexec` para relanzar validaciones en caliente ante cambios de código.
-- Mantener la edición en paquetes pequeños (~400 líneas) para garantizar legibilidad, bajo consumo de tokens y verificación controlada.
-- Aplicar los estándares idiomáticos del motor activo (Rust/Bevy, GDScript/Godot, C++/Raylib, C#/Unity, C++/Unreal, TypeScript/Phaser).
+### 2. In-Engine Implementation
+- Modify or create the source files in `src/`.
+- **Shader & Material Implementation**: If the task involves visual effects, lighting, fog or distortion, create the corresponding shader files in `assets/shaders/` (.wgsl, .gdshader, .fs) with clean bindings/uniforms, instead of emulating them with heavy CPU-side logic.
+- **Debug Overlay & Gizmos in Dev (`F3`)**: In the first scaffold or subsystem task (`TASK-01` or `02`), enable a debug layer toggled with the `F3` or `~` key that projects real FPS, gameplay metrics, AI states and collision/vision gizmos on screen.
+- **Decoupled Action Mapping**: Always use virtual actions (`ActionState` or `InputMap`) that natively support Keyboard/Mouse and Gamepad without hardcoding individual keys into controllers.
+- **Game Feel Micro-feedback**: Apply the camera shake, hitstop and easing curve values defined in the Live Spec instead of dry jumps or movements.
+- **CLI Asset Transformation & Optimization**:
+  - If the task introduces new 2D sprites or atlases: use `magick` to assemble spritesheets and `oxipng` to compress PNGs losslessly.
+  - If the task introduces audio effects: convert to `.ogg` with `ffmpeg` and apply reverb/EQ with the `ffmpeg` audio filters (`aecho`, `equalizer`).
+  - If the task imports 3D models: convert proprietary or `.obj` formats into optimized `.glb` with `assimp`.
+  - During iterative development: use `watchexec` to re-run validations hot on code changes.
+- Keep edits in small packages (~400 lines) to guarantee readability, low token consumption and controlled verification.
+- Apply the active engine's idiomatic standards (Rust/Bevy, GDScript/Godot, C++/Raylib, C#/Unity, C++/Unreal, TypeScript/Phaser).
 
-### 3. Verificación de Compilación y Test por Motor
-Routing de validación y especialista según el motor activo (priorizar validación rápida y acotada):
+### 3. Per-Engine Build & Test Verification
+Validation and specialist routing per active engine (prioritize fast, scoped validation):
 - **Godot** (`godot-specialist`): `godot --headless --check-only`
-- **Unity** (`unity-specialist`): `Unity -batchmode -runTests` o análisis C# Roslyn
+- **Unity** (`unity-specialist`): `Unity -batchmode -runTests` or C# Roslyn analysis
 - **Unreal** (`unreal-specialist`): `Build.bat` / `UnrealEditor-Cmd`
-- **Bevy** (`bevy-specialist`): `cargo check` para el proyecto, o `cargo test -p <crate>` para crates desacoplados de lógica (e.g. `radio-core`). Evitar `cargo test` del root completo si recompila Bevy con perfiles pesados de debug.
+- **Bevy** (`bevy-specialist`): `cargo check` for the project, or `cargo test -p <crate>` for logic-decoupled crates (e.g. `radio-core`). Avoid the full root `cargo test` if it recompiles Bevy with heavy debug profiles.
 - **Raylib** (`raylib-specialist`): `cmake --build build && ./build/game`
-- **Phaser** (`phaser-specialist`): `npm test` o `npx vitest run` / `npx vite build`
-Asegurar que la compilación sea limpia (0 errores).
+- **Phaser** (`phaser-specialist`): `npm test` or `npx vitest run` / `npx vite build`
+Ensure the build is clean (0 errors).
 
-### 4. Cierre Automático de Tarea & Producer Handoff
-Tras recibir el Delivery Receipt del especialista con `status: completed`:
-- **Live Spec**: Abrir `design/gdd/<feature>.md` y marcar la tarea completada de `[ ]` (o `[/]`) a `[x] <tarea>` con su fecha y hash/resumen de validación.
-- **Roadmap & Estado**: Actualizar `production/roadmap.md` dentro del bloque `<!-- PRODUCER_STATE -->` actualizando:
+### 4. Automatic Task Closure & Producer Handoff
+After receiving the specialist's Delivery Receipt with `status: completed`:
+- **Live Spec**: Open `design/gdd/<feature>.md` and mark the completed task from `[ ]` (or `[/]`) to `[x] <tarea>` (task-line format; the placeholder stays as documented) with its date and validation hash/summary.
+- **Roadmap & State**: Update `production/roadmap.md` inside the `<!-- PRODUCER_STATE -->` block, updating (the field labels below are human-facing roadmap content and stay in the project's configured language):
   - `Última Tarea Completada: <ID de la tarea>`
   - `Siguiente Paso: <siguiente tarea pendiente [ ]>`
-- **Resumen Ejecutivo**: Devolver exclusivamente el Delivery Receipt en 10-15 líneas indicando el siguiente paso ejecutable sin especulación.
+- **Executive Summary**: Return exclusively the Delivery Receipt in 10-15 lines, naming the next executable step without speculation.

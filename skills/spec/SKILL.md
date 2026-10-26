@@ -1,6 +1,6 @@
 ---
 name: spec
-description: "[ODD Fase 2] Live Specs. Role Owner: game-designer (Tier 2 Lead). Diseño de mecánicas, sistemas y fórmulas vivas en design/gdd/<feature>.md con variables de balance (tuning knobs) y criterios de aceptación."
+description: "[ODD Phase 2] Live Specs. Role Owner: game-designer (Tier 2 Lead). Living design of mechanics, systems and formulas in design/gdd/<feature>.md with balance variables (tuning knobs) and acceptance criteria."
 model: inherit
 inheritProjectContext: true
 tools:
@@ -12,49 +12,49 @@ tools:
   - ask_user_question
 ---
 
-## Fase 2 ODD: Live Specs & Design
+## ODD Phase 2: Live Specs & Design
 
 - **Role Owner**: `game-designer` (Tier 2 Lead)
-- **Contrato ODD Compartido**: Consulta [`skills/_shared/odd-contract.md`](../_shared/odd-contract.md) para las reglas compartidas de tareas atómicas (~400 líneas), Live Specs en `design/gdd/`, límites de compilación (compiler bounds) y el formato del Return Contract en YAML.
+- **Shared ODD Contract**: See [`skills/_shared/odd-contract.md`](../_shared/odd-contract.md) for the shared rules on atomic tasks (~400 lines), Live Specs in `design/gdd/`, compiler bounds, and the YAML Return Contract format.
 
-Cuando se invoca `/spec <feature>` (o `/spec review`):
+When `/spec <feature>` is invoked (or `/spec review`):
 
-### 1. Lectura del Estado Actual
-- Leer `design/gdd/concept.md` para alinear el sistema con los pilares del juego.
-- Si existe código previo en `src/`, inspeccionar estructuras y APIs existentes.
+### 1. Read the Current State
+- Read `design/gdd/concept.md` to align the system with the game's Pillars.
+- If prior code exists in `src/`, inspect the existing structures and APIs.
 
-### 2. Redacción de la Live Spec Única
-Crear o actualizar exclusivamente el archivo vivo: `design/gdd/<feature>.md`.
-La Live Spec debe contener obligatoriamente:
-- **Fantasía del Jugador**: Qué experimenta en 1-2 oraciones.
-- **Reglas del Sistema**: Lógica paso a paso sin ambigüedades.
-- **Fórmulas y Tuning Knobs**: Parámetros numéricos expuestos (velocidad, cooldowns, daño, ratios) en archivos de datos externos (`assets/data/`), nunca hardcodeados.
-- **Requisitos de Render & Shaders**: Identificar explícitamente qué efectos visuales de la mecánica requieren shaders en GPU (e.g. atenuación de luz, niebla volumétrica/ruido, distorsión de agua, post-procesado, disolución) en lugar de intentar emularlos con lógica de CPU.
-- **Juice & Game Feel**: Micro-retroalimentación háptica y visual obligatoria: tiempos de *hitstop/freeze*, curvas de sacudida de pantalla (*screen shake* con decay exponencial), tolerancia de *coyote time* e *input buffering*, y curvas de interpolación (*easing*).
-- **Mapeo de Input & Multi-dispositivo**: Definir acciones semánticas (`Move`, `Interact`, `ActionPrimary`) mapeadas simultáneamente a teclado/ratón y Gamepad (stick analógico + botones estándar). Prohibido atar el diseño a teclas físicas fijas.
-- **Ciclo de Vida & Máquina de Estados de la App (App States)**: Definir el comportamiento ante transiciones globales (`Boot`, `MainMenu`, `InGame`, `Paused`, `GameOver`). El estado `Paused` debe congelar el tiempo del juego y la simulación física mientras mantiene la UI interactiva y atenúa el audio.
-- **Manifiesto de Assets & Placeholders**: Registrar en `assets/manifest.yaml` cada sprite, textura, audio o shader requerido con sus dimensiones/formato y marcar su estado (`placeholder` vs `final`).
-- **Esquema de Estado & Persistencia (Save/Load)**: Estructura exacta de los datos que deben persistir entre sesiones (componentes guardables, inventario, progreso, niebla descubierta).
-- **Herramientas de Diagnóstico & Debug Overlay**: Declarar qué variables de estado e indicadores de depuración (gizmos de colisión, radios de percepción, contadores) deben exponerse en la capa de depuración (`F3`).
-- **Edge Cases**: Manejo de situaciones límite (desconexión, límites de pantalla, estados concurrentes).
-- **Checklist Atómico de Implementación**: Tareas de ~400 líneas cada una con formato `[ ]`, incluyendo explícitamente las tareas de creación de shaders, debug overlay, estados de pausa y assets de sonido.
+### 2. Writing the Single Live Spec
+Create or update exclusively the living file: `design/gdd/<feature>.md`.
+The Live Spec must mandatorily contain:
+- **Player Fantasy**: What they experience, in 1-2 sentences.
+- **System Rules**: Step-by-step logic without ambiguities.
+- **Formulas & Tuning Knobs**: Exposed numeric parameters (speed, cooldowns, damage, ratios) in external data files (`assets/data/`), never hardcoded.
+- **Render & Shader Requirements**: Explicitly identify which visual effects of the mechanic require GPU shaders (e.g. light attenuation, volumetric fog/noise, water distortion, post-processing, dissolution) instead of emulating them with CPU-side logic.
+- **Juice & Game Feel**: Mandatory haptic and visual micro-feedback: *hitstop/freeze* timings, screen shake curves (*screen shake* with exponential decay), *coyote time* and *input buffering* tolerances, and *easing* interpolation curves.
+- **Input Mapping & Multi-device**: Define semantic actions (`Move`, `Interact`, `ActionPrimary`) mapped simultaneously to keyboard/mouse and Gamepad (analog stick + standard buttons). Binding the design to fixed physical keys is forbidden.
+- **App Lifecycle & App States**: Define the behavior under global transitions (`Boot`, `MainMenu`, `InGame`, `Paused`, `GameOver`). The `Paused` state must freeze game time and the physics simulation while keeping the UI interactive and ducking the audio.
+- **Asset Manifest & Placeholders**: Register every required sprite, texture, audio or shader in `assets/manifest.yaml` with its dimensions/format and mark its state (`placeholder` vs `final`).
+- **State Schema & Persistence (Save/Load)**: Exact structure of the data that must persist between sessions (saveable components, inventory, progress, discovered fog).
+- **Diagnostic Tools & Debug Overlay**: Declare which state variables and debug indicators (collision gizmos, perception radii, counters) must be exposed in the debug layer (`F3`).
+- **Edge Cases**: Handling of boundary situations (disconnection, screen limits, concurrent states).
+- **Atomic Implementation Checklist**: Tasks of ~400 lines each with `[ ]` format, explicitly including the tasks for shader creation, debug overlay, pause states and sound assets.
 
-### 3. Resolución de Incertidumbre
-Si existe un dilema de diseño (e.g. tipo de control o fórmula de progresión), se presenta una **TRADE-OFF MATRIX** concisa y se resuelve interactivamente con `ask_user_question`.
+### 3. Resolving Uncertainty
+If there is a design dilemma (e.g. control scheme or progression formula), present a concise **TRADE-OFF MATRIX** and resolve it interactively with `ask_user_question`.
 
-### 4. Cierre Verificable (Done When)
+### 4. Verifiable Closure (Done When)
 
-La Live Spec **no cierra por estar escrita**: cierra cuando otro rol puede ejecutarla sin preguntar nada.
+The Live Spec **does not close because it is written**: it closes when another role can execute it without asking anything.
 
-Cierra en `completed` solo si `design/gdd/<feature>.md` cumple estas cinco condiciones binarias:
-- **Secciones completas**: las secciones obligatorias de arriba están todas presentes y ninguna vacía.
-- **Knobs con unidad y dueño**: cada parámetro numérico declara número, unidad (`px/s`, `ms`, `%`) y el archivo real que lo expone en `assets/data/`; ningún valor de balance vive en la prosa.
-- **Shader nombrado por efecto**: cada requisito de render nombra el efecto concreto (atenuación de luz, niebla, distorsión de agua, disolución), nunca el genérico "iluminación".
-- **Checklist cubre los mecanismos**: cada mecanismo de *Reglas del Sistema* tiene al menos una tarea `[ ]` en el checklist atómico.
-- **Assets registrados**: cada sprite, audio o shader nombrado aparece en `assets/manifest.yaml` con su estado (`placeholder` o `final`).
+It closes in `completed` only if `design/gdd/<feature>.md` meets these five binary conditions:
+- **Complete sections**: all the mandatory sections above are present and none is empty.
+- **Knobs with unit and owner**: every numeric parameter declares a number, a unit (`px/s`, `ms`, `%`) and the actual file exposing it in `assets/data/`; no balance value lives in prose.
+- **Shader named per effect**: every render requirement names the concrete effect (light attenuation, fog, water distortion, dissolution), never the generic "lighting".
+- **Checklist covers the mechanisms**: every mechanism in *System Rules* has at least one `[ ]` task in the atomic checklist.
+- **Assets registered**: every named sprite, audio or shader appears in `assets/manifest.yaml` with its state (`placeholder` or `final`).
 
-Evidencia que se reporta:
+Evidence reported (the `structural:` example below is delivery output and stays in the project's configured language):
 
 `structural: design/gdd/<feature>.md: 12/12 secciones, 7 knobs con unidad y archivo, checklist cubre 5 mecanismos, 4 assets en manifiesto`
 
-Si una condición falla, la fase devuelve `partial` con la lista exacta de lo que falta. Una Live Spec incompleta es peor que ninguna: se lee como verdad y la implementación la obedece.
+If a condition fails, the phase returns `partial` with the exact list of what is missing. An incomplete Live Spec is worse than none: it reads as truth and the implementation obeys it.

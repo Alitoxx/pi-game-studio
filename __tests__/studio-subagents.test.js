@@ -74,8 +74,8 @@ describe("Studio Subagents & Isolated Execution Engine", () => {
 		expect(viewerSource).toContain("INSPECTOR DE ESPECIALISTA");
 
 		const indexSource = fs.readFileSync(indexPath, "utf8");
-		expect(indexSource).toContain('registerCommand?.("studio:subagents"');
-		expect(indexSource).toContain('registerCommand?.("studio:logs"');
+		expect(indexSource).toContain('pi.registerCommand("studio:subagents"');
+		expect(indexSource).toContain('pi.registerCommand("studio:logs"');
 	});
 
 	test("subagent runner and index support immediate abort on Escape / interrupt", () => {
@@ -89,8 +89,11 @@ describe("Studio Subagents & Isolated Execution Engine", () => {
 		expect(subagentsSource).toContain("_signal");
 
 		const indexSource = fs.readFileSync(indexPath, "utf8");
-		expect(indexSource).toContain('"session_abort"');
-		expect(indexSource).toContain('"turn_abort"');
+		// Pi 1.4.0 emits no abort event, so the fictional session/turn/agent abort
+		// names were replaced by a turn_start subscription that cancels dispatched
+		// work through the turn's own AbortSignal.
+		expect(indexSource).toContain('pi.on("turn_start"');
+		expect(indexSource).toMatch(/addEventListener\(\s*["']abort["']/);
 		expect(indexSource).toContain("studioAgentsRunner.cancelAll");
 	});
 

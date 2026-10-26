@@ -100,28 +100,26 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// ──────────────────────────────────────────────
-	// Escape & Abort Handling (Double-Escape Emergency Cancel)
+	// Session Lifecycle (Specialist Cleanup)
+	// Pi emits no abort event at all: session_abort, turn_abort and agent_abort
+	// never fired, so cancelling on Escape is wired through the turn's own
+	// AbortSignal below, next to the shutdown hook.
 	// ──────────────────────────────────────────────
-	(pi as any).on?.("session_abort", (_event: any, ctx: any) => {
-		doubleEscapeGuard.handleEscape(ctx);
-		studioAgentsRunner.cancelAll("Sesión interrumpida por el usuario (Escape)");
-	});
-	(pi as any).on?.("turn_abort", (_event: any, ctx: any) => {
-		doubleEscapeGuard.handleEscape(ctx);
-		studioAgentsRunner.cancelAll("Turno abortado por el usuario (Escape)");
-	});
-	(pi as any).on?.("agent_abort", (_event: any, ctx: any) => {
-		doubleEscapeGuard.handleEscape(ctx);
-		studioAgentsRunner.cancelAll("Agente abortado por el usuario (Escape)");
-	});
-
-	// Closing Pi normally is not an abort: without this hook a running specialist
-	// outlives the session that started it.
-	(pi as any).on?.("session_shutdown", () => {
+	pi.on("session_shutdown", () => {
 		const cancelled = studioAgentsRunner.cancelAll("Sesión del estudio cerrada");
 		if (cancelled > 0) {
 			console.log(`[studio] ${cancelled} especialista(s) cancelados al cerrar la sesión.`);
 		}
+	});
+
+	// Cancelling a turn cancels what it dispatched: Pi exposes no abort event, so the
+	// turn's own AbortSignal is the authority. One listener per turn, auto-removed.
+	pi.on("turn_start", (_event, ctx) => {
+		ctx.signal?.addEventListener(
+			"abort",
+			() => studioAgentsRunner.cancelAll("Turno abortado por el usuario (Escape)"),
+			{ once: true },
+		);
 	});
 
 	// ──────────────────────────────────────────────
@@ -129,7 +127,7 @@ export default function (pi: ExtensionAPI) {
 	// ──────────────────────────────────────────────
 
 	// /studio — Hub principal y catálogo
-	(pi as any).registerCommand?.("studio", {
+	pi.registerCommand("studio", {
 		description: "[Studio] Explorador y catálogo de comandos de Pi Game Studio",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioCommand(args, ctx);
@@ -137,7 +135,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:start — Asistente interactivo de inicio y onboarding
-	(pi as any).registerCommand?.("studio:start", {
+	pi.registerCommand("studio:start", {
 		description: "[Studio] Asistente interactivo de inicio y onboarding de tu juego",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioStart(args, ctx);
@@ -145,7 +143,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /start — Alias directo de inicio y onboarding
-	(pi as any).registerCommand?.("start", {
+	pi.registerCommand("start", {
 		description: "[Studio] Asistente interactivo de inicio y onboarding de tu juego",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioStart(args, ctx);
@@ -153,7 +151,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:setup — Asistente interactivo de instalación y actualización
-	(pi as any).registerCommand?.("studio:setup", {
+	pi.registerCommand("studio:setup", {
 		description: "[Studio] Asistente interactivo de instalación, verificación y actualización del estudio",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioSetup(args, ctx);
@@ -161,7 +159,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /setup — Alias directo de instalación y actualización
-	(pi as any).registerCommand?.("setup", {
+	pi.registerCommand("setup", {
 		description: "[Studio] Asistente interactivo de instalación, verificación y actualización del estudio",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioSetup(args, ctx);
@@ -169,7 +167,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:new — Crear nuevo juego desde plantilla o starter
-	(pi as any).registerCommand?.("studio:new", {
+	pi.registerCommand("studio:new", {
 		description: "[Studio] Crear nuevo proyecto desde plantilla/starter (Bevy, Raylib, Godot)",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioNew(args, ctx);
@@ -177,7 +175,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:models — Asignación interactiva de modelos por nivel
-	(pi as any).registerCommand?.("studio:models", {
+	pi.registerCommand("studio:models", {
 		description: "[Studio] Configuración interactiva de modelos de IA por nivel de agente",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioModels(args, ctx);
@@ -185,7 +183,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:status — Dashboard y diagnóstico en vivo
-	(pi as any).registerCommand?.("studio:status", {
+	pi.registerCommand("studio:status", {
 		description: "[Studio] Dashboard en vivo de estado, agentes y métricas del estudio",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioStatus(args, ctx);
@@ -193,7 +191,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /status — Alias directo del dashboard de estado del estudio
-	(pi as any).registerCommand?.("status", {
+	pi.registerCommand("status", {
 		description: "[Studio] Dashboard en vivo de estado, agentes y métricas del estudio",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioStatus(args, ctx);
@@ -201,7 +199,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:changes — Clasificación de cambios gamedev (Gentle Changes)
-	(pi as any).registerCommand?.("studio:changes", {
+	pi.registerCommand("studio:changes", {
 		description: "[Studio] Clasificación de cambios pendientes en diseño, código, assets y drift de ODD",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioChanges(args, ctx);
@@ -209,7 +207,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /changes — Alias directo de clasificación de cambios gamedev (Gentle Changes)
-	(pi as any).registerCommand?.("changes", {
+	pi.registerCommand("changes", {
 		description: "[Studio] Clasificación de cambios pendientes en diseño, código, assets y drift de ODD",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioChanges(args, ctx);
@@ -217,7 +215,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:sound — Activar o desactivar notificaciones de audio (on/off)
-	(pi as any).registerCommand?.("studio:sound", {
+	pi.registerCommand("studio:sound", {
 		description: "[Studio] Activar o desactivar notificaciones de audio del estudio (on/off)",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioSound(args, ctx);
@@ -225,7 +223,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /sound — Alias de notificaciones de audio (on/off)
-	(pi as any).registerCommand?.("sound", {
+	pi.registerCommand("sound", {
 		description: "[Studio] Activar o desactivar notificaciones de audio del estudio (on/off)",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioSound(args, ctx);
@@ -233,7 +231,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:tasks — Gestión de tareas y radar de obsolescencia (Gentle Todo)
-	(pi as any).registerCommand?.("studio:tasks", {
+	pi.registerCommand("studio:tasks", {
 		description: "[Studio] Gestión de tareas del sprint, Live Specs y radar de tareas obsoletas (Stale)",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioTasks(args, ctx);
@@ -241,7 +239,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /tasks — Alias directo de gestión de tareas y radar de obsolescencia
-	(pi as any).registerCommand?.("tasks", {
+	pi.registerCommand("tasks", {
 		description: "[Studio] Gestión de tareas del sprint, Live Specs y radar de tareas obsoletas (Stale)",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioTasks(args, ctx);
@@ -249,7 +247,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:agents — Visor e inspector en vivo de actividad y logs de subagentes
-	(pi as any).registerCommand?.("studio:agents", {
+	pi.registerCommand("studio:agents", {
 		description: "[Studio] Visor e inspector en vivo de logs, herramientas y actividad de subagentes",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioSubagentsViewer(args, ctx);
@@ -257,7 +255,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /agents — Alias directo del visor e inspector en vivo de subagentes
-	(pi as any).registerCommand?.("agents", {
+	pi.registerCommand("agents", {
 		description: "[Studio] Visor e inspector en vivo de logs, herramientas y actividad de subagentes",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioSubagentsViewer(args, ctx);
@@ -265,7 +263,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:roster — Navegador del catálogo de los 14 agentes del estudio
-	(pi as any).registerCommand?.("studio:roster", {
+	pi.registerCommand("studio:roster", {
 		description: "[Studio] Navegador interactivo de los 14 agentes oficiales (8 Core + 6 Especialistas de motor)",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioAgents(args, ctx);
@@ -273,7 +271,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:chains — Cadenas multi-agente guiadas
-	(pi as any).registerCommand?.("studio:chains", {
+	pi.registerCommand("studio:chains", {
 		description: "[Studio] Cadenas de ejecución multi-agente para GDD, mecánicas y release",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioChains(args, ctx);
@@ -281,7 +279,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:chain — Alias singular de cadenas
-	(pi as any).registerCommand?.("studio:chain", {
+	pi.registerCommand("studio:chain", {
 		description: "[Studio] Cadenas de ejecución multi-agente para GDD, mecánicas y release",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioChains(args, ctx);
@@ -289,7 +287,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:settings — Configuración interactiva del proyecto
-	(pi as any).registerCommand?.("studio:settings", {
+	pi.registerCommand("studio:settings", {
 		description: "[Studio] Configuración interactiva del proyecto (motor, plataformas, idioma)",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioSettings(args, ctx);
@@ -297,7 +295,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:doctor — Diagnóstico de prerrequisitos de compilación y motor
-	(pi as any).registerCommand?.("studio:doctor", {
+	pi.registerCommand("studio:doctor", {
 		description: "[Studio] Diagnóstico de prerrequisitos, herramientas y compiladores del motor de juego",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioDoctor(args, ctx);
@@ -305,7 +303,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:web — Compilar y servir versión Web/WASM en el navegador
-	(pi as any).registerCommand?.("studio:web", {
+	pi.registerCommand("studio:web", {
 		description: "[Studio] Compilar versión WebAssembly y lanzar servidor local con aislamiento COOP/COEP",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioWeb(ctx, args);
@@ -313,7 +311,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:profile — Live Performance Profiler & Budget Tracker
-	(pi as any).registerCommand?.("studio:profile", {
+	pi.registerCommand("studio:profile", {
 		description: "[Studio] Live Performance Profiler y monitor de presupuestos de FPS/Memoria",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioProfile(args, ctx);
@@ -321,7 +319,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:sfx — Sintetizador procedural de audio SFX
-	(pi as any).registerCommand?.("studio:sfx", {
+	pi.registerCommand("studio:sfx", {
 		description: "[Studio] Sintetizador procedural de audio WAV (ondas sine/square/saw/noise y ADSR)",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioSfx(args, ctx);
@@ -329,7 +327,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:palettes — Generador de paletas de color y shaders
-	(pi as any).registerCommand?.("studio:palettes", {
+	pi.registerCommand("studio:palettes", {
 		description: "[Studio] Generador de paletas retro y shaders cuantizadores para Godot y Raylib",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioPalettes(args, ctx);
@@ -337,7 +335,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:commands — Paleta curada de comandos del estudio
-	(pi as any).registerCommand?.("studio:commands", {
+	pi.registerCommand("studio:commands", {
 		description: "[Studio] Paleta curada y búsqueda rápida de comandos y herramientas del estudio",
 		handler: async (_args: string, ctx: ExtensionContext) => {
 			await showCommandPalette(ctx);
@@ -345,7 +343,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /palette — Paleta difusa de comandos interactiva (Alt+K)
-	(pi as any).registerCommand?.("palette", {
+	pi.registerCommand("palette", {
 		description: "[Studio] Paleta difusa de comandos interactiva (Alt+K)",
 		handler: async (_args: string, ctx: ExtensionContext) => {
 			await showCommandPalette(ctx);
@@ -353,7 +351,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// Shortcut Alt+K — Abre la paleta de comandos
-	(pi as any).registerShortcut?.("alt+k", {
+	pi.registerShortcut("alt+k", {
 		description: "[Studio] Paleta difusa de comandos",
 		handler: async (ctx: ExtensionContext) => {
 			await showCommandPalette(ctx);
@@ -361,7 +359,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:toggle-art — Alternar ilustración Braille en el banner de bienvenida
-	(pi as any).registerCommand?.("studio:toggle-art", {
+	pi.registerCommand("studio:toggle-art", {
 		description: "[Studio] Alternar ilustración Braille de bienvenida (on/off)",
 		handler: async (_args: string, ctx: ExtensionContext) => {
 			const root = findStudioRoot(ctx.cwd) || ctx.cwd;
@@ -382,7 +380,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:art — Alias de toggle-art
-	(pi as any).registerCommand?.("studio:art", {
+	pi.registerCommand("studio:art", {
 		description: "[Studio] Alternar ilustración Braille de bienvenida (on/off)",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			const root = findStudioRoot(ctx.cwd) || ctx.cwd;
@@ -403,7 +401,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:subagents — Visor e inspector en vivo de logs y actividades de subagentes
-	(pi as any).registerCommand?.("studio:subagents", {
+	pi.registerCommand("studio:subagents", {
 		description: "[Studio] Visor e inspector en vivo de logs, herramientas y actividad de subagentes",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioSubagentsViewer(args, ctx);
@@ -411,7 +409,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:mcp — Gestor interactivo de los 10 Servidores MCP del Estudio
-	(pi as any).registerCommand?.("studio:mcp", {
+	pi.registerCommand("studio:mcp", {
 		description: "[Studio] Hub interactivo de los 10 servidores MCP (REA, Playwright, Context7, Blender, etc.)",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioMcp(args, ctx);
@@ -419,7 +417,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:tools — Diagnóstico de viabilidad e instalador de herramientas multimedia CLI (FFmpeg, ImageMagick, Assimp, gltfpack)
-	(pi as any).registerCommand?.("studio:tools", {
+	pi.registerCommand("studio:tools", {
 		description: "[Studio] Diagnóstico de viabilidad e instalador interactivo de herramientas multimedia CLI",
 		handler: async (_args: string, ctx: ExtensionContext) => {
 			await promptMediaToolsInstall(ctx);
@@ -427,7 +425,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:logs — Alias de inspección en vivo de subagentes
-	(pi as any).registerCommand?.("studio:logs", {
+	pi.registerCommand("studio:logs", {
 		description: "[Studio] Alias de inspección en vivo de logs, herramientas y actividad de subagentes",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioSubagentsViewer(args, ctx);
@@ -435,7 +433,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:help — Alias de ayuda
-	(pi as any).registerCommand?.("studio:help", {
+	pi.registerCommand("studio:help", {
 		description: "[Studio] Ayuda rápida y catálogo de comandos de Pi Game Studio",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioCommand(args, ctx);
@@ -443,7 +441,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:perf-guard — Auditor de rendimiento y detección de allocs en frame loops
-	(pi as any).registerCommand?.("studio:perf-guard", {
+	pi.registerCommand("studio:perf-guard", {
 		description: "[Studio] Auditor de rendimiento y detección de allocs en frame loops (Rust, GDScript, C++, C#)",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioPerfAudit(args, ctx);
@@ -451,7 +449,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /perf-guard — Alias de studio:perf-guard
-	(pi as any).registerCommand?.("perf-guard", {
+	pi.registerCommand("perf-guard", {
 		description: "[Studio] Alias de auditor de rendimiento y allocaciones en frame loops",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioPerfAudit(args, ctx);
@@ -459,7 +457,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:watch — Live Engine Hot-Reload & Watcher
-	(pi as any).registerCommand?.("studio:watch", {
+	pi.registerCommand("studio:watch", {
 		description: "[Studio] Live engine watcher y compilación en segundo plano (cargo check, godot, cmake)",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioWatch(args, ctx);
@@ -467,7 +465,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /watch — Alias de studio:watch
-	(pi as any).registerCommand?.("watch", {
+	pi.registerCommand("watch", {
 		description: "[Studio] Alias de live engine watcher y hot-reload en segundo plano",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioWatch(args, ctx);
@@ -475,7 +473,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:assets — Asset Pipeline & Manifest Inspector
-	(pi as any).registerCommand?.("studio:assets", {
+	pi.registerCommand("studio:assets", {
 		description: "[Studio] Auditor de pipeline de assets, optimización oxipng y verificación de manifest",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioAssets(args, ctx);
@@ -483,7 +481,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /assets — Alias de studio:assets
-	(pi as any).registerCommand?.("assets", {
+	pi.registerCommand("assets", {
 		description: "[Studio] Alias de auditor de pipeline de assets y manifest inspector",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioAssets(args, ctx);
@@ -491,7 +489,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:jam — Alternar modo Game Jam / Rapid Prototyping
-	(pi as any).registerCommand?.("studio:jam", {
+	pi.registerCommand("studio:jam", {
 		description: "[Studio] Alternar modo Game Jam / Rapid Prototyping (relaja perf-guard y acelera iteración)",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioJam(args, ctx);
@@ -499,7 +497,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /jam — Alias de studio:jam
-	(pi as any).registerCommand?.("jam", {
+	pi.registerCommand("jam", {
 		description: "[Studio] Alias de modo Game Jam / Rapid Prototyping",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioJam(args, ctx);
@@ -507,7 +505,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:budget — Monitor de tokens y presupuesto estimado en USD
-	(pi as any).registerCommand?.("studio:budget", {
+	pi.registerCommand("studio:budget", {
 		description: "[Studio] Monitor de consumo de tokens y presupuesto estimado en USD",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioBudget(args, ctx);
@@ -515,7 +513,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /budget — Alias de studio:budget
-	(pi as any).registerCommand?.("budget", {
+	pi.registerCommand("budget", {
 		description: "[Studio] Alias de monitor de presupuesto y tokens",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioBudget(args, ctx);
@@ -523,7 +521,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:timeline — Línea de tiempo de producción y registro histórico de decisiones
-	(pi as any).registerCommand?.("studio:timeline", {
+	pi.registerCommand("studio:timeline", {
 		description: "[Studio] Línea de tiempo de producción, hitos y registro histórico de decisiones (ADRs y Specs)",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioTimeline(args, ctx);
@@ -531,7 +529,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /timeline — Alias de studio:timeline
-	(pi as any).registerCommand?.("timeline", {
+	pi.registerCommand("timeline", {
 		description: "[Studio] Alias de línea de tiempo de producción",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioTimeline(args, ctx);
@@ -539,7 +537,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:market — Steam Reality Check y validación de viabilidad comercial
-	(pi as any).registerCommand?.("studio:market", {
+	pi.registerCommand("studio:market", {
 		description: "[Studio] Steam Reality Check y validación de viabilidad comercial en Steam",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioMarket(args, ctx);
@@ -547,7 +545,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /market — Alias de studio:market
-	(pi as any).registerCommand?.("market", {
+	pi.registerCommand("market", {
 		description: "[Studio] Alias de Steam Reality Check y auditoría de mercado",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioMarket(args, ctx);
@@ -555,7 +553,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:scaffold — Generador de sandbox jugable según motor activo (2D/3D)
-	(pi as any).registerCommand?.("studio:scaffold", {
+	pi.registerCommand("studio:scaffold", {
 		description: "[Studio] Generador de sandbox jugable según motor activo (2D/3D)",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioScaffold(args, ctx);
@@ -563,7 +561,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /scaffold — Alias de studio:scaffold
-	(pi as any).registerCommand?.("scaffold", {
+	pi.registerCommand("scaffold", {
 		description: "[Studio] Alias de sandbox jugable según motor activo",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioScaffold(args, ctx);
@@ -571,7 +569,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:game-feel — Auditor estático de Game Feel y respuesta de control
-	(pi as any).registerCommand?.("studio:game-feel", {
+	pi.registerCommand("studio:game-feel", {
 		description: "[Studio] Auditor estático de Game Feel y respuesta de control (5 pilares)",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioGameFeel(args, ctx);
@@ -579,7 +577,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /game-feel — Alias de studio:game-feel
-	(pi as any).registerCommand?.("game-feel", {
+	pi.registerCommand("game-feel", {
 		description: "[Studio] Alias de auditoría de Game Feel y respuesta de control",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioGameFeel(args, ctx);
@@ -587,7 +585,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:capsule — Auditor de portadas y cápsulas de Steamworks (231x87, 460x215, etc.)
-	(pi as any).registerCommand?.("studio:capsule", {
+	pi.registerCommand("studio:capsule", {
 		description: "[Studio] Auditor de portadas y cápsulas de Steamworks (231x87, 460x215, etc.)",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioCapsule(args, ctx);
@@ -595,7 +593,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /capsule-check — Alias de studio:capsule
-	(pi as any).registerCommand?.("capsule-check", {
+	pi.registerCommand("capsule-check", {
 		description: "[Studio] Alias de auditoría de cápsulas de Steamworks",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioCapsule(args, ctx);
@@ -603,7 +601,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:steam-page — Generador de ficha de Steamworks en BBCode oficial
-	(pi as any).registerCommand?.("studio:steam-page", {
+	pi.registerCommand("studio:steam-page", {
 		description: "[Studio] Generador de ficha de Steamworks en BBCode oficial",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioSteamPage(args, ctx);
@@ -611,7 +609,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /steam-page — Alias de studio:steam-page
-	(pi as any).registerCommand?.("steam-page", {
+	pi.registerCommand("steam-page", {
 		description: "[Studio] Alias de generador de ficha de Steamworks",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioSteamPage(args, ctx);
@@ -619,7 +617,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:audio-bus — Scaffolding de jerarquía de buses de audio profesionales con ducking
-	(pi as any).registerCommand?.("studio:audio-bus", {
+	pi.registerCommand("studio:audio-bus", {
 		description: "[Studio] Scaffolding de jerarquía de buses de audio profesionales con ducking",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioAudioBus(args, ctx);
@@ -627,7 +625,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /audio-bus — Alias de studio:audio-bus
-	(pi as any).registerCommand?.("audio-bus", {
+	pi.registerCommand("audio-bus", {
 		description: "[Studio] Alias de scaffolding de buses de audio profesionales",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioAudioBus(args, ctx);
@@ -635,7 +633,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:continuity — Fast-forward pipeline de continuidad entre tareas atómicas
-	(pi as any).registerCommand?.("studio:continuity", {
+	pi.registerCommand("studio:continuity", {
 		description: "[Studio] Fast-forward pipeline de continuidad entre tareas atómicas ODD",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioContinuity(args, ctx);
@@ -643,7 +641,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:next — Alias de studio:continuity
-	(pi as any).registerCommand?.("studio:next", {
+	pi.registerCommand("studio:next", {
 		description: "[Studio] Ejecutar o inspeccionar la siguiente tarea atómica en cola ODD",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioContinuity(args, ctx);
@@ -651,7 +649,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /next — Alias directo de studio:next
-	(pi as any).registerCommand?.("next", {
+	pi.registerCommand("next", {
 		description: "[Studio] Alias para avanzar a la siguiente tarea atómica en cola",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioContinuity(args, ctx);
@@ -659,7 +657,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:tuning — Inspector y calibrador interactivo de variables de balance y Game Feel
-	(pi as any).registerCommand?.("studio:tuning", {
+	pi.registerCommand("studio:tuning", {
 		description: "[Studio] Inspector y calibrador de variables de balance y Game Feel en YAML",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioTuning(args, ctx);
@@ -667,7 +665,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /tuning — Alias de studio:tuning
-	(pi as any).registerCommand?.("tuning", {
+	pi.registerCommand("tuning", {
 		description: "[Studio] Alias de calibrador de balance de gameplay",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioTuning(args, ctx);
@@ -675,7 +673,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:play — Runner unificado de ejecución y previsualización del juego
-	(pi as any).registerCommand?.("studio:play", {
+	pi.registerCommand("studio:play", {
 		description: "[Studio] Runner de ejecución supervisada y previsualización del motor",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioPlay(args, ctx);
@@ -683,7 +681,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /play — Alias de studio:play
-	(pi as any).registerCommand?.("play", {
+	pi.registerCommand("play", {
 		description: "[Studio] Alias para ejecutar el juego en runtime o preview",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioPlay(args, ctx);
@@ -691,7 +689,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /studio:feature — Generador guiado de Live Specs ODD en design/gdd/ con tareas T1-TN
-	(pi as any).registerCommand?.("studio:feature", {
+	pi.registerCommand("studio:feature", {
 		description: "[Studio] Generador guiado de Live Specs ODD en design/gdd/ con tareas T1-TN",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioFeature(args, ctx);
@@ -699,7 +697,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// /feature — Alias de studio:feature
-	(pi as any).registerCommand?.("feature", {
+	pi.registerCommand("feature", {
 		description: "[Studio] Alias para crear un Live Spec ODD",
 		handler: async (args: string, ctx: ExtensionContext) => {
 			await handleStudioFeature(args, ctx);
@@ -992,8 +990,8 @@ export default function (pi: ExtensionAPI) {
 	};
 
 	pi.on("turn_start", handleAgentTurnStart);
-	(pi as any).on?.("before_agent_start", handleAgentTurnStart);
-	(pi as any).on?.("turn_end", async (event: any, ctx: any) => {
+	pi.on("before_agent_start", handleAgentTurnStart);
+	pi.on("turn_end", async (event: any, ctx: any) => {
 		try {
 			if (event?.usage || (event as any)?.tokens) {
 				const usage = event?.usage || (event as any)?.tokens;
@@ -1010,7 +1008,7 @@ export default function (pi: ExtensionAPI) {
 			updateSubagentsWidget(ctx);
 		} catch {}
 	});
-	(pi as any).on?.("model_change", async (_event: any, ctx: any) => {
+	pi.on("model_select", async (_event: any, ctx: any) => {
 		try {
 			updateStudioHUD(ctx, pi);
 		} catch {}

@@ -1,3 +1,4 @@
+# schema_version: forward-compatibility marker, read by no one yet.
 schema_version: 1
 engine: "Unity"
 language: "es"

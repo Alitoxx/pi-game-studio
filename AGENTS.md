@@ -188,6 +188,7 @@ Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar 
 - `/setup` o `/studio:setup` copia y activa los 10 agentes correspondientes (8 Core + 1 Motor activo + 1 Verificador read-only) en `.pi/agents/` en tu proyecto.
 - `/assign-models` o `/studio:models` permite cambiar qué modelo ejecuta cada agente o nivel.
 - Gestión de paquetes Node/JS (`package.json`, `extensions/hooks`, `starters/phaser-web-2d`): usar `pnpm` (`pnpm install`, `pnpm run`) en lugar de `npm`.
+- **`schema_version` en `project.yaml`**: es un marcador de forward-compat, no un contrato. El setup lo escribe y hoy ningún consumidor lo lee, así que no codifica ninguna migración pendiente; si alguna vez hace falta, el lector entra en el mismo cambio que la migración. Lo mismo dice el comentario del propio archivo y el header que genera el setup, para que quien lea el repo no tenga que reconstruir esta decisión desde el historial.
 
 ## Least-Privilege Deny Baseline
 

@@ -667,7 +667,12 @@ export function installStudioFiles(
 	if (/^engine:\s*.*/m.test(yamlContent)) {
 		yamlContent = yamlContent.replace(/^engine:\s*.*/m, `engine: "${engine}"`);
 	} else {
-		yamlContent = `# Pi Game Studio project configuration\nschema_version: 1\nengine: "${engine}"\n` + yamlContent;
+		yamlContent =
+			"# Pi Game Studio project configuration\n" +
+			// #106: the key is a marker, so a reader of the generated file knows it decides nothing.
+			"# schema_version: forward-compatibility marker, read by no one yet; a migration must ship its reader.\n" +
+			`schema_version: 1\nengine: "${engine}"\n` +
+			yamlContent;
 	}
 	if (/^dimension:\s*.*/m.test(yamlContent)) {
 		yamlContent = yamlContent.replace(/^dimension:\s*.*/m, `dimension: "${dimension}"`);

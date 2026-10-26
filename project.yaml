@@ -1,4 +1,8 @@
 # Pi Game Studio project configuration — single source of truth for project settings.
+#
+# schema_version: a forward-compatibility marker, not an enforced contract. Setup writes
+# it and no consumer reads it yet, so it currently promises nothing; a migration that
+# needs it must ship its reader in the same change.
 
 schema_version: 1
 engine: "Bevy"

@@ -54,6 +54,11 @@ export interface TaskRecord {
 	lastActivityAt?: number;
 	/** Last stderr lines, kept because children no longer persist a session. */
 	stderrTail?: string[];
+	/**
+	 * Logical stderr lines the child wrote, which is what the tail is a sample of: a
+	 * bounded tail must never imply the failure was small.
+	 */
+	stderrLines?: number;
 	status: "queued" | "running" | "completed" | "failed" | "cancelled" | "interaction_required";
 	/** Escalation payload when the specialist needs a decision it cannot take. */
 	interaction?: { question: string; options: string[]; blocking: boolean } | null;
@@ -83,6 +88,36 @@ export function appendTaskLog(record: TaskRecord, line: string): void {
 		record.logs.splice(0, overflow);
 		record.logsDropped = (record.logsDropped ?? 0) + overflow;
 	}
+}
+
+/** The stderr tail keeps the last lines of a failure, each one capped. */
+export const MAX_STDERR_TAIL_LINES = 20;
+export const MAX_STDERR_LINE_CHARS = 400;
+
+/**
+ * The tail is keyed by logical lines, not by transport chunks: how the OS happens to
+ * split a failure must not change what is stored. Lines are trimmed, empty ones are
+ * ignored, and every line is counted so a truncated tail never reads as a small one.
+ */
+export function pushStderrLine(record: TaskRecord, raw: string): void {
+	const line = raw.trim();
+	if (!line) return;
+	record.stderrLines = (record.stderrLines ?? 0) + 1;
+	if (!record.stderrTail) record.stderrTail = [];
+	const tail = record.stderrTail;
+	tail.push(line.slice(0, MAX_STDERR_LINE_CHARS));
+	if (tail.length > MAX_STDERR_TAIL_LINES) tail.shift();
+}
+
+/**
+ * How a child ended, in the order a human reads it. A signal-terminated child has a
+ * null code, so reporting the code alone would say nothing at all.
+ */
+export function describeChildExit(code: number | null, signal: NodeJS.Signals | null): string {
+	if (code !== null && signal) return `Subagent process exited with code ${code} (signal ${signal})`;
+	if (code !== null) return `Subagent process exited with code ${code}`;
+	if (signal) return `Subagent process was terminated by signal ${signal}`;
+	return "Subagent process exited without an exit code or signal";
 }
 
 /** Finished tasks are kept only while a user could still act on them. */
@@ -382,6 +417,7 @@ export class StudioAgentsRunner {
 			cwd,
 			resolvedRoot: findStudioRoot(cwd) ?? resolve(cwd),
 			stderrTail,
+			stderrLines: 0,
 			status: "queued",
 			model: chosenModel,
 			latestActivity: "En cola para ejecución...",
@@ -977,18 +1013,27 @@ export class StudioAgentsRunner {
 			});
 
 			child.stderr?.setEncoding("utf8");
+			// The stream is read as lines, not as chunks: a chunk boundary is a transport
+			// detail, so a line split across chunks is reassembled instead of becoming two
+			// ring entries, and only the head of the line in progress is kept, so an
+			// enormous line is never copied whole on its way to being dropped.
+			let stderrPartial = "";
 			child.stderr?.on("data", (chunk: string) => {
 				record.lastActivityAt = Date.now();
-				const clean = chunk.trim();
-				if (clean) {
-					appendTaskLog(record, `        stderr: ${clean.slice(0, 100)}`);
-					for (const line of clean.split("\n")) {
-						if (!line.trim()) continue;
-						// Both dimensions are bounded: 20 lines, and each line capped, so one
-						// enormous line cannot become the whole error text either.
-						record.stderrTail!.push(line.trim().slice(0, 400));
-						if (record.stderrTail!.length > 20) record.stderrTail!.shift();
-					}
+				let lineStart = 0;
+				let breakAt = chunk.indexOf("\n");
+				while (breakAt !== -1) {
+					const line = (stderrPartial + chunk.slice(lineStart, breakAt)).trim();
+					stderrPartial = "";
+					lineStart = breakAt + 1;
+					breakAt = chunk.indexOf("\n", lineStart);
+					if (!line) continue;
+					appendTaskLog(record, `        stderr: ${line.slice(0, 100)}`);
+					pushStderrLine(record, line);
+				}
+				const room = MAX_STDERR_LINE_CHARS - stderrPartial.length;
+				if (room > 0 && lineStart < chunk.length) {
+					stderrPartial += chunk.slice(lineStart, lineStart + room);
 				}
 			});
 
@@ -1008,7 +1053,7 @@ export class StudioAgentsRunner {
 				);
 			}, tickMs);
 
-			child.on("close", (code) => {
+			child.on("close", (code, exitSignal) => {
 				clearTimeout(timer);
 				clearTimeout(initTimer);
 				if (signal) {
@@ -1016,6 +1061,10 @@ export class StudioAgentsRunner {
 				}
 				this.liveProcesses.delete(record.id);
 				record.endedAt = Date.now();
+
+				// A last line without its newline is still part of the diagnostic.
+				if (stderrPartial.trim()) pushStderrLine(record, stderrPartial);
+				stderrPartial = "";
 
 				if (superseded) {
 					// El desenlace ya se decidió al leer la respuesta del prompt.
@@ -1075,12 +1124,22 @@ export class StudioAgentsRunner {
 					}
 				} else {
 					record.status = "failed";
-					// The bounded tail is the diagnostic; the full stream was only ever read here.
-					record.error = record.stderrTail?.length
-						? record.stderrTail.join("\n")
-						: `Subagent process exited with code ${code}`;
+					// The tail is the diagnostic, but the status leads it: a child that fails
+					// noisily must not hide how it died, and a child killed by a signal has no
+					// exit code at all (#104, #105).
+					const outcome = describeChildExit(code, exitSignal);
+					const tail = record.stderrTail ?? [];
+					if (tail.length === 0) {
+						record.error = outcome;
+					} else {
+						const seen = record.stderrLines ?? tail.length;
+						const truncated = seen > tail.length ? ` (${seen} stderr lines, last ${tail.length} kept)` : "";
+						record.error = `${outcome}${truncated}\n${tail.join("\n")}`;
+					}
 					record.result = resultText.trim() || null;
-					record.latestActivity = `Error al salir (código ${code})`;
+					record.latestActivity = code !== null
+						? `Error al salir (código ${code})`
+						: `Error al salir (señal ${exitSignal ?? "desconocida"})`;
 				}
 
 				this.notifyListeners(record);

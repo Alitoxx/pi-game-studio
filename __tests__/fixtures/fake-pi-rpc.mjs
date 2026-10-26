@@ -87,6 +87,35 @@ process.stdin.on("data", (chunk) => {
 		return;
 	}
 
+	// FAKE_STDERR_LONG_LINE models one enormous diagnostic line that the OS delivers
+	// as many chunks: what the runner keeps must key on logical lines, not chunks.
+	if (process.env.FAKE_STDERR_LONG_LINE) {
+		const total = Number(process.env.FAKE_STDERR_LONG_LINE);
+		const piece = 8000;
+		const head = "long-line-start ";
+		const text = head + "z".repeat(Math.max(0, total - head.length));
+		let offset = 0;
+		const writeNext = () => {
+			if (offset >= text.length) {
+				process.stderr.write("\n");
+				setTimeout(() => process.exit(Number(process.env.FAKE_EXIT_CODE || 3)), 30);
+				return;
+			}
+			process.stderr.write(text.slice(offset, offset + piece));
+			offset += piece;
+			setTimeout(writeNext, 2);
+		};
+		writeNext();
+		return;
+	}
+
+	// FAKE_SELF_SIGNAL models a child killed by a signal, which exits with a null
+	// code: the record must name the signal instead of reporting a bare null.
+	if (process.env.FAKE_SELF_SIGNAL) {
+		process.kill(process.pid, process.env.FAKE_SELF_SIGNAL);
+		return;
+	}
+
 	// A child that keeps working is not a child that is stuck: the watchdog must
 	// see activity, not elapsed time.
 	if (process.env.FAKE_SILENT_AFTER_PROMPT) return;

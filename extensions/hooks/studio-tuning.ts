@@ -3,6 +3,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
 import { writeFileAtomicSync } from "./studio-fs.ts";
+import { recordFailure } from "./studio-diagnostics.ts";
 import { ACCENT, ACCENT as BLUE, BORDER, CYAN, DIM, GRAY, GREEN, RED, RESET, SECONDARY, WHITE, YELLOW, padAnsi } from "./studio-palette.ts";
 
 export interface TuningVar {
@@ -167,7 +168,10 @@ export function updateTuningVariable(
 			return true;
 		}
 		return false;
-	} catch {
+	} catch (error) {
+		// The caller only sees a boolean, so the cause has to be recorded here or the
+		// calibration is silently left untouched.
+		recordFailure("tuning.write", error);
 		return false;
 	}
 }

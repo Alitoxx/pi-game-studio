@@ -56,7 +56,7 @@ El idioma de cada archivo se decide por quién lo consume, no por preferencia:
 
 | Capa | Idioma | Por qué |
 |---|---|---|
-| `agents/*.md`, `chains/*.chain.md`, `skills/*/SKILL.md` | **Inglés** | Son instrucciones que el modelo carga y ejecuta: el inglés es más fiable para *instruction-following*, ocupa menos tokens para el mismo contenido y coincide con el resto del contrato (`subagent_run`, `validation:`, `## Allowed edit surfaces`, rutas). |
+| `agents/*.md`, `chains/*.chain.md`, `skills/**/*.md` | **Inglés** | Son instrucciones que el modelo carga y ejecuta: el inglés es más fiable para *instruction-following*, ocupa menos tokens para el mismo contenido y coincide con el resto del contrato (`subagent_run`, `validation:`, `## Allowed edit surfaces`, rutas). |
 | `docs/`, `AGENTS.md`, `README.md`, copy de CLI y chat | **Español** | Lo lee el humano; el inglés ahí no aporta nada y sí cuesta comprensión. |
 | Salida de los agentes (receipts, GDD, comentarios de producto) | **Idioma configurado** | `.pi/game-studio/language` + Neutral Protocol. Es un eje distinto del anterior y no lo reemplaza. |
 

@@ -4,6 +4,7 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, unlinkSync } from 
 import { dirname, join } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
 import { writeFileAtomicSync } from "./studio-fs.ts";
+import { recordFailure } from "./studio-diagnostics.ts";
 import { detectProjectEngine } from "./engine-detector.ts";
 import { ACCENT as BLUE, BORDER, CYAN, DIM, GRAY, GREEN, RED, RESET, SECONDARY, YELLOW, padAnsi } from "./studio-palette.ts";
 
@@ -201,7 +202,9 @@ export async function handleStudioPlay(
 		// The header truncates the log, so it must be atomic: a crash mid-write
 		// would leave a prefix that the next append silently extends.
 		writeFileAtomicSync(logPath, `=== Studio Play Log: ${new Date().toISOString()} ===\n`, "utf8");
-	} catch {}
+	} catch (error) {
+		recordFailure("play.logHeader", error);
+	}
 
 	try {
 		const child = spawn(config.command, config.args, {
@@ -222,7 +225,10 @@ export async function handleStudioPlay(
 				// The pid file is re-read by stop/status, so it lands whole or not at
 				// all: a truncated pid would kill the wrong process.
 				writeFileAtomicSync(getPidFilePath(studioRoot), String(child.pid), "utf8");
-			} catch {}
+			} catch (error) {
+				// Without a pid, stop/status cannot find the child: the failure matters.
+				recordFailure("play.pid", error);
+			}
 		}
 
 		// Appending is the right primitive for a log: the old read-modify-write

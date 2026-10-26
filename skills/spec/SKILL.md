@@ -53,7 +53,7 @@ It closes in `completed` only if `design/gdd/<feature>.md` meets these five bina
 - **Checklist covers the mechanisms**: every mechanism in *System Rules* has at least one `[ ]` task in the atomic checklist.
 - **Assets registered**: every named sprite, audio or shader appears in `assets/manifest.yaml` with its state (`placeholder` or `final`).
 
-Evidence reported (the `structural:` example below is delivery output and stays in the project's configured language):
+Evidence reported:
 
 `structural: design/gdd/<feature>.md: 12/12 secciones, 7 knobs con unidad y archivo, checklist cubre 5 mecanismos, 4 assets en manifiesto`
 

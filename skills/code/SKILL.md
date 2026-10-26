@@ -29,7 +29,7 @@ When `/code <feature>` is invoked (or `/code review`):
 - Modify or create the source files in `src/`.
 - **Shader & Material Implementation**: If the task involves visual effects, lighting, fog or distortion, create the corresponding shader files in `assets/shaders/` (.wgsl, .gdshader, .fs) with clean bindings/uniforms, instead of emulating them with heavy CPU-side logic.
 - **Debug Overlay & Gizmos in Dev (`F3`)**: In the first scaffold or subsystem task (`TASK-01` or `02`), enable a debug layer toggled with the `F3` or `~` key that projects real FPS, gameplay metrics, AI states and collision/vision gizmos on screen.
-- **Decoupled Action Mapping**: Always use virtual actions (`ActionState` or `InputMap`) that natively support Keyboard/Mouse and Gamepad without hardcoding individual keys into controllers.
+- **Decoupled Action Mapping**: Always use virtual actions (`ActionState` or `InputMap`) that natively support Keyboard/Mouse and Gamepad without `hardcoding` individual keys into controllers.
 - **Game Feel Micro-feedback**: Apply the camera shake, hitstop and easing curve values defined in the Live Spec instead of dry jumps or movements.
 - **CLI Asset Transformation & Optimization**:
   - If the task introduces new 2D sprites or atlases: use `magick` to assemble spritesheets and `oxipng` to compress PNGs losslessly.
@@ -52,7 +52,7 @@ Ensure the build is clean (0 errors).
 ### 4. Automatic Task Closure & Producer Handoff
 After receiving the specialist's Delivery Receipt with `status: completed`:
 - **Live Spec**: Open `design/gdd/<feature>.md` and mark the completed task from `[ ]` (or `[/]`) to `[x] <tarea>` (task-line format; the placeholder stays as documented) with its date and validation hash/summary.
-- **Roadmap & State**: Update `production/roadmap.md` inside the `<!-- PRODUCER_STATE -->` block, updating (the field labels below are human-facing roadmap content and stay in the project's configured language):
+- **Roadmap & State**: Update `production/roadmap.md` inside the `<!-- PRODUCER_STATE -->` block, updating (the field labels below are roadmap content, written as they are):
   - `Última Tarea Completada: <ID de la tarea>`
   - `Siguiente Paso: <siguiente tarea pendiente [ ]>`
 - **Executive Summary**: Return exclusively the Delivery Receipt in 10-15 lines, naming the next executable step without speculation.

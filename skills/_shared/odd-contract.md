@@ -5,12 +5,12 @@ This file defines the shared contracts and standards for the **6 ODD Skills of P
 ## 1. Zero Bleed & Executive Delivery (Gentle Shell Neutral Protocol)
 - Printing raw tool calls (`ask_user_question`, `subagent_run`), internal pipeline traces, or reasoning monologues into the user's chat is strictly forbidden.
 - All human interaction happens through interactive terminal modals (`ctx.ui.select` / `ask_user_question`).
-- **Professional Neutral Mode:** All conversational output, explanations and summaries from the skills operate under the Gentle Shell neutral protocol: standard informal address (`tú tienes`, `haz`, `revisa` — output examples kept in the project's configured language), no voseo or regionalisms, zero opening flattery (*"Buena pregunta"*), zero condescension (*"en lenguaje llano"*), and zero decorative emojis.
+- **Professional Neutral Mode:** All conversational output, explanations and summaries from the skills operate under the Gentle Shell neutral protocol: standard informal address (`tú tienes`, `haz`, `revisa` — the parenthetical strings are output examples), no voseo or regionalisms, zero opening flattery (*"Buena pregunta"*), zero condescension (*"en lenguaje llano"*), and zero decorative emojis.
 
 ## 2. Live Specs Single Source of Truth
 - All system or mechanic design lives exclusively in `design/gdd/<feature>.md`.
 - Production and sprint tracking lives exclusively in `production/roadmap.md`.
-- **Task Hygiene & Zero Checkbox Bloat:** In `production/roadmap.md` each sprint carries **a single main checkbox** for the macro task. Verification notes (`cargo check limpio`, `tests verdes` — example note text in the project's configured language, constraints) go as plain bullets (`-`), never as `[ ]` or `[x]`. Duplicating future task queues that already exist in the GDD is forbidden.
+- **Task Hygiene & Zero Checkbox Bloat:** In `production/roadmap.md` each sprint carries **a single main checkbox** for the macro task. Verification notes (`cargo check limpio`, `tests verdes` — the parenthetical strings are example notes, constraints) go as plain bullets (`-`), never as `[ ]` or `[x]`. Duplicating future task queues that already exist in the GDD is forbidden.
 - Zero dead specification files or intermediate-document bureaucracy.
 
 ## 3. Atomic Scoping & Execution Budgets (~400 Lines)
@@ -43,7 +43,7 @@ next_recommended_specialist: qa-lead
 
 `status` accepts `completed`, `partial`, `blocked` or `interaction_required`. A `completed` requires non-empty `validation`: `files_changed` names files, not verification, and is not evidence by itself.
 
-Each `validation` entry takes one of three shapes, and the admissible family depends on whether the agent declares `bash` (the shapes below are shown verbatim: the runtime matches the `structural:` and `exception:` prefixes literally):
+Each `validation` entry takes one of three shapes, and the admissible family depends on whether the agent declares `bash` (the shapes below are shown as they appear in a delivery: the runtime matches the `structural:` and `exception:` prefixes case-insensitively and tolerates surrounding whitespace):
 
 | Shape | Who reports it | What it proves |
 |---|---|---|

@@ -26,7 +26,7 @@ When `/concept` is invoked (or `/concept pitch`, `/concept jam`):
 ### 2. Pillar Definition (3 to 5 Pillars)
 - Each Pillar must contain:
   1. **Name & Philosophy**: What makes the game unique.
-  2. **Actionable Design Test**: A concrete binary question to settle doubts ("¿Esto refuerza el pilar X?" — example output in the project's configured language: "Does this reinforce Pillar X?").
+  2. **Actionable Design Test**: A concrete binary question to settle doubts ("¿Esto refuerza el pilar X?" — example: "Does this reinforce Pillar X?").
 - Define at least 2 **Anti-Pillars**: What the game explicitly will NOT try to be, to protect scope.
 
 ### 3. Inline Validation & Visual Anchor
@@ -48,7 +48,7 @@ It closes in `completed` only if `design/gdd/concept.md` meets these four binary
 - **Loop of three steps or fewer**: the core loop reads complete in ≤ 3 steps, with no hidden sub-loops inside.
 - **Explicit platform and dimension**: the document declares the target (PC, console, web) and `2d` or `3d`, consistent with `project.yaml`.
 
-Evidence reported (the `structural:` example below is delivery output and stays in the project's configured language; an agent without `bash` cannot run commands):
+Evidence reported (an agent without `bash` cannot run commands):
 
 `structural: design/gdd/concept.md: 4 pilares con verbo, loop de 3 pasos, target PC, dimensión 3d`
 

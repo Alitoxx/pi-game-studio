@@ -583,7 +583,7 @@ describe("Every paper ODD phase closes on observed evidence", () => {
 	const closingGateOf = (content) => {
 		const lines = content.split("\n");
 		const start = lines.findIndex((line) =>
-			/^#{2,3} (?:\d+\.\s*)?(?:Cierre|Verifiable Closure|Closing Gate)/i.test(line),
+			/^#{2,3} (?:\d+\.\s*)?(?:Cierre Verificable \(Done When\)|Verifiable Closure \(Done When\)|Closing Gate)$/i.test(line),
 		);
 		if (start === -1) return null;
 		// Everything under the closing heading, up to the next heading of any level.

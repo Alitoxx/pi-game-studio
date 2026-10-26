@@ -61,7 +61,7 @@ It closes in `completed` only if these four binary conditions hold:
 - **Complete ADR**: every ADR in `docs/architecture/adr-<numero>-<titulo>.md` declares the decision, the rejected alternative and the consequence; an ADR without a rejected alternative is an announcement, not a decision.
 - **Proven toolchain**: the active engine's build/check command runs at least once and its exact result goes into the evidence.
 
-Evidence reported (the `structural:` example below is delivery output and stays in the project's configured language):
+Evidence reported:
 
 `structural: docs/architecture/adr-001-ecs-vs-jerarquia.md: decisión + alternativa + consecuencia, 3 presupuestos con umbral y comando` plus `cargo check -p game: 0 errors` (or the active engine's command) once the scaffold exists.
 

@@ -7,18 +7,19 @@ import {
 	RESET,
 	BOLD,
 	DIM,
-	GREEN,
-	YELLOW,
-	GRAY,
-	ACCENT as BLUE,
 	SECONDARY,
-	WHITE,
-	RED,
 	resolveStudioTheme,
 	type StudioThemeRoles,
 } from "./studio-palette.ts";
 
 export const AGENTS_WIDGET_KEY = "studio-subagents";
+
+/**
+ * How long a finished task stays on screen. One constant, because the card
+ * filter and the widget's install gate disagreed by fifteen seconds: the widget
+ * dropped a task while the card still drew it.
+ */
+export const SUBAGENTS_RECENT_WINDOW_MS = 45000;
 
 export const SPECIALIST_ENGINE_TAGS: Record<string, string> = {
 	"bevy-specialist": "[Bevy]",
@@ -68,7 +69,13 @@ export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 7
 	const r = role ?? resolveStudioTheme();
 
 	const activeTasks = tasks.filter(
-		(t) => t.status === "running" || t.status === "queued" || (t.endedAt && Date.now() - t.endedAt < 60000)
+		(t) =>
+			t.status === "running" ||
+			t.status === "queued" ||
+			// A task waiting for a decision is the one case the human must see: it
+			// was outside this filter, so the card hid the request it was asking for.
+			t.status === "interaction_required" ||
+			(t.endedAt && Date.now() - t.endedAt < SUBAGENTS_RECENT_WINDOW_MS),
 	).slice(0, 4);
 
 	if (activeTasks.length === 0) return [];
@@ -94,7 +101,11 @@ export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 7
 	const now = Date.now();
 	for (const task of activeTasks) {
 		let statusBadge = `${r.muted("○ EN COLA")}`;
-		if (task.status === "completed") {
+		if (task.status === "interaction_required") {
+			// The one state that asks the human for something is not the one that
+			// waits for a turn: it needs its own badge or it reads as queued.
+			statusBadge = `${r.warn("◑ PIDE RESPUESTA")}`;
+		} else if (task.status === "completed") {
 			statusBadge = `${r.success("✓ OK")}`;
 		} else if (task.status === "running") {
 			statusBadge = `${r.warn("◐ COMPILANDO")}`;
@@ -153,17 +164,38 @@ export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 7
 	return lines;
 }
 
-export function installSubagentsWidget(ctx: ExtensionContext): void {
+let activeWidgetContext: ExtensionContext | undefined;
+let widgetSubscribed = false;
+
+/**
+ * Installs the live card once per session and returns whether this call was the
+ * one that subscribed.
+ *
+ * It runs from the per-turn setup block, and it used to subscribe again on every
+ * turn: each listener re-rendered the widget, so the work per runner event grew
+ * with the session length and could never be released. The single listener reads
+ * the latest context instead of capturing the first one.
+ */
+export function installSubagentsWidget(ctx: ExtensionContext): boolean {
 	if (!(ctx as any).hasUI || typeof (ctx.ui as any)?.setWidget !== "function") {
-		return;
+		return false;
 	}
 
-	// Suscribirse a cambios en los subagentes para re-renderizar en vivo
+	activeWidgetContext = ctx;
+	if (widgetSubscribed) {
+		return false;
+	}
+	widgetSubscribed = true;
+
 	studioAgentsRunner.subscribe(() => {
+		const target = activeWidgetContext;
+		if (!target) return;
 		try {
-			updateSubagentsWidget(ctx);
+			updateSubagentsWidget(target);
 		} catch {}
 	});
+
+	return true;
 }
 
 export function updateSubagentsWidget(ctx: ExtensionContext): void {
@@ -173,7 +205,11 @@ export function updateSubagentsWidget(ctx: ExtensionContext): void {
 
 	const tasks = studioAgentsRunner.listTasks();
 	const activeTasks = tasks.filter(
-		(t) => t.status === "running" || t.status === "queued" || (t.endedAt && Date.now() - t.endedAt < 45000)
+		(t) =>
+			t.status === "running" ||
+			t.status === "queued" ||
+			t.status === "interaction_required" ||
+			(t.endedAt && Date.now() - t.endedAt < SUBAGENTS_RECENT_WINDOW_MS),
 	);
 
 	if (activeTasks.length === 0) {

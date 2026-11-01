@@ -13,6 +13,7 @@ import { renderStudioStatusCard, isStatusCardCollapsed, setStatusCardCollapsed }
 import { renderTasksWidgetCard, isTasksWidgetEnabled, isTasksCardCollapsed, setTasksCardCollapsed } from "./studio-tasks-widget.ts";
 import { studioAgentsRunner } from "./studio-agents-runner.ts";
 import { renderSubagentsWidgetCard } from "./studio-subagents-widget.ts";
+import { resolveStudioTheme, truncateAnsi, type StudioThemeRoles } from "./studio-palette.ts";
 
 export const SIDEBAR_BREAKPOINT = 140;
 const RAIL_WIDTH = 50;
@@ -86,10 +87,54 @@ export function isStudioSidebarActive(tui?: TUI): boolean {
  * Displays Status + Tasks on the right rail when terminal width >= 140 and in fullscreen mode.
  * Safe fallback to bottom widget if terminal is narrower or not in fullscreen.
  */
-export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => void {
+export interface StudioRailCards {
+	status: string[];
+	tasks: string[];
+	subagents: string[];
+}
+
+/**
+ * The rail's card set, rendered with the caller's theme role.
+ *
+ * The rail and the dock show the same cards, so they must paint them the same
+ * way. The role travels with the call instead of being resolved here: when the
+ * rail resolved it on its own it got the themeless default, and the same card
+ * changed colour with the window width.
+ */
+export function renderRailCards(
+	ctx: ExtensionContext,
+	studioRoot: string,
+	cardInnerWidth: number,
+	role?: StudioThemeRoles,
+): StudioRailCards {
+	const statusCollapsed = isStatusCardCollapsed(studioRoot);
+	const tasksCollapsed = isTasksCardCollapsed(studioRoot);
+
+	const tasks: string[] = [];
+	if (isTasksWidgetEnabled(studioRoot)) {
+		const summary = inspectStudioTasks(studioRoot);
+		tasks.push(
+			...renderTasksWidgetCard(summary.tasks || [], cardInnerWidth, tasksCollapsed, studioRoot, role),
+		);
+	}
+
+	let subagents: string[] = [];
+	try {
+		subagents = renderSubagentsWidgetCard(studioAgentsRunner.listTasks(), cardInnerWidth, role);
+	} catch {}
+
+	return {
+		status: renderStudioStatusCard(ctx, studioRoot, cardInnerWidth, statusCollapsed, role),
+		tasks,
+		subagents,
+	};
+}
+
+export function installStudioSidebar(tui: TUI, ctx: ExtensionContext, theme?: any): () => void {
 	if (!tui?.terminal) return () => {};
 
 	activeTui = tui;
+	const role = resolveStudioTheme(theme);
 	const host = tui as Host;
 	const state = getStudioSidebarState(tui);
 	const cleanups: Array<() => void> = [];
@@ -210,23 +255,11 @@ export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => voi
 			const cardInnerWidth = Math.max(0, contentWidth - RAIL_PADDING * 2);
 
 			const statusCollapsed = isStatusCardCollapsed(studioRoot);
-			// Render Status Card
-			const statusLines = renderStudioStatusCard(ctx, studioRoot, cardInnerWidth, statusCollapsed);
-
 			const tasksCollapsed = isTasksCardCollapsed(studioRoot);
-			// Render Tasks Card (if enabled)
-			let taskLines: string[] = [];
-			if (isTasksWidgetEnabled(studioRoot)) {
-				const summary = inspectStudioTasks(studioRoot);
-				taskLines = renderTasksWidgetCard(summary.tasks || [], cardInnerWidth, tasksCollapsed, studioRoot);
-			}
-
-			// Render Subagents Card (if active subagent tasks exist)
-			let subagentLines: string[] = [];
-			try {
-				const subTasks = studioAgentsRunner.listTasks();
-				subagentLines = renderSubagentsWidgetCard(subTasks, cardInnerWidth);
-			} catch {}
+			const cards = renderRailCards(ctx, studioRoot, cardInnerWidth, role);
+			const statusLines = cards.status;
+			const taskLines = cards.tasks;
+			const subagentLines = cards.subagents;
 
 			railLines = [];
 			railLines.push(""); // top margin
@@ -261,9 +294,13 @@ export function installStudioSidebar(tui: TUI, ctx: ExtensionContext): () => voi
 				state.tasksHeaderRange = undefined;
 			}
 
+			// A line wider than the rail either wraps or clips at the terminal edge
+			// depending on the host, so clip here: the rail owns its own width.
+			railLines = railLines.map((line) => truncateAnsi(line, contentWidth));
+
 			const active =
 				railLines.length > 0 &&
-				railLines.every((l) => visibleWidth(l) <= contentWidth + 4);
+				railLines.every((l) => visibleWidth(l) <= contentWidth);
 
 			state.active = active;
 			lastRevision = state.revision;

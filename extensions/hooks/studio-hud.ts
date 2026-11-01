@@ -5,6 +5,7 @@ import { findStudioRoot } from "./studio-root.ts";
 import { panelBottom, panelRow, panelTop } from "./studio-palette.ts";
 import { readProducerState } from "./studio-start.ts";
 import { inspectSetup } from "./studio-setup.ts";
+import { getActivePerfMetrics } from "./studio-profile.ts";
 
 export type OddPhaseId = "concept" | "spec" | "arch" | "code" | "test" | "ship";
 
@@ -279,9 +280,11 @@ export function renderStudioFooterBar(
 	const engineDisplay = isEngineUnconfigured ? "Sin motor" : rawEngine;
 
 	const gaugeLen = width < 60 ? 4 : 5;
+	// An unread usage is unknown, not full. A green 100% here would be
+	// indistinguishable from a context that really is exhausted.
 	const contextDisplay = usage
 		? `${renderContextGauge(usage.percent, gaugeLen)} ${getGaugeColor(usage.percent)}${usage.percent}%${RESET}`
-		: `${r.success("100%")}`;
+		: `${r.muted("n/d")}`;
 
 	const parts: string[] = [];
 	parts.push(`▎ ${r.accent(engineDisplay)}${RESET}`);
@@ -290,22 +293,25 @@ export function renderStudioFooterBar(
 	}
 	parts.push(contextDisplay);
 
-	// Live Performance Tracker (only if active metrics exist and screen fits)
-	try {
-		const { getActivePerfMetrics } = require("./studio-profile.ts");
-		const perf = getActivePerfMetrics?.();
-		if (perf && width >= 70) {
-			const perfLine = `⚡ ${perf.fps}fps`;
-			parts.push(perf.status === "OK" ? r.success(perfLine) : r.warn(perfLine));
+	// Live Performance Tracker: only the metrics that were actually measured.
+	// Measured memory renders; an fps the studio cannot sample stays absent.
+	const perf = getActivePerfMetrics();
+	if (perf && width >= 70) {
+		const measured: string[] = [];
+		if (perf.fps !== null) measured.push(`${perf.fps}fps`);
+		if (perf.memoryMb !== null) measured.push(`${perf.memoryMb}MB`);
+		if (measured.length > 0) {
+			const perfLine = `⚡ ${measured.join(" ")}`;
+			parts.push(
+				perf.status === "OK" ? r.success(perfLine) : perf.status === "UNKNOWN" ? r.muted(perfLine) : r.warn(perfLine),
+			);
 		}
-	} catch {}
+	}
 
 	return parts.join(` ${DIM}·${RESET} `);
 }
 
-import { installStudioSidebar, isStudioSidebarActive } from "./studio-sidebar.ts";
-import { studioAgentsRunner } from "./studio-agents-runner.ts";
-import { renderSubagentsWidgetCard } from "./studio-subagents-widget.ts";
+import { installStudioSidebar } from "./studio-sidebar.ts";
 
 export function installStudioFooter(pi: ExtensionAPI, ctx: ExtensionContext): void {
 	if (!(ctx as any).hasUI || typeof (ctx.ui as any)?.setFooter !== "function") {
@@ -318,29 +324,16 @@ export function installStudioFooter(pi: ExtensionAPI, ctx: ExtensionContext): vo
 			let uninstallSidebar: (() => void) | undefined;
 			if (tui && tui.terminal) {
 				try {
-					uninstallSidebar = installStudioSidebar(tui, ctx);
+					uninstallSidebar = installStudioSidebar(tui, ctx, theme);
 				} catch {}
 			}
 
 			return {
 				render(width: number) {
-					const lines: string[] = [];
-					// Si la barra lateral derecha no está activa (por ancho de terminal o split-view)
-					// renderizamos la tarjeta viva de subagentes en el footer dock
-					if (!isStudioSidebarActive(tui)) {
-						try {
-							const tasks = studioAgentsRunner.listTasks();
-							const widgetLines = renderSubagentsWidgetCard(tasks, width, role);
-							if (widgetLines.length > 0) {
-								lines.push(...widgetLines);
-								lines.push(""); // Separador visual sobrio
-							}
-						} catch {}
-					}
-
-					const barLine = renderStudioFooterBar(pi, ctx, width, footerData, role);
-					lines.push(barLine);
-					return lines;
+					// The subagents card has one owner: the widget, which already gates on the
+					// rail being active. Rendering it here too is what doubled the card in
+					// every terminal narrower than the sidebar breakpoint.
+					return [renderStudioFooterBar(pi, ctx, width, footerData, role)];
 				},
 				invalidate() {},
 				dispose() {
@@ -382,7 +375,7 @@ export function updateStudioHUD(ctx: ExtensionContext, pi?: ExtensionAPI): void 
 		const milestone = prodState?.milestone || "Pendiente (/concept)";
 		const sprint = prodState?.sprint || "Sprint Activo";
 		const phaseChip = inferOddPhase(prodState);
-		const contextDisplay = usage ? `${usage.percent}%` : "100%";
+		const contextDisplay = usage ? `${usage.percent}%` : "n/d";
 
 		(ctx.ui as any).setStatus(
 			"studio",

@@ -247,6 +247,11 @@ function showReport({ tierPlan, agentPlan, tierKeys }) {
 		console.log(`  ${entry.agent}: ${entry.old || "(unset)"} → ${entry.model}`);
 	}
 
+	// One line for humans and for the CI guard that reads this report.
+	console.log(
+		`\nSummary: ${tierChanges.length + agentChanges.length} pending change(s) — run with --apply to write them`,
+	);
+
 	return tierChanges.length + agentChanges.length;
 }
 

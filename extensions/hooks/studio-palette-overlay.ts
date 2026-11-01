@@ -167,7 +167,9 @@ export class CommandPaletteOverlayComponent {
 	public render(width: number): string[] {
 		// Pi hands this component a theme handle; resolve the semantic roles from it.
 		const role = resolveStudioTheme(this.theme);
-		const cardWidth = Math.min(76, Math.max(56, width - 4));
+		// Floor of 32 so a narrow terminal still gets a readable card, and a hard
+		// clamp to `width` so no rendered line can ever exceed the surface given.
+		const cardWidth = Math.max(16, Math.min(76, Math.max(32, width - 4), width));
 		const innerWidth = cardWidth - 4;
 		const lines: string[] = [];
 
@@ -234,10 +236,12 @@ export class CommandPaletteOverlayComponent {
 
 				const pointer = isSelected ? `${role.accent("▶")}${RESET} ` : "  ";
 				const highlightedName = highlightMatch(item.name, item.indices, CYAN, WHITE);
-				const namePadded = padAnsi(`${role.text(highlightedName)}${RESET}`, 22);
+				// Name column is fixed at 22; the description gets whatever is left of the
+				// row (pointer 2 + name 22 + space 1 + description <= innerWidth - 2).
+				const namePadded = padAnsi(truncateAnsi(`${role.text(highlightedName)}${RESET}`, 22), 22);
 
-				const descLen = innerWidth - 26;
-				const descTrunc = truncateAnsi(item.description, Math.max(10, descLen));
+				const descLen = Math.max(4, innerWidth - 27);
+				const descTrunc = truncateAnsi(item.description, descLen);
 				const descFormatted = isSelected ? `${role.text(descTrunc)}${RESET}` : `${role.muted(descTrunc)}${RESET}`;
 
 				const rowContent = `${pointer}${namePadded} ${descFormatted}`;

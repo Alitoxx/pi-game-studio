@@ -49,7 +49,10 @@ export function renderTimelineSplitView(
 	activeFilter: FilterCategory = "All",
 	width: number = 84,
 ): string[] {
-	const totalWidth = Math.max(76, width);
+	// The frame adds its own two border columns, so the inner width is two less
+	// than the surface: a frame wider than the terminal wraps and the box breaks
+	// at the edge. 76 is the split view's declared minimum, floor included.
+	const totalWidth = Math.max(76, width) - 2;
 	const leftWidth = Math.min(36, Math.max(28, Math.floor(totalWidth * 0.38)));
 	const rightWidth = totalWidth - leftWidth - 1;
 
@@ -73,8 +76,11 @@ export function renderTimelineSplitView(
 		return isAct ? `${CYAN}[${name}]${RESET}` : `${GRAY}[○ ${name}]${RESET}`;
 	}).join("  ");
 
-	lines.push(panelTop(totalWidth - 4, `${PURPLE}${BOLD}TIMELINE DE PRODUCCIÓN Y DECISIONES (ODD)${RESET}`, "rounded", BORDER));
-	lines.push(`${panelRow(`  ${GRAY}Filtro:${RESET} ${tabLabels}  ${DIM}(Tab para cambiar)${RESET}`, totalWidth - 2, BORDER)}`);
+	// One inner width for the whole frame: the body rows, the mid rule and the
+	// bottom border are all `totalWidth + 2` visible columns wide, so the title
+	// bar and the filter row must be built at the same width or the box is ragged.
+	lines.push(panelTop(totalWidth, `${PURPLE}${BOLD}TIMELINE DE PRODUCCIÓN Y DECISIONES (ODD)${RESET}`, "rounded", BORDER));
+	lines.push(`${panelRow(`  ${GRAY}Filtro:${RESET} ${tabLabels}  ${DIM}(Tab para cambiar)${RESET}`, totalWidth, BORDER)}`);
 	lines.push(`${BORDER}├${"─".repeat(leftWidth)}┬${"─".repeat(rightWidth)}┤${RESET}`);
 
 	// 2. Left column (tree with ASCII spine)

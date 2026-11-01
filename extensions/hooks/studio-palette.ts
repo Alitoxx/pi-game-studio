@@ -253,11 +253,14 @@ export function panelBottom(innerWidth: number, style: PanelStyle = "square", fr
 /**
  * Builds one content row: `│ <content padded to innerWidth - 2> │`. Total
  * visible width, padding included, is exactly `innerWidth + 2`. Content is
- * padded, never truncated — callers truncate with `truncateAnsi` first when
- * they need a hard cap. `frameColor` colours both border segments.
+ * padded to fill the row and clipped with `truncateAnsi` when it cannot fit:
+ * a row never renders wider than the frame it belongs to. `frameColor` colours
+ * both border segments.
  */
 export function panelRow(content: string, innerWidth: number, frameColor: string = ""): string {
-	const body = padAnsi(content, Math.max(0, innerWidth - 2));
+	const budget = Math.max(0, innerWidth - 2);
+	// `truncateAnsi` always leaves an ellipsis, so a zero budget must skip it.
+	const body = padAnsi(budget > 0 ? truncateAnsi(content, budget) : "", budget);
 	const innerReset = frameColor ? RESET : "";
 	const tail = frameColor ? RESET : "";
 	return frameColor + "│" + innerReset + " " + body + " " + frameColor + "│" + tail;

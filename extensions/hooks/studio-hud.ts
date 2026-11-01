@@ -308,7 +308,9 @@ export function renderStudioFooterBar(
 		}
 	}
 
-	return parts.join(` ${DIM}·${RESET} `);
+	// The footer is one terminal line: a long engine name or model id must be
+	// clipped by the studio itself instead of being wrapped or cut by the host.
+	return truncateAnsi(parts.join(` ${DIM}·${RESET} `), Math.max(1, width));
 }
 
 import { installStudioSidebar } from "./studio-sidebar.ts";

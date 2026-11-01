@@ -3,7 +3,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { runGit } from "./studio-exec.ts";
 import { findStudioRoot } from "./studio-root.ts";
-import { panelBottom, panelRow, panelTop, panelRule, RESET, BORDER, ACCENT, HEADING, MUTED, SUCCESS, WARNING, ERROR } from "./studio-palette.ts";
+import { panelBottom, panelRow, panelTop, panelRule, RESET, BORDER, HEADING, resolveStudioTheme, getActiveThemeRole, type StudioThemeRoles } from "./studio-palette.ts";
 
 export type ChangeCategory = "DESIGN" | "CODE" | "DATA_ASSETS" | "PRODUCTION" | "CONFIG" | "OTHER";
 
@@ -222,10 +222,13 @@ function formatFileChangeRow(c: FileChange): string {
 	return `  ${c.status.padEnd(2)} ${c.path}${statStr}`;
 }
 
-export function formatChangesOutput(summary: ChangesSummary): string[] {
+export function formatChangesOutput(
+	summary: ChangesSummary,
+	role: StudioThemeRoles = resolveStudioTheme(),
+): string[] {
 	// One card idiom: /changes draws the same rounded, coloured card as every
 	// other studio surface, and the grouped detail hangs below it.
-	const lines: string[] = renderChangesCard(summary);
+	const lines: string[] = renderChangesCard(summary, role);
 
 	const totalChanges =
 		summary.design.length +
@@ -305,8 +308,16 @@ export function formatChangesOutput(summary: ChangesSummary): string[] {
  * other studio surface uses, carrying the counts. The per-category detail is
  * appended by `formatChangesOutput`, so this card stays the single header
  * idiom rather than a second renderer nobody reaches.
+ *
+ * Semantic states (added/removed figures, drift warnings, muted labels) resolve
+ * through `role`, so the card follows the host theme when one is configured.
+ * The title stays on the studio accent: the brand never routes through a theme
+ * token, which is the contract `palette.test.js` asserts.
  */
-export function renderChangesCard(summary: ChangesSummary): string[] {
+export function renderChangesCard(
+	summary: ChangesSummary,
+	role: StudioThemeRoles = resolveStudioTheme(),
+): string[] {
 	const groups: Array<[string, FileChange[]]> = [
 		["DESIGN", summary.design],
 		["CODE", summary.code],
@@ -329,16 +340,16 @@ export function renderChangesCard(summary: ChangesSummary): string[] {
 	// Emphasis stays on the accent role — the studio's title idiom — and the
 	// palette's ornament budget is left exactly as the other cards found it.
 	lines.push(
-		panelTop(cardWidth, `${ACCENT}CAMBIOS DEL ESTUDIO (STUDIO CHANGES)${RESET}`, "rounded", BORDER),
+		panelTop(cardWidth, role.accent("CAMBIOS DEL ESTUDIO (STUDIO CHANGES)"), "rounded", BORDER),
 	);
 	lines.push(
-		panelRow(`${MUTED}Clasificación rigurosa de modificaciones por naturaleza de juego${RESET}`, cardWidth, BORDER),
+		panelRow(role.muted("Clasificación rigurosa de modificaciones por naturaleza de juego"), cardWidth, BORDER),
 	);
 	lines.push(panelRule(cardWidth, "rounded", BORDER));
 
 	if (all.length === 0) {
 		lines.push(
-			panelRow(`${SUCCESS}✓ Árbol de trabajo limpio. No hay cambios pendientes en git.${RESET}`, cardWidth, BORDER),
+			panelRow(role.success("✓ Árbol de trabajo limpio. No hay cambios pendientes en git."), cardWidth, BORDER),
 		);
 		lines.push(panelBottom(cardWidth, "rounded", BORDER));
 		return lines;
@@ -346,21 +357,21 @@ export function renderChangesCard(summary: ChangesSummary): string[] {
 
 	lines.push(
 		panelRow(
-			` ${HEADING}${all.length} archivo(s) pendientes${RESET} ${MUTED}·${RESET} ${SUCCESS}+${totalAdds}${RESET} ${ERROR}-${totalDels}${RESET}`,
+			` ${HEADING}${all.length} archivo(s) pendientes${RESET} ${role.muted("·")} ${role.success(`+${totalAdds}`)} ${role.error(`-${totalDels}`)}`,
 			cardWidth,
 			BORDER,
 		),
 	);
 	const counts = groups
 		.filter(([, files]) => files.length > 0)
-		.map(([label, files]) => `${MUTED}${label}${RESET} ${files.length}`)
-		.join(` ${MUTED}·${RESET} `);
+		.map(([label, files]) => `${role.muted(label)} ${files.length}`)
+		.join(` ${role.muted("·")} `);
 	lines.push(panelRow(` ${counts}`, cardWidth, BORDER));
 
 	if (summary.driftWarnings.length > 0) {
 		lines.push(
 			panelRow(
-				` ${WARNING}⚠ ${summary.driftWarnings.length} alerta(s) de drift ODD${RESET}`,
+				` ${role.warn(`⚠ ${summary.driftWarnings.length} alerta(s) de drift ODD`)}`,
 				cardWidth,
 				BORDER,
 			),
@@ -392,7 +403,9 @@ export async function handleStudioChanges(
 	}
 
 	const summary = inspectChanges(rootDir);
-	const lines = formatChangesOutput(summary);
+	// The host gives a theme to the footer factory, not to a command handler, so
+	// the role the studio is actually rendering with is read from the palette.
+	const lines = formatChangesOutput(summary, getActiveThemeRole());
 
 	for (const line of lines) {
 		console.log(line);

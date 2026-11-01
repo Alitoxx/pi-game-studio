@@ -12,6 +12,7 @@ import {
 	YELLOW,
 	GREEN,
 	resolveStudioTheme,
+	reverse,
 	truncateAnsi,
 	padAnsi,
 	PALETTE_CATEGORIES,
@@ -200,7 +201,7 @@ export class CommandPaletteOverlayComponent {
 			const beforeCursor = this.query.slice(0, this.cursor);
 			const atCursor = this.query[this.cursor] || " ";
 			const afterCursor = this.query.slice(this.cursor + 1);
-			searchDisplay = `${role.text(beforeCursor)}${RESET}\x1b[7m${atCursor}\x1b[27m${role.text(afterCursor)}${RESET}`;
+			searchDisplay = `${role.text(beforeCursor)}${RESET}${reverse(atCursor)}${role.text(afterCursor)}${RESET}`;
 		}
 		lines.push(
 			`${panelRow(`${searchPrompt}${searchDisplay}`, innerWidth + 2, BORDER)}`,

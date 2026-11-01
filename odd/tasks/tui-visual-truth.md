@@ -24,7 +24,7 @@ Nine defects found in a read-only audit of the studio's terminal surface. Three 
 - **T5** — Panel geometry: one inner width for the timeline frame, footer truncation, rail clipping, palette overlay narrow fallback. `S6` · delegated · **`fix(chrome): panels keep their own width`** (+ T6)
 - **T6** — `/changes` single card idiom; dead `renderChangesCard` resolved. `S7` · delegated · same commit as T5
 - **T7** — Roster, engine label and language drift. `S9` · inline · **`fix(copy): one roster, one label, one language`**
-- **T8** — Theme contract applied: overlays through roles, `NO_COLOR` reverse video, theme files documented as chrome-only. `S10` · inline · **`docs(theme): the studio owns its palette`**
+- **T8** — Theme contract applied: overlays through roles, `NO_COLOR` reverse video, theme files documented as chrome-only. `S10` · delegated · **`docs(theme): the studio owns its palette`**
 
 ## Slices
 
@@ -40,4 +40,6 @@ Nine defects found in a read-only audit of the studio's terminal surface. Three 
 - **L4** — The theme question is not open: `palette.test.js` already asserts "semantic roles follow the theme, the brand does not" and "no theme keeps today's palette". `#115` applies that contract rather than reopening it.
 - **L5** — Slice 2 delivered by `gentle-ai-worker` (mvxt9nnf). Reviewed and accepted with one correction: the worker left the timeline frame 2 columns wider than the surface (it was told not to touch `rightWidth`), so `totalWidth = Math.max(76, width) - 2` now makes the frame fit exactly. Its `panelRow` change is global — every panel now clips instead of overflowing — which is the invariant S6 asked for, and it is covered by the full suite.
 - **L6** — Residual for T8: `renderChangesCard` imports raw `SUCCESS`/`WARNING`/`ERROR`/`ACCENT` constants instead of taking a `role`, so `/changes` does not follow the theme's semantic states. That is exactly #115.
-- **L7** — One unexplained flake observed: a full-suite run reported 1 of 334 tests failing, and two subsequent runs were green with no output naming the test. Not attributed; if it recurs, capture the name before touching anything.
+- **L7** — One flake observed and attributed: a full-suite run reported 1 of 334 failing; the name was lost to output truncation, and the suite that fails in a full run but passes alone is `studio-stderr-bound.test.js` (it failed again in the T7 full run and passed alone twice). Pre-existing, unrelated to the chrome work.
+- **L8** — T8 delivered by `gentle-ai-worker` (mvxu0zu3) and reviewed. Its `role` parameter on `formatChangesOutput` had no production caller — the host hands a theme to the footer factory, not to a command handler — so an accepted parameter nobody passed was the same dead-capability pattern the whole slice exists to remove. Added `setActiveThemeRole`/`getActiveThemeRole` in `studio-palette.ts`, published by the footer on every render and read by the `/changes` handler.
+- **L9** — Correction to my own test: the theme marker for deletions arrives clipped (`MARK:err`) because the card is 66 columns wide, so the assertion checks that the palette escape for deletions is gone instead of a marker substring that cannot fit.

@@ -2,7 +2,7 @@ import type { ExtensionContext, ExtensionAPI } from "@earendil-works/pi-coding-a
 import { existsSync, readFileSync, writeFileSync, unlinkSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
-import { panelBottom, panelRow, panelTop } from "./studio-palette.ts";
+import { panelBottom, panelRow, panelTop, setActiveThemeRole } from "./studio-palette.ts";
 import { readProducerState } from "./studio-start.ts";
 import { inspectSetup } from "./studio-setup.ts";
 import { getActivePerfMetrics } from "./studio-profile.ts";
@@ -323,6 +323,9 @@ export function installStudioFooter(pi: ExtensionAPI, ctx: ExtensionContext): vo
 	try {
 		(ctx.ui as any).setFooter((tui: any, theme: any, footerData: any) => {
 			const role = resolveStudioTheme(theme);
+			// Command handlers never receive the theme handle, so the live role is
+			// published here for them (/changes reads it on every invocation).
+			setActiveThemeRole(role);
 			let uninstallSidebar: (() => void) | undefined;
 			if (tui && tui.terminal) {
 				try {

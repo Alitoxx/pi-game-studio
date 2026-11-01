@@ -12,6 +12,35 @@ export const DIM = colorEnabled ? "\x1b[2m" : "";
 export const COLORS_ENABLED = colorEnabled;
 
 /**
+ * Reverse video for a single glyph (the text cursor in the studio overlays).
+ * Reverse video is an SGR attribute like any other, so `NO_COLOR` must remove
+ * it too: a terminal that asked for no colour should not receive an inverted
+ * cell either. The only place the escape is built (issue #115).
+ */
+export function reverse(text: string): string {
+	return colorEnabled ? `\x1b[7m${text}\x1b[27m` : text;
+}
+
+/**
+ * The theme role the host is currently rendering with.
+ *
+ * The host hands a theme handle to the footer and widget factories and to no
+ * command handler, so a command that wants to follow the theme has nothing to
+ * resolve from. The footer records the live role here once per render, and
+ * command output reads it. With no theme recorded it stays `undefined`, and
+ * `resolveStudioTheme(undefined)` returns the studio palette byte for byte.
+ */
+let activeThemeRole: StudioThemeRoles | undefined;
+
+export function setActiveThemeRole(role: StudioThemeRoles | undefined): void {
+	activeThemeRole = role;
+}
+
+export function getActiveThemeRole(): StudioThemeRoles | undefined {
+	return activeThemeRole;
+}
+
+/**
  * Builds a colour escape from a computed RGB triple. The only sanctioned way to
  * interpolate colours (gradients): the invariant forbids the escape sequence
  * anywhere else, so a dynamic colour cannot drift from this module either.

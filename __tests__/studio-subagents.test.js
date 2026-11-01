@@ -937,7 +937,13 @@ describe("Inactivity watchdog", () => {
 		const script = scenario(
 			{ FAKE_TOOL_THEN_SILENCE: 2000, PI_STUDIO_TOOL_IDLE_MS: 6000 },
 			{
-				timeout: 800,
+				// Process boot is charged to the plain idle budget until tool_execution_start is
+				// parsed, so 800ms was asking a spawn to be faster than the budget, and the kill
+				// lands at budget + one tick (tick = budget/4), i.e. 800-1000ms. Measured boot is
+				// 66-170ms, so 1200 is 7-13x headroom, and 1200 + 300 = 1500 < 2000 of tool
+				// silence keeps the scenario proving its claim: without the tool budget applied it
+				// would still be cancelled.
+				timeout: 1200,
 				assert: `
 			if (record.status !== "completed") {
 				throw new Error("a tool in flight must not be judged by the plain idle budget: " + record.status + " / " + (record.error || ""));

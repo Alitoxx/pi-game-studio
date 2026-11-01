@@ -28,15 +28,17 @@ Auditoría Independiente (siempre instalado, read-only)
 
 ## Model Mapping y Reasoning Budget
 
-Cada plantilla de agente declara `model: inherit`: hereda el modelo activo de la sesión de Pi. `models.default.json` es la fuente de verdad del mapeo: aporta los tres tiers y una clave por cada uno de los seis especialistas de motor (`extensions/hooks/studio-models.ts`), que hoy resuelven al modelo workhorse. El panel de `/studio:models` se renderiza desde ese archivo, no desde una tabla paralela, y `/assign-models` o `/studio:models` escriben overrides por agente y por proyecto en `.pi/game-studio/models.json`.
+Los tiers son **presupuestos de razonamiento**, no modelos concretos. Cada plantilla declara `model: inherit` y `models.default.json` declara `"inherit"` para los tres tiers: por defecto, todos los agentes usan el modelo de tu sesión de Pi.
+
+Un paquete no puede fijar ids de modelo. Todo id pertenece a un provider que el paquete no controla, y un id que no resuelve en tu instalación hace que el hijo vuelva vacío y que el runner reporte una **violación de contrato de entrega** — o sea, culpa al agente por un modelo que nunca existió. Los overrides viven por proyecto en `.pi/game-studio/models.json` y los escriben `/studio:models` o `/assign-models`.
 
 | Tier | Default en `models.default.json` | Thinking Budget | Rol Principal |
 |---|---|---|---|
-| **`director`** (Core) | `openai-codex/gpt-5.4-mini` | `high` | Visión de juego, arquitectura base, producción y coordinación |
-| **`workhorse`** (Core + Motor) | `openrouter/openai/gpt-oss-120b:free` | `medium` | Diseño de sistemas, arte, audio, gameplay, QA e implementación idiomática en motor |
-| **`lightweight`** | `openrouter/openai/gpt-oss-20b:free` | `medium` | Consultas puntuales de bajo costo |
+| **`director`** (Core) | `inherit` | `high` | Visión de juego, arquitectura base, producción y coordinación |
+| **`workhorse`** (Core + Motor) | `inherit` | `medium` | Diseño de sistemas, arte, audio, gameplay, QA e implementación idiomática en motor |
+| **`lightweight`** | `inherit` | `medium` | Consultas puntuales de bajo costo |
 
-Sin overrides explícitos, el modelo efectivo de cada agente es el de tu sesión de Pi. `/studio:models` muestra la asignación efectiva por tier y lista solo las excepciones por agente que difieren de su default de tier.
+Para fijar un modelo, escribí un `provider/model` en `.pi/game-studio/models.json`, por tier o por agente. `/studio:models` muestra la asignación efectiva por tier y lista solo las excepciones por agente que difieren del default.
 
 ## Language Policy (Modo Neutro Profesional — Gentle Shell)
 

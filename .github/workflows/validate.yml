@@ -95,16 +95,15 @@ jobs:
         run: |
           node -e "
             const m = require('./models.default.json');
-            const fs = require('fs');
             const tiers = ['director', 'workhorse', 'lightweight'];
-            const specialists = fs.readdirSync('agents')
-              .filter((f) => f.endsWith('-specialist.md'))
-              .map((f) => f.replace(/\.md$/, ''));
+            // The manifest names the three tiers and assigns no model of its own: a
+            // concrete id belongs to a provider the package does not control, and an id
+            // that does not resolve makes the child return empty, which the runner then
+            // reports as a return-contract violation — a broken agent that never was.
             const keys = Object.keys(m);
-            const expected = [...tiers, ...specialists].sort();
+            const expected = [...tiers].sort();
             const actual = [...keys].sort();
-            // The manifest is the source of truth for the tier mapping and AGENTS.md
-            // describes its key set: anything else is drift, not a rounding error.
+            // AGENTS.md documents the key set: tiers only, no per-agent keys.
             if (JSON.stringify(actual) !== JSON.stringify(expected)) {
               console.error('❌ models.default.json keys drifted');
               console.error('  expected:', expected.join(', '));
@@ -112,12 +111,17 @@ jobs:
               process.exit(1);
             }
             for (const key of keys) {
-              if (typeof m[key] !== 'string' || !m[key].trim()) {
+              const value = typeof m[key] === 'string' ? m[key].trim() : m[key];
+              if (typeof value !== 'string' || value.length === 0) {
                 console.error('❌ empty model for key', key);
                 process.exit(1);
               }
+              if (value !== 'inherit' && !/^[^/\s]+\/\S+$/.test(value)) {
+                console.error('❌ model for key', key, 'is neither inherit nor provider/model:', value);
+                process.exit(1);
+              }
             }
-            console.log('✅ models.default.json matches the documented key set:', keys.join(', '));
+            console.log('✅ models.default.json names the documented key set:', keys.join(', '));
           "
 
 

@@ -12,11 +12,21 @@
  *   --apply              Write changes to models.default.json
  *   --config <file>      Read mapping from a JSON file
  *
+ * A value is either "inherit" (the agent uses the session model) or a
+ * `provider/model` pair. Anything else is rejected before anything is written: a
+ * model id the environment cannot resolve is worse than no assignment at all.
+ *
  * Examples:
  *   node scripts/assign-models.js --dry-run --tier '{
  *     "director": "anthropic/claude-sonnet-4",
  *     "workhorse": "openai/gpt-4o",
  *     "lightweight": "ollama/llama3.2"
+ *   }'
+ *
+ *   node scripts/assign-models.js --apply --tier '{
+ *     "director": "inherit",
+ *     "workhorse": "inherit",
+ *     "lightweight": "inherit"
  *   }'
  *
  *   node scripts/assign-models.js --apply --tier mapping.json
@@ -32,8 +42,24 @@ const path = require("path");
 const PACKAGE_ROOT = path.resolve(__dirname, "..");
 const MODELS_FILE = path.join(PACKAGE_ROOT, "models.default.json");
 
+const INHERIT = "inherit";
+// The three tiers are the only keys models.default.json may ship.
+const KNOWN_TIERS = ["director", "workhorse", "lightweight"];
+// "inherit" or a provider/model pair. A bare model name has no provider, so it can
+// never resolve and must not reach the manifest.
+const MODEL_VALUE = /^[^/\s]+\/\S+$/;
+
+function isValidModelValue(value) {
+	return (
+		typeof value === "string" &&
+		(value.trim() === INHERIT || MODEL_VALUE.test(value.trim()))
+	);
+}
+
 // ── Agent roster by tier (Compact 8+1 Studio Architecture: 15 agents total) ────
 // 8 core roles + 6 engine specialists + 1 always-installed read-only verifier.
+// Reporting only: the manifest holds tier keys, never agent keys, so this roster is
+// used to say which agents a tier mapping affects, not to expand the write.
 // No agent defaults to the lightweight tier: the runtime (studio-models.ts) resolves
 // every non-director, non-engine agent to the workhorse tier, and art/audio directors
 // are Tier 2 leads with thinking: medium. The tier stays available as a model value.
@@ -115,94 +141,118 @@ function parseArgValue(raw) {
 }
 
 // ── Core logic ────────────────────────────────────────────────────
-function expandTierMapping(tierMap) {
-	const expanded = {};
-	for (const [tier, model] of Object.entries(tierMap)) {
-		const agents = TIERS[tier];
-		if (!agents) {
+function readCurrentModels() {
+	if (!fs.existsSync(MODELS_FILE)) return {};
+	try {
+		return JSON.parse(fs.readFileSync(MODELS_FILE, "utf-8"));
+	} catch {
+		return {};
+	}
+}
+
+/** The tiers the manifest itself declares; all three when it declares none. */
+function declaredTierKeys(current) {
+	const declared = Object.keys(current).filter((key) => KNOWN_TIERS.includes(key));
+	return declared.length > 0 ? declared : [...KNOWN_TIERS];
+}
+
+/**
+ * Tier mappings are written as tier keys. Expanding them into per-agent keys would
+ * leave the tier's own value untouched (a stale, unresolvable id) and fill the
+ * defaults with agent-only keys.
+ */
+function planTierMapping(tierMap, current) {
+	const plan = [];
+	for (const [tier, raw] of Object.entries(tierMap)) {
+		if (!KNOWN_TIERS.includes(tier)) {
 			console.warn(`  ⚠ Unknown tier "${tier}" — skipping`);
 			continue;
 		}
-		for (const agent of agents) {
-			expanded[agent] = model;
+		if (!isValidModelValue(raw)) {
+			throw new Error(
+				`Invalid model for tier "${tier}": ${JSON.stringify(raw)} — expected "inherit" or "provider/model".`,
+			);
 		}
+		plan.push({
+			tier,
+			model: raw.trim(),
+			old: current[tier] || null,
+			agents: TIERS[tier] || [],
+		});
 	}
-	return expanded;
+	return plan;
 }
 
-function readCurrentModels() {
-	if (!fs.existsSync(MODELS_FILE)) return {};
-	return JSON.parse(fs.readFileSync(MODELS_FILE, "utf-8"));
-}
-
-function applyMapping(current, mapping) {
-	const changes = [];
-	for (const [agent, model] of Object.entries(mapping)) {
-		if (current[agent] !== model) {
-			changes.push({ agent, old: current[agent] || null, new: model });
-			current[agent] = model;
+function planAgentMapping(agentMap, current) {
+	const plan = [];
+	for (const [agent, raw] of Object.entries(agentMap)) {
+		if (!isValidModelValue(raw)) {
+			throw new Error(
+				`Invalid model for agent "${agent}": ${JSON.stringify(raw)} — expected "inherit" or "provider/model".`,
+			);
 		}
+		plan.push({ agent, model: raw.trim(), old: current[agent] || null });
 	}
-	return changes;
+	return plan;
 }
 
-function groupByTier(flat) {
-	const grouped = {};
-	for (const [tier, agents] of Object.entries(TIERS)) {
-		const tierChanges = agents
-			.filter((a) => flat[a])
-			.map((a) => ({ agent: a, model: flat[a] }));
-		if (tierChanges.length) grouped[tier] = tierChanges;
+function changed(plan) {
+	return plan.filter((entry) => entry.old !== entry.model);
+}
+
+function applyPlan(current, plan) {
+	const next = { ...current };
+	for (const entry of plan) {
+		const key = entry.tier || entry.agent;
+		next[key] = entry.model;
 	}
-	return grouped;
+	return next;
 }
 
 // ── Report ────────────────────────────────────────────────────────
-function showReport(changes, tierMap) {
-	if (tierMap) {
+function showReport({ tierPlan, agentPlan, tierKeys }) {
+	console.log(`\nTier keys in models.default.json: ${tierKeys.join(", ")}`);
+
+	if (tierPlan.length > 0) {
 		console.log("\nTier mapping:");
-		for (const [tier, model] of Object.entries(tierMap)) {
-			const count = (TIERS[tier] || []).length;
-			console.log(`  ${tier.padEnd(14)} ${model}  (${count} agents)`);
+		for (const entry of tierPlan) {
+			const count = entry.agents.length;
+			console.log(`  ${entry.tier.padEnd(14)} ${entry.model}  (${count} agents)`);
 		}
 	}
 
-	if (changes.length === 0) {
-		console.log("\nNo changes — all agents already match.");
-		return;
-	}
-
-	console.log(`\nChanges: ${changes.length} agent(s)`);
-
-	// Group by tier for display
-	const current = readCurrentModels();
-	const after = { ...current };
-	for (const c of changes) after[c.agent] = c.new;
-	const byTier = groupByTier(after);
-
-	for (const [tier, agents] of Object.entries(byTier)) {
-		console.log(`\n  ${tier}:`);
-		for (const { agent, model } of agents) {
-			const change = changes.find((c) => c.agent === agent);
-			if (change) {
-				console.log(
-					`    ${agent.padEnd(30)} ${(change.old || "(unset)").padEnd(40)} →  ${change.new}`,
-				);
-			} else {
-				console.log(`    ${agent.padEnd(30)} ${model}`);
-			}
+	if (agentPlan.length > 0) {
+		console.log("\nAgent mapping:");
+		for (const entry of agentPlan) {
+			console.log(`  ${entry.agent.padEnd(24)} ${entry.model}`);
 		}
 	}
 
-	// Count by model
-	const modelCounts = {};
-	for (const c of changes) {
-		modelCounts[c.new] = (modelCounts[c.new] || 0) + 1;
+	const tierChanges = changed(tierPlan);
+	const agentChanges = changed(agentPlan);
+
+	if (tierChanges.length === 0 && agentChanges.length === 0) {
+		console.log("\nNo changes — the manifest already matches.");
+		return 0;
 	}
-	console.log("\nSummary:");
-	for (const [model, count] of Object.entries(modelCounts)) {
-		console.log(`  ${model.padEnd(45)} ${count} agent(s)`);
+
+	console.log(`\nChanges: ${tierChanges.length + agentChanges.length}`);
+	for (const entry of tierChanges) {
+		console.log(`  ${entry.tier}: ${entry.old || "(unset)"} → ${entry.model}`);
+		if (entry.agents.length > 0) {
+			console.log(`    agents affected: ${entry.agents.join(", ")}`);
+		}
 	}
+	for (const entry of agentChanges) {
+		console.log(`  ${entry.agent}: ${entry.old || "(unset)"} → ${entry.model}`);
+	}
+
+	// One line for humans and for the CI guard that reads this report.
+	console.log(
+		`\nSummary: ${tierChanges.length + agentChanges.length} pending change(s) — run with --apply to write them`,
+	);
+
+	return tierChanges.length + agentChanges.length;
 }
 
 // ── Write ─────────────────────────────────────────────────────────
@@ -219,32 +269,39 @@ function writeModelsFile(models) {
 function main() {
 	const opts = parseArgs();
 
-	// Read current models
 	const current = readCurrentModels();
-	console.log(`Current models: ${Object.keys(current).length} agent(s) mapped`);
-	console.log(`Agent roster:    ${Object.values(TIERS).flat().length} total`);
+	const tierKeys = declaredTierKeys(current);
+	console.log(`Current manifest: ${Object.keys(current).length} key(s) mapped`);
+	console.log(`Agent roster:     ${Object.values(TIERS).flat().length} agents`);
 
-	// Resolve mapping
-	let mapping = opts.map || {};
-	if (opts.tier) {
-		mapping = { ...mapping, ...expandTierMapping(opts.tier) };
+	let tierPlan = [];
+	let agentPlan = [];
+	try {
+		tierPlan = opts.tier ? planTierMapping(opts.tier, current) : [];
+		agentPlan = opts.map ? planAgentMapping(opts.map, current) : [];
+	} catch (error) {
+		// Nothing is written when the mapping is not a value the runtime can resolve.
+		console.error(`\n✗ ${error.message}`);
+		process.exit(1);
 	}
 
-	// Apply
-	const changes = applyMapping(current, mapping);
-	showReport(changes, opts.tier, mapping);
+	const changeCount = showReport({ tierPlan, agentPlan, tierKeys });
 
-	// Write
-	if (opts.apply && changes.length > 0) {
-		writeModelsFile(current);
-		console.log(`Done. ${changes.length} agent(s) updated.`);
-	} else if (opts.apply && changes.length === 0) {
+	if (opts.apply && changeCount > 0) {
+		writeModelsFile(applyPlan(current, [...tierPlan, ...agentPlan]));
+		console.log(`Done. ${changeCount} key(s) updated.`);
+	} else if (opts.apply) {
 		console.log("\nNothing to write.");
 	}
 
-	// Exit with error if dry-run showed changes and user should run --apply
-	if (opts.dryRun && changes.length > 0) {
+	if (opts.dryRun && changeCount > 0) {
 		console.log("\nRun with --apply to write these changes.");
+	}
+
+	if (agentPlan.length > 0) {
+		console.log(
+			"\nPer-agent overrides belong in <project>/.pi/game-studio/models.json, which /studio:models writes.",
+		);
 	}
 }
 

@@ -6,6 +6,23 @@ import { promptModelForRole } from "./provider-resolver.ts";
 import { writeFileAtomicSync, writeJsonAtomicSync } from "./studio-fs.ts";
 import { recordFailure } from "./studio-diagnostics.ts";
 
+/** The three tiers are the only keys models.default.json may ship. */
+const KNOWN_TIERS = ["director", "workhorse", "lightweight"] as const;
+
+/**
+ * "inherit" means "no model of my own, use the session model". It is the only default
+ * a package can ship: any concrete id belongs to a provider the package does not
+ * control, and an id that does not resolve makes the child return empty.
+ */
+const INHERIT = "inherit";
+const INHERIT_LABEL = "inherit (sesión)";
+/** Display width of the tier value column inside the STUDIO MODELS card. */
+const TIER_VALUE_WIDTH = 20;
+
+function isModelValue(value: string): boolean {
+	return value === INHERIT || /^[^/\s]+\/\S+$/.test(value);
+}
+
 function resolvePackageRoot(): string {
 	try {
 		const candidate1 = resolve(
@@ -71,8 +88,8 @@ export async function handleStudioModels(
 	// Interactive select
 	if (ctx.hasUI && typeof (ctx.ui as any)?.select === "function") {
 		const options = [
-			"1. Aplicar perfil recomendado (Director: gpt-5.4-mini, Workhorse: 120b, Light: 20b)",
-			"2. Modo 'inherit' (Heredar el modelo activo de la sesión de Pi en todos los agentes)",
+			"1. Aplicar perfil recomendado del estudio (los tres tiers heredan el modelo de tu sesión)",
+			"2. Modo 'inherit' explícito (Heredar el modelo activo de la sesión de Pi en todos los agentes)",
 			"3. Personalizar modelos por Nivel / Tier (Directores, Workhorses, Ligeros)",
 			"4. Asignar modelo a un agente específico",
 			"5. Ajustar presupuesto de razonamiento (Thinking Effort: High, Medium, Low)",
@@ -124,9 +141,35 @@ export async function handleStudioModels(
 	const list = formatModelsList(currentConfig);
 	console.log(list);
 	console.log("" + ACCENT + "\x1b[1mOpciones de configuración de modelos:\x1b[0m");
-	console.log("  " + SECONDARY + "/studio:models default\x1b[0m  Aplica los modelos recomendados del estudio");
+	console.log("  " + SECONDARY + "/studio:models default\x1b[0m  Aplica el perfil del estudio (tiers en 'inherit')");
 	console.log("  " + SECONDARY + "/studio:models inherit\x1b[0m  Todos los agentes usan el modelo de la sesión Pi");
 	console.log("  " + SECONDARY + "/assign-models\x1b[0m          Flujo guiado para personalizar agente por agente");
+}
+
+/**
+ * Reads the shipped manifest as tier values. Only the three known tiers are accepted,
+ * and only `"inherit"` or a `provider/model` pair: anything else would be an invented
+ * id written into the project config. Falls back to all-inherit when the file is
+ * missing, unreadable or carries no usable tier.
+ */
+function readShippedDefaults(path: string): Record<string, string> {
+	const tiers: Record<string, string> = {};
+	try {
+		if (existsSync(path)) {
+			const parsed: unknown = JSON.parse(readFileSync(path, "utf8"));
+			if (parsed !== null && typeof parsed === "object" && !Array.isArray(parsed)) {
+				for (const [key, value] of Object.entries(parsed)) {
+					if (!(KNOWN_TIERS as readonly string[]).includes(key)) continue;
+					if (typeof value !== "string" || !isModelValue(value.trim())) continue;
+					tiers[key] = value.trim();
+				}
+			}
+		}
+	} catch {}
+	for (const tier of KNOWN_TIERS) {
+		if (!tiers[tier]) tiers[tier] = INHERIT;
+	}
+	return tiers;
 }
 
 function applyDefaultConfig(ctx: ExtensionContext): void {
@@ -137,14 +180,19 @@ function applyDefaultConfig(ctx: ExtensionContext): void {
 
 	mkdirSync(destDir, { recursive: true });
 
-	if (existsSync(defaultsPath)) {
-		writeFileAtomicSync(destFile, readFileSync(defaultsPath));
-		const msg = "✓ Perfil recomendado guardado en .pi/game-studio/models.json";
-		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
-			ctx.ui.notify(msg, "info");
-		} else {
-			console.log(`${GREEN}${msg}\x1b[0m`);
-		}
+	const shipped = readShippedDefaults(defaultsPath);
+	writeJsonAtomicSync(destFile, shipped);
+
+	// Report what was written, never a profile the file does not contain.
+	const allInherit = KNOWN_TIERS.every((tier) => shipped[tier] === INHERIT);
+	const msg = allInherit
+		? "✓ Perfil del estudio aplicado: los tres tiers heredan el modelo activo de tu sesión (.pi/game-studio/models.json)"
+		: "✓ Perfil del estudio guardado en .pi/game-studio/models.json: " +
+			KNOWN_TIERS.map((tier) => `${tier}: ${shipped[tier]}`).join(", ");
+	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
+		ctx.ui.notify(msg, "info");
+	} else {
+		console.log(`${GREEN}${msg}\x1b[0m`);
 	}
 }
 
@@ -196,7 +244,7 @@ async function configureTierModels(
 		ctx,
 		"Tier 1 — Directores (Visión y Calidad)",
 		"director",
-		config.director || "openai-codex/gpt-5.4-mini",
+		config.director || INHERIT,
 	);
 	if (dirPick) {
 		config.director = dirPick;
@@ -207,7 +255,7 @@ async function configureTierModels(
 		ctx,
 		"Tier 2 — Workhorses / Especialistas (Código y Diseño)",
 		"workhorse",
-		config.workhorse || "openrouter/openai/gpt-oss-120b:free",
+		config.workhorse || INHERIT,
 	);
 	if (workPick) {
 		config.workhorse = workPick;
@@ -218,7 +266,7 @@ async function configureTierModels(
 		ctx,
 		"Tier 3 — Especialistas de Motor",
 		"lightweight",
-		config.lightweight || "openrouter/openai/gpt-oss-20b:free",
+		config.lightweight || INHERIT,
 	);
 	if (lightPick) {
 		config.lightweight = lightPick;
@@ -278,24 +326,43 @@ async function configureAgentModel(
 }
 
 export function formatModelsList(cfg: Record<string, string>): string {
-	const dirModel = cfg.director || "openai-codex/gpt-5.4-mini";
-	const workModel = cfg.workhorse || "openrouter/openai/gpt-oss-120b:free";
-	const lightModel = cfg.lightweight || "openrouter/openai/gpt-oss-20b:free";
+	const dirModel = cfg.director || INHERIT;
+	const workModel = cfg.workhorse || INHERIT;
+	const lightModel = cfg.lightweight || INHERIT;
 
-	const allInherit = dirModel === "inherit" && workModel === "inherit" && lightModel === "inherit";
+	const allInherit = dirModel === INHERIT && workModel === INHERIT && lightModel === INHERIT;
+
+	// A tier that inherits has no model of its own: printing one would announce an
+	// assignment nobody made.
+	const tierValue = (model: string) => (model === INHERIT ? INHERIT_LABEL : model);
+
+	// The value column is fixed so the card stays a card: an inherit label is shorter
+	// than any id, and an id longer than the column is truncated instead of pushing the
+	// right edge out.
+	const fitTierValue = (model: string): string => {
+		const chars = Array.from(model);
+		if (chars.length > TIER_VALUE_WIDTH) {
+			return chars.slice(0, TIER_VALUE_WIDTH - 1).join("") + "…";
+		}
+		return model.padEnd(TIER_VALUE_WIDTH);
+	};
 
 	const TIER_1 = ["producer", "creative-director", "technical-director"];
 	const TIER_3 = ["bevy-specialist", "godot-specialist", "phaser-specialist", "raylib-specialist", "unity-specialist", "unreal-specialist"];
 
-	// What the engine specialists actually run. The panel used to print the
-	// lightweight model for them, which no specialist resolves to: they carry their
-	// own key in models.default.json (the workhorse model) and fall back to the
-	// workhorse tier when they carry none.
-	const specialistModels = TIER_3.map((name) => cfg[name]).filter(Boolean);
+	// Engine specialists resolve like any other non-director agent: their own key when the
+	// project set one, otherwise the workhorse tier. models.default.json carries no
+	// per-specialist key any more — that mapping only repeated the workhorse default with
+	// an id that could not resolve outside the environment that wrote it.
+	const specialistModels: string[] = [];
+	for (const name of TIER_3) {
+		const model = cfg[name];
+		if (model && model !== INHERIT) specialistModels.push(model);
+	}
 	const specialistsModel =
 		specialistModels.length === 0
 			? workModel
-			: specialistModels.every((model) => model === specialistModels[0])
+			: new Set(specialistModels).size === 1
 				? specialistModels[0]
 				: "por agente";
 
@@ -317,9 +384,9 @@ export function formatModelsList(cfg: Record<string, string>): string {
 
 	const lines = [
 		"┌── STUDIO MODELS: ASIGNACIÓN Y MONITOR DE CUOTAS POR TIER ──────┐",
-		`│ • Tier 1 (Directores - Visión & Gating):   ${dirModel.padEnd(27)} │`,
-		`│ • Tier 2 (Leads & Core Devs - Mecánicas):  ${workModel.padEnd(27)} │`,
-		`│ • Tier 3 (Especialistas de Motor):         ${specialistsModel.padEnd(27)} │`,
+		`│ • Tier 1 (Directores - Visión & Gating):   ${fitTierValue(tierValue(dirModel))}│`,
+		`│ • Tier 2 (Leads & Core Devs - Mecánicas):  ${fitTierValue(tierValue(workModel))}│`,
+		`│ • Tier 3 (Especialistas de Motor):         ${fitTierValue(tierValue(specialistsModel))}│`,
 		"├─────────────────────────────────────────────────────────────────┤",
 		"│ PRESUPUESTO & REASONING BUDGET:                                 │",
 		"│ • Tier 1: Thinking 'high'   (Estrategia, arquitectura, triaje)  │",
@@ -328,9 +395,10 @@ export function formatModelsList(cfg: Record<string, string>): string {
 		"└─────────────────────────────────────────────────────────────────┘",
 	];
 
-	if (allInherit && overrides.length === 0) {
-		lines.push("\n✓ Modo inherit: todos los agentes heredan el modelo activo de tu sesión.");
-	} else if (overrides.length > 0) {
+	if (allInherit) {
+		lines.push("\n✓ Modo inherit: los tres tiers heredan el modelo activo de tu sesión.");
+	}
+	if (overrides.length > 0) {
 		lines.push("\nAsignaciones específicas por agente:\n" + overrides.slice(0, 15).join("\n"));
 	}
 

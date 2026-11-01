@@ -1,11 +1,5 @@
 {
-  "director": "openai-codex/gpt-5.4-mini",
-  "workhorse": "openrouter/openai/gpt-oss-120b:free",
-  "lightweight": "openrouter/openai/gpt-oss-20b:free",
-  "bevy-specialist": "openrouter/openai/gpt-oss-120b:free",
-  "godot-specialist": "openrouter/openai/gpt-oss-120b:free",
-  "phaser-specialist": "openrouter/openai/gpt-oss-120b:free",
-  "raylib-specialist": "openrouter/openai/gpt-oss-120b:free",
-  "unity-specialist": "openrouter/openai/gpt-oss-120b:free",
-  "unreal-specialist": "openrouter/openai/gpt-oss-120b:free"
+  "director": "inherit",
+  "workhorse": "inherit",
+  "lightweight": "inherit"
 }

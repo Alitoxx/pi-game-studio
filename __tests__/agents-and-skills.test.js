@@ -477,26 +477,21 @@ describe("Shared ODD Contract Validation", () => {
 		expect(content).toContain("`free-tex-packer-cli`");
 		expect(content).toContain("`gltfpack`");
 	});
-	test("models.default.json only names tiers and real agents of the 8+1 roster", () => {
+	test("models.default.json names only tiers and assigns no id of its own", () => {
+		// The package cannot know which providers exist where it is installed, so the
+		// manifest names the tiers and nothing else: per-agent overrides belong in the
+		// project's .pi/game-studio/models.json, written by /studio:models.
 		const modelsPath = path.join(__dirname, "..", "models.default.json");
 		const defaults = JSON.parse(fs.readFileSync(modelsPath, "utf8"));
 		const tiers = new Set(["director", "workhorse", "lightweight"]);
-		const rosterDir = path.join(__dirname, "..", "agents");
-		const rosterFiles = fs.readdirSync(rosterDir).filter((file) => file.endsWith(".md"));
-		const agentNames = new Set(
-			rosterFiles.map((file) => {
-				const frontmatter = fs.readFileSync(path.join(rosterDir, file), "utf8");
-				const match = frontmatter.match(/^name:\s*(.+)$/m);
-				return match ? match[1].trim() : file.replace(/\.md$/, "");
-			}),
-		);
 
-		const unknownKeys = Object.keys(defaults).filter((key) => !tiers.has(key) && !agentNames.has(key));
+		const unknownKeys = Object.keys(defaults).filter((key) => !tiers.has(key));
 		expect(unknownKeys).toEqual([]);
 
 		for (const tier of tiers) {
 			expect(typeof defaults[tier]).toBe("string");
-			expect(defaults[tier].length).toBeGreaterThan(0);
+			// "inherit" or a provider/model pair; never a bare model name.
+			expect(defaults[tier] === "inherit" || /^[^/\s]+\/\S+$/.test(defaults[tier])).toBe(true);
 		}
 	});
 });

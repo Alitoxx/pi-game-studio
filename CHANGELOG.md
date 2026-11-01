@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (Model Defaults)
+- **`models.default.json` no longer pins model ids.** It mapped the three tiers and the six engine specialists to concrete ids (`openai-codex/gpt-5.4-mini`, `openrouter/openai/gpt-oss-120b:free`, `openrouter/openai/gpt-oss-20b:free`). No package can guarantee those resolve: on an installation without that exact provider set, Pi prints `Model "<id>" not found for provider "<p>". Using custom model id.`, the child returns nothing, and the runner reports a **return-contract violation** — so a wrong model id reads as a broken agent.
+  - The three tiers now declare `"inherit"`, which is what the 15 templates and `project.yaml` already documented. A fresh project inherits the session model until you pin something.
+  - The six engine-specialist keys are gone: they only repeated the workhorse mapping.
+  - To pin a model, write a `provider/model` in `.pi/game-studio/models.json`, per tier or per agent, or use `/studio:models`.
+  - `AGENTS.md` and `README.md` now describe tiers as reasoning budgets rather than as concrete models, and say where an override belongs.
+
 ### Changed (Visual Identity)
 - **A sober palette with a single accent.** The studio shipped two palettes at once: `studio-palette.ts` (soft pastels) and hardcoded Tailwind-400 literals in seventeen other files. Nine of the fourteen colours sat at 90%+ brightness, so status competed with body text and nothing had visual rank; the error colour was pink and three different reds were in use.
   - Hierarchy now comes from brightness, not hue: text 83% · states 69-76% · muted 56% · faint 36% · borders 25%.

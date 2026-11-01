@@ -23,6 +23,56 @@ import { detectProjectEngine } from "./engine-detector.ts";
 import { handleStudioMcp } from "./studio-mcp.ts";
 import { promptMediaToolsInstall } from "./studio-media-tools.ts";
 
+/** The three tiers are the only keys a models manifest may declare. */
+const STUDIO_TIER_KEYS = ["director", "workhorse", "lightweight"] as const;
+
+/**
+ * "inherit" means "use the session model". It is the only default the package can
+ * ship: a concrete id depends on a provider we do not control here, and an id that
+ * does not resolve makes the child return nothing.
+ */
+const INHERIT = "inherit";
+const INHERIT_LABEL = "inherit (modelo de sesión)";
+
+function isModelValue(value: unknown): value is string {
+	return (
+		typeof value === "string" &&
+		(value.trim() === INHERIT || /^[^/\s]+\/\S+$/.test(value.trim()))
+	);
+}
+
+/**
+ * Reads a models manifest as tier values. Unknown keys and values that are neither
+ * `"inherit"` nor `provider/model` are dropped instead of copied, and every tier the
+ * file omits is filled with `"inherit"` — so a missing, corrupt or older manifest
+ * still installs a configuration that cannot fail to resolve.
+ */
+function readTierConfig(manifestPath: string): Record<string, string> {
+	const tiers: Record<string, string> = {};
+	try {
+		if (existsSync(manifestPath)) {
+			const parsed: unknown = JSON.parse(readFileSync(manifestPath, "utf8"));
+			if (parsed !== null && typeof parsed === "object" && !Array.isArray(parsed)) {
+				for (const [key, value] of Object.entries(parsed)) {
+					if (!(STUDIO_TIER_KEYS as readonly string[]).includes(key)) continue;
+					if (!isModelValue(value)) continue;
+					tiers[key] = value.trim();
+				}
+			}
+		}
+	} catch {}
+	for (const tier of STUDIO_TIER_KEYS) {
+		if (!tiers[tier]) tiers[tier] = INHERIT;
+	}
+	return tiers;
+}
+
+function formatTierConfig(cfg: Record<string, string>): string {
+	return STUDIO_TIER_KEYS.map(
+		(tier) => `${tier}: ${cfg[tier] === INHERIT ? INHERIT_LABEL : cfg[tier]}`,
+	).join(", ");
+}
+
 function resolvePackageRoot(): string {
 	try {
 		const candidate1 = resolve(
@@ -424,11 +474,12 @@ export async function runGuidedSetup(
 	const selectedLang = langChoice.index === 0 ? "es" : "en";
 
 	// ── Paso 4: Configuración de Modelos ──
+	// The shipped profile and the inherit profile are the same thing now: the package
+	// assigns no id, so both options collapsed into one honest choice.
 	const modelStrategyOptions = [
-		"1. Perfil Recomendado (Directores: gpt-5.4-mini, Especialistas: 120b, Ligeros: 20b)",
-		"2. Modo 'inherit' (Todos los agentes usan el modelo activo en tu sesión Pi)",
-		"3. Personalizar modelos por Nivel / Tier (Directores, Workhorses, Ligeros)",
-		"4. Personalizar agentes individuales (asignar modelo a roles específicos)",
+		"1. Heredar el modelo activo de tu sesión Pi en todos los agentes (perfil recomendado del estudio)",
+		"2. Personalizar modelos por Nivel / Tier (Directores, Workhorses, Ligeros)",
+		"3. Personalizar agentes individuales (asignar modelo a roles específicos)",
 	];
 
 	const modelStrategyChoice = await promptSelectSafe(
@@ -438,26 +489,13 @@ export async function runGuidedSetup(
 	);
 	if (!modelStrategyChoice) return;
 
-	let customModels: Record<string, string> = {};
 	const pkgRoot = resolvePackageRoot();
-	try {
-		const defaultsPath = join(pkgRoot, "models.default.json");
-		if (existsSync(defaultsPath)) {
-			customModels = JSON.parse(readFileSync(defaultsPath, "utf8"));
-		}
-	} catch {}
+	let customModels: Record<string, string> = readTierConfig(join(pkgRoot, "models.default.json"));
 
 	if (modelStrategyChoice.index === 1) {
-		// Inherit all
-		customModels = {
-			director: "inherit",
-			workhorse: "inherit",
-			lightweight: "inherit",
-		};
-	} else if (modelStrategyChoice.index === 2) {
 		// Customize by Tiers
 		customModels = await configureModelsByTier(ctx, customModels);
-	} else if (modelStrategyChoice.index === 3) {
+	} else if (modelStrategyChoice.index === 2) {
 		// Customize specific agents
 		customModels = await configureSpecificAgents(ctx, customModels);
 	}
@@ -472,9 +510,7 @@ export async function runGuidedSetup(
 		`• Dimensión del juego: ${selectedDimension.toUpperCase()} (${selectedDimension === "2d" ? "Sprites & TileMaps" : "glTF/GLB & PBR"})`,
 		`• Agentes a desplegar: ${targetCount} agentes (8 Core + 1 especialista de ${selectedEngine} + 1 verificador read-only)`,
 		`• Idioma preferido:    ${selectedLang === "es" ? "Español (es)" : "English (en)"}`,
-		`• Modelos Directores: ${customModels.director || "gpt-5.4-mini"}`,
-		`• Modelos Workhorse:  ${customModels.workhorse || "gpt-oss-120b:free"}`,
-		`• Modelos Ligeros:    ${customModels.lightweight || "gpt-oss-20b:free"}`,
+		`• Modelos:            ${formatTierConfig(customModels)}`,
 	];
 
 	const confirmOptions = [
@@ -517,7 +553,7 @@ async function configureModelsByTier(
 		ctx,
 		"Tier 1 — Directores (Visión, GDD y Arquitectura)",
 		"director",
-		config.director || "openai-codex/gpt-5.4-mini",
+		config.director || INHERIT,
 	);
 	if (dirModel) {
 		config.director = dirModel;
@@ -528,7 +564,7 @@ async function configureModelsByTier(
 		ctx,
 		"Tier 2 — Workhorses / Especialistas (Código, Diseño, QA)",
 		"workhorse",
-		config.workhorse || "openrouter/openai/gpt-oss-120b:free",
+		config.workhorse || INHERIT,
 	);
 	if (workModel) {
 		config.workhorse = workModel;
@@ -539,7 +575,7 @@ async function configureModelsByTier(
 		ctx,
 		"Tier 3 — Tareas Ligeras (Comunidad, DevOps, Sonido)",
 		"lightweight",
-		config.lightweight || "openrouter/openai/gpt-oss-20b:free",
+		config.lightweight || INHERIT,
 	);
 	if (lightModel) {
 		config.lightweight = lightModel;
@@ -657,8 +693,10 @@ export function installStudioFiles(
 	// 3. Deploy models configuration
 	if (options.modelsConfig) {
 		writeJsonAtomicSync(modelsDest, options.modelsConfig);
-	} else if (!existsSync(modelsDest) && existsSync(modelsSrc)) {
-		writeFileAtomicSync(modelsDest, readFileSync(modelsSrc));
+	} else if (!existsSync(modelsDest)) {
+		// Reading through readTierConfig means the install cannot copy an id the runtime
+		// cannot resolve, and a missing manifest still installs a usable inherit config.
+		writeJsonAtomicSync(modelsDest, readTierConfig(modelsSrc));
 	}
 
 	// 4. Configure engine and dimension in project.yaml
@@ -824,14 +862,20 @@ export function installModelsConfig(ctx: ExtensionContext): void {
 
 	mkdirSync(join(ctx.cwd, ".pi", "game-studio"), { recursive: true });
 
-	if (existsSync(modelsSrc)) {
-		writeFileAtomicSync(modelsDest, readFileSync(modelsSrc));
-		const msg = "✓ Modelos recomendados aplicados en .pi/game-studio/models.json";
-		if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
-			ctx.ui.notify(msg, "info");
-		} else {
-			console.log(`${GREEN}${msg}\x1b[0m`);
-		}
+	const shipped = readTierConfig(modelsSrc);
+	writeJsonAtomicSync(modelsDest, shipped);
+
+	// Report what was written. With the shipped manifest every tier inherits, so
+	// announcing a "recommended profile" of concrete ids would announce an assignment
+	// that never reached the file.
+	const allInherit = STUDIO_TIER_KEYS.every((tier) => shipped[tier] === INHERIT);
+	const msg = allInherit
+		? "✓ Modelos: los tres tiers heredan el modelo activo de tu sesión (.pi/game-studio/models.json)"
+		: `✓ Modelos guardados en .pi/game-studio/models.json: ${formatTierConfig(shipped)}`;
+	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
+		ctx.ui.notify(msg, "info");
+	} else {
+		console.log(`${GREEN}${msg}\x1b[0m`);
 	}
 }
 

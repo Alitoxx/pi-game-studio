@@ -36,7 +36,7 @@ describe("Studio child stderr bound", () => {
 			};
 			fs.rmSync(tmp, { recursive: true, force: true });
 			process.stdout.write(JSON.stringify(out) + "\\n");
-			process.exit(0);
+			process.exitCode = 0;
 		`;
 
 		const output = execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
@@ -101,7 +101,7 @@ describe("Studio child stderr bound", () => {
 			};
 			fs.rmSync(tmp, { recursive: true, force: true });
 			process.stdout.write(JSON.stringify(out) + "\\n");
-			process.exit(0);
+			process.exitCode = 0;
 		`;
 
 		const output = execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {

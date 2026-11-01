@@ -28,9 +28,11 @@ Nine defects found in a read-only audit of the studio's terminal surface. Three 
 
 ## Slices
 
-- **Slice 1** — `fix/tui-visual-truth`, commits `4e7ac51` + `9f8f1a7`, 572 authored lines. T1-T4: `#107`, `#108`, `#109`, `#110`, `#113`.
-- **Slice 2** — T5, T6: `#111`, `#112`.
-- **Slice 3** — T7, T8: `#114`, `#115`.
+- **Slice 1** — `4e7ac51` + `9f8f1a7`, 572 authored lines. T1-T4: `#107`, `#108`, `#109`, `#110`, `#113`.
+- **Slice 2** — `38a7b49`. T5, T5b, T6: `#111`, `#112`.
+- **Slice 3** — `80e6ada` + `4cf22fe`. T7, T8: `#114`, `#115`.
+
+Verification for the branch: 29 suites / 347 tests, `tsc -p extensions/hooks/tsconfig.json --noEmit` exit 0. Every slice ran RED before GREEN; `__tests__/palette.test.js` was never modified.
 
 ## Log
 

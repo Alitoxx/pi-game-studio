@@ -9,7 +9,7 @@
  *
  * Options:
  *   --dry-run            Preview changes without writing
- *   --apply              Write changes to models.default.json
+ *   --apply              Write changes to <project>/.pi/game-studio/models.json
  *   --config <file>      Read mapping from a JSON file
  *
  * A value is either "inherit" (the agent uses the session model) or a
@@ -40,7 +40,15 @@ const fs = require("fs");
 const path = require("path");
 
 const PACKAGE_ROOT = path.resolve(__dirname, "..");
-const MODELS_FILE = path.join(PACKAGE_ROOT, "models.default.json");
+/** Shipped defaults: the base for planning, never a write target. */
+const PACKAGE_DEFAULTS = path.join(PACKAGE_ROOT, "models.default.json");
+/**
+ * Where `--apply` writes: the project override, the same file `/studio:models`
+ * writes. The shipped manifest stays hand-edited and guarded by the invariant
+ * test, so this CLI can never plant a model id in every project that installs
+ * the package.
+ */
+const MODELS_FILE = path.join(process.cwd(), ".pi", "game-studio", "models.json");
 
 const INHERIT = "inherit";
 // The three tiers are the only keys models.default.json may ship.
@@ -142,12 +150,15 @@ function parseArgValue(raw) {
 
 // ── Core logic ────────────────────────────────────────────────────
 function readCurrentModels() {
-	if (!fs.existsSync(MODELS_FILE)) return {};
-	try {
-		return JSON.parse(fs.readFileSync(MODELS_FILE, "utf-8"));
-	} catch {
-		return {};
+	// The project override is the base when it exists; the shipped defaults are the
+	// fallback for a project that was never configured.
+	for (const file of [MODELS_FILE, PACKAGE_DEFAULTS]) {
+		if (!fs.existsSync(file)) continue;
+		try {
+			return JSON.parse(fs.readFileSync(file, "utf-8"));
+		} catch {}
 	}
+	return {};
 }
 
 /** The tiers the manifest itself declares; all three when it declares none. */
@@ -211,7 +222,7 @@ function applyPlan(current, plan) {
 
 // ── Report ────────────────────────────────────────────────────────
 function showReport({ tierPlan, agentPlan, tierKeys }) {
-	console.log(`\nTier keys in models.default.json: ${tierKeys.join(", ")}`);
+	console.log(`\nTier keys: ${tierKeys.join(", ")}`);
 
 	if (tierPlan.length > 0) {
 		console.log("\nTier mapping:");
@@ -257,12 +268,13 @@ function showReport({ tierPlan, agentPlan, tierKeys }) {
 
 // ── Write ─────────────────────────────────────────────────────────
 function writeModelsFile(models) {
+	fs.mkdirSync(path.dirname(MODELS_FILE), { recursive: true });
 	fs.writeFileSync(
 		MODELS_FILE,
 		JSON.stringify(models, null, 2) + "\n",
 		"utf-8",
 	);
-	console.log(`\nWrote ${MODELS_FILE}`);
+	console.log(`\nWrote ${path.relative(process.cwd(), MODELS_FILE) || MODELS_FILE}`);
 }
 
 // ── Main ──────────────────────────────────────────────────────────
@@ -300,7 +312,7 @@ function main() {
 
 	if (agentPlan.length > 0) {
 		console.log(
-			"\nPer-agent overrides belong in <project>/.pi/game-studio/models.json, which /studio:models writes.",
+			"\nPer-agent overrides live in the project config above. The package manifest (models.default.json) names only the three tiers and is validated by CI.",
 		);
 	}
 }

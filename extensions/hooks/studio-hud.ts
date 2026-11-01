@@ -5,6 +5,7 @@ import { findStudioRoot } from "./studio-root.ts";
 import { panelBottom, panelRow, panelTop } from "./studio-palette.ts";
 import { readProducerState } from "./studio-start.ts";
 import { inspectSetup } from "./studio-setup.ts";
+import { getActivePerfMetrics } from "./studio-profile.ts";
 
 export type OddPhaseId = "concept" | "spec" | "arch" | "code" | "test" | "ship";
 
@@ -279,9 +280,11 @@ export function renderStudioFooterBar(
 	const engineDisplay = isEngineUnconfigured ? "Sin motor" : rawEngine;
 
 	const gaugeLen = width < 60 ? 4 : 5;
+	// An unread usage is unknown, not full. A green 100% here would be
+	// indistinguishable from a context that really is exhausted.
 	const contextDisplay = usage
 		? `${renderContextGauge(usage.percent, gaugeLen)} ${getGaugeColor(usage.percent)}${usage.percent}%${RESET}`
-		: `${r.success("100%")}`;
+		: `${r.muted("n/d")}`;
 
 	const parts: string[] = [];
 	parts.push(`▎ ${r.accent(engineDisplay)}${RESET}`);
@@ -290,15 +293,20 @@ export function renderStudioFooterBar(
 	}
 	parts.push(contextDisplay);
 
-	// Live Performance Tracker (only if active metrics exist and screen fits)
-	try {
-		const { getActivePerfMetrics } = require("./studio-profile.ts");
-		const perf = getActivePerfMetrics?.();
-		if (perf && width >= 70) {
-			const perfLine = `⚡ ${perf.fps}fps`;
-			parts.push(perf.status === "OK" ? r.success(perfLine) : r.warn(perfLine));
+	// Live Performance Tracker: only the metrics that were actually measured.
+	// Measured memory renders; an fps the studio cannot sample stays absent.
+	const perf = getActivePerfMetrics();
+	if (perf && width >= 70) {
+		const measured: string[] = [];
+		if (perf.fps !== null) measured.push(`${perf.fps}fps`);
+		if (perf.memoryMb !== null) measured.push(`${perf.memoryMb}MB`);
+		if (measured.length > 0) {
+			const perfLine = `⚡ ${measured.join(" ")}`;
+			parts.push(
+				perf.status === "OK" ? r.success(perfLine) : perf.status === "UNKNOWN" ? r.muted(perfLine) : r.warn(perfLine),
+			);
 		}
-	} catch {}
+	}
 
 	return parts.join(` ${DIM}·${RESET} `);
 }
@@ -382,7 +390,7 @@ export function updateStudioHUD(ctx: ExtensionContext, pi?: ExtensionAPI): void 
 		const milestone = prodState?.milestone || "Pendiente (/concept)";
 		const sprint = prodState?.sprint || "Sprint Activo";
 		const phaseChip = inferOddPhase(prodState);
-		const contextDisplay = usage ? `${usage.percent}%` : "100%";
+		const contextDisplay = usage ? `${usage.percent}%` : "n/d";
 
 		(ctx.ui as any).setStatus(
 			"studio",

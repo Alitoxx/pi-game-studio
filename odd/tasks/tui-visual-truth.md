@@ -26,6 +26,12 @@ Nine defects found in a read-only audit of the studio's terminal surface. Three 
 - **T7** — Roster, engine label and language drift. `S9` · inline · **`fix(copy): one roster, one label, one language`**
 - **T8** — Theme contract applied: overlays through roles, `NO_COLOR` reverse video, theme files documented as chrome-only. `S10` · inline · **`docs(theme): the studio owns its palette`**
 
+## Slices
+
+- **Slice 1** — `fix/tui-visual-truth`, commits `4e7ac51` + `9f8f1a7`, 572 authored lines. T1-T4: `#107`, `#108`, `#109`, `#110`, `#113`.
+- **Slice 2** — T5, T6: `#111`, `#112`.
+- **Slice 3** — T7, T8: `#114`, `#115`.
+
 ## Log
 
 - **L1** — User, verbatim: `genera los issues en github, y los comienzas a solucionar`

@@ -419,7 +419,7 @@ export const STUDIO_COMMAND_REGISTRY: StudioCommandItem[] = [
 	},
 	{
 		name: "/studio:setup",
-		description: "Instalación y actualización de los 9 agentes oficiales (8 Core + 1 Motor)",
+		description: "Instalación y actualización de los 10 agentes oficiales (8 Core + 1 Motor + 1 Verificador)",
 		category: "Studio & Models",
 	},
 	{

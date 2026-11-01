@@ -133,7 +133,7 @@ if (version === "dev") {
 			`${r.muted(fit("GIT:", 11))}${RESET}${r.text(`On branch ${gitBranch}`)}${RESET}`,
 			`${r.muted(fit("PATH:", 11))}${RESET}${r.text(shortPath)}${RESET}`,
 			`${r.muted(fit("ENGINE:", 11))}${RESET}${r.text(engineInfo)}${RESET}`,
-			`${r.muted(fit("AGENTS:", 11))}${RESET}${r.text(`${setup.agentsInstalled} activos (Directors, Leads, Devs)`)}${RESET}`,
+			`${r.muted(fit("AGENTS:", 11))}${RESET}${r.text(`${setup.agentsInstalled}/${setup.expectedAgents} activos`)}${RESET}`,
 			`${r.muted(fit("STAGE:", 11))}${RESET}${r.text(stage)}${RESET}`,
 			`${r.muted(fit("SKILLS:", 11))}${RESET}${r.text("6 ODD pipeline (/concept, /spec, /arch, /code, /test, /ship)")}${RESET}`,
 			`${r.muted(fit("STORAGE:", 11))}${RESET}${r.text(`${engramStatus} (Persistent Memory)`)}${RESET}`,
@@ -195,7 +195,7 @@ if (version === "dev") {
 		addNarrow("GIT:", `On branch ${gitBranch}`);
 		addNarrow("PATH:", shortPath);
 		addNarrow("ENGINE:", engineInfo);
-		addNarrow("AGENTS:", `${setup.agentsInstalled} activos (8 Core + 1 Motor)`);
+		addNarrow("AGENTS:", `${setup.agentsInstalled} de ${setup.expectedAgents} activos`);
 		addNarrow("STAGE:", stage);
 		addNarrow("STORAGE:", engramStatus);
 		lines.push(`${padStr}${r.warn(fit("TIPS:", lW))}${RESET} ${r.muted("/concept · /spec · /code · /studio · /studio:setup")}${RESET}`);

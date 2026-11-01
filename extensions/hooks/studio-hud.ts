@@ -277,7 +277,7 @@ export function renderStudioFooterBar(
 
 	const rawEngine = prodState?.engine || setup.currentEngine || "Sin configurar";
 	const isEngineUnconfigured = rawEngine === "Sin configurar" || !rawEngine || rawEngine.toLowerCase() === "sin motor";
-	const engineDisplay = isEngineUnconfigured ? "Sin motor" : rawEngine;
+	const engineDisplay = isEngineUnconfigured ? "Sin motor (/studio:setup)" : rawEngine;
 
 	const gaugeLen = width < 60 ? 4 : 5;
 	// An unread usage is unknown, not full. A green 100% here would be
@@ -373,7 +373,7 @@ export function updateStudioHUD(ctx: ExtensionContext, pi?: ExtensionAPI): void 
 
 		const rawEngine = prodState?.engine || setup.currentEngine || "Sin configurar";
 		const isEngineUnconfigured = rawEngine === "Sin configurar" || !rawEngine || rawEngine.toLowerCase() === "sin motor";
-		const engineDisplay = isEngineUnconfigured ? "Sin configurar" : rawEngine;
+		const engineDisplay = isEngineUnconfigured ? "Sin motor (/studio:setup)" : rawEngine;
 		const milestone = prodState?.milestone || "Pendiente (/concept)";
 		const sprint = prodState?.sprint || "Sprint Activo";
 		const phaseChip = inferOddPhase(prodState);

@@ -365,7 +365,9 @@ export async function handleStudioStart(
 
 function displayProjectAudit(ctx: ExtensionContext, a: ProjectAudit): void {
 	const envStatus = a.isConfigured
-		? "OK (9 agentes activos)"
+		// The count lives in the banner and in /studio:setup; repeating it here
+		// meant a fourth place to forget when the roster grew.
+		? "OK · agentes activos"
 		: "Incompleto (/studio:setup)";
 	const roadmapStatus = a.hasRoadmap
 		? (a.producerState?.milestone ? `${a.producerState.milestone}` : "Roadmap activo")

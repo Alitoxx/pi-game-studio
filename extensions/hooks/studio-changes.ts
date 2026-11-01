@@ -3,7 +3,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { runGit } from "./studio-exec.ts";
 import { findStudioRoot } from "./studio-root.ts";
-import { panelBottom, panelRow, panelTop } from "./studio-palette.ts";
+import { panelBottom, panelRow, panelTop, panelRule, RESET, BORDER, HEADING, resolveStudioTheme, getActiveThemeRole, type StudioThemeRoles } from "./studio-palette.ts";
 
 export type ChangeCategory = "DESIGN" | "CODE" | "DATA_ASSETS" | "PRODUCTION" | "CONFIG" | "OTHER";
 
@@ -222,13 +222,13 @@ function formatFileChangeRow(c: FileChange): string {
 	return `  ${c.status.padEnd(2)} ${c.path}${statStr}`;
 }
 
-export function formatChangesOutput(summary: ChangesSummary): string[] {
-	const lines: string[] = [];
-
-	lines.push(panelTop(66, "CAMBIOS DEL ESTUDIO (STUDIO CHANGES)"));
-	lines.push(panelRow("Clasificación rigurosa de modificaciones por naturaleza de juego", 66));
-	lines.push(panelBottom(66));
-	lines.push("");
+export function formatChangesOutput(
+	summary: ChangesSummary,
+	role: StudioThemeRoles = resolveStudioTheme(),
+): string[] {
+	// One card idiom: /changes draws the same rounded, coloured card as every
+	// other studio surface, and the grouped detail hangs below it.
+	const lines: string[] = renderChangesCard(summary, role);
 
 	const totalChanges =
 		summary.design.length +
@@ -239,9 +239,10 @@ export function formatChangesOutput(summary: ChangesSummary): string[] {
 		summary.other.length;
 
 	if (totalChanges === 0) {
-		lines.push("✓ Árbol de trabajo limpio. No hay cambios pendientes en git.");
 		return lines;
 	}
+
+	lines.push("");
 
 	if (summary.design.length > 0) {
 		lines.push(`[DESIGN] Especificaciones Vivas & Arte (${summary.design.length}):`);
@@ -303,45 +304,81 @@ export function formatChangesOutput(summary: ChangesSummary): string[] {
 }
 
 /**
- * Renders a compact Gentle Shell card with left accent bar ▎ for git changes.
+ * Renders the studio card for `/changes`: the rounded, coloured frame every
+ * other studio surface uses, carrying the counts. The per-category detail is
+ * appended by `formatChangesOutput`, so this card stays the single header
+ * idiom rather than a second renderer nobody reaches.
+ *
+ * Semantic states (added/removed figures, drift warnings, muted labels) resolve
+ * through `role`, so the card follows the host theme when one is configured.
+ * The title stays on the studio accent: the brand never routes through a theme
+ * token, which is the contract `palette.test.js` asserts.
  */
-export function renderChangesCard(summary: ChangesSummary): string[] {
-	const all = [
-		...summary.design,
-		...summary.code,
-		...summary.dataAssets,
-		...summary.production,
-		...summary.config,
-		...summary.other,
+export function renderChangesCard(
+	summary: ChangesSummary,
+	role: StudioThemeRoles = resolveStudioTheme(),
+): string[] {
+	const groups: Array<[string, FileChange[]]> = [
+		["DESIGN", summary.design],
+		["CODE", summary.code],
+		["DATA/ASSETS", summary.dataAssets],
+		["PRODUCTION", summary.production],
+		["CONFIG", summary.config],
+		["OTHER", summary.other],
 	];
-
-	const lines: string[] = [];
-	lines.push(`▎ Cambios Pendientes (${all.length} archivos)`);
-
-	if (all.length === 0) {
-		lines.push("▎ Árbol limpio · Cero modificaciones pendientes");
-		return lines;
-	}
+	const all = groups.flatMap(([, files]) => files);
 
 	let totalAdds = 0;
 	let totalDels = 0;
 	for (const f of all) {
 		totalAdds += f.additions ?? 0;
 		totalDels += f.deletions ?? 0;
-		const stat = f.additions !== undefined || f.deletions !== undefined
-			? ` (+${f.additions ?? 0} -${f.deletions ?? 0})`
-			: "";
-		lines.push(`▎   ${f.status.padEnd(2)} ${f.path}${stat}`);
 	}
 
-	lines.push(`▎ Total stats: +${totalAdds} -${totalDels}`);
+	const cardWidth = 66;
+	const lines: string[] = [];
+	// Emphasis stays on the accent role — the studio's title idiom — and the
+	// palette's ornament budget is left exactly as the other cards found it.
+	lines.push(
+		panelTop(cardWidth, role.accent("CAMBIOS DEL ESTUDIO (STUDIO CHANGES)"), "rounded", BORDER),
+	);
+	lines.push(
+		panelRow(role.muted("Clasificación rigurosa de modificaciones por naturaleza de juego"), cardWidth, BORDER),
+	);
+	lines.push(panelRule(cardWidth, "rounded", BORDER));
+
+	if (all.length === 0) {
+		lines.push(
+			panelRow(role.success("✓ Árbol de trabajo limpio. No hay cambios pendientes en git."), cardWidth, BORDER),
+		);
+		lines.push(panelBottom(cardWidth, "rounded", BORDER));
+		return lines;
+	}
+
+	lines.push(
+		panelRow(
+			` ${HEADING}${all.length} archivo(s) pendientes${RESET} ${role.muted("·")} ${role.success(`+${totalAdds}`)} ${role.error(`-${totalDels}`)}`,
+			cardWidth,
+			BORDER,
+		),
+	);
+	const counts = groups
+		.filter(([, files]) => files.length > 0)
+		.map(([label, files]) => `${role.muted(label)} ${files.length}`)
+		.join(` ${role.muted("·")} `);
+	lines.push(panelRow(` ${counts}`, cardWidth, BORDER));
 
 	if (summary.driftWarnings.length > 0) {
-		for (const w of summary.driftWarnings) {
-			lines.push(`▎ ⚠ ${w}`);
-		}
+		lines.push(
+			panelRow(
+				` ${role.warn(`⚠ ${summary.driftWarnings.length} alerta(s) de drift ODD`)}`,
+				cardWidth,
+				BORDER,
+			),
+		);
 	}
 
+	lines.push(panelBottom(cardWidth, "rounded", BORDER));
 	return lines;
 }
 
@@ -366,7 +403,9 @@ export async function handleStudioChanges(
 	}
 
 	const summary = inspectChanges(rootDir);
-	const lines = formatChangesOutput(summary);
+	// The host gives a theme to the footer factory, not to a command handler, so
+	// the role the studio is actually rendering with is read from the palette.
+	const lines = formatChangesOutput(summary, getActiveThemeRole());
 
 	for (const line of lines) {
 		console.log(line);

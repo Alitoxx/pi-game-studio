@@ -132,6 +132,7 @@ Tier 3 — Engine Specialist (+1 per project)
 > - [`docs/architecture-flowcharts.md`](docs/architecture-flowcharts.md): **Diagramas de Flujo y Arquitectura Completa** — Visualización paso a paso del pipeline ODD de 6 fases, la jerarquía 8+1+1, subagentes en vivo, compilación Web/WASM, profiler y sintetizador procedural.
 > - [`docs/gamedev-interaction-protocol.md`](docs/gamedev-interaction-protocol.md): **Protocolo de Respuestas y Decisiones (Gentle Shell for Games)** — Bloque 0: *Executive Delivery & Zero Bleed*, Pillars Header, Trade-offs Matrix, Choice Envelopes, Radar, Return Contracts, **Gobernanza Comercial & Modelado Boxleiter** y **Flow Completion Protocol**.
 > - [`docs/skills-reference.md`](docs/skills-reference.md): Catálogo de las **6 skills ODD** y comandos `studio:*` organizados por fases.
+> - [`docs/theme-contract.md`](docs/theme-contract.md): Contrato de tema — el estudio es dueño de su paleta; los archivos de `themes/` visten solo el chrome del host y los estados semánticos siguen al tema.
 > - **Única Fuente de Verdad (Single Source of Truth)**: `design/gdd/` y `design/art/` exclusivos para diseño y arte; `production/` exclusivo para roadmaps y sprints.
 > - **Diagnóstico y Salud de Entorno**: Detección automática al iniciar o decir *"hola"` (`Estado: ✔ Entorno OK`), con setup Automático o Manual sin preguntas redundantes.
 > - **Brújula de Producción del Producer**: Lectura y actualización automática de `production/roadmap.md` (`<!-- PRODUCER_STATE -->`) para saber en qué línea va el proyecto en todo momento.

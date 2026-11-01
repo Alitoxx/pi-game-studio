@@ -374,7 +374,7 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 		expect(phaserPkg.dependencies.phaser).toBeDefined();
 	});
 
-	test("banner.ts includes Phaser in the 6 supported engines and 8 Core + 1 Motor", () => {
+	test("banner.ts includes Phaser in the 6 supported engines and derives the roster", () => {
 		const bannerSource = fs.readFileSync(
 			path.join(__dirname, "..", "extensions", "hooks", "banner.ts"),
 			"utf8",
@@ -382,7 +382,10 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 		expect(bannerSource).toContain("Raylib");
 		expect(bannerSource).toContain("Phaser");
 		expect(bannerSource).toContain("Godot · Unity · Unreal · Bevy · Raylib · Phaser");
-		expect(bannerSource).toContain("8 Core + 1 Motor");
+		// The roster is derived from setup, never restated: every layout kept its own
+		// phrasing and the narrow one still claimed the pre-verifier shape.
+		expect(bannerSource).toContain("setup.expectedAgents");
+		expect(bannerSource).not.toContain("8 Core + 1 Motor");
 	});
 
 	test("engine reference docs exist for all 6 engines (bevy, godot, phaser, raylib, unity, unreal)", () => {

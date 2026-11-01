@@ -2,7 +2,7 @@ import type { ExtensionContext, ExtensionAPI } from "@earendil-works/pi-coding-a
 import { existsSync, readFileSync, writeFileSync, unlinkSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
-import { panelBottom, panelRow, panelTop } from "./studio-palette.ts";
+import { panelBottom, panelRow, panelTop, setActiveThemeRole } from "./studio-palette.ts";
 import { readProducerState } from "./studio-start.ts";
 import { inspectSetup } from "./studio-setup.ts";
 import { getActivePerfMetrics } from "./studio-profile.ts";
@@ -277,7 +277,7 @@ export function renderStudioFooterBar(
 
 	const rawEngine = prodState?.engine || setup.currentEngine || "Sin configurar";
 	const isEngineUnconfigured = rawEngine === "Sin configurar" || !rawEngine || rawEngine.toLowerCase() === "sin motor";
-	const engineDisplay = isEngineUnconfigured ? "Sin motor" : rawEngine;
+	const engineDisplay = isEngineUnconfigured ? "Sin motor (/studio:setup)" : rawEngine;
 
 	const gaugeLen = width < 60 ? 4 : 5;
 	// An unread usage is unknown, not full. A green 100% here would be
@@ -308,7 +308,9 @@ export function renderStudioFooterBar(
 		}
 	}
 
-	return parts.join(` ${DIM}·${RESET} `);
+	// The footer is one terminal line: a long engine name or model id must be
+	// clipped by the studio itself instead of being wrapped or cut by the host.
+	return truncateAnsi(parts.join(` ${DIM}·${RESET} `), Math.max(1, width));
 }
 
 import { installStudioSidebar } from "./studio-sidebar.ts";
@@ -321,6 +323,9 @@ export function installStudioFooter(pi: ExtensionAPI, ctx: ExtensionContext): vo
 	try {
 		(ctx.ui as any).setFooter((tui: any, theme: any, footerData: any) => {
 			const role = resolveStudioTheme(theme);
+			// Command handlers never receive the theme handle, so the live role is
+			// published here for them (/changes reads it on every invocation).
+			setActiveThemeRole(role);
 			let uninstallSidebar: (() => void) | undefined;
 			if (tui && tui.terminal) {
 				try {
@@ -371,7 +376,7 @@ export function updateStudioHUD(ctx: ExtensionContext, pi?: ExtensionAPI): void 
 
 		const rawEngine = prodState?.engine || setup.currentEngine || "Sin configurar";
 		const isEngineUnconfigured = rawEngine === "Sin configurar" || !rawEngine || rawEngine.toLowerCase() === "sin motor";
-		const engineDisplay = isEngineUnconfigured ? "Sin configurar" : rawEngine;
+		const engineDisplay = isEngineUnconfigured ? "Sin motor (/studio:setup)" : rawEngine;
 		const milestone = prodState?.milestone || "Pendiente (/concept)";
 		const sprint = prodState?.sprint || "Sprint Activo";
 		const phaseChip = inferOddPhase(prodState);

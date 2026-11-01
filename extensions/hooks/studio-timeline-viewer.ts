@@ -6,15 +6,13 @@ import {
 	RESET,
 	BOLD,
 	DIM,
-	GREEN,
-	YELLOW,
-	RED,
 	ACCENT as PURPLE,
 	SECONDARY as CYAN,
 	HEADING as LAVENDER,
 	WHITE,
-	GRAY,
 	BORDER,
+	resolveStudioTheme,
+	type StudioThemeRoles,
 	padAnsi,
 	truncateAnsi,
 	panelBottom,
@@ -42,14 +40,23 @@ function isKeyMatch(data: string, name: string): boolean {
 
 /**
  * Renders the timeline split view (tree on left, card on right).
+ *
+ * Semantic states (completed / in progress / neutral) resolve through `role`,
+ * so the viewer follows the host theme when one is configured. `accent`,
+ * `secondary`, `heading` and the frame stay on the studio palette: the brand
+ * never routes through a theme token (issue #115).
  */
 export function renderTimelineSplitView(
 	items: TimelineItem[],
 	selectedIndex: number,
 	activeFilter: FilterCategory = "All",
 	width: number = 84,
+	role: StudioThemeRoles = resolveStudioTheme(),
 ): string[] {
-	const totalWidth = Math.max(76, width);
+	// The frame adds its own two border columns, so the inner width is two less
+	// than the surface: a frame wider than the terminal wraps and the box breaks
+	// at the edge. 76 is the split view's declared minimum, floor included.
+	const totalWidth = Math.max(76, width) - 2;
 	const leftWidth = Math.min(36, Math.max(28, Math.floor(totalWidth * 0.38)));
 	const rightWidth = totalWidth - leftWidth - 1;
 
@@ -70,11 +77,14 @@ export function renderTimelineSplitView(
 	const tabLabels = FILTER_TABS.map((tab) => {
 		const isAct = tab === activeFilter;
 		const name = tab === "All" ? "Todos" : tab === "Milestones" ? "Hitos" : tab === "ADRs" ? "ADRs" : "Live Specs";
-		return isAct ? `${CYAN}[${name}]${RESET}` : `${GRAY}[○ ${name}]${RESET}`;
+		return isAct ? `${CYAN}[${name}]${RESET}` : role.muted(`[○ ${name}]`);
 	}).join("  ");
 
-	lines.push(panelTop(totalWidth - 4, `${PURPLE}${BOLD}TIMELINE DE PRODUCCIÓN Y DECISIONES (ODD)${RESET}`, "rounded", BORDER));
-	lines.push(`${panelRow(`  ${GRAY}Filtro:${RESET} ${tabLabels}  ${DIM}(Tab para cambiar)${RESET}`, totalWidth - 2, BORDER)}`);
+	// One inner width for the whole frame: the body rows, the mid rule and the
+	// bottom border are all `totalWidth + 2` visible columns wide, so the title
+	// bar and the filter row must be built at the same width or the box is ragged.
+	lines.push(panelTop(totalWidth, `${PURPLE}${BOLD}TIMELINE DE PRODUCCIÓN Y DECISIONES (ODD)${RESET}`, "rounded", BORDER));
+	lines.push(`${panelRow(`  ${role.muted("Filtro:")} ${tabLabels}  ${DIM}(Tab para cambiar)${RESET}`, totalWidth, BORDER)}`);
 	lines.push(`${BORDER}├${"─".repeat(leftWidth)}┬${"─".repeat(rightWidth)}┤${RESET}`);
 
 	// 2. Left column (tree with ASCII spine)
@@ -88,43 +98,43 @@ export function renderTimelineSplitView(
 		const marker = isSelected ? `${CYAN}▸${RESET} ` : "  ";
 		const spine = it.treeSpine || "";
 
-		let iconColor = GRAY;
+		let paint = role.muted;
 		if (it.type === "milestone") {
-			iconColor = it.progress === 100 ? GREEN : it.progress && it.progress > 0 ? YELLOW : GRAY;
+			paint = it.progress === 100 ? role.success : it.progress && it.progress > 0 ? role.warn : role.muted;
 		} else if (it.type === "task") {
-			iconColor = it.status === "Completed" ? GREEN : it.status === "In Progress" ? YELLOW : GRAY;
+			paint = it.status === "Completed" ? role.success : it.status === "In Progress" ? role.warn : role.muted;
 		} else if (it.type === "adr") {
-			iconColor = PURPLE;
+			paint = (text: string) => `${PURPLE}${text}${RESET}`;
 		} else if (it.type === "spec") {
-			iconColor = CYAN;
+			paint = (text: string) => `${CYAN}${text}${RESET}`;
 		}
 
-		const textColor = isSelected ? `${WHITE}` : it.type === "milestone" ? `${WHITE}` : `${GRAY}`;
 		const maxTitleLen = Math.max(10, leftWidth - spine.length - 8);
 		const titleDisplay = truncateAnsi(it.title, maxTitleLen);
+		const titleColored = isSelected || it.type === "milestone" ? `${WHITE}${titleDisplay}${RESET}` : role.muted(titleDisplay);
 
-		leftLines.push(`${marker}${GRAY}${spine}${RESET}${iconColor}${it.icon}${RESET} ${textColor}${titleDisplay}${RESET}`);
+		leftLines.push(`${marker}${role.muted(spine)}${paint(it.icon)} ${titleColored}`);
 	}
 
 	// 3. Right column (Detail card for selected event)
 	const rightLines: string[] = [];
 
 	let typeBadge = `${PURPLE}[HITO]${RESET}`;
-	if (targetItem.type === "task") typeBadge = `${GRAY}[TAREA]${RESET}`;
+	if (targetItem.type === "task") typeBadge = role.muted("[TAREA]");
 	if (targetItem.type === "adr") typeBadge = `${PURPLE}[ADR]${RESET}`;
 	if (targetItem.type === "spec") typeBadge = `${CYAN}[LIVE SPEC]${RESET}`;
 
-	let statusBadge = `${GRAY}○ ${targetItem.status}${RESET}`;
+	let statusBadge = role.muted(`○ ${targetItem.status}`);
 	if (targetItem.status === "Completed" || targetItem.status === "Accepted" || targetItem.status === "Approved") {
-		statusBadge = `${GREEN}✓ ${targetItem.status}${RESET}`;
+		statusBadge = role.success(`✓ ${targetItem.status}`);
 	} else if (targetItem.status === "In Progress") {
-		statusBadge = `${YELLOW}◐ ${targetItem.status}${RESET}`;
+		statusBadge = role.warn(`◐ ${targetItem.status}`);
 	}
 
 	rightLines.push(`${typeBadge} ${WHITE}${truncateAnsi(targetItem.title, rightWidth - 16)}${RESET}`);
-	rightLines.push(`  ${GRAY}Estado:${RESET} ${statusBadge}  ${GRAY}·${RESET}  ${GRAY}Archivo:${RESET} ${CYAN}${targetItem.sourceFile || "N/A"}${RESET}`);
+	rightLines.push(`  ${role.muted("Estado:")} ${statusBadge}  ${role.muted("·")}  ${role.muted("Archivo:")} ${CYAN}${targetItem.sourceFile || "N/A"}${RESET}`);
 	if (targetItem.date) {
-		rightLines.push(`  ${GRAY}Fecha / Registro:${RESET} ${WHITE}${targetItem.date}${RESET}`);
+		rightLines.push(`  ${role.muted("Fecha / Registro:")} ${WHITE}${targetItem.date}${RESET}`);
 	}
 	rightLines.push("");
 
@@ -141,7 +151,7 @@ export function renderTimelineSplitView(
 		rightLines.push(`${LAVENDER}Decisión de Arquitectura${RESET}`);
 		const decisionLines = (targetItem.details.decision || "Decisión técnica.").split("\n").slice(0, 3);
 		for (const dl of decisionLines) {
-			rightLines.push(`  ${GREEN}${truncateAnsi(dl.trim(), rightWidth - 4)}${RESET}`);
+			rightLines.push(`  ${role.success(truncateAnsi(dl.trim(), rightWidth - 4))}`);
 		}
 		rightLines.push("");
 
@@ -149,7 +159,7 @@ export function renderTimelineSplitView(
 			rightLines.push(`${LAVENDER}Trade-offs y Alternativas Evaluadas${RESET}`);
 			const tradeLines = targetItem.details.tradeoffs.split("\n").slice(0, 3);
 			for (const tl of tradeLines) {
-				rightLines.push(`  ${YELLOW}${truncateAnsi(tl.trim(), rightWidth - 4)}${RESET}`);
+				rightLines.push(`  ${role.warn(truncateAnsi(tl.trim(), rightWidth - 4))}`);
 			}
 			rightLines.push("");
 		}
@@ -158,7 +168,7 @@ export function renderTimelineSplitView(
 			rightLines.push(`${LAVENDER}Consecuencias e Impacto Técnico${RESET}`);
 			const consLines = targetItem.details.consequences.split("\n").slice(0, 3);
 			for (const cl of consLines) {
-				rightLines.push(`  ${GRAY}${truncateAnsi(cl.trim(), rightWidth - 4)}${RESET}`);
+				rightLines.push(`  ${role.muted(truncateAnsi(cl.trim(), rightWidth - 4))}`);
 			}
 		}
 	} else if (targetItem.type === "spec") {
@@ -181,7 +191,7 @@ export function renderTimelineSplitView(
 		if (targetItem.details.tuningKnobs && targetItem.details.tuningKnobs.length > 0) {
 			rightLines.push(`${LAVENDER}Variables de Balance (Tuning Knobs)${RESET}`);
 			for (const knob of targetItem.details.tuningKnobs.slice(0, 4)) {
-				rightLines.push(`  ${YELLOW}${truncateAnsi(knob, rightWidth - 4)}${RESET}`);
+				rightLines.push(`  ${role.warn(truncateAnsi(knob, rightWidth - 4))}`);
 			}
 		}
 	} else {
@@ -193,11 +203,11 @@ export function renderTimelineSplitView(
 		if (targetItem.details.producerState) {
 			const ps = targetItem.details.producerState;
 			rightLines.push(`${LAVENDER}Estado del Productor (Roadmap Live)${RESET}`);
-			if (ps.gameTitle) rightLines.push(`  ${GRAY}Juego:${RESET}     ${WHITE}${ps.gameTitle}${RESET}`);
-			if (ps.engine) rightLines.push(`  ${GRAY}Motor:${RESET}     ${CYAN}${ps.engine}${RESET}`);
-			if (ps.milestone) rightLines.push(`  ${GRAY}Hito:${RESET}      ${YELLOW}${ps.milestone}${RESET}`);
-			if (ps.sprint) rightLines.push(`  ${GRAY}Sprint:${RESET}    ${WHITE}${ps.sprint}${RESET}`);
-			if (ps.nextStep) rightLines.push(`  ${GRAY}Siguiente:${RESET} ${GREEN}${ps.nextStep}${RESET}`);
+			if (ps.gameTitle) rightLines.push(`  ${role.muted("Juego:")}     ${WHITE}${ps.gameTitle}${RESET}`);
+			if (ps.engine) rightLines.push(`  ${role.muted("Motor:")}     ${CYAN}${ps.engine}${RESET}`);
+			if (ps.milestone) rightLines.push(`  ${role.muted("Hito:")}      ${role.warn(ps.milestone)}`);
+			if (ps.sprint) rightLines.push(`  ${role.muted("Sprint:")}    ${WHITE}${ps.sprint}${RESET}`);
+			if (ps.nextStep) rightLines.push(`  ${role.muted("Siguiente:")} ${role.success(ps.nextStep)}`);
 		}
 	}
 
@@ -211,7 +221,7 @@ export function renderTimelineSplitView(
 	}
 
 	lines.push(`${BORDER}╰${"─".repeat(leftWidth)}┴${"─".repeat(rightWidth)}╯${RESET}`);
-	lines.push(`  ${GRAY}↑/↓ o j/k: Navegar • Tab: Filtrar (${activeFilter}) • Esc/q: Salir${RESET}`);
+	lines.push(`  ${role.muted(`↑/↓ o j/k: Navegar • Tab: Filtrar (${activeFilter}) • Esc/q: Salir`)}`);
 
 	return lines;
 }
@@ -315,6 +325,7 @@ export class TimelineViewerComponent {
 			this.selectedIndex,
 			this.getActiveFilter(),
 			width,
+			resolveStudioTheme(this.theme),
 		);
 
 		this.cachedWidth = width;

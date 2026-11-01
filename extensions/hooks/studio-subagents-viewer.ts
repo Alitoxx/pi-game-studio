@@ -10,15 +10,13 @@ import {
 	RESET,
 	BOLD,
 	DIM,
-	GREEN,
-	YELLOW,
-	GRAY,
 	ACCENT as BLUE,
 	HEADING as LAVENDER,
 	SECONDARY,
 	WHITE,
 	BORDER,
-	RED,
+	resolveStudioTheme,
+	type StudioThemeRoles,
 	truncateAnsi,
 	padAnsi,
 	panelBottom,
@@ -280,6 +278,7 @@ export function renderSubagentLiveConsoleView(
 	width: number = 80,
 	height?: number,
 	scrollOffset: number = 0,
+	role: StudioThemeRoles = resolveStudioTheme(),
 ): string[] {
 	if (!targetTask) return renderNoTaskState(width);
 
@@ -293,22 +292,22 @@ export function renderSubagentLiveConsoleView(
 		: 0;
 	const elapsedStr = formatElapsed(elapsedMs);
 
-	let statusBadge = `${YELLOW}◐ EN EJECUCIÓN${RESET}`;
-	if (targetTask.status === "completed") statusBadge = `${GREEN}✓ COMPLETADO${RESET}`;
-	if (targetTask.status === "failed") statusBadge = `${RED}✗ FALLIDO${RESET}`;
-	if (targetTask.status === "cancelled") statusBadge = `${GRAY}○ CANCELADO${RESET}`;
-	if (targetTask.status === "queued") statusBadge = `${GRAY}○ EN COLA${RESET}`;
+	let statusBadge = role.warn("◐ EN EJECUCIÓN");
+	if (targetTask.status === "completed") statusBadge = role.success("✓ COMPLETADO");
+	if (targetTask.status === "failed") statusBadge = role.error("✗ FALLIDO");
+	if (targetTask.status === "cancelled") statusBadge = role.muted("○ CANCELADO");
+	if (targetTask.status === "queued") statusBadge = role.muted("○ EN COLA");
 
 	const headerTitle = `CONSOLA EN VIVO · ${(targetTask.title || targetTask.agent).toUpperCase()}`;
 
 	lines.push(panelTop(cardWidth - 2, `${BLUE}${headerTitle}${RESET}`, "rounded", BORDER));
 
 	// Compact 2-line header bar
-	const statusLine = `  ${statusBadge} ${GRAY}·${RESET} ${GRAY}Modelo:${RESET} ${BLUE}${targetTask.model || "inherit"}${RESET} ${GRAY}·${RESET} ${GRAY}Tiempo:${RESET} ${WHITE}${elapsedStr}${RESET} ${GRAY}·${RESET} ${GRAY}Task:${RESET} ${DIM}${targetTask.id}${RESET}`;
+	const statusLine = `  ${statusBadge} ${role.muted("·")} ${role.muted("Modelo:")} ${BLUE}${targetTask.model || "inherit"}${RESET} ${role.muted("·")} ${role.muted("Tiempo:")} ${WHITE}${elapsedStr}${RESET} ${role.muted("·")} ${role.muted("Task:")} ${DIM}${targetTask.id}${RESET}`;
 	lines.push(`${panelRow(statusLine, innerWidth + 2, BORDER)}`);
 
 	const firstTaskLine = targetTask.task.split("\n")[0]?.trim() || "";
-	const instructionLine = `  ${GRAY}Instrucción:${RESET} ${WHITE}${truncateAnsi(firstTaskLine, innerWidth - 17)}${RESET}`;
+	const instructionLine = `  ${role.muted("Instrucción:")} ${WHITE}${truncateAnsi(firstTaskLine, innerWidth - 17)}${RESET}`;
 	lines.push(`${panelRow(instructionLine, innerWidth + 2, BORDER)}`);
 
 	lines.push(panelRule(cardWidth - 2, "rounded", BORDER));
@@ -339,7 +338,7 @@ export function renderSubagentLiveConsoleView(
 		} else if (rawLog.includes("  read ") || rawLog.includes("📖 read:")) {
 			styledLog = `${LAVENDER}${rawLog}${RESET}`;
 		} else if (rawLog.includes("  write ") || rawLog.includes("  edit ") || rawLog.includes("✎ write:") || rawLog.includes("✎ edit:")) {
-			styledLog = `${GREEN}${rawLog}${RESET}`;
+			styledLog = `${role.success(rawLog)}`;
 		} else if (rawLog.includes("  find ") || rawLog.includes("  grep ") || rawLog.includes("🔍 find:") || rawLog.includes("🔍 grep:")) {
 			styledLog = `${BLUE}${rawLog}${RESET}`;
 		} else if (rawLog.includes("  think ") || rawLog.includes("💭")) {
@@ -347,11 +346,11 @@ export function renderSubagentLiveConsoleView(
 		} else if (rawLog.includes("  text ") || rawLog.includes("💬")) {
 			styledLog = `${WHITE}${rawLog}${RESET}`;
 		} else if (rawLog.includes("  done ")) {
-			styledLog = `${GREEN}${rawLog}${RESET}`;
+			styledLog = `${role.success(rawLog)}`;
 		} else if (rawLog.includes("err (") || rawLog.includes("✗ [error") || rawLog.includes("stderr:")) {
-			styledLog = `${RED}${rawLog}${RESET}`;
+			styledLog = `${role.error(rawLog)}`;
 		} else if (rawLog.includes("ok (") || rawLog.includes("out (") || rawLog.includes("↳ [")) {
-			styledLog = `${GRAY}${rawLog}${RESET}`;
+			styledLog = `${role.muted(rawLog)}`;
 		} else if (rawLog.startsWith("          ") || rawLog.startsWith("         ")) {
 			styledLog = `${WHITE}${rawLog}${RESET}`;
 		}
@@ -368,7 +367,7 @@ export function renderSubagentLiveConsoleView(
 	lines.push(panelBottom(cardWidth - 2, "rounded", BORDER));
 
 	const scrollIndicator = clampedOffset > 0 ? ` [Scroll: -${clampedOffset}]` : "";
-	lines.push(`  ${GRAY}Tab/v: Alternar Resumen • ↑/↓/PgUp/PgDn: Scroll • o: Editor • c: Cancelar • Esc: Salir${scrollIndicator}${RESET}`);
+	lines.push(`  ${role.muted(`Tab/v: Alternar Resumen • ↑/↓/PgUp/PgDn: Scroll • o: Editor • c: Cancelar • Esc: Salir${scrollIndicator}`)}`);
 
 	return lines;
 }
@@ -381,6 +380,7 @@ export function renderSubagentModalView(
 	targetTask: TaskRecord,
 	width: number = 80,
 	options?: { selectedIndex?: number; totalTasks?: number; height?: number; scrollOffset?: number },
+	role: StudioThemeRoles = resolveStudioTheme(),
 ): string[] {
 	if (!targetTask) return renderNoTaskState(width);
 
@@ -394,23 +394,23 @@ export function renderSubagentModalView(
 		: 0;
 	const elapsedStr = formatElapsed(elapsedMs);
 
-	let statusBadge = `${YELLOW}◐ EN EJECUCIÓN${RESET}`;
-	if (targetTask.status === "completed") statusBadge = `${GREEN}✓ COMPLETADO${RESET}`;
-	if (targetTask.status === "failed") statusBadge = `${RED}✗ FALLIDO${RESET}`;
-	if (targetTask.status === "cancelled") statusBadge = `${GRAY}○ CANCELADO${RESET}`;
-	if (targetTask.status === "queued") statusBadge = `${GRAY}○ EN COLA${RESET}`;
+	let statusBadge = role.warn("◐ EN EJECUCIÓN");
+	if (targetTask.status === "completed") statusBadge = role.success("✓ COMPLETADO");
+	if (targetTask.status === "failed") statusBadge = role.error("✗ FALLIDO");
+	if (targetTask.status === "cancelled") statusBadge = role.muted("○ CANCELADO");
+	if (targetTask.status === "queued") statusBadge = role.muted("○ EN COLA");
 
 	const headerTitle = `INSPECTOR DE ESPECIALISTA · ${(targetTask.title || targetTask.agent).toUpperCase()}`;
 
 	lines.push(panelTop(cardWidth - 2, `${BLUE}${headerTitle}${RESET}`, "rounded", BORDER));
 	lines.push(`${panelRow(`${LAVENDER}Detalles de Ejecución${RESET}`, innerWidth + 2, BORDER)}`);
-	lines.push(`${panelRow(`  ${GRAY}Agente:${RESET}  ${WHITE}${targetTask.agent}${RESET} (${targetTask.title})`, innerWidth + 2, BORDER)}`);
-	lines.push(`${panelRow(`  ${GRAY}Modelo:${RESET}  ${BLUE}${targetTask.model || "inherit"}${RESET}  ${GRAY}·  Estado:${RESET} ${statusBadge}`, innerWidth + 2, BORDER)}`);
-	lines.push(`${panelRow(`  ${GRAY}Tiempo:${RESET}  ${WHITE}${elapsedStr}${RESET}  ${GRAY}·  Task ID:${RESET} ${DIM}${targetTask.id}${RESET}`, innerWidth + 2, BORDER)}`);
+	lines.push(`${panelRow(`  ${role.muted("Agente:")}  ${WHITE}${targetTask.agent}${RESET} (${targetTask.title})`, innerWidth + 2, BORDER)}`);
+	lines.push(`${panelRow(`  ${role.muted("Modelo:")}  ${BLUE}${targetTask.model || "inherit"}${RESET}  ${role.muted("·  Estado:")} ${statusBadge}`, innerWidth + 2, BORDER)}`);
+	lines.push(`${panelRow(`  ${role.muted("Tiempo:")}  ${WHITE}${elapsedStr}${RESET}  ${role.muted("·  Task ID:")} ${DIM}${targetTask.id}${RESET}`, innerWidth + 2, BORDER)}`);
 
 	if (options?.totalTasks && options.totalTasks > 1) {
 		const currentIdx = (options.selectedIndex ?? 0) + 1;
-		lines.push(`${panelRow(`  ${GRAY}Navegación:${RESET} [${currentIdx}/${options.totalTasks}] ${GRAY}(usa ↑/↓ para cambiar de agente)${RESET}`, innerWidth + 2, BORDER)}`);
+		lines.push(`${panelRow(`  ${role.muted("Navegación:")} [${currentIdx}/${options.totalTasks}] ${role.muted("(usa ↑/↓ para cambiar de agente)")}`, innerWidth + 2, BORDER)}`);
 	}
 
 	lines.push(`${panelRow("", innerWidth + 2, BORDER)}`);
@@ -430,14 +430,14 @@ export function renderSubagentModalView(
 		resultLines.push(`${panelRow(`${LAVENDER}Resultado / Entrega Final${RESET}`, innerWidth + 2, BORDER)}`);
 		const resultPreview = targetTask.result.split("\n").slice(0, 6);
 		for (const rl of resultPreview) {
-			resultLines.push(`${panelRow(`  ${GREEN}${truncateAnsi(rl, innerWidth - 4)}${RESET}`, innerWidth + 2, BORDER)}`);
+			resultLines.push(`${panelRow(`  ${role.success(truncateAnsi(rl, innerWidth - 4))}`, innerWidth + 2, BORDER)}`);
 		}
 	} else if (targetTask.error) {
 		resultLines.push(`${panelRow("", innerWidth + 2, BORDER)}`);
-		resultLines.push(`${panelRow(`${RED}Error Registrado:${RESET} ${truncateAnsi(targetTask.error, innerWidth - 20)}`, innerWidth + 2, BORDER)}`);
+		resultLines.push(`${panelRow(`${role.error("Error Registrado:")} ${truncateAnsi(targetTask.error, innerWidth - 20)}`, innerWidth + 2, BORDER)}`);
 	} else if (targetTask.status === "running") {
 		resultLines.push(`${panelRow("", innerWidth + 2, BORDER)}`);
-		resultLines.push(`${panelRow(`  ${YELLOW}◐ Especialista ejecutando en segundo plano...${RESET}`, innerWidth + 2, BORDER)}`);
+		resultLines.push(`${panelRow(`  ${role.warn("◐ Especialista ejecutando en segundo plano...")}`, innerWidth + 2, BORDER)}`);
 	}
 
 	// Panel 2: Live Tool Call Events & Logs
@@ -482,8 +482,8 @@ export function renderSubagentModalView(
 	}
 
 	lines.push(panelBottom(cardWidth - 2, "rounded", BORDER));
-	const scrollIndicator = clampedOffset > 0 ? ` ${YELLOW}[Scroll: -${clampedOffset} • End: fin]${RESET}` : "";
-	lines.push(`  ${GRAY}Tab/v: Consola Stream • ↑/↓: Seleccionar agente • Esc: Salir • c: Cancelar • o: Abrir en editor externo • PgUp/PgDn/Rueda: Scroll${scrollIndicator}${RESET}`);
+	const scrollIndicator = clampedOffset > 0 ? ` ${role.warn(`[Scroll: -${clampedOffset} • End: fin]`)}` : "";
+	lines.push(`  ${role.muted(`Tab/v: Consola Stream • ↑/↓: Seleccionar agente • Esc: Salir • c: Cancelar • o: Abrir en editor externo • PgUp/PgDn/Rueda: Scroll${scrollIndicator}`)}`);
 
 	return lines;
 }
@@ -500,6 +500,7 @@ export function renderSubagentSplitView(
 	width: number = 84,
 	height?: number,
 	scrollOffset: number = 0,
+	role: StudioThemeRoles = resolveStudioTheme(),
 ): string[] {
 	const totalWidth = Math.max(76, width);
 	const leftWidth = Math.min(28, Math.max(22, Math.floor(totalWidth * 0.28)));
@@ -527,19 +528,19 @@ export function renderSubagentSplitView(
 	for (let i = 0; i < visibleTasks.length; i++) {
 		const actualIdx = leftScroll + i;
 		const t = visibleTasks[i];
-		let icon = `${GRAY}○${RESET}`;
-		if (t.status === "completed") icon = `${GREEN}✓${RESET}`;
-		else if (t.status === "running") icon = `${YELLOW}◐${RESET}`;
-		else if (t.status === "interaction_required") icon = `${YELLOW}?${RESET}`;
-		else if (t.status === "failed") icon = `${RED}✗${RESET}`;
+		let icon = role.muted("○");
+		if (t.status === "completed") icon = role.success("✓");
+		else if (t.status === "running") icon = role.warn("◐");
+		else if (t.status === "interaction_required") icon = role.warn("?");
+		else if (t.status === "failed") icon = role.error("✗");
 
 		const isSelected = actualIdx === selectedIndex;
 		const marker = isSelected ? `${BLUE}▸${RESET} ` : "  ";
-		const agentColor = isSelected ? `${WHITE}` : `${GRAY}`;
 		const maxNameLen = leftWidth - 7;
 		const nameDisplay = truncateAnsi(t.agent, maxNameLen);
+		const nameColored = isSelected ? `${WHITE}${nameDisplay}${RESET}` : role.muted(nameDisplay);
 
-		leftContent.push(`${marker}${icon} ${agentColor}${nameDisplay}${RESET}`);
+		leftContent.push(`${marker}${icon} ${nameColored}`);
 	}
 
 	// Generate right column lines (detailed task inspector)
@@ -549,17 +550,17 @@ export function renderSubagentSplitView(
 		: 0;
 	const elapsedStr = formatElapsed(elapsedMs);
 
-	let statusBadge = `${YELLOW}◐ EN EJECUCIÓN${RESET}`;
-	if (targetTask.status === "completed") statusBadge = `${GREEN}✓ COMPLETADO${RESET}`;
-	if (targetTask.status === "failed") statusBadge = `${RED}✗ FALLIDO${RESET}`;
-	if (targetTask.status === "cancelled") statusBadge = `${GRAY}○ CANCELADO${RESET}`;
-	if (targetTask.status === "queued") statusBadge = `${GRAY}○ EN COLA${RESET}`;
+	let statusBadge = role.warn("◐ EN EJECUCIÓN");
+	if (targetTask.status === "completed") statusBadge = role.success("✓ COMPLETADO");
+	if (targetTask.status === "failed") statusBadge = role.error("✗ FALLIDO");
+	if (targetTask.status === "cancelled") statusBadge = role.muted("○ CANCELADO");
+	if (targetTask.status === "queued") statusBadge = role.muted("○ EN COLA");
 
 	const headerLines: string[] = [];
 	const headerTitle = `INSPECTOR DE ESPECIALISTA · ${(targetTask.title || targetTask.agent).toUpperCase()}`;
 	headerLines.push(`${BLUE}${BOLD}${truncateAnsi(headerTitle, rightWidth - 2)}${RESET}`);
-	headerLines.push(`  ${GRAY}Modelo:${RESET} ${BLUE}${targetTask.model || "inherit"}${RESET}  ${GRAY}·${RESET}  ${statusBadge}  ${GRAY}·${RESET}  ${WHITE}${elapsedStr}${RESET}`);
-	headerLines.push(`  ${GRAY}Task ID:${RESET} ${DIM}${targetTask.id}${RESET}`);
+	headerLines.push(`  ${role.muted("Modelo:")} ${BLUE}${targetTask.model || "inherit"}${RESET}  ${role.muted("·")}  ${statusBadge}  ${role.muted("·")}  ${WHITE}${elapsedStr}${RESET}`);
+	headerLines.push(`  ${role.muted("Task ID:")} ${DIM}${targetTask.id}${RESET}`);
 	headerLines.push("");
 
 	// Panel: Instruction
@@ -577,14 +578,14 @@ export function renderSubagentSplitView(
 		footerRightLines.push(`${LAVENDER}Resultado / Entrega Final${RESET}`);
 		const resultPreview = targetTask.result.split("\n").slice(0, 5);
 		for (const rl of resultPreview) {
-			footerRightLines.push(`  ${GREEN}${truncateAnsi(rl, rightWidth - 4)}${RESET}`);
+			footerRightLines.push(`  ${role.success(truncateAnsi(rl, rightWidth - 4))}`);
 		}
 	} else if (targetTask.error) {
 		footerRightLines.push("");
-		footerRightLines.push(`${RED}Error Registrado:${RESET} ${truncateAnsi(targetTask.error, rightWidth - 20)}`);
+		footerRightLines.push(`${role.error("Error Registrado:")} ${truncateAnsi(targetTask.error, rightWidth - 20)}`);
 	} else if (targetTask.status === "running") {
 		footerRightLines.push("");
-		footerRightLines.push(`  ${YELLOW}◐ Ejecución activa en segundo plano...${RESET}`);
+		footerRightLines.push(`  ${role.warn("◐ Ejecución activa en segundo plano...")}`);
 	}
 
 	const allLogs = withDroppedMarker(
@@ -608,7 +609,7 @@ export function renderSubagentSplitView(
 	const startIdx = Math.max(0, endIdx - availableLogRows);
 	const eventLogs = allLogs.slice(startIdx, endIdx);
 
-	const scrollHeaderNote = clampedOffset > 0 ? ` ${YELLOW}[Scroll: -${clampedOffset}]${RESET}` : "";
+	const scrollHeaderNote = clampedOffset > 0 ? ` ${role.warn(`[Scroll: -${clampedOffset}]`)}` : "";
 	const logHeader = `${LAVENDER}Eventos y Llamadas de Herramientas (En Vivo)${RESET}${scrollHeaderNote}`;
 	const fixedRightCount = headerLines.length + 1 /* logHeader */ + footerRightLines.length;
 
@@ -632,8 +633,8 @@ export function renderSubagentSplitView(
 		lines.push(`${BORDER}│${RESET}${l}${BORDER}│${RESET} ${rPadded} ${BORDER}│${RESET}`);
 	}
 	lines.push(`${BORDER}╰${"─".repeat(leftWidth)}┴${"─".repeat(rightWidth)}╯${RESET}`);
-	const bottomScrollIndicator = clampedOffset > 0 ? ` ${YELLOW}[Scroll: -${clampedOffset} • End: fin]${RESET}` : "";
-	lines.push(`  ${GRAY}Tab/v: Consola Stream • ↑/↓: Seleccionar agente • Esc: Salir • c: Cancelar • o: Abrir en editor externo • PgUp/PgDn/Rueda: Scroll${bottomScrollIndicator}${RESET}`);
+	const bottomScrollIndicator = clampedOffset > 0 ? ` ${role.warn(`[Scroll: -${clampedOffset} • End: fin]`)}` : "";
+	lines.push(`  ${role.muted(`Tab/v: Consola Stream • ↑/↓: Seleccionar agente • Esc: Salir • c: Cancelar • o: Abrir en editor externo • PgUp/PgDn/Rueda: Scroll${bottomScrollIndicator}`)}`);
 
 	return lines;
 }
@@ -845,18 +846,19 @@ export class SubagentsViewerComponent {
 
 		let lines: string[];
 		const targetTask = this.tasks[this.selectedIndex] || this.tasks[0];
+		const role = resolveStudioTheme(this.theme);
 
 		if (this.viewMode === "stream") {
-			lines = renderSubagentLiveConsoleView(targetTask, width, height, this.scrollOffset);
+			lines = renderSubagentLiveConsoleView(targetTask, width, height, this.scrollOffset, role);
 		} else {
 			lines = (width >= 76 && this.tasks.length > 1)
-				? renderSubagentSplitView(this.tasks, this.selectedIndex, width, height, this.scrollOffset)
+				? renderSubagentSplitView(this.tasks, this.selectedIndex, width, height, this.scrollOffset, role)
 				: renderSubagentModalView(targetTask, width, {
 					selectedIndex: this.selectedIndex,
 					totalTasks: this.tasks.length,
 					height,
 					scrollOffset: this.scrollOffset,
-				});
+				}, role);
 		}
 
 		this.cachedWidth = width;

@@ -95,7 +95,7 @@ export function renderTasksWidgetCard(
 		: "";
 
 	const countSummary = targetTasks.length > 0
-		? (activeFeature ? `${activeFeature}: ${completedCount} of ${targetTasks.length}` : `${completedCount} of ${targetTasks.length}`)
+		? (activeFeature ? `${activeFeature}: ${completedCount} de ${targetTasks.length}` : `${completedCount} de ${targetTasks.length}`)
 		: "0 tareas";
 
 	let phaseChip = "";

@@ -20,13 +20,14 @@ try {
 import {
 	ACCENT,
 	SECONDARY,
-	GREEN,
 	WHITE,
-	GRAY,
 	BORDER,
 	RESET,
 	BOLD,
 	DIM,
+	reverse,
+	resolveStudioTheme,
+	type StudioThemeRoles,
 	panelBottom,
 	panelTop,
 } from "./studio-palette.ts";
@@ -301,6 +302,11 @@ export class StudioQuestionnaireComponent {
 		this.drafts = questions.map(() => "");
 	}
 
+	/** Semantic states route through the host theme; the brand and the frame do not. */
+	private get role(): StudioThemeRoles {
+		return resolveStudioTheme(this.theme);
+	}
+
 	public requestRender(): void {
 		if (this.tui?.requestRender) {
 			try {
@@ -520,20 +526,21 @@ export class StudioQuestionnaireComponent {
 
 	public renderTabs(): string {
 		const total = this.questions.length;
-		const progress = `${GRAY}[${this.activeQuestion + 1}/${total}]${RESET}`;
+		const role = this.role;
+		const progress = role.muted(`[${this.activeQuestion + 1}/${total}]`);
 		const chips = this.questions.map((q, idx) => {
 			const header = q.header || `Paso ${idx + 1}`;
 			const isAnswered = Boolean(this.answers[idx]);
 			const isActive = idx === this.activeQuestion;
 
 			if (isActive) {
-				const check = isAnswered ? `${GREEN}✓ ${RESET}${ACCENT}` : "";
+				const check = isAnswered ? `${role.success("✓")} ${ACCENT}` : "";
 				return `${ACCENT}▸ ${check}${header}${RESET}`;
 			}
 			if (isAnswered) {
-				return `${GREEN}✓ ${RESET}${WHITE}${header}${RESET}`;
+				return `${role.success("✓")} ${WHITE}${header}${RESET}`;
 			}
-			return `${GRAY}${header}${RESET}`;
+			return role.muted(header);
 		});
 
 		return `  ${progress}   ${chips.join("   ")}`;
@@ -541,6 +548,7 @@ export class StudioQuestionnaireComponent {
 
 	public renderBody(): string[] {
 		const lines: string[] = [];
+		const role = this.role;
 		const q = this.questions[this.activeQuestion];
 		if (!q) return lines;
 
@@ -557,7 +565,7 @@ export class StudioQuestionnaireComponent {
 			lines.push(`  ${SECONDARY}Respuesta personalizada:${RESET}`);
 			lines.push(`  ${panelTop(58, undefined, "rounded", BORDER)}`);
 			lines.push(
-				`  ${BORDER}│${RESET} > ${WHITE}${beforeCursor}${RESET}\x1b[7m${atCursor}\x1b[27m${WHITE}${afterCursor}${RESET}`,
+				`  ${BORDER}│${RESET} > ${WHITE}${beforeCursor}${RESET}${reverse(atCursor)}${WHITE}${afterCursor}${RESET}`,
 			);
 			lines.push(`  ${panelBottom(58, "rounded", BORDER)}`);
 			return lines;
@@ -577,12 +585,12 @@ export class StudioQuestionnaireComponent {
 			const titleText = isCursor
 				? `${ACCENT}${opt.label}${RESET}`
 				: `${WHITE}${opt.label}${RESET}`;
-			const selectedBadge = isSelected ? ` ${GREEN}✓${RESET}` : "";
+			const selectedBadge = isSelected ? ` ${role.success("✓")}` : "";
 
 			lines.push(`  ${cursorSymbol}${titleText}${selectedBadge}`);
 
 			if (opt.description) {
-				lines.push(`      ${GRAY}${opt.description}${RESET}`);
+				lines.push(`      ${role.muted(opt.description)}`);
 			}
 		}
 
@@ -595,14 +603,14 @@ export class StudioQuestionnaireComponent {
 			const cursorSymbol = isCustomCursor ? `${SECONDARY}❯ ${RESET}` : "  ";
 			const labelText = isCustomCursor
 				? `${ACCENT}${OTHER_LABEL}${RESET}`
-				: `${GRAY}${OTHER_LABEL}${RESET}`;
+				: role.muted(OTHER_LABEL);
 
 			lines.push(`  ${cursorSymbol}${labelText}`);
 
 			if (isCustomAnswered && customAns) {
-				lines.push(`      ${GREEN}✓ ${WHITE}"${customAns}"${RESET}`);
+				lines.push(`      ${role.success("✓")} ${WHITE}"${customAns}"${RESET}`);
 			} else if (this.drafts[this.activeQuestion]) {
-				lines.push(`      ${GRAY}Borrador: "${this.drafts[this.activeQuestion]}"${RESET}`);
+				lines.push(`      ${role.muted(`Borrador: "${this.drafts[this.activeQuestion]}"`)}`);
 			}
 		}
 
@@ -610,13 +618,14 @@ export class StudioQuestionnaireComponent {
 	}
 
 	public renderFooter(): string {
+		const role = this.role;
 		if (this.isEditingCustom) {
-			return `  ${GRAY}enter confirmar · esc volver a opciones · tab cambiar pregunta${RESET}`;
+			return `  ${role.muted("enter confirmar · esc volver a opciones · tab cambiar pregunta")}`;
 		}
 		if (this.questions.length > 1) {
-			return `  ${GRAY}↑↓ navegar · enter seleccionar · tab cambiar pregunta · esc cancelar${RESET}`;
+			return `  ${role.muted("↑↓ navegar · enter seleccionar · tab cambiar pregunta · esc cancelar")}`;
 		}
-		return `  ${GRAY}↑↓ navegar · enter seleccionar · esc cancelar${RESET}`;
+		return `  ${role.muted("↑↓ navegar · enter seleccionar · esc cancelar")}`;
 	}
 
 	public render(_width: number): string[] {

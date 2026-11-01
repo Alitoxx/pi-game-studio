@@ -36,7 +36,7 @@ export const STUDIO_CATEGORIES: StudioCategory[] = [
 			{ cmd: "/studio:palettes", desc: "Generador de paletas retro y shaders cuantizadores para Godot y Raylib" },
 			{ cmd: "/studio:tasks", desc: "Gestión interactiva de tareas y radar de obsolescencia" },
 			{ cmd: "/studio:changes", desc: "Inspector de cambios pendientes y drift de diseño vs código" },
-			{ cmd: "/studio:agents", desc: "Navegador interactivo de los agentes activos (8 Core + 1 Motor)" },
+			{ cmd: "/studio:agents", desc: "Navegador interactivo de los agentes activos (8 Core + 1 Motor + 1 Verificador)" },
 			{ cmd: "/studio:mcp", desc: "Hub de Servidores MCP (REA, Playwright, Context7, Blender, etc.)" },
 			{ cmd: "/studio:tools", desc: "Diagnóstico de viabilidad multimedia CLI (FFmpeg, ImageMagick, Assimp, etc.)" },
 			{ cmd: "/studio:models", desc: "Personalización de modelos LLM por nivel o agente" },

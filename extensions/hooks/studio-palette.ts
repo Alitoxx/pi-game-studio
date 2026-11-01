@@ -12,6 +12,35 @@ export const DIM = colorEnabled ? "\x1b[2m" : "";
 export const COLORS_ENABLED = colorEnabled;
 
 /**
+ * Reverse video for a single glyph (the text cursor in the studio overlays).
+ * Reverse video is an SGR attribute like any other, so `NO_COLOR` must remove
+ * it too: a terminal that asked for no colour should not receive an inverted
+ * cell either. The only place the escape is built (issue #115).
+ */
+export function reverse(text: string): string {
+	return colorEnabled ? `\x1b[7m${text}\x1b[27m` : text;
+}
+
+/**
+ * The theme role the host is currently rendering with.
+ *
+ * The host hands a theme handle to the footer and widget factories and to no
+ * command handler, so a command that wants to follow the theme has nothing to
+ * resolve from. The footer records the live role here once per render, and
+ * command output reads it. With no theme recorded it stays `undefined`, and
+ * `resolveStudioTheme(undefined)` returns the studio palette byte for byte.
+ */
+let activeThemeRole: StudioThemeRoles | undefined;
+
+export function setActiveThemeRole(role: StudioThemeRoles | undefined): void {
+	activeThemeRole = role;
+}
+
+export function getActiveThemeRole(): StudioThemeRoles | undefined {
+	return activeThemeRole;
+}
+
+/**
  * Builds a colour escape from a computed RGB triple. The only sanctioned way to
  * interpolate colours (gradients): the invariant forbids the escape sequence
  * anywhere else, so a dynamic colour cannot drift from this module either.
@@ -253,11 +282,14 @@ export function panelBottom(innerWidth: number, style: PanelStyle = "square", fr
 /**
  * Builds one content row: `│ <content padded to innerWidth - 2> │`. Total
  * visible width, padding included, is exactly `innerWidth + 2`. Content is
- * padded, never truncated — callers truncate with `truncateAnsi` first when
- * they need a hard cap. `frameColor` colours both border segments.
+ * padded to fill the row and clipped with `truncateAnsi` when it cannot fit:
+ * a row never renders wider than the frame it belongs to. `frameColor` colours
+ * both border segments.
  */
 export function panelRow(content: string, innerWidth: number, frameColor: string = ""): string {
-	const body = padAnsi(content, Math.max(0, innerWidth - 2));
+	const budget = Math.max(0, innerWidth - 2);
+	// `truncateAnsi` always leaves an ellipsis, so a zero budget must skip it.
+	const body = padAnsi(budget > 0 ? truncateAnsi(content, budget) : "", budget);
 	const innerReset = frameColor ? RESET : "";
 	const tail = frameColor ? RESET : "";
 	return frameColor + "│" + innerReset + " " + body + " " + frameColor + "│" + tail;
@@ -416,7 +448,7 @@ export const STUDIO_COMMAND_REGISTRY: StudioCommandItem[] = [
 	},
 	{
 		name: "/studio:setup",
-		description: "Instalación y actualización de los 9 agentes oficiales (8 Core + 1 Motor)",
+		description: "Instalación y actualización de los 10 agentes oficiales (8 Core + 1 Motor + 1 Verificador)",
 		category: "Studio & Models",
 	},
 	{

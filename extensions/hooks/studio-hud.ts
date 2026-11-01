@@ -311,9 +311,7 @@ export function renderStudioFooterBar(
 	return parts.join(` ${DIM}·${RESET} `);
 }
 
-import { installStudioSidebar, isStudioSidebarActive } from "./studio-sidebar.ts";
-import { studioAgentsRunner } from "./studio-agents-runner.ts";
-import { renderSubagentsWidgetCard } from "./studio-subagents-widget.ts";
+import { installStudioSidebar } from "./studio-sidebar.ts";
 
 export function installStudioFooter(pi: ExtensionAPI, ctx: ExtensionContext): void {
 	if (!(ctx as any).hasUI || typeof (ctx.ui as any)?.setFooter !== "function") {
@@ -326,29 +324,16 @@ export function installStudioFooter(pi: ExtensionAPI, ctx: ExtensionContext): vo
 			let uninstallSidebar: (() => void) | undefined;
 			if (tui && tui.terminal) {
 				try {
-					uninstallSidebar = installStudioSidebar(tui, ctx);
+					uninstallSidebar = installStudioSidebar(tui, ctx, theme);
 				} catch {}
 			}
 
 			return {
 				render(width: number) {
-					const lines: string[] = [];
-					// Si la barra lateral derecha no está activa (por ancho de terminal o split-view)
-					// renderizamos la tarjeta viva de subagentes en el footer dock
-					if (!isStudioSidebarActive(tui)) {
-						try {
-							const tasks = studioAgentsRunner.listTasks();
-							const widgetLines = renderSubagentsWidgetCard(tasks, width, role);
-							if (widgetLines.length > 0) {
-								lines.push(...widgetLines);
-								lines.push(""); // Separador visual sobrio
-							}
-						} catch {}
-					}
-
-					const barLine = renderStudioFooterBar(pi, ctx, width, footerData, role);
-					lines.push(barLine);
-					return lines;
+					// The subagents card has one owner: the widget, which already gates on the
+					// rail being active. Rendering it here too is what doubled the card in
+					// every terminal narrower than the sidebar breakpoint.
+					return [renderStudioFooterBar(pi, ctx, width, footerData, role)];
 				},
 				invalidate() {},
 				dispose() {

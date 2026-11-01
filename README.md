@@ -159,17 +159,17 @@ Incluye diagramas detallados de:
 
 Pi Game Studio uses **model inheritance**: all agents ship with `model: inherit`, meaning they use the default model of your Pi session. This avoids hardcoding model choices into agent definitions.
 
-The recommended model assignment lives in `models.default.json`:
+`models.default.json` pins no model of its own: each tier declares `"inherit"`.
 
-| Tier                      | Default model                         | Thinking Effort | Rationale                                                                     |
-| ------------------------- | ------------------------------------- | --------------- | ----------------------------------------------------------------------------- |
-| **Directors** (Tier 1)    | `openai-codex/gpt-5.4-mini`           | `high`          | Heaviest model for strategic planning, architecture, and cross-team decisions |
-| **Workhorses** (Tier 2–3) | `openrouter/openai/gpt-oss-120b:free` | `medium`        | Balanced model for day-to-day design, implementation, and review              |
-| **Lightweight** (Special) | `openrouter/openai/gpt-oss-20b:free`  | `low`           | Fast model for simple, repetitive tasks, logs, and community updates          |
+| Tier                      | Default in `models.default.json` | Thinking Effort | Rationale                                                                     |
+| ------------------------- | -------------------------------- | --------------- | ----------------------------------------------------------------------------- |
+| **Directors** (Tier 1)    | `inherit`                        | `high`          | Heaviest reasoning effort for strategic planning, architecture, cross-team decisions |
+| **Workhorses** (Tier 2–3) | `inherit`                        | `medium`        | Balanced effort for day-to-day design, implementation, and review              |
+| **Lightweight** (Special) | `inherit`                        | `low`           | Fast effort for simple, repetitive tasks, logs, and community updates          |
 
-After running `/setup`, the mapping is written to `.pi/game-studio/models.json`. You can edit it directly or use `/assign-models` to change models interactively.
+A package cannot ship model ids. Every id belongs to a provider it does not control, and an id that does not resolve in your installation makes the child return an empty result, which the runner reports as a return-contract violation — a wrong model id then reads as a broken agent.
 
-Agents ship with `model: inherit`, so without overrides every agent uses the model of your active Pi session. `models.default.json` contributes only the three tier defaults (`director`, `workhorse`, `lightweight`).
+After running `/setup`, the mapping is written to `.pi/game-studio/models.json`. To pin a model, put a `provider/model` there — per tier or per agent — or use `/studio:models`. Until you do, every agent inherits the model of your active Pi session.
 
 ## Customizing Models
 
@@ -192,12 +192,15 @@ Edit `.pi/game-studio/models.json`:
 
 ```json
 {
-  "director": "openai-codex/gpt-5.4-mini",
-  "workhorse": "openrouter/openai/gpt-oss-120b:free",
-  "lightweight": "openrouter/openai/gpt-oss-20b:free",
-  "creative-director": "anthropic/claude-sonnet-4"
+  "director": "inherit",
+  "workhorse": "inherit",
+  "lightweight": "inherit",
+  "creative-director": "opencode/claude-sonnet-4-6",
+  "bevy-specialist": "openrouter/openai/gpt-4o"
 }
 ```
+
+The two agent keys above are examples of overrides: name a `provider/model` that exists in your Pi installation. A value that does not resolve is not reported as a model error — the child comes back empty and the runner reports it as a broken agent, which is why the defaults ship `inherit` instead of a guess.
 
 Tier keys apply to every agent of that tier; a real agent name adds a single override on top of its tier default.
 

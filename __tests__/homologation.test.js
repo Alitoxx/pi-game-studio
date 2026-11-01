@@ -119,7 +119,11 @@ describe("Engine Support Symmetry (Godot, Unity, Unreal, Bevy, Raylib, Phaser)",
 		}
 	});
 
-	test("models.default.json maps all 6 engine primary specialists", () => {
+	test("models.default.json carries no per-specialist model for the 6 engine specialists", () => {
+		// Engine coverage lives in the roster, not in a model id: the six specialists are
+		// installed for their engine, and they inherit the session model like everyone
+		// else. A per-specialist key here was a duplicated workhorse mapping that could
+		// not resolve outside the environment that wrote it.
 		const defaultModels = JSON.parse(
 			fs.readFileSync(
 				path.join(__dirname, "..", "models.default.json"),
@@ -127,12 +131,19 @@ describe("Engine Support Symmetry (Godot, Unity, Unreal, Bevy, Raylib, Phaser)",
 			),
 		);
 
-		expect(defaultModels["godot-specialist"]).toBeDefined();
-		expect(defaultModels["unity-specialist"]).toBeDefined();
-		expect(defaultModels["unreal-specialist"]).toBeDefined();
-		expect(defaultModels["bevy-specialist"]).toBeDefined();
-		expect(defaultModels["phaser-specialist"]).toBeDefined();
-		expect(defaultModels["raylib-specialist"]).toBeDefined();
+		const specialists = [
+			"godot-specialist",
+			"unity-specialist",
+			"unreal-specialist",
+			"bevy-specialist",
+			"phaser-specialist",
+			"raylib-specialist",
+		];
+
+		for (const specialist of specialists) {
+			expect(defaultModels[specialist]).toBeUndefined();
+			expect(fs.existsSync(path.join(__dirname, "..", "agents", `${specialist}.md`))).toBe(true);
+		}
 	});
 });
 

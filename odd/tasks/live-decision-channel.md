@@ -16,11 +16,23 @@ Gentle Shell solves this one level down. `docs/gentle-shell.md:292`: a child cal
 
 ## Tasks
 
-- **T1** — Protocol module: framing, correlation, bounds, settle-once, over a real socket pair. `S3, S4, S5`
-- **T2** — Parent-side server: `0700` socket directory, per-child lifecycle, reply API, settle on exit. `S1, S5`
-- **T3** — Child-side extension registering `studio_parent_message`, plus runner wiring (`--extension`, env endpoint, `PI_GAME_STUDIO_CHILD` guard). `S1, S6`
-- **T4** — Parent relay: a query opens the native selector and the committed answer goes back as a reply. `S2`
-- **T5** — Docs, templates and verification. `S1-S7`
+- **T1** — Protocol module: framing, correlation, bounds, settle-once, over a real socket pair. `S3, S4, S5` · `90aeecc`
+- **T2** — Parent-side server: `0700` socket directory, per-child lifecycle, reply API, settle on exit. `S1, S5` · `90aeecc`
+- **T3** — Child-side extension registering `studio_parent_message`, plus runner wiring (`--extension`, env endpoint, `PI_GAME_STUDIO_CHILD` guard). `S1, S6` · `c47739f`
+- **T4** — Parent relay: a query opens the native selector and the committed answer goes back as a reply. `S2` · `c47739f`
+- **T5** — Docs, templates and verification. `S1-S7` · `a36a50c`
+
+## Delivery
+
+Three slices on `feat/live-decision-channel`:
+
+| Slice | Files | Lines | Why it is a unit |
+|---|---|---|---|
+| `90aeecc` | `studio-channel.ts`, both channel suites | 791 | A protocol without its tests is unverifiable; the tests without the module do not run. |
+| `c47739f` | `studio-child-tool.ts`, runner, subagents relay | 315 | The child tool, the wiring that loads it and the relay that answers it only build together. |
+| `a36a50c` | templates, `AGENTS.md`, protocol doc, changelog, this record | 119 | Instruction layer: without it the channel exists and nothing calls it. |
+
+The first two exceed the ~400-line slice guidance. They were not split further because the intermediate commits would not build or would ship a channel with no caller, which is worse for review than one large coherent unit; the boundaries above are the smallest buildable ones.
 
 ## Verification
 

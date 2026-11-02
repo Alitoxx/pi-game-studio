@@ -77,7 +77,7 @@ Se almacena como la única fuente de verdad en `design/gdd/<feature-name>.md`:
 - Cero código muerto, cero métodos de más de 40 líneas.
 
 ### Paso 7: Validate & Close (Validación y Cierre)
-1. **Compilación y Smoke Check**: Verificación con el compilador nativo (`cargo check`, `cmake --build`, `godot --headless`).
+1. **Compilación y Smoke Check**: Verificación con el compilador nativo (`cargo check`, `cmake --build`, `godot --headless`). El motor declarado en `project.yaml` manda: el watcher compila con el toolchain de ese motor y nunca con otro, aunque en el proyecto haya archivos de otro motor. Si no hay motor configurado ni marcador reconocible, no se ejecuta ninguna compilación.
 2. **Impacto en Rendimiento**: Confirmación de que el game loop no sufre regresiones de FPS ni allocations dinámicas innecesarias.
 3. **Delivery Receipt**: Emisión del recibo de entrega en la terminal.
 4. **Producer Auto-Handoff**: El Producer actualiza `production/roadmap.md` (`<!-- PRODUCER_STATE -->`) y presenta el siguiente paso sin preguntar *"¿qué hacemos ahora?"*.

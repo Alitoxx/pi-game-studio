@@ -3,7 +3,7 @@ import { exec } from "node:child_process";
 import { existsSync, watch, type FSWatcher } from "node:fs";
 import { join } from "node:path";
 import { findStudioRoot } from "./studio-root.ts";
-import { detectProjectEngine } from "./engine-detector.ts";
+import { detectProjectEngine, readConfiguredEngine, resolveEngineName, type EngineName } from "./engine-detector.ts";
 import { inspectSetup } from "./studio-setup.ts";
 import {
 	RESET,
@@ -25,6 +25,7 @@ export interface CompileCheckResult {
 	warningsCount: number;
 	output: string;
 	message: string;
+	skipped?: boolean;
 }
 
 let activeWatcher: FSWatcher | null = null;
@@ -49,35 +50,53 @@ export function stopStudioWatcher(): boolean {
 	return wasWatching;
 }
 
+export interface EngineCompileCommand {
+	command: string | null;
+	engine: string;
+}
+
+const COMPILE_COMMANDS: Record<Exclude<EngineName, "Desconocido">, string> = {
+	Bevy: "cargo check",
+	Godot: "godot --headless --editor --quit",
+	Raylib: "cmake --build build 2>/dev/null || make -j4 2>/dev/null || true",
+	Phaser: "npx vite build --emptyOutDir 2>/dev/null || npm run build 2>/dev/null || true",
+	Unity: "dotnet build --no-restore",
+	Unreal: "dotnet build",
+};
+
 /**
- * Determines appropriate compile check command for active engine.
+ * Determines the compile check command for the project's engine.
+ *
+ * The engine configured in project.yaml is the authority. Marker files only get a
+ * say when no engine was configured at all, so a stray Cargo.toml can no longer
+ * turn a Godot project into a Rust build. When nothing identifies the engine the
+ * answer is "no command": guessing means compiling the wrong toolchain, which is
+ * exactly how a Godot project ended up waiting on `cargo check`.
  */
 export function getEngineCompileCommand(
 	engineName: string,
 	studioRoot: string,
-): { command: string; engine: string } {
-	const norm = (engineName || "").toLowerCase();
+): EngineCompileCommand {
+	const configured = resolveEngineName(readConfiguredEngine(studioRoot));
+	const authority = configured ?? resolveEngineName(engineName);
 
-	if (norm.includes("bevy") || existsSync(join(studioRoot, "Cargo.toml"))) {
-		return { command: "cargo check", engine: "Bevy" };
-	}
-	if (norm.includes("godot") || existsSync(join(studioRoot, "project.godot"))) {
-		return { command: "godot --headless --check-only", engine: "Godot" };
-	}
-	if (norm.includes("raylib") || existsSync(join(studioRoot, "CMakeLists.txt"))) {
-		return { command: "cmake --build build 2>/dev/null || make -j4 2>/dev/null || true", engine: "Raylib" };
-	}
-	if (norm.includes("phaser")) {
-		return { command: "npx vite build --emptyOutDir 2>/dev/null || npm run build 2>/dev/null || true", engine: "Phaser" };
-	}
-	if (norm.includes("unity")) {
-		return { command: "dotnet build --no-restore", engine: "Unity" };
-	}
-	if (norm.includes("unreal")) {
-		return { command: "dotnet build", engine: "Unreal" };
+	if (authority && authority.engine !== "Desconocido") {
+		return { command: COMPILE_COMMANDS[authority.engine], engine: authority.engine };
 	}
 
-	return { command: "cargo check", engine: "Engine" };
+	// Legacy path: projects created before project.yaml existed are identified by
+	// their marker files alone.
+	if (existsSync(join(studioRoot, "Cargo.toml"))) {
+		return { command: COMPILE_COMMANDS.Bevy, engine: "Bevy" };
+	}
+	if (existsSync(join(studioRoot, "project.godot"))) {
+		return { command: COMPILE_COMMANDS.Godot, engine: "Godot" };
+	}
+	if (existsSync(join(studioRoot, "CMakeLists.txt"))) {
+		return { command: COMPILE_COMMANDS.Raylib, engine: "Raylib" };
+	}
+
+	return { command: null, engine: "Desconocido" };
 }
 
 /**
@@ -95,6 +114,20 @@ export async function runEngineCompileCheck(
 	const startTime = Date.now();
 
 	return new Promise((resolve) => {
+		if (!command) {
+			resolve({
+				success: true,
+				skipped: true,
+				engine: resolvedEngine,
+				command: "",
+				durationSec: "0.0",
+				warningsCount: 0,
+				output: "",
+				message: `COMPILE SKIP: no hay motor reconocido en ${studioRoot}; no se ejecuta ninguna compilación.`,
+			});
+			return;
+		}
+
 		exec(command, { cwd: studioRoot }, (err, stdout, stderr) => {
 			const durationMs = Date.now() - startTime;
 			const durationSec = (durationMs / 1000).toFixed(1);
@@ -148,7 +181,7 @@ export async function handleStudioWatch(
 		? detected.engine
 		: setup.currentEngine !== "Sin configurar"
 			? setup.currentEngine
-			: "Bevy";
+			: "Desconocido";
 
 	const subcmd = (args || "").trim().toLowerCase();
 

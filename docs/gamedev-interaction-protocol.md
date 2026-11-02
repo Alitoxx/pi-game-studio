@@ -125,6 +125,25 @@ Está **estrictamente prohibido** invocar `ask_user_question` en un mensaje vac�
 - **`description` con impacto de juego:** Explicar qué aporta al juego o al desarrollo, no un volcado de nombres crudos de archivos `.yaml` o comandos sueltos.
 - **Opción Personalizada por defecto:** `allowCustomResponse: true` (por defecto) para que el usuario siempre pueda tipear una alternativa propia mediante *"Otro..."*.
 
+### Decisiones de un Especialista Despachado (Canal Vivo)
+
+Un especialista corre en un proceso hijo sin UI: el runner le retira `ask_user_question` porque ahí solo produce una request cancelada y un run colgado. Para que pueda consultar sin terminar, el runner le inyecta `studio_parent_message` y monta un socket privado por despacho (directorio `0700`, socket `0600`, ruta acotada por el límite del SO).
+
+El circuito completo:
+
+1. El especialista llama `studio_parent_message` con la pregunta y entre 2 y 4 opciones concretas.
+2. El Runner recibe la consulta, la anota en el log de la tarea y avisa al Producer.
+3. El Producer abre `ask_user_question` con esas opciones; el humano navega con flechas y confirma con `Enter`.
+4. La respuesta viaja de vuelta por el socket y el especialista **continúa su trabajo** con la decisión tomada.
+
+Reglas del canal:
+
+- **Correlación estricta:** cada consulta se cierra con una sola respuesta; un frame forjado, duplicado, tardío o de otro `id` nunca la resuelve.
+- **Cota de espera propia:** minutos, no los 30 segundos del canal de Gentle Shell, porque del otro lado hay una persona leyendo opciones.
+- **Cuatro consultas pendientes como máximo** por especialista: cinco decisiones abiertas no es preguntar, es trabarse.
+- **Pregunta cerrada sin respuesta:** si el humano descarta el selector, el hijo recibe la instrucción de tomar el default más seguro, declararlo en el receipt y seguir. Nunca se deja un run esperando una respuesta que no va a llegar.
+- **Prohibido el volcado en prosa:** una lista numerada en la salida del especialista es un defecto, no una entrega. El Producer no la relaya como si fuera una pregunta.
+
 ### Ejemplo de Turno Completo:
 
 ```text

@@ -4,6 +4,8 @@ import { existsSync } from "node:fs";
 import { resolve, sep } from "node:path";
 import { loadAgentManifest, listAvailableAgents } from "./studio-agent-loader.ts";
 import { studioAgentsRunner } from "./studio-agents-runner.ts";
+import type { ChannelQuery } from "./studio-channel.ts";
+import { executeAskUserQuestion } from "./studio-choice.ts";
 import { registerStudioTool } from "./studio-tool-registry.ts";
 import { findStudioRoot } from "./studio-root.ts";
 
@@ -291,6 +293,35 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 					? `${sessionModel.provider}/${sessionModel.id}`
 					: String(sessionModel.id))
 				: undefined;
+			// A specialist cannot open a selector: the runner strips ask_user_question from
+			// it because a child has no UI. So when it needs a human decision it asks here,
+			// over the channel, and this is where the question becomes the native menu.
+			// The child blocks meanwhile; the answer is the only thing that unblocks it.
+			const answerSpecialistDecision = async (query: ChannelQuery): Promise<string | undefined> => {
+				const options = query.choices.map((choice) => ({
+					label: choice.label,
+					...(choice.description ? { description: choice.description } : {}),
+				}));
+				const result = await executeAskUserQuestion(
+					{
+						questions: [
+							{
+								question: query.message,
+								header: `Decisión de ${manifest.title}`,
+								// No choices is not a reason to leave the human out: the free-text
+								// row is the answer path, so the child always gets one.
+								options: options.length > 0 ? options : [{ label: "Responder" }],
+								allowCustomResponse: true,
+							},
+						],
+					},
+					ctx,
+				);
+				const selection = (result?.details as any)?.selection;
+				const answer = typeof selection?.answer === "string" ? selection.answer.trim() : "";
+				return answer.length > 0 ? answer : undefined;
+			};
+
 			const record = await studioAgentsRunner.run(
 				manifest,
 				scopedTaskPrompt,
@@ -299,6 +330,7 @@ export function registerStudioSubagentTools(pi: ExtensionAPI): void {
 				_signal,
 				timeoutMs,
 				activeModel,
+				answerSpecialistDecision,
 			);
 
 			if (mode === "background") {

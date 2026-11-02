@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (Delegated Decision Channel)
+- **A dispatched specialist can ask the human and keep working.** A child has no UI, so the runner strips `ask_user_question` from it — correctly, because granting it only produces a cancelled request and a stalled run. The templates compensated by telling the child to return its options "in the Return Contract", a contract with no field for them (`status`, `summary`, `files_changed`, `validation`, `gameplay_impact`, `risks`), so a real design fork left the child as a numbered prose list and the Producer relayed it verbatim. That is fixed at the level where it broke.
+  - `studio_parent_message` is injected into every dispatched child (`lib/agents-runner.ts:290` does the same for Gentle Shell). It blocks on one correlated reply and returns the human's decision; the child continues with it instead of ending its run.
+  - The transport is a private socket per dispatch — `0700` directory, `0600` socket, path capped at the OS limit — never the child's RPC stdio stream, which stays a pure JSON event stream.
+  - Correlation is strict: forged, duplicate, late, malformed and cross-id frames settle nothing. At most four decisions per child. The wait budget is minutes, not Gentle Shell's 30 seconds, because the other end is a person reading options.
+  - Answering goes through the same native selector the Producer already used (`executeAskUserQuestion` → `ctx.ui.select`), so the question the specialist raised appears as arrow-key options, not as text.
+  - A dismissed question is guidance, not a dead run: the child is told to take the safest default, state the assumption in its receipt, and continue.
+
 ### Changed (Model Defaults)
 - **`models.default.json` no longer pins model ids.** It mapped the three tiers and the six engine specialists to concrete ids (`openai-codex/gpt-5.4-mini`, `openrouter/openai/gpt-oss-120b:free`, `openrouter/openai/gpt-oss-20b:free`). No package can guarantee those resolve: on an installation without that exact provider set, Pi prints `Model "<id>" not found for provider "<p>". Using custom model id.`, the child returns nothing, and the runner reports a **return-contract violation** — so a wrong model id reads as a broken agent.
   - The three tiers now declare `"inherit"`, which is what the 15 templates and `project.yaml` already documented. A fresh project inherits the session model until you pin something.

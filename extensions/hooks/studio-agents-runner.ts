@@ -1,12 +1,31 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { recordFailure } from "./studio-diagnostics.ts";
 import { findStudioRoot } from "./studio-root.ts";
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { existsSync, mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { AgentManifest } from "./studio-agent-loader.ts";
 import { chooseModelForAgent } from "./studio-model-config.ts";
 import { validateSpecialistReturn } from "./return-contract.ts";
 import { parseAllowedSurfaces } from "./studio-surfaces-guard.ts";
+import {
+	ParentChannel,
+	channelSocketPath,
+	removeChannelDirectory,
+	type ChannelQuery,
+} from "./studio-channel.ts";
+import { CHILD_CHANNEL_SOCKET_ENV, CHILD_CHANNEL_TOOL, CHILD_MARKER_ENV } from "./studio-child-tool.ts";
+
+/**
+ * Turns a child's decision request into the human's answer. Returning undefined means
+ * the human closed the question: the child is told to take the safest default and say
+ * so in its receipt, because a question nobody answered must not become a dead run.
+ */
+export type QueryResponder = (query: ChannelQuery) => Promise<string | undefined>;
+
+/** The child-side extension that registers studio_parent_message, next to this file. */
+const CHILD_TOOL_PATH = join(dirname(fileURLToPath(import.meta.url)), "studio-child-tool.ts");
 
 /**
  * Builds the child process environment for a dispatched specialist, forwarding
@@ -392,6 +411,7 @@ export class StudioAgentsRunner {
 		signal?: AbortSignal,
 		timeoutMs?: number,
 		activeModel?: string,
+		queryResponder?: QueryResponder,
 	): Promise<TaskRecord> {
 		this.counter++;
 		const now = Date.now();
@@ -433,7 +453,7 @@ export class StudioAgentsRunner {
 		this.pruneTasks(now);
 		this.notifyListeners(record);
 
-		const executionPromise = this.executeSubprocess(record, manifest, signal);
+		const executionPromise = this.executeSubprocess(record, manifest, signal, queryResponder);
 
 		if (mode === "background") {
 			// Retornar de inmediato sin esperar
@@ -443,17 +463,93 @@ export class StudioAgentsRunner {
 		return await executionPromise;
 	}
 
-	private executeSubprocess(
+	private async executeSubprocess(
 		record: TaskRecord,
 		manifest: AgentManifest,
 		signal?: AbortSignal,
+		queryResponder?: QueryResponder,
 	): Promise<TaskRecord> {
+		// Decision channel. Created before the spawn so the child can find it, and only
+		// when someone is actually listening: a socket nobody answers would turn a design
+		// question into a fifteen minute stall, which is the failure this replaces.
+		let parentChannel: ParentChannel | undefined;
+		let channelDirectory: string | undefined;
+		let channelPath: string | undefined;
+		if (queryResponder) {
+			try {
+				channelDirectory = mkdtempSync(join(tmpdir(), "pi-std-"));
+				channelPath = channelSocketPath(record.id, channelDirectory);
+				const channel = await ParentChannel.create({
+					socketPath: channelPath,
+					onQuery: (query: ChannelQuery) => {
+						appendTaskLog(record, `        consulta ${query.id}: ${query.message.slice(0, 80)}`);
+						record.latestActivity = `Esperando decisión del humano: ${query.message.slice(0, 60)}`;
+						this.notifyListeners(record);
+						void (async () => {
+							try {
+								let answer: string | undefined;
+								try {
+									answer = await queryResponder(query);
+								} catch (err) {
+									recordFailure("runner.query", err);
+									answer = undefined;
+								}
+								// A dismissed question is guidance, never a dead child: say what to do
+								// instead of leaving the run waiting for an answer that is not coming.
+								const delivered = channel.reply(
+									query.id,
+									answer
+										?? "The human closed the question without answering. Take the safest default, state the assumption explicitly in your receipt, and continue.",
+								);
+								appendTaskLog(
+									record,
+									delivered
+										? `        decisión ${query.id}: ${(answer ?? "sin respuesta").slice(0, 80)}`
+										: `        decisión ${query.id} sin entregar (el hijo ya no esperaba)`,
+								);
+								record.latestActivity = answer
+									? `Decisión del humano: ${answer.slice(0, 60)}`
+									: "Decisión cerrada sin respuesta";
+								this.notifyListeners(record);
+							} catch (err) {
+								recordFailure("runner.query_relay", err);
+							}
+						})();
+					},
+				});
+				parentChannel = channel;
+			} catch (err) {
+				// The channel is an extra view on the decision, not the run's lifeline:
+				// losing it must leave dispatch exactly as it was before this feature.
+				recordFailure("runner.query_channel", err);
+				parentChannel = undefined;
+				channelPath = undefined;
+			}
+		}
+
+		// Synchronous: an async cleanup races the process that is about to exit, and the
+		// socket file plus its directory would survive the dispatch that created them.
+		const closeChannel = () => {
+			const channel = parentChannel;
+			parentChannel = undefined;
+			try {
+				channel?.close();
+			} catch {
+				// Already closed: cleanup is idempotent by contract.
+			}
+			if (channelDirectory) {
+				removeChannelDirectory(channelDirectory);
+				channelDirectory = undefined;
+			}
+		};
+
 		return new Promise<TaskRecord>((resolve) => {
 			if (signal?.aborted) {
 				record.status = "cancelled";
 				record.error = "Operación abortada por el usuario (Escape)";
 				record.endedAt = Date.now();
 				record.latestActivity = "Cancelado por usuario";
+				closeChannel();
 				this.notifyListeners(record);
 				return resolve(record);
 			}
@@ -561,7 +657,7 @@ export class StudioAgentsRunner {
 				record.task,
 				``,
 				`[ODD GAMEDEV EXECUTION RULES — MANDATORY]`,
-				`1. AUTONOMOUS DIRECT EXECUTION: This task has already been authorized by the Producer/User. Do NOT ask conversational questions, do NOT output menus, and do NOT wait for confirmation before writing files. Execute the task directly on disk using your allowed tools (${childTools.join(", ")}). If a decision is genuinely above your role, stop with 'status: interaction_required' and a 'question' instead of guessing.`,
+				`1. AUTONOMOUS DIRECT EXECUTION: This task has already been authorized by the Producer/User. Do NOT ask conversational questions, do NOT output menus, and do NOT wait for confirmation before writing files. Execute the task directly on disk using your allowed tools (${childTools.join(", ")}). ${channelPath ? `If a decision is genuinely the human's to make — scope, scale, engine, art direction — call '${CHILD_CHANNEL_TOOL}' with the question and two to four concrete choices; it blocks until the human answers and returns their decision, then continue. Never write a numbered option list into your output: it is not an answer, the Producer cannot turn it into one, and it is exactly the failure this channel replaces.` : `No decision channel is available in this run, so if a decision is genuinely above your role, stop with 'status: interaction_required' and a 'question' instead of guessing.`}` ,
 				`2. ATOMIC SCOPE (~400 LINES): Deliver coherent changes of ~400 lines (code + data/tests). Do NOT dump monolithic 800+ line blocks in one pass. If the design requires more, implement the foundational core cleanly and set status: partial in the completion receipt.`,
 				`3. SCOPED ENGINE VALIDATION (NO MONOLITHIC BUILDS): If you validate via bash:`,
 				`   - If working on an isolated crate or component (e.g. crates/radio-core), run ONLY focused tests: e.g. 'cargo test -p <crate>' or 'cargo check -p <crate>'.`,
@@ -610,6 +706,14 @@ export class StudioAgentsRunner {
 				args.push("--thinking", manifest.thinking);
 			}
 
+			// Gentle Shell injects its parent-message tool into every child unconditionally
+			// (`lib/agents-runner.ts:290`), and for the same reason: a template that forgets
+			// to declare the channel must not lose the only way it can ask. The deny baseline
+			// still wins, because --exclude-tools is applied after this list.
+			if (channelPath && !childTools.includes(CHILD_CHANNEL_TOOL)) {
+				childTools.push(CHILD_CHANNEL_TOOL);
+			}
+
 			// Herramientas permitidas
 			if (childTools.length > 0) {
 				args.push("--tools", childTools.join(","));
@@ -636,8 +740,18 @@ export class StudioAgentsRunner {
 				record.error = `Concurrencia maxima alcanzada (${maxConcurrency} especialistas en ejecucion). Espera o cancela uno antes de despachar otro.`;
 				record.endedAt = Date.now();
 				record.latestActivity = "Rechazado por concurrencia";
+				// Nothing will spawn, so the channel created for it is reclaimed here.
+				closeChannel();
 				this.notifyListeners(record);
 				return resolve(record);
+			}
+
+
+			// The decision channel's child half. Passed explicitly instead of relying on
+			// project extension discovery, so a project cannot silently lose the ability
+			// to answer a question mid-run.
+			if (channelPath && existsSync(CHILD_TOOL_PATH)) {
+				args.push("--extension", CHILD_TOOL_PATH);
 			}
 
 			let child: ChildProcess;
@@ -648,6 +762,9 @@ export class StudioAgentsRunner {
 						...process.env,
 						PI_GAME_STUDIO_CHILD: "1",
 						PI_GAME_STUDIO_AGENT: manifest.name,
+						// Only the socket path is handed over: the child learns nothing else
+						// about the parent, and the channel is unusable without a live listener.
+						...(channelPath ? { [CHILD_CHANNEL_SOCKET_ENV]: channelPath } : {}),
 					}),
 					stdio: ["pipe", "pipe", "pipe"],
 					// Own process group, so termination can reach grandchildren.
@@ -656,6 +773,9 @@ export class StudioAgentsRunner {
 			} catch (err: any) {
 				record.status = "failed";
 				record.error = `Could not spawn pi RPC process: ${err?.message || String(err)}`;
+				// No child means no "close" event to clean up after: reclaim the channel
+				// here or the socket directory outlives the dispatch that never happened.
+				closeChannel();
 				record.endedAt = Date.now();
 				record.latestActivity = "Fallo al iniciar RPC";
 				this.notifyListeners(record);
@@ -1056,6 +1176,9 @@ export class StudioAgentsRunner {
 			child.on("close", (code, exitSignal) => {
 				clearTimeout(timer);
 				clearTimeout(initTimer);
+				// The child is gone: nothing can wait on the decision channel any more, so the
+				// socket and its directory are reclaimed on every settlement path.
+				closeChannel();
 				if (signal) {
 					signal.removeEventListener("abort", abortHandler);
 				}
@@ -1149,6 +1272,9 @@ export class StudioAgentsRunner {
 			child.on("error", (err) => {
 				clearTimeout(timer);
 				clearTimeout(initTimer);
+				// A spawn failure emits 'error' and never 'close', so this is the only place
+				// the channel would otherwise outlive the dispatch that never started.
+				closeChannel();
 				if (signal) {
 					signal.removeEventListener("abort", abortHandler);
 				}

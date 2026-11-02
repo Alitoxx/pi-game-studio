@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (Engine Authority)
+- **The configured engine decides the compile command.** `getEngineCompileCommand` read a marker file as an engine signal before it read `project.yaml`: a single `Cargo.toml` in the project root returned `cargo check` no matter what the project was configured as, and the function's last resort was `cargo check` too, so any project whose engine could not be identified was compiled as Rust by default. A Godot project carrying a copied starter or a vendored crate paid for a Rust build it never needed.
+  - `project.yaml` is now the authority: `detectProjectEngine` only accepts a marker file that confirms the configured engine, and `getEngineCompileCommand` answers from one per-engine table.
+  - Marker files still identify projects created before `project.yaml` existed, but only when no engine is configured.
+  - No engine, no command: `runEngineCompileCheck` returns `COMPILE SKIP` instead of guessing a toolchain.
+  - A configured engine name the studio does not support no longer coerces to Godot; it reports `Desconocido`.
+- **The Godot check uses options Godot 4 accepts.** The table asked for `godot --headless --check-only`, which Godot 3 needed next to `--script` and Godot 4 does not list, so a healthy Godot project reported `BUILD ERROR` on every watched save. It is `godot --headless --editor --quit` now: a headless import that parses the project and exits without running the game (verified on Godot 4.7.2: exit 0, 7.4s, `.godot` cache created).
+- **A test that restated the mapping kept the broken command green.** `studio-commands` re-implemented the engine table inside the test instead of exercising the module, so its expectation could not disagree with production. It now pins the command surface, and `/studio:watch` behaviour is covered by `__tests__/engine-authority.test.js` against real directories.
+
 ### Added (Delegated Decision Channel)
 - **A dispatched specialist can ask the human and keep working.** A child has no UI, so the runner strips `ask_user_question` from it — correctly, because granting it only produces a cancelled request and a stalled run. The templates compensated by telling the child to return its options "in the Return Contract", a contract with no field for them (`status`, `summary`, `files_changed`, `validation`, `gameplay_impact`, `risks`), so a real design fork left the child as a numbered prose list and the Producer relayed it verbatim. That is fixed at the level where it broke.
   - `studio_parent_message` is injected into every dispatched child (`lib/agents-runner.ts:290` does the same for Gentle Shell). It blocks on one correlated reply and returns the human's decision; the child continues with it instead of ending its run.

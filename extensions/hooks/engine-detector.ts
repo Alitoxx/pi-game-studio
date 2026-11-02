@@ -1,9 +1,11 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
+export type EngineName = "Bevy" | "Godot" | "Phaser" | "Raylib" | "Unity" | "Unreal" | "Desconocido";
+
 export interface EngineDetectionResult {
 	detected: boolean;
-	engine: "Bevy" | "Godot" | "Phaser" | "Raylib" | "Unity" | "Unreal" | "Desconocido";
+	engine: EngineName;
 	version?: string;
 	language: string;
 	sourceFile: string;
@@ -11,27 +13,63 @@ export interface EngineDetectionResult {
 	isConfigured: boolean; // True if specified in project.yaml
 }
 
+const ENGINE_ALIASES: Array<{ match: RegExp; engine: EngineName; language: string }> = [
+	{ match: /bevy/, engine: "Bevy", language: "Rust" },
+	{ match: /godot/, engine: "Godot", language: "GDScript" },
+	{ match: /raylib/, engine: "Raylib", language: "C++" },
+	{ match: /phaser/, engine: "Phaser", language: "TypeScript" },
+	{ match: /unity/, engine: "Unity", language: "C#" },
+	{ match: /unreal/, engine: "Unreal", language: "C++ / Blueprints" },
+];
+
+/**
+ * Maps an engine name as written by a human (in project.yaml or on the command
+ * line) to the engine the studio knows how to drive. Returns null when the name
+ * matches no supported engine, so an unknown value can never be silently
+ * coerced into a real engine.
+ */
+export function resolveEngineName(raw: string | null | undefined): { engine: EngineName; language: string } | null {
+	const norm = (raw || "").toLowerCase().trim();
+	if (!norm) return null;
+	const alias = ENGINE_ALIASES.find((entry) => entry.match.test(norm));
+	return alias ? { engine: alias.engine, language: alias.language } : null;
+}
+
+/**
+ * Reads the `engine:` line of project.yaml. This is the human's decision and the
+ * authority for every engine-dependent choice in the studio.
+ */
+export function readConfiguredEngine(dir: string): string | null {
+	const projectYaml = join(dir, "project.yaml");
+	if (!existsSync(projectYaml)) return null;
+	try {
+		const yaml = readFileSync(projectYaml, "utf8");
+		const m = yaml.match(/^engine:\s*["']?([^\n"']+)["']?/m);
+		if (!m || !m[1]) return null;
+		const value = m[1].trim();
+		if (value === "null" || value === "unknown") return null;
+		return value;
+	} catch {
+		return null;
+	}
+}
+
 /**
  * Automatically inspects a directory and its key project files to determine
  * which game engine is used, along with its version and primary programming language.
  */
 export function detectProjectEngine(dir: string): EngineDetectionResult {
-	let configuredEngine: string | null = null;
-	const projectYaml = join(dir, "project.yaml");
+	const configuredEngine = readConfiguredEngine(dir);
+	const configured = resolveEngineName(configuredEngine);
 
-	if (existsSync(projectYaml)) {
-		try {
-			const yaml = readFileSync(projectYaml, "utf8");
-			const m = yaml.match(/^engine:\s*["']?([^\n"']+)["']?/m);
-			if (m && m[1] && m[1] !== "null" && m[1] !== "unknown") {
-				configuredEngine = m[1].trim();
-			}
-		} catch {}
-	}
+	// A marker file may only confirm the configured engine, never overrule it.
+	// Godot projects routinely carry a Cargo.toml (a copied starter, a vendored
+	// crate) and the studio used to compile those as Rust.
+	const allowsMarker = (engine: EngineName) => !configured || configured.engine === engine;
 
 	// 1. Check for Bevy (Cargo.toml with bevy dependency)
 	const cargoToml = join(dir, "Cargo.toml");
-	if (existsSync(cargoToml)) {
+	if (allowsMarker("Bevy") && existsSync(cargoToml)) {
 		try {
 			const cargo = readFileSync(cargoToml, "utf8");
 			// Match bevy = "0.15" or bevy = { version = "0.15", ... } or [dependencies.bevy] version = "0.15"
@@ -57,7 +95,7 @@ export function detectProjectEngine(dir: string): EngineDetectionResult {
 
 	// 2. Check for Godot (project.godot)
 	const projectGodot = join(dir, "project.godot");
-	if (existsSync(projectGodot)) {
+	if (allowsMarker("Godot") && existsSync(projectGodot)) {
 		try {
 			const godotContent = readFileSync(projectGodot, "utf8");
 			// Look for config/features=PackedStringArray("4.3", ...)
@@ -119,7 +157,7 @@ export function detectProjectEngine(dir: string): EngineDetectionResult {
 		}
 	}
 
-	if (hasRaylibCMake || hasRaylibSource) {
+	if (allowsMarker("Raylib") && (hasRaylibCMake || hasRaylibSource)) {
 		let isCpp = existsSync(join(dir, "src", "main.cpp")) || existsSync(join(dir, "main.cpp"));
 		if (!isCpp && existsSync(cmakeLists)) {
 			try {
@@ -141,7 +179,7 @@ export function detectProjectEngine(dir: string): EngineDetectionResult {
 
 	// 4. Check for Unity (ProjectSettings/ProjectVersion.txt)
 	const unityVersionPath = join(dir, "ProjectSettings", "ProjectVersion.txt");
-	if (existsSync(unityVersionPath)) {
+	if (allowsMarker("Unity") && existsSync(unityVersionPath)) {
 		try {
 			const content = readFileSync(unityVersionPath, "utf8");
 			const m = content.match(/m_EditorVersion:\s*([^\r\n]+)/);
@@ -161,7 +199,7 @@ export function detectProjectEngine(dir: string): EngineDetectionResult {
 	// 5. Check for Unreal Engine (*.uproject)
 	try {
 		const files = readdirSync(dir);
-		const uproject = files.find((f) => f.endsWith(".uproject"));
+		const uproject = allowsMarker("Unreal") ? files.find((f) => f.endsWith(".uproject")) : undefined;
 		if (uproject) {
 			let version: string | undefined;
 			try {
@@ -184,7 +222,7 @@ export function detectProjectEngine(dir: string): EngineDetectionResult {
 
 	// 6. Check for Phaser (package.json with phaser dependency)
 	const packageJsonPath = join(dir, "package.json");
-	if (existsSync(packageJsonPath)) {
+	if (allowsMarker("Phaser") && existsSync(packageJsonPath)) {
 		try {
 			const pkg = JSON.parse(readFileSync(packageJsonPath, "utf8"));
 			const phaserVersion =
@@ -210,36 +248,15 @@ export function detectProjectEngine(dir: string): EngineDetectionResult {
 		} catch {}
 	}
 
-	// 7. Fallback to configuredEngine if specified in project.yaml
-	if (configuredEngine) {
-		const norm = configuredEngine.toLowerCase();
-		let engineName: "Bevy" | "Godot" | "Phaser" | "Raylib" | "Unity" | "Unreal" = "Godot";
-		let lang = "GDScript";
-
-		if (norm.includes("bevy")) {
-			engineName = "Bevy";
-			lang = "Rust";
-		} else if (norm.includes("raylib")) {
-			engineName = "Raylib";
-			lang = "C++";
-		} else if (norm.includes("phaser")) {
-			engineName = "Phaser";
-			lang = "TypeScript";
-		} else if (norm.includes("unity")) {
-			engineName = "Unity";
-			lang = "C#";
-		} else if (norm.includes("unreal")) {
-			engineName = "Unreal";
-			lang = "C++";
-		}
-
+	// 7. The configured engine answers on its own when no marker confirmed it.
+	if (configured) {
 		return {
 			detected: true,
-			engine: engineName,
+			engine: configured.engine,
 			version: undefined,
-			language: lang,
+			language: configured.language,
 			sourceFile: "project.yaml",
-			details: `${engineName} (configurado en project.yaml)`,
+			details: `${configured.engine} (configurado en project.yaml)`,
 			isConfigured: true,
 		};
 	}

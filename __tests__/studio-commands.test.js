@@ -1411,27 +1411,19 @@ Next: Level Design
 		expect(watchSource).toContain("export function isStudioWatcherActive");
 		expect(watchSource).toContain("export function stopStudioWatcher");
 
-		// Engine compilation commands
+		// Engine compilation commands. The per-engine table is exercised behaviourally
+		// in engine-authority.test.js; here we only pin the surface so a rename cannot
+		// silently drop a command family. `--check-only` was a Godot 3 option and made
+		// the watcher report BUILD ERROR on healthy Godot 4 projects.
 		expect(watchSource).toContain("cargo check");
-		expect(watchSource).toContain("godot --headless --check-only");
+		expect(watchSource).toContain("godot --headless --editor --quit");
 		expect(watchSource).toContain("cmake --build");
+		expect(watchSource).not.toContain("--check-only");
 
 		// Background notification telemetry
 		expect(watchSource).toContain("COMPILE OK:");
 		expect(watchSource).toContain("build clean in");
 		expect(watchSource).toContain("BUILD ERROR:");
-
-		// Replicates engine command mapping
-		function resolveCompileCmd(engine) {
-			const norm = engine.toLowerCase();
-			if (norm.includes("bevy")) return "cargo check";
-			if (norm.includes("godot")) return "godot --headless --check-only";
-			if (norm.includes("raylib")) return "cmake --build build 2>/dev/null || make -j4 2>/dev/null || true";
-			return "cargo check";
-		}
-		expect(resolveCompileCmd("Bevy")).toBe("cargo check");
-		expect(resolveCompileCmd("Godot")).toBe("godot --headless --check-only");
-		expect(resolveCompileCmd("Raylib")).toContain("cmake");
 	});
 
 	test("Feature C: studio-sound synthesizes authentic 8-bit retro chiptune chimes", () => {

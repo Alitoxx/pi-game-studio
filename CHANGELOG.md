@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (Roster Status)
+- **The injected status line claimed a full roster when none was installed.** `agentsInstalled === 0` was substituted with `expectedAgents`, so a project with no specialist templates read as `OK. 10 agents installed and ready` — and the same paragraph ordered the agent not to ask about setup. With `isConfigured` true for a project in package-level mode, the `PENDING SETUP` guidance never ran either, so the Producer had nothing to delegate to, worked inline, and the gap was undetectable from inside the session: the human only notices that the work is not being shared.
+  - `buildStudioStatusLine` reports what is installed: **PACKAGE MODE** (`0 of N`, delegation requires `/setup`, readiness must not be claimed), **PARTIAL SETUP** (`X of N` plus the missing agents — the case #72 fixed for readiness but never for guidance) and **OK** (the only state allowed to say the environment is configured).
+  - `/setup` is a human command (`pi.registerCommand`, no `registerTool`), so an agent can only ask for it. `agents/producer.md` gains a `## Roster Check` section: believe the status literally, never dispatch a missing specialist, and never silently absorb its work.
+
 ### Fixed (Engine Authority)
 - **The configured engine decides the compile command.** `getEngineCompileCommand` read a marker file as an engine signal before it read `project.yaml`: a single `Cargo.toml` in the project root returned `cargo check` no matter what the project was configured as, and the function's last resort was `cargo check` too, so any project whose engine could not be identified was compiled as Rust by default. A Godot project carrying a copied starter or a vendored crate paid for a Rust build it never needed.
   - `project.yaml` is now the authority: `detectProjectEngine` only accepts a marker file that confirms the configured engine, and `getEngineCompileCommand` answers from one per-engine table.

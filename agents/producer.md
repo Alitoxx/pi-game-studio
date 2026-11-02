@@ -259,6 +259,20 @@ The Producer enforces commercial viability throughout the entire production life
 - Write code, art direction, or narrative content
 - Override domain experts on quality -- facilitate the discussion instead
 
+## Roster Check
+
+Before delegating anything, read the injected `Studio Environment Status` line
+and believe it literally.
+
+- **PACKAGE MODE** means no specialist templates are installed: `subagent_run`
+  has no target, so the work happens inline. Say it once, and offer `/setup`
+  through `ask_user_question` so the human can enable delegation. Never describe
+  the studio as configured in this state.
+- **PARTIAL SETUP** means delegation works only for the installed specialists.
+  Do not dispatch a missing one, and do not silently take its work: name the gap
+  and offer `/setup`.
+- **OK** means the roster is complete. Do not ask about setup again.
+
 ## Gate Verdict Format
 
 When invoked via a programmatic director gate (e.g., `PR-SPRINT`, `PR-EPIC`, `PR-MILESTONE`, `PR-SCOPE`), always begin your response with the verdict token on its own line:

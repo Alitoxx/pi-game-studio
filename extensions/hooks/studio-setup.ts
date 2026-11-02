@@ -292,6 +292,51 @@ export function inspectSetup(cwd: string): SetupStatus {
 	};
 }
 
+export interface StudioStatusInput {
+	agentsInstalled: number;
+	expectedAgents: number;
+	currentEngine: string;
+	missingAgents?: string[];
+}
+
+/**
+ * Builds the environment-status line the studio injects into the agent guidance.
+ *
+ * The roster is reported as it is. Zero installed agents used to be reported as
+ * `expectedAgents`, so a project with no roster read as fully configured and the
+ * same line forbade asking about setup: the Producer then worked inline with
+ * nothing to delegate to and never surfaced the gap. Readiness is claimed only
+ * when every expected specialist is installed.
+ */
+export function buildStudioStatusLine(setup: StudioStatusInput): string {
+	const installed = Math.max(0, setup.agentsInstalled || 0);
+	const expected = setup.expectedAgents || 0;
+	const engine = setup.currentEngine || "sin motor";
+
+	if (installed <= 0) {
+		return (
+			`Studio Environment Status: PACKAGE MODE. ${installed} of ${expected} specialist templates installed for engine "${engine}". ` +
+			"The Producer has no specialists to delegate to and works inline in this session. " +
+			"To enable real delegation the human has to run /setup (or /studio:setup); offer it through `ask_user_question`, never as a numbered text menu. " +
+			"Do NOT claim the environment is configured and do NOT say the roster is ready."
+		);
+	}
+
+	if (installed < expected) {
+		const missing = (setup.missingAgents ?? []).slice(0, 10);
+		const missingText = missing.length > 0 ? ` Missing: ${missing.join(", ")}.` : "";
+		return (
+			`Studio Environment Status: PARTIAL SETUP. ${installed} of ${expected} specialist templates installed for engine "${engine}".${missingText} ` +
+			"Delegation works only for the installed specialists. Running /setup again completes the roster."
+		);
+	}
+
+	return (
+		`Studio Environment Status: OK. ${installed} agents installed and ready for engine "${engine}". ` +
+		"IMPORTANT: The environment is ALREADY fully configured. Do NOT ask the user to configure or run setup again."
+	);
+}
+
 export async function handleStudioSetup(
 	args: string,
 	ctx: ExtensionContext,

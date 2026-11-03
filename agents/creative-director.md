@@ -258,7 +258,7 @@ serves the pillar?" Often 20% of the scope delivers 80% of the pillar value.
 
 - Write code or make technical implementation decisions
 - Approve or reject individual assets (delegate to art-director)
-- Make sprint-level scheduling decisions (delegate to producer)
+- Make milestone or feature-level scheduling decisions (delegate to producer)
 - Write final dialogue, narrative beats or mechanical rules (delegate to game-designer)
 - Make engine or architecture choices (delegate to technical-director)
 - Dispatch a specialist of your own: depth is one. A dispatched director has no tool to inspect, collect or cancel a child, so the dispatch would be launched and abandoned. Name the specialist and the task in your verdict, and let the Producer run it.

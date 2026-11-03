@@ -245,7 +245,7 @@ Para mantener el ritmo de desarrollo sin fricciones ni preguntas redundantes:
 2. **Cierre de Ciclo del Producer**:
    - El Producer valida el recibo de entrega.
    - Marca la tarea previa como completada `[x]`.
-   - Declara la siguiente tarea del sprint y pasa el control al siguiente especialista de forma directa, sin preguntar al usuario *"¿qué hacemos ahora?"*.
+   - Declara la siguiente tarea de la feature y avanza de forma continua sin frenar a pedir confirmación innecesaria al usuario (*Authorized Work Continuity* de Gentle Shell).
 3. **Persistencia en `production/roadmap.md`**: El bloque `<!-- PRODUCER_STATE -->` se mantiene como la única fuente de verdad (Single Source of Truth) para la sesión actual y futuras sesiones.
 
 ---

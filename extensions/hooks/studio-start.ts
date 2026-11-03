@@ -154,7 +154,8 @@ export function readProducerState(cwd: string): { hasRoadmap: boolean; roadmapPa
 		const milestone = block.match(/(?:Hito Actual|Milestone|Current Milestone):\s*([^\n]+)/i);
 		if (milestone) state.milestone = milestone[1].trim();
 
-		const sprint = block.match(/(?:Sprint Activo|Sprint|Active Sprint):\s*([^\n]+)/i);
+		const feature = block.match(/(?:Feature Activa|Feature):\s*([^\n]+)/i);
+		const sprint = feature || block.match(/(?:Sprint Activo|Sprint|Active Sprint):\s*([^\n]+)/i);
 		if (sprint) state.sprint = sprint[1].trim();
 
 		const inProgress = block.match(/(?:En Progreso|In Progress|Working On):\s*([^\n]+)/i);

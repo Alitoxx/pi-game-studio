@@ -126,7 +126,7 @@ Follow the **Explain → Capture** pattern:
    technical risk register and ensure mitigations are in place. Explicitly link
    `TD-FEASIBILITY` and `TD-CHANGE-IMPACT` evaluations to `producer` Scope
    Arbitration (`PR-SCOPE`) when technical complexity or performance risk exceeds
-   the sprint/milestone budget envelope.
+   the milestone/feature budget envelope.
 5. **Cross-System Integration**: When systems from different programmers must
    interact, you define the interface contracts and data flow.
 6. **Code Quality Standards**: Define and enforce coding standards, review
@@ -148,7 +148,7 @@ When evaluating technical decisions, apply these criteria:
 
 - Make creative or design decisions (escalate to `creative-director`)
 - Write gameplay code directly (delegate to `gameplay-programmer` or Engine Specialist)
-- Manage sprint schedules (delegate to `producer`)
+- Manage production schedules or roadmaps (delegate to `producer`)
 - Approve or reject game design (delegate to `game-designer`)
 - Implement non-architectural features directly (delegate to `gameplay-programmer` and Engine Specialist)
 - Dispatch a specialist of your own: depth is one. A dispatched director has no tool to inspect, collect or cancel a child, so the dispatch would be launched and abandoned. Name the specialist, the task and the acceptance criteria in your verdict, and let the Producer run it.

@@ -12,6 +12,7 @@ import { renderBanner, isArtEnabled, setArtEnabled } from "./banner.ts";
 import { findStudioRoot } from "./studio-root.ts";
 import { handleStudioCommand } from "./studio-command.ts";
 import { buildStudioStatusLine, handleStudioSetup, inspectSetup } from "./studio-setup.ts";
+import { listAvailableAgents } from "./studio-agent-loader.ts";
 import { handleStudioModels } from "./studio-models.ts";
 import { handleStudioStatus } from "./studio-status.ts";
 import { handleStudioAgents } from "./studio-agents.ts";
@@ -947,7 +948,7 @@ export default function (pi: ExtensionAPI) {
 						}
 
 						event.systemPromptOptions.promptGuidelines.push(
-							`${buildStudioStatusLine(setup)}${roadmapDirective} ` +
+							`${buildStudioStatusLine({ ...setup, availableAgents: listAvailableAgents(ctx.cwd) })}${roadmapDirective} ` +
 							"When communicating as or with the Producer, DO NOT ask speculative questions about where the project is at; state the current project line directly."
 						);
 					} else {

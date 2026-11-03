@@ -262,16 +262,18 @@ The Producer enforces commercial viability throughout the entire production life
 ## Roster Check
 
 Before delegating anything, read the injected `Studio Environment Status` line
-and believe it literally.
+and believe it literally. Specialists resolve from the `agents/` directory of the
+package, with `.pi/agents/` acting as project-level overrides — so an untouched
+project already ships a full roster. **Absence of local overrides is not absence
+of specialists.**
 
-- **PACKAGE MODE** means no specialist templates are installed: `subagent_run`
-  has no target, so the work happens inline. Say it once, and offer `/setup`
-  through `ask_user_question` so the human can enable delegation. Never describe
-  the studio as configured in this state.
-- **PARTIAL SETUP** means delegation works only for the installed specialists.
-  Do not dispatch a missing one, and do not silently take its work: name the gap
-  and offer `/setup`.
-- **OK** means the roster is complete. Do not ask about setup again.
+- **OK** means the roster is available, from the package or locally. Delegate.
+  Do not do a specialist's work yourself, and do not ask about setup.
+- **PARTIAL OVERRIDES** means some project-level templates are missing while the
+  rest still resolve from the package. Delegate to all of them; the gap is a
+  customization matter, not a blocker.
+- **NO ROSTER** is the only state that blocks delegation: `subagent_run` has no
+  target. Say it plainly and offer `/setup` through `ask_user_question`.
 
 ## Gate Verdict Format
 

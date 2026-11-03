@@ -11,6 +11,14 @@ export interface RunOptions {
 	cwd?: string;
 	timeoutMs?: number;
 	stdio?: "pipe" | "inherit";
+	/**
+	 * Trim leading and trailing whitespace from stdout. Defaults to true, which is
+	 * what callers reading a single value want. Set it to false for output whose
+	 * whitespace is part of the format: `git status --porcelain` prefixes a
+	 * worktree-only change with a space, so trimming shifts the first path by one
+	 * character and every parser built on the trimmed text is off by one.
+	 */
+	trim?: boolean;
 }
 
 export function runCommand(
@@ -19,7 +27,7 @@ export function runCommand(
 	options?: RunOptions,
 ): string | null {
 	try {
-		return execFileSync(command, args ?? [], {
+		const stdout = execFileSync(command, args ?? [], {
 			cwd: options?.cwd,
 			encoding: "utf8",
 			timeout: options?.timeoutMs ?? DEFAULT_TIMEOUT_MS,
@@ -27,7 +35,8 @@ export function runCommand(
 				options?.stdio === "inherit"
 					? ["ignore", "inherit", "pipe"]
 					: ["ignore", "pipe", "pipe"],
-		}).trim();
+		});
+		return options?.trim === false ? stdout : stdout.trim();
 	} catch {
 		return null;
 	}

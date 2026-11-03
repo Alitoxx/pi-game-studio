@@ -69,6 +69,8 @@ export interface TaskRecord {
 	memoryUnavailable?: string[];
 	/** Real usage reported by the child, accumulated per completed message. */
 	usage?: { input: number; output: number; cacheRead: number; cacheWrite: number; cost: number };
+	/** Accumulated counts per tool name invoked during this task. */
+	toolCounts?: Record<string, number>;
 	/** Timestamp of the last sign of life from the child, for the idle watchdog. */
 	lastActivityAt?: number;
 	/** Last stderr lines, kept because children no longer persist a session. */
@@ -805,7 +807,6 @@ export class StudioAgentsRunner {
 			let thinkingBuffer = "";
 			let textBuffer = "";
 			const activeToolCalls = new Map<string, { toolName: string; detail: string; startedAt: number }>();
-			const lastLoggedThinking = new Set<string>();
 
 			const sendRpc = (payload: Record<string, unknown>) => {
 				try {
@@ -956,6 +957,10 @@ export class StudioAgentsRunner {
 							}
 
 							activeToolCalls.set(toolCallId, { toolName, detail, startedAt: Date.now() });
+							if (!record.toolCounts) {
+								record.toolCounts = {};
+							}
+							record.toolCounts[toolName] = (record.toolCounts[toolName] || 0) + 1;
 							record.latestActivity = detail.slice(0, 45);
 							appendTaskLog(record, logLine);
 							this.notifyListeners(record);
@@ -1025,30 +1030,13 @@ export class StudioAgentsRunner {
 								thinkingBuffer += inner.delta;
 								const firstIntention = thinkingBuffer.trim().split("\n")[0]?.trim();
 								if (firstIntention) {
+									// Zero Bleed: el monólogo interno actualiza la actividad viva, nunca el historial de logs
 									record.latestActivity = `pensando: ${firstIntention}`.slice(0, 45);
-								}
-								// Colapsar monólogo interno en hitos ejecutivos (máx 1 línea por bloque)
-								if (thinkingBuffer.length > 200 && thinkingBuffer.includes("\n")) {
-									const lines = thinkingBuffer.split("\n").map((l: string) => l.trim()).filter((l: string) => l.length > 0);
-									const headline = lines.find((l: string) => l.length > 10 && !l.startsWith("-") && !l.startsWith("*")) || lines[0];
-									if (headline && !lastLoggedThinking.has(headline)) {
-										lastLoggedThinking.add(headline);
-										appendTaskLog(record, `${formatRel(record.startedAt)}  think ${headline.slice(0, 90)}`);
-										this.notifyListeners(record);
-									}
-									thinkingBuffer = "";
+									this.notifyListeners(record);
 								}
 							}
 							if (inner?.type === "thinking_end") {
-								if (thinkingBuffer.trim()) {
-									const headline = thinkingBuffer.trim().split("\n")[0]?.trim();
-									if (headline && !lastLoggedThinking.has(headline)) {
-										lastLoggedThinking.add(headline);
-										appendTaskLog(record, `${formatRel(record.startedAt)}  think ${headline.slice(0, 90)}`);
-									}
-									thinkingBuffer = "";
-									this.notifyListeners(record);
-								}
+								thinkingBuffer = "";
 							}
 							if (inner?.type === "text_delta" && typeof inner.delta === "string") {
 								resultText += inner.delta;
@@ -1097,13 +1085,7 @@ export class StudioAgentsRunner {
 						if (event.type === "agent_settled") {
 							agentSettled = true;
 							if (event.aborted === true) settledAborted = true;
-							if (thinkingBuffer.trim()) {
-								const headline = thinkingBuffer.trim().split("\n")[0]?.trim();
-								if (headline && !lastLoggedThinking.has(headline)) {
-									appendTaskLog(record, `${formatRel(record.startedAt)}  think ${headline.slice(0, 90)}`);
-								}
-								thinkingBuffer = "";
-							}
+							thinkingBuffer = "";
 							record.latestActivity = "Sintetizando entrega...";
 							appendTaskLog(record, `${formatRel(record.startedAt)}  done  entrega completada`);
 							this.notifyListeners(record);

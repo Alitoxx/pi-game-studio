@@ -161,7 +161,8 @@ export function renderTasksWidgetCard(
 			titleColor = (t: string) => r.text(t);
 		}
 
-		let rowText = `${icon} ${titleColor(task.title)}${RESET}`;
+		const cleanTitle = task.title.replace(/\*\*/g, "").replace(/__/g, "").trim();
+		let rowText = `${icon} ${titleColor(cleanTitle)}${RESET}`;
 		if (task.isStale) {
 			rowText += ` ${r.warn(`${DIM}(stale)`)}${RESET}`;
 		}

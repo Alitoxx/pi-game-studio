@@ -64,8 +64,8 @@ export function synthesizeRetroChime(type: ChimeType): Buffer {
 			const isSecondTone = i >= splitSample;
 			const freq = isSecondTone ? 1318.51 : 987.77; // B5 then E6
 			const phase = ((freq * (i / SAMPLE_RATE)) % 1);
-			// Pulse wave with 25% duty cycle for authentic NES/arcade timbre
-			const wave = phase > 0.35 ? 0.6 : -0.6;
+			// Pulse wave with 25% duty cycle, softened amplitude for discreet ambient feedback
+			const wave = phase > 0.35 ? 0.18 : -0.18;
 			const decay = isSecondTone
 				? Math.max(0, 1 - (i - splitSample) / (totalSamples - splitSample))
 				: 1.0;
@@ -84,7 +84,7 @@ export function synthesizeRetroChime(type: ChimeType): Buffer {
 		for (let i = 0; i < totalSamples; i++) {
 			const t = i / totalSamples;
 			const phase = ((freq * (i / SAMPLE_RATE)) % 1);
-			const wave = phase > 0.5 ? 0.7 : -0.7;
+			const wave = phase > 0.5 ? 0.20 : -0.20;
 			const env = Math.max(0, 1 - Math.pow(t, 0.7));
 			samples[i] = wave * env;
 		}
@@ -100,8 +100,8 @@ export function synthesizeRetroChime(type: ChimeType): Buffer {
 		const t = i / totalSamples;
 		const curFreq = 260 - 195 * Math.pow(t, 0.7); // 260Hz down to 65Hz
 		const phase = ((curFreq * (i / SAMPLE_RATE)) % 1);
-		// Harsh square/saw buzz with grit
-		const wave = (phase > 0.6 ? 0.8 : -0.8) + (Math.random() * 0.15 - 0.075);
+		// Softened square/saw buzz with subtle grit
+		const wave = (phase > 0.6 ? 0.22 : -0.22) + (Math.random() * 0.04 - 0.02);
 		const env = Math.max(0, 1 - t);
 		samples[i] = wave * env;
 	}
@@ -192,7 +192,7 @@ function triggerSound(type: ChimeType, studioRoot?: string): void {
 	if (platform === "linux") {
 		command = `paplay "${wavPath}" 2>/dev/null || pw-play "${wavPath}" 2>/dev/null || aplay -q "${wavPath}" 2>/dev/null || paplay /usr/share/sounds/freedesktop/stereo/complete.oga 2>/dev/null`;
 	} else if (platform === "darwin") {
-		command = `afplay "${wavPath}" 2>/dev/null || afplay /System/Library/Sounds/Ping.aiff 2>/dev/null`;
+		command = `afplay -v 0.25 "${wavPath}" 2>/dev/null || afplay -v 0.25 /System/Library/Sounds/Ping.aiff 2>/dev/null`;
 	} else if (platform === "win32") {
 		if (type === "success") {
 			command = 'powershell -c "[console]::beep(988, 80); [console]::beep(1319, 220)"';

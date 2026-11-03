@@ -2,12 +2,18 @@ import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { studioAgentsRunner, type TaskRecord } from "./studio-agents-runner.ts";
 import { isStudioSidebarActive, invalidateStudioSidebar } from "./studio-sidebar.ts";
 import { loadAgentManifest } from "./studio-agent-loader.ts";
+import { computeTaskOddPhase } from "./studio-subagents-viewer.ts";
 
 import {
 	RESET,
 	BOLD,
 	DIM,
 	SECONDARY,
+	BORDER,
+	panelTop,
+	panelRow,
+	panelBottom,
+	truncateAnsi,
 	resolveStudioTheme,
 	type StudioThemeRoles,
 } from "./studio-palette.ts";
@@ -80,26 +86,22 @@ export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 7
 
 	if (activeTasks.length === 0) return [];
 
-	const targetWidth = Math.max(40, width);
-	const contentWidth = targetWidth;
+	const isSidebar = width <= 56;
+	const cardWidth = isSidebar ? Math.min(Math.max(width - 4, 46), 56) : Math.max(48, width);
+	const innerWidth = cardWidth - 4;
 
 	const runningCount = activeTasks.filter((t) => t.status === "running").length;
 	const countText = runningCount > 0 ? `${runningCount} active` : "reciente";
 
 	const lines: string[] = [];
 
-	// Top padding
-	lines.push("");
-
-	// Header: ENGINE DISPATCH  <N> active (or reciente)
-	const headerTitle = `${r.accent(BOLD + "ENGINE DISPATCH")}${RESET}  ${DIM}${countText}${RESET}`;
-	lines.push(headerTitle);
-
-	// Spacing between header and items
-	lines.push("");
+	// Header: ENGINE DISPATCH · <count>
+	const headerTitle = `${r.accent(BOLD + "ENGINE DISPATCH")}${RESET} ${DIM}· ${countText}${RESET}`;
+	lines.push(`  ${panelTop(cardWidth - 2, headerTitle, "rounded", BORDER)}`);
 
 	const now = Date.now();
 	for (const task of activeTasks) {
+		const phase = computeTaskOddPhase(task);
 		let statusBadge = `${r.muted("○ EN COLA")}`;
 		if (task.status === "interaction_required") {
 			// The one state that asks the human for something is not the one that
@@ -108,7 +110,7 @@ export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 7
 		} else if (task.status === "completed") {
 			statusBadge = `${r.success("✓ OK")}`;
 		} else if (task.status === "running") {
-			statusBadge = `${r.warn("◐ COMPILANDO")}`;
+			statusBadge = `${r.warn(phase.badge)}`;
 		} else if (task.status === "failed") {
 			statusBadge = `${r.error("✗ BLOQUEADO")}`;
 		}
@@ -119,48 +121,34 @@ export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 7
 			: 0;
 		const elapsedStr = formatElapsed(elapsedMs);
 
-		// Build telemetry string: model · thinking · elapsed
+		// Build telemetry string: model · elapsed
 		const teleParts: string[] = [];
 		if (task.model && task.model !== "inherit") {
 			const shortModel = task.model.split("/").pop() || task.model;
 			teleParts.push(shortModel);
 		}
-		try {
-			const manifest = loadAgentManifest(task.agent, task.cwd);
-			if (manifest?.thinking) {
-				teleParts.push(manifest.thinking);
-			}
-		} catch {}
 		teleParts.push(elapsedStr);
 		const telemetryStr = teleParts.join(" · ");
 
 		// Format specialist engine tag and agent name
 		const engineTag = getAgentEngineTag(task.agent);
 		const enginePrefix = engineTag ? `${SECONDARY}${engineTag}${RESET} ` : "";
-		const leftPrefix = `${statusBadge}  ${enginePrefix}${r.text(task.agent)}${RESET}  `;
+		const leftPrefix = `${statusBadge} ${enginePrefix}${r.text(task.agent)}${RESET}`;
+
+		const leftLen = stripAnsi(leftPrefix).length;
+		const teleLen = stripAnsi(telemetryStr).length;
+		const spacesCount = Math.max(2, innerWidth - leftLen - teleLen);
+		const topRow = `${leftPrefix}${" ".repeat(spacesCount)}${DIM}${telemetryStr}${RESET}`;
+		lines.push(`  ${panelRow(truncateAnsi(topRow, innerWidth), innerWidth + 2, BORDER)}`);
 
 		const rawActivity = (task.latestActivity || task.task).replace(/\s+/g, " ").trim();
-		const leftVisible = stripAnsi(leftPrefix).length;
-		const teleVisible = stripAnsi(telemetryStr).length;
-
-		const maxActivityLen = contentWidth - leftVisible - teleVisible - 2;
-		if (maxActivityLen > 6) {
-			const activityDisplay = rawActivity.length > maxActivityLen
-				? (maxActivityLen > 1 ? rawActivity.slice(0, maxActivityLen - 1) + "…" : "")
-				: rawActivity;
-			const spacesCount = Math.max(2, contentWidth - leftVisible - activityDisplay.length - teleVisible);
-			const row = `${leftPrefix}${r.text(activityDisplay)}${RESET}${" ".repeat(spacesCount)}${DIM}${telemetryStr}${RESET}`;
-			lines.push(row);
-		} else {
-			// Compact row for narrow viewports
-			const row = `${leftPrefix}${DIM}${telemetryStr}${RESET}`;
-			lines.push(row);
+		if (rawActivity) {
+			const actRow = `  ${r.muted(truncateAnsi(rawActivity, innerWidth - 2))}${RESET}`;
+			lines.push(`  ${panelRow(actRow, innerWidth + 2, BORDER)}`);
 		}
 	}
 
-	// Bottom padding
-	lines.push("");
-
+	lines.push(`  ${panelBottom(cardWidth - 2, "rounded", BORDER)}`);
 	return lines;
 }
 

@@ -324,4 +324,84 @@ describe("Studio HUD and Live Tasks Widget", () => {
 		// The real card carries no retired ornament glyph.
 		expect(hudSource).not.toMatch(/[◈▌✔●◆★▲■]/);
 	});
+
+	test("computeTaskOddPhase infers ODD progression, badges, and tool metrics cleanly", () => {
+		const script = `
+			const { computeTaskOddPhase } = await import("./extensions/hooks/studio-subagents-viewer.ts");
+
+			// Running with reads only -> Exploración (25%)
+			const task1 = { status: "running", toolCounts: { read: 3, grep: 1 } };
+			const p1 = computeTaskOddPhase(task1);
+			if (p1.step !== 1 || p1.percent !== 25 || !p1.name.includes("Exploración")) {
+				throw new Error("unexpected phase for reads: " + JSON.stringify(p1));
+			}
+			if (p1.badge !== "🔍 EXPLORANDO") {
+				throw new Error("unexpected badge for reads: " + p1.badge);
+			}
+
+			// Running with writes -> Implementación (50%)
+			const task2 = { status: "running", toolCounts: { read: 3, edit: 2 } };
+			const p2 = computeTaskOddPhase(task2);
+			if (p2.step !== 2 || p2.percent !== 50 || !p2.name.includes("Implementación")) {
+				throw new Error("unexpected phase for edits: " + JSON.stringify(p2));
+			}
+			if (p2.badge !== "✎ EDITANDO") {
+				throw new Error("unexpected badge for edits: " + p2.badge);
+			}
+
+			// Running with bash -> Validación (75%)
+			const task3 = { status: "running", toolCounts: { read: 3, edit: 2, bash: 1 } };
+			const p3 = computeTaskOddPhase(task3);
+			if (p3.step !== 3 || p3.percent !== 75 || !p3.name.includes("Validación")) {
+				throw new Error("unexpected phase for bash: " + JSON.stringify(p3));
+			}
+			if (p3.badge !== "⚡ VALIDANDO") {
+				throw new Error("unexpected badge for bash: " + p3.badge);
+			}
+
+			// Completed -> 100%
+			const task4 = { status: "completed", toolCounts: { read: 3, edit: 2, bash: 1 } };
+			const p4 = computeTaskOddPhase(task4);
+			if (p4.step !== 4 || p4.percent !== 100 || !p4.name.includes("Entrega")) {
+				throw new Error("unexpected phase for completed: " + JSON.stringify(p4));
+			}
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+				encoding: "utf8",
+				timeout: 60000,
+			});
+		}).not.toThrow();
+	});
+
+	test("extractCleanMission extracts substantive goals from boilerplate agent prompts", () => {
+		const script = `
+			const { extractCleanMission } = await import("./extensions/hooks/studio-subagents-viewer.ts");
+
+			const sample1 = "Eres el game-designer del estudio Pi Game Studio. Proyecto: \\"Volga 1942: Puesto de Mando\\" (Godot 4.7.2, GDScript).\\nTarea: Diseñar sistema de teletipo T4";
+			if (extractCleanMission(sample1) !== "Diseñar sistema de teletipo T4") {
+				throw new Error("failed to extract task: " + extractCleanMission(sample1));
+			}
+
+			const sample2 = "Eres el lead-programmer del estudio.\\nDirectorio: /path/to/repo\\nObjetivo: Implementar autoload de radio";
+			if (extractCleanMission(sample2) !== "Implementar autoload de radio") {
+				throw new Error("failed to extract objetivo: " + extractCleanMission(sample2));
+			}
+
+			const sample3 = "Diseñar combate naval sin preámbulos";
+			if (extractCleanMission(sample3) !== "Diseñar combate naval sin preámbulos") {
+				throw new Error("failed on plain text: " + extractCleanMission(sample3));
+			}
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+				encoding: "utf8",
+				timeout: 60000,
+			});
+		}).not.toThrow();
+	});
 });

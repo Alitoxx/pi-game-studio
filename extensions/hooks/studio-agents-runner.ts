@@ -674,12 +674,14 @@ export class StudioAgentsRunner {
 						: `This role holds no memory tool by design, so persist nothing. Report durable discoveries in 'risks' (or 'summary' when they change the plan) so the Producer can record them.`}`,
 				`8. STRICT RETURN CONTRACT: At the very end of your response, output ONLY a clean YAML block formatted exactly like this:`,
 				`\`\`\`yaml`,
-				`status: completed # or partial / failed / blocked`,
+				`status: completed # or partial / failed / blocked / interaction_required`,
 				`summary: "<executive 1-2 sentence summary of what was done>"`,
 				`files_changed:`,
 				`  - "<path_to_file>"`,
-				`validation: "<tests run, clean compile, or fps checks>"`,
-				`gameplay_impact: "<game feel, latency, memory allocations, or trade-offs>"`,
+				`validation:`,
+				`  - "<exact command>: <observed result>" # e.g. "godot --headless --check-only: 0 errors" (or structural: <property>: <result> if no bash)`,
+				`gameplay_impact:`,
+				`  - "<game feel, latency, memory allocations, or trade-offs>"`,
 				`\`\`\``,
 			].join("\n");
 

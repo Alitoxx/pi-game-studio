@@ -38,9 +38,12 @@ const STRUCTURAL_HINT = "'structural: <propiedad leída>: <resultado>'";
 const EXCEPTION_HINT = "'exception: <razón>'";
 
 const splitPair = (value: string): { left: string; right: string } => {
-	const separator = value.indexOf(":");
+	const colonPos = value.indexOf(":");
+	const arrowPos = value.indexOf("->");
+	const separator = colonPos > 0 ? colonPos : arrowPos;
+	const sepLen = colonPos > 0 ? 1 : 2;
 	return separator > 0
-		? { left: value.slice(0, separator).trim(), right: value.slice(separator + 1).trim() }
+		? { left: value.slice(0, separator).trim(), right: value.slice(separator + sepLen).trim() }
 		: { left: "", right: "" };
 };
 
@@ -193,19 +196,44 @@ export function validateSpecialistReturn(
 	const optionsMatch = textToParse.match(/(?:^|\n)\s*options:\s*([\s\S]*?)(?=\n[a-z_]+:|$)/i);
 	const blockingMatch = textToParse.match(/(?:^|\n)\s*blocking:\s*(true|false)/i);
 
-	const parseList = (block?: string | null): string[] => {
+	const parseListOrScalar = (block?: string | null): string[] => {
 		if (!block) return [];
-		return block
+		const trimmed = block.trim();
+		if (!trimmed) return [];
+
+		// 1. Standard YAML list: lines starting with "-"
+		const listItems = trimmed
 			.split("\n")
 			.map((l) => l.trim())
 			.filter((l) => l.startsWith("-"))
-			.map((l) => l.replace(/^-\s*/, ""));
+			.map((l) => l.replace(/^-\s*/, "").trim())
+			.filter(Boolean);
+		if (listItems.length > 0) {
+			return listItems;
+		}
+
+		// 2. Inline YAML/JSON array: [ "item1", "item2" ]
+		const inlineMatch = trimmed.match(/^\[([\s\S]*)\]$/);
+		if (inlineMatch) {
+			return inlineMatch[1]
+				.split(",")
+				.map((item) => item.trim().replace(/^["']|["']$/g, "").trim())
+				.filter(Boolean);
+		}
+
+		// 3. Scalar string or multi-line block without dashes:
+		// e.g. validation: "godot --check-only: 0 errors" or raw text
+		const lines = trimmed
+			.split("\n")
+			.map((l) => l.trim().replace(/^["']|["']$/g, "").trim())
+			.filter(Boolean);
+		return lines;
 	};
 
 	const interaction: InteractionRequest | undefined = questionMatch
 		? {
 				question: questionMatch[1].trim().replace(/^["']|["']$/g, ""),
-				options: parseList(optionsMatch ? optionsMatch[1] : null).map((o) =>
+				options: parseListOrScalar(optionsMatch ? optionsMatch[1] : null).map((o) =>
 					o.replace(/^["']|["']$/g, ""),
 				),
 				blocking: blockingMatch ? blockingMatch[1].toLowerCase() === "true" : true,
@@ -215,10 +243,10 @@ export function validateSpecialistReturn(
 	const parsed: SpecialistReturn | undefined = statusMatch && summaryMatch ? {
 		status: statusMatch[1].toLowerCase().trim() as any,
 		summary: summaryMatch[1].trim(),
-		files_changed: parseList(filesMatch ? filesMatch[1] : null),
-		validation: parseList(validationMatch ? validationMatch[1] : null),
-		gameplay_impact: parseList(impactMatch ? impactMatch[1] : null),
-		risks: parseList(risksMatch ? risksMatch[1] : null),
+		files_changed: parseListOrScalar(filesMatch ? filesMatch[1] : null),
+		validation: parseListOrScalar(validationMatch ? validationMatch[1] : null),
+		gameplay_impact: parseListOrScalar(impactMatch ? impactMatch[1] : null),
+		risks: parseListOrScalar(risksMatch ? risksMatch[1] : null),
 		next_recommended_specialist: nextMatch ? nextMatch[1].trim() : undefined,
 		interaction,
 	} : undefined;

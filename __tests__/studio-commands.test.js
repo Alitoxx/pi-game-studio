@@ -524,6 +524,33 @@ describe("Pi Game Studio Extension Commands (studio:*)", () => {
 				throw new Error("partial without evidence must stay valid");
 			}
 
+			// Scalar string, unquoted scalar, and arrow separator validation formats:
+			const scalarCmd = validateSpecialistReturn([
+				"status: completed",
+				"summary: Reloj táctico implementado",
+				"files_changed:",
+				"  - src/tactical_clock.gd",
+				'validation: "godot --headless --check-only: 0 errors"',
+				'gameplay_impact: "cero allocs en tick"',
+			].join("\\n"), withBash);
+			if (!scalarCmd.isValid) throw new Error("scalar string validation must be accepted: " + scalarCmd.errors.join(" | "));
+
+			const unquotedScalarCmd = validateSpecialistReturn([
+				"status: completed",
+				"summary: Reloj táctico implementado",
+				"files_changed: src/tactical_clock.gd",
+				"validation: godot --headless --check-only: 0 errors",
+				"gameplay_impact: 60 FPS estables",
+			].join("\\n"), withBash);
+			if (!unquotedScalarCmd.isValid) throw new Error("unquoted scalar validation must be accepted: " + unquotedScalarCmd.errors.join(" | "));
+
+			const arrowCmd = validateSpecialistReturn([
+				"status: completed",
+				"summary: Reloj táctico implementado",
+				"validation: godot --headless --check-only -> 0 errors",
+			].join("\\n"), withBash);
+			if (!arrowCmd.isValid) throw new Error("arrow syntax in validation must be accepted: " + arrowCmd.errors.join(" | "));
+
 			// S8: neutral professional Spanish, never voseo.
 			const messages = [filesOnly, bareCmd, emptyException, structuralInBash, cmdInNoBash]
 				.flatMap((r) => r.errors)

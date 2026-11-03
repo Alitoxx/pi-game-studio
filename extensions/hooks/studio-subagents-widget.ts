@@ -2,6 +2,7 @@ import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { studioAgentsRunner, type TaskRecord } from "./studio-agents-runner.ts";
 import { isStudioSidebarActive, invalidateStudioSidebar } from "./studio-sidebar.ts";
 import { loadAgentManifest } from "./studio-agent-loader.ts";
+import { computeTaskOddPhase } from "./studio-subagents-viewer.ts";
 
 import {
 	RESET,
@@ -100,6 +101,7 @@ export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 7
 
 	const now = Date.now();
 	for (const task of activeTasks) {
+		const phase = computeTaskOddPhase(task);
 		let statusBadge = `${r.muted("○ EN COLA")}`;
 		if (task.status === "interaction_required") {
 			// The one state that asks the human for something is not the one that
@@ -108,7 +110,7 @@ export function renderSubagentsWidgetCard(tasks: TaskRecord[], width: number = 7
 		} else if (task.status === "completed") {
 			statusBadge = `${r.success("✓ OK")}`;
 		} else if (task.status === "running") {
-			statusBadge = `${r.warn("◐ COMPILANDO")}`;
+			statusBadge = `${r.warn(phase.badge)}`;
 		} else if (task.status === "failed") {
 			statusBadge = `${r.error("✗ BLOQUEADO")}`;
 		}

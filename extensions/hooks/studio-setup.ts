@@ -1,4 +1,4 @@
-import { ACCENT, GREEN, SECONDARY, WHITE, YELLOW } from "./studio-palette.ts";
+import { ACCENT, DIM, GREEN, RESET, SECONDARY, WHITE, YELLOW } from "./studio-palette.ts";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import {
 	appendFileSync,
@@ -113,6 +113,12 @@ export interface StudioInstallOptions {
 	dimension?: "2d" | "3d";
 	modelsConfig?: Record<string, string>;
 	installAllAgents?: boolean;
+	/**
+	 * Copy agent templates physically into `.pi/agents/` for local customization.
+	 * Defaults to false (Package-First / Zero Bloat mode): subagent_run resolves
+	 * from the package's `agents/` directory, keeping projects clean and up to date.
+	 */
+	copyAgents?: boolean;
 }
 
 export function detectDimensionFromText(text: string): "2d" | "3d" | null {
@@ -356,6 +362,11 @@ export async function handleStudioSetup(
 	const status = inspectSetup(ctx.cwd);
 
 	// Direct execution flags
+	if (query === "eject" || query === "customize") {
+		installStudioFiles(ctx, { copyAgents: true });
+		return;
+	}
+
 	if (query === "run" || query === "auto" || query === "install") {
 		installStudioFiles(ctx);
 		return;
@@ -390,13 +401,14 @@ export async function handleStudioSetup(
 	// Interactive UI mode
 	if (ctx.hasUI && typeof (ctx.ui as any)?.select === "function") {
 		const options = [
-			`1. Instalación Automática (${status.expectedAgents} agentes recomendados para ${status.currentEngine} en modo 'inherit')`,
-			"2. Instalación Manual / Guiada (Elegir motor, idioma y modelos por nivel)",
-			"3. Configurar Modelos de IA (/studio:models)",
-			"4. Diagnóstico de Viabilidad Multimedia (FFmpeg, ImageMagick, Assimp, Git-LFS, gltfpack)",
-			"5. Hub de Servidores MCP (/studio:mcp — REA, Playwright, Context7, etc.)",
-			"6. Ver diagnóstico del estudio (/studio:status)",
-			"7. Ver guía rápida de inicio",
+			`1. Configurar Proyecto (${status.expectedAgents} especialistas activos desde el paquete)`,
+			"2. Configuración Manual / Guiada (Elegir motor, idioma y modelos por nivel)",
+			"3. Personalizar Agentes (/setup eject — copiar plantillas a .pi/agents/ para editarlas)",
+			"4. Configurar Modelos de IA (/studio:models)",
+			"5. Diagnóstico de Viabilidad Multimedia (FFmpeg, ImageMagick, Assimp, Git-LFS, gltfpack)",
+			"6. Hub de Servidores MCP (/studio:mcp — REA, Playwright, Context7, etc.)",
+			"7. Ver diagnóstico del estudio (/studio:status)",
+			"8. Ver guía rápida de inicio",
 		];
 
 		const choice = await promptSelectSafe(
@@ -415,15 +427,18 @@ export async function handleStudioSetup(
 				await runGuidedSetup(ctx, status);
 				break;
 			case 2:
-				installModelsConfig(ctx);
+				installStudioFiles(ctx, { copyAgents: true });
 				break;
 			case 3:
-				await promptMediaToolsInstall(ctx);
+				installModelsConfig(ctx);
 				break;
 			case 4:
+				await promptMediaToolsInstall(ctx);
+				break;
+			case 5:
 				await handleStudioMcp("", ctx);
 				break;
-			case 5: {
+			case 6: {
 				const diag = formatSetupDiagnostic(status);
 				if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 					ctx.ui.notify(diag, "info");
@@ -432,7 +447,7 @@ export async function handleStudioSetup(
 				}
 				break;
 			}
-			case 6: {
+			case 7: {
 				const guide = formatGettingStartedGuide();
 				if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
 					ctx.ui.notify(guide, "info");
@@ -561,16 +576,16 @@ export async function runGuidedSetup(
 
 	// ── Confirmación Final ──
 	const confirmSummary = [
-		"RESUMEN DE INSTALACION PERSONALIZADA:",
-		`• Motor de juego:      ${selectedEngine}`,
-		`• Dimensión del juego: ${selectedDimension.toUpperCase()} (${selectedDimension === "2d" ? "Sprites & TileMaps" : "glTF/GLB & PBR"})`,
-		`• Agentes a desplegar: ${targetCount} agentes (8 Core + 1 especialista de ${selectedEngine} + 1 verificador read-only)`,
-		`• Idioma preferido:    ${selectedLang === "es" ? "Español (es)" : "English (en)"}`,
-		`• Modelos:            ${formatTierConfig(customModels)}`,
+		"RESUMEN DE CONFIGURACION PERSONALIZADA:",
+		`• Motor de juego:         ${selectedEngine}`,
+		`• Dimensión del juego:    ${selectedDimension.toUpperCase()} (${selectedDimension === "2d" ? "Sprites & TileMaps" : "glTF/GLB & PBR"})`,
+		`• Especialistas activos:   ${targetCount} especialistas desde el paquete (8 Core + 1 especialista de ${selectedEngine} + 1 verificador read-only)`,
+		`• Idioma preferido:       ${selectedLang === "es" ? "Español (es)" : "English (en)"}`,
+		`• Modelos:               ${formatTierConfig(customModels)}`,
 	];
 
 	const confirmOptions = [
-		`✓ Confirmar e Instalar Pi Game Studio (${targetCount} agentes para ${selectedEngine})`,
+		`✓ Confirmar y Configurar Pi Game Studio (${targetCount} especialistas para ${selectedEngine})`,
 		"❌ Cancelar sin modificar archivos",
 	];
 
@@ -701,7 +716,6 @@ export function installStudioFiles(
 	const modelsSrc = join(pkgRoot, "models.default.json");
 	const projectYamlPath = join(ctx.cwd, "project.yaml");
 
-	mkdirSync(destDir, { recursive: true });
 	mkdirSync(studioDir, { recursive: true });
 
 	// 1. Determine engine and allowed agents
@@ -709,19 +723,22 @@ export function installStudioFiles(
 	const allowedAgentNames = filterAgentsForEngine(engine, options.installAllAgents);
 	const allowedSet = allowedAgentNames.length > 0 ? new Set(allowedAgentNames) : null;
 
-	// 2. Copy selected agents (Core + Selected Engine Specialists)
+	// 2. Copy selected agents only when explicitly requested (Package-First / Zero Bloat)
 	let copiedCount = 0;
-	if (existsSync(agentsSrc)) {
-		const files = readdirSync(agentsSrc).filter((f) => f.endsWith(".md"));
-		for (const file of files) {
-			const agentId = file.replace(/\.md$/, "");
-			if (allowedSet && !allowedSet.has(agentId)) {
-				continue;
+	if (options.copyAgents) {
+		mkdirSync(destDir, { recursive: true });
+		if (existsSync(agentsSrc)) {
+			const files = readdirSync(agentsSrc).filter((f) => f.endsWith(".md"));
+			for (const file of files) {
+				const agentId = file.replace(/\.md$/, "");
+				if (allowedSet && !allowedSet.has(agentId)) {
+					continue;
+				}
+				const srcPath = join(agentsSrc, file);
+				const destPath = join(destDir, file);
+				writeFileAtomicSync(destPath, readFileSync(srcPath));
+				copiedCount++;
 			}
-			const srcPath = join(agentsSrc, file);
-			const destPath = join(destDir, file);
-			writeFileAtomicSync(destPath, readFileSync(srcPath));
-			copiedCount++;
 		}
 	}
 
@@ -844,7 +861,7 @@ export function installStudioFiles(
 
 	// 8. Install log
 	const logPath = join(studioDir, "install-log.md");
-	const logEntry = `\n## Setup: ${new Date().toISOString()}\n- Agents installed: ${copiedCount}\n- Engine: ${engine}\n- Dimension: ${dimension}\n- Language: ${options.language || "es"}\n- Source: ${pkgRoot}\n- Launcher installed: ${launcherInstalled}\n`;
+	const logEntry = `\n## Setup: ${new Date().toISOString()}\n- Mode: ${options.copyAgents ? "eject (local overrides)" : "package-first"}\n- Agents installed: ${copiedCount}\n- Engine: ${engine}\n- Dimension: ${dimension}\n- Language: ${options.language || "es"}\n- Source: ${pkgRoot}\n- Launcher installed: ${launcherInstalled}\n`;
 	// The install log is append-only: reading it back and rewriting the whole file
 	// was both a read-modify-write race and a way to lose the previous entries.
 	if (!existsSync(logPath)) {
@@ -852,9 +869,14 @@ export function installStudioFiles(
 	}
 	appendFileSync(logPath, logEntry, "utf8");
 
+	const expectedCount = allowedAgentNames.length > 0 ? allowedAgentNames.length : 10;
+	const agentSummary = options.copyAgents
+		? `• Agentes locales: ${copiedCount} plantillas copiadas a .pi/agents/ para personalización`
+		: `• Agentes: ${expectedCount} especialistas activos desde el paquete (usa /setup eject para personalizarlos)`;
+
 	const summaryMsg = [
-		`✓ ¡Pi Game Studio instalado con éxito!`,
-		`• Agentes: ${copiedCount} agentes en .pi/agents/`,
+		`✓ ¡Pi Game Studio configurado con éxito!`,
+		agentSummary,
 		`• Motor: ${engine} (en project.yaml)`,
 		`• Dimensión: ${dimension.toUpperCase()} (en project.yaml)`,
 		`• Modelos: .pi/game-studio/models.json`,
@@ -868,8 +890,12 @@ export function installStudioFiles(
 		ctx.ui.notify(summaryMsg, "info");
 	} else {
 		console.log("");
-		console.log("" + GREEN + "✓ ¡Pi Game Studio instalado con éxito!\x1b[0m");
-		console.log(`  ${ACCENT}• Agentes:\x1b[0m    ${copiedCount} agentes en ${WHITE}.pi/agents/\x1b[0m`);
+		console.log("" + GREEN + "✓ ¡Pi Game Studio configurado con éxito!\x1b[0m");
+		if (options.copyAgents) {
+			console.log(`  ${ACCENT}• Agentes:\x1b[0m    ${copiedCount} plantillas en ${WHITE}.pi/agents/\x1b[0m (overrides locales)`);
+		} else {
+			console.log(`  ${ACCENT}• Agentes:\x1b[0m    ${expectedCount} especialistas activos desde el paquete ${DIM}(usa /setup eject para personalizarlos en .pi/agents/)${RESET}`);
+		}
 		console.log(`  ${ACCENT}• Motor:\x1b[0m      ${engine} en ${WHITE}project.yaml\x1b[0m`);
 		console.log(`  ${ACCENT}• Dimensión:\x1b[0m  ${dimension.toUpperCase()} en ${WHITE}project.yaml\x1b[0m`);
 		console.log(`  ${ACCENT}• Modelos:\x1b[0m    ${WHITE}.pi/game-studio/models.json\x1b[0m`);
@@ -936,9 +962,13 @@ export function installModelsConfig(ctx: ExtensionContext): void {
 }
 
 export function formatSetupDiagnostic(s: SetupStatus): string {
+	const agentInfo = s.agentsInstalled > 0
+		? `${s.agentsInstalled}/${s.expectedAgents} overrides locales en .pi/agents/`
+		: `${s.expectedAgents} especialistas activos desde el paquete (0 overrides en .pi/agents/)`;
+
 	return [
 		"PI GAME STUDIO — ESTADO DE INSTALACION",
-		`• Agentes instalados:  ${s.agentsInstalled}/${s.expectedAgents} para ${s.currentEngine} (.pi/agents/)`,
+		`• Agentes:             ${agentInfo}`,
 		`• Motor actual:        ${s.currentEngine}`,
 		`• Config de modelos:   ${s.hasModelsConfig ? "Presente (.pi/game-studio/models.json)" : "No encontrada"}`,
 		`• Directorio estudio:  ${s.hasGameStudioDir ? "Activo (.pi/game-studio/)" : "No creado aún"}`,

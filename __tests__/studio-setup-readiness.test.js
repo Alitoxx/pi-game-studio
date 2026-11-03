@@ -176,4 +176,46 @@ describe("Studio setup readiness", () => {
 		expect(result.isConfigured).toBe(false);
 		expect(result.missingAgents.length).toBeGreaterThan(5);
 	});
+
+	test("a project with project.yaml and no local agents is configured in package-first mode", () => {
+		const result = probe(makeProject([], { gameStudioDir: true, projectYaml: true, engine: "Godot" }));
+		expect(result.expectedAgents).toBe(10);
+		expect(result.agentsInstalled).toBe(0);
+		expect(result.isConfigured).toBe(true);
+		expect(result.engineSupported).toBe(true);
+	});
+
+	test("installStudioFiles defaults to package-first mode without writing agent templates to disk", () => {
+		const script = `
+			const fs = await import("node:fs");
+			const os = await import("node:os");
+			const path = await import("node:path");
+
+			const dir = fs.mkdtempSync(path.join(os.tmpdir(), "studio-install-pkg-"));
+			const ctx = { cwd: dir, hasUI: false };
+
+			const { installStudioFiles } = await import("./extensions/hooks/studio-setup.ts");
+
+			// Default: package-first mode
+			installStudioFiles(ctx, { engine: "Godot" });
+			const agentsDir = path.join(dir, ".pi", "agents");
+			const exists = fs.existsSync(agentsDir);
+			const agentCount = exists ? fs.readdirSync(agentsDir).filter(f => f.endsWith(".md")).length : 0;
+			if (agentCount !== 0) throw new Error("installStudioFiles must not copy agents by default, got " + agentCount);
+
+			// Eject mode: copies agents
+			installStudioFiles(ctx, { engine: "Godot", copyAgents: true });
+			const ejectedCount = fs.readdirSync(agentsDir).filter(f => f.endsWith(".md")).length;
+			if (ejectedCount !== 10) throw new Error("eject mode must copy exactly 10 agents, got " + ejectedCount);
+
+			fs.rmSync(dir, { recursive: true, force: true });
+		`;
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: repoRoot,
+				encoding: "utf8",
+				timeout: 60000,
+			});
+		}).not.toThrow();
+	});
 });

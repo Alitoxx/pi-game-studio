@@ -64,9 +64,13 @@ El idioma de cada archivo se decide por quién lo consume, no por preferencia:
 
 Consecuencia práctica: al editar un skill o una plantilla de agente no se traduce la prosa al español; al escribir documentación no se traduce al inglés. Los ejemplos de copy que muestran *qué diría* el agente a un usuario hispanohablante sí quedan en español, porque son salida de ejemplo, no instrucción.
 
-## Política de Instalación Oficial (8 Core + 1 Motor + 1 Verificador = 10 Agentes Activos)
+## Política de Resolución e Instalación Oficial (Arquitectura Package-First)
 
-El instalador (`/setup` o `/studio:setup`) despliega exactamente **10 agentes** en `.pi/agents/`:
+Pi Game Studio opera bajo la filosofía **Package-First (Zero Bloat)** idéntica a Gentle Shell:
+- **Modo Paquete por Defecto (Recomendado):** Los **10 agentes activos** (8 Core + 1 Motor activo + 1 Verificador read-only) se resuelven y despachan directamente desde el paquete `pi-game-studio`. No se requiere ni se recomienda copiar archivos a `.pi/agents/`: tus proyectos se mantienen limpios, sin código redundante en git, y reciben mejoras automáticas de roles y prompts cada vez que el paquete se actualiza.
+- **Personalización Local (`/setup eject` o `/studio:eject`):** Si deseas modificar las instrucciones, herramientas o límites de un agente para un proyecto específico, `/setup eject` copia las 10 plantillas correspondientes a `.pi/agents/`. Cualquier archivo en `.pi/agents/` actúa como override prioritario sobre las plantillas del paquete.
+
+La dotación activa para cada motor es:
 - **8 Agentes Core**: `producer`, `creative-director`, `technical-director`, `game-designer`, `gameplay-programmer`, `art-director`, `audio-director`, `qa-lead`.
 - **1 Especialista del motor activo** definido en `project.yaml`:
   - **Bevy (Rust)**: 8 + 1 + 1 = **10 agentes** (`bevy-specialist`).
@@ -187,7 +191,7 @@ Todos los agentes estructuran sus consultas y propuestas siguiendo el estándar 
 
 - Los agentes se distribuyen como plantillas de origen en `agents/*.md` (15 plantillas oficiales: 8 Core + 6 Especialistas de motor + 1 Verificador read-only).
 - **Memoria persistente (opcional, nunca implícita)**: 14 de las 15 plantillas declaran `mem_save` para que un descubrimiento sobreviva al proceso hijo; el `qa-verifier` no, porque su independencia depende de seguir siendo read-only. El paquete **no provee** memoria: la suministra un paquete externo (Engram). El runner sondea al host antes de despachar, retira la herramienta y lo registra cuando no hay proveedor, y otorga cuando no puede responder.
-- `/setup` o `/studio:setup` copia y activa los 10 agentes correspondientes (8 Core + 1 Motor activo + 1 Verificador read-only) en `.pi/agents/` en tu proyecto.
+- `/setup` o `/studio:setup` inicializa la configuración del proyecto (`project.yaml`, modelos, directorios de diseño y QA) en modo package-first. Usa `/setup eject` si deseas copiar las plantillas a `.pi/agents/` para personalizarlas.
 - `/assign-models` o `/studio:models` permite cambiar qué modelo ejecuta cada agente o nivel.
 - Gestión de paquetes Node/JS (`package.json`, `extensions/hooks`, `starters/phaser-web-2d`): usar `pnpm` (`pnpm install`, `pnpm run`) en lugar de `npm`.
 - **`schema_version` en `project.yaml`**: es un marcador de forward-compat, no un contrato. El setup lo escribe y hoy ningún consumidor lo lee, así que no codifica ninguna migración pendiente; si alguna vez hace falta, el lector entra en el mismo cambio que la migración. Lo mismo dice el comentario del propio archivo y el header que genera el setup, para que quien lea el repo no tenga que reconstruir esta decisión desde el historial.

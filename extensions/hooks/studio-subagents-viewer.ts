@@ -268,6 +268,92 @@ function renderNoTaskState(width: number): string[] {
 	];
 }
 
+export interface TaskProgressPhase {
+	name: string;
+	badge: string;
+	step: number;
+	totalSteps: number;
+	percent: number;
+	bar: string;
+	metricsText: string;
+}
+
+export function computeTaskOddPhase(task: TaskRecord): TaskProgressPhase {
+	const counts = task.toolCounts || {};
+	const readCount = (counts["read"] || 0) + (counts["find"] || 0) + (counts["grep"] || 0);
+	const writeCount = (counts["write"] || 0) + (counts["edit"] || 0);
+	const bashCount = counts["bash"] || 0;
+	const totalTools = Object.values(counts).reduce((sum, n) => sum + n, 0);
+
+	let step = 1;
+	let name = "1. Preparación";
+	let badge = "◐ EN EJECUCIÓN";
+	let percent = 10;
+
+	if (task.status === "completed") {
+		step = 4;
+		name = "4. Entrega y Recibo";
+		badge = "✓ OK";
+		percent = 100;
+	} else if (task.status === "interaction_required") {
+		step = 3;
+		name = "Pausa: Consulta Humana";
+		badge = "◑ PIDE RESPUESTA";
+		percent = 60;
+	} else if (task.status === "failed") {
+		step = bashCount > 0 ? 3 : writeCount > 0 ? 2 : 1;
+		name = "Detenido por Error";
+		badge = "✗ BLOQUEADO";
+		percent = step === 3 ? 75 : step === 2 ? 50 : 25;
+	} else if (task.status === "cancelled") {
+		step = 1;
+		name = "Cancelado";
+		badge = "○ CANCELADO";
+		percent = 0;
+	} else if (bashCount > 0) {
+		step = 3;
+		name = "3. Validación Técnica (Motor/Tests)";
+		badge = "⚡ VALIDANDO";
+		percent = 75;
+	} else if (writeCount > 0) {
+		step = 2;
+		name = "2. Implementación de Código";
+		badge = "✎ EDITANDO";
+		percent = 50;
+	} else if (readCount > 0) {
+		step = 1;
+		name = "1. Exploración e Inspección";
+		badge = "🔍 EXPLORANDO";
+		percent = 25;
+	} else if (task.latestActivity?.startsWith("pensando")) {
+		step = 1;
+		name = "1. Razonamiento y Plan";
+		badge = "💭 PENSANDO";
+		percent = 15;
+	}
+
+	const barWidth = 14;
+	const filled = Math.round((percent / 100) * barWidth);
+	const bar = "▰".repeat(filled) + "▱".repeat(barWidth - filled);
+
+	const parts: string[] = [];
+	if (totalTools > 0) parts.push(`${totalTools} herramientas`);
+	if (readCount > 0) parts.push(`${readCount} lecturas`);
+	if (writeCount > 0) parts.push(`${writeCount} cambios`);
+	if (bashCount > 0) parts.push(`${bashCount} bash`);
+	const metricsText = parts.length > 0 ? parts.join(" · ") : "Iniciando...";
+
+	return {
+		name,
+		badge,
+		step,
+		totalSteps: 4,
+		percent,
+		bar,
+		metricsText,
+	};
+}
+
 /**
  * Renders an expansive, full-screen Live Stream Console of agent execution.
  * Dedicated 100% to displaying real-time tool calls, bash outputs, thinking stream,
@@ -302,13 +388,12 @@ export function renderSubagentLiveConsoleView(
 
 	lines.push(panelTop(cardWidth - 2, `${BLUE}${headerTitle}${RESET}`, "rounded", BORDER));
 
-	// Compact 2-line header bar
-	const statusLine = `  ${statusBadge} ${role.muted("·")} ${role.muted("Modelo:")} ${BLUE}${targetTask.model || "inherit"}${RESET} ${role.muted("·")} ${role.muted("Tiempo:")} ${WHITE}${elapsedStr}${RESET} ${role.muted("·")} ${role.muted("Task:")} ${DIM}${targetTask.id}${RESET}`;
+	const phase = computeTaskOddPhase(targetTask);
+	const statusLine = `  ${statusBadge} ${role.muted("·")} ${WHITE}${phase.name}${RESET} ${role.accent(`[${phase.bar}] ${phase.percent}%`)} ${role.muted("·")} ${WHITE}${elapsedStr}${RESET}`;
 	lines.push(`${panelRow(statusLine, innerWidth + 2, BORDER)}`);
 
-	const firstTaskLine = targetTask.task.split("\n")[0]?.trim() || "";
-	const instructionLine = `  ${role.muted("Instrucción:")} ${WHITE}${truncateAnsi(firstTaskLine, innerWidth - 17)}${RESET}`;
-	lines.push(`${panelRow(instructionLine, innerWidth + 2, BORDER)}`);
+	const activityLine = `  ${role.muted("Actividad:")} ${WHITE}${phase.metricsText}${RESET} ${role.muted("·")} ${role.muted("Modelo:")} ${BLUE}${targetTask.model || "inherit"}${RESET}`;
+	lines.push(`${panelRow(activityLine, innerWidth + 2, BORDER)}`);
 
 	lines.push(panelRule(cardWidth - 2, "rounded", BORDER));
 
@@ -402,11 +487,15 @@ export function renderSubagentModalView(
 
 	const headerTitle = `INSPECTOR DE ESPECIALISTA · ${(targetTask.title || targetTask.agent).toUpperCase()}`;
 
+	const phase = computeTaskOddPhase(targetTask);
+
 	lines.push(panelTop(cardWidth - 2, `${BLUE}${headerTitle}${RESET}`, "rounded", BORDER));
 	lines.push(`${panelRow(`${LAVENDER}Detalles de Ejecución${RESET}`, innerWidth + 2, BORDER)}`);
-	lines.push(`${panelRow(`  ${role.muted("Agente:")}  ${WHITE}${targetTask.agent}${RESET} (${targetTask.title})`, innerWidth + 2, BORDER)}`);
-	lines.push(`${panelRow(`  ${role.muted("Modelo:")}  ${BLUE}${targetTask.model || "inherit"}${RESET}  ${role.muted("·  Estado:")} ${statusBadge}`, innerWidth + 2, BORDER)}`);
-	lines.push(`${panelRow(`  ${role.muted("Tiempo:")}  ${WHITE}${elapsedStr}${RESET}  ${role.muted("·  Task ID:")} ${DIM}${targetTask.id}${RESET}`, innerWidth + 2, BORDER)}`);
+	lines.push(`${panelRow(`  ${role.muted("Agente:")}    ${WHITE}${targetTask.agent}${RESET} (${targetTask.title})`, innerWidth + 2, BORDER)}`);
+	lines.push(`${panelRow(`  ${role.muted("Fase ODD:")}   ${WHITE}${phase.name}${RESET}  ${role.accent(`[${phase.bar}] ${phase.percent}%`)}`, innerWidth + 2, BORDER)}`);
+	lines.push(`${panelRow(`  ${role.muted("Actividad:")}  ${WHITE}${phase.metricsText}${RESET}`, innerWidth + 2, BORDER)}`);
+	lines.push(`${panelRow(`  ${role.muted("Tiempo:")}     ${WHITE}${elapsedStr}${RESET}  ${role.muted("·  Task ID:")} ${DIM}${targetTask.id}${RESET}`, innerWidth + 2, BORDER)}`);
+	lines.push(`${panelRow(`  ${role.muted("Modelo:")}     ${BLUE}${targetTask.model || "inherit"}${RESET}  ${role.muted("·  Estado:")} ${statusBadge}`, innerWidth + 2, BORDER)}`);
 
 	if (options?.totalTasks && options.totalTasks > 1) {
 		const currentIdx = (options.selectedIndex ?? 0) + 1;

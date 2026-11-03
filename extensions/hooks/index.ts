@@ -168,6 +168,22 @@ export default function (pi: ExtensionAPI) {
 		},
 	});
 
+	// /studio:eject — Personalización local de plantillas de agentes
+	pi.registerCommand("studio:eject", {
+		description: "[Studio] Copia las plantillas de agentes a .pi/agents/ para personalizarlas localmente",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioSetup("eject", ctx);
+		},
+	});
+
+	// /eject — Alias directo de /studio:eject
+	pi.registerCommand("eject", {
+		description: "[Studio] Copia las plantillas de agentes a .pi/agents/ para personalizarlas localmente",
+		handler: async (args: string, ctx: ExtensionContext) => {
+			await handleStudioSetup("eject", ctx);
+		},
+	});
+
 	// /studio:new — Crear nuevo juego desde plantilla o starter
 	pi.registerCommand("studio:new", {
 		description: "[Studio] Crear nuevo proyecto desde plantilla/starter (Bevy, Raylib, Godot)",

@@ -11,7 +11,8 @@ import { runGit } from "./studio-exec.ts";
 import { renderBanner, isArtEnabled, setArtEnabled } from "./banner.ts";
 import { findStudioRoot } from "./studio-root.ts";
 import { handleStudioCommand } from "./studio-command.ts";
-import { handleStudioSetup, inspectSetup } from "./studio-setup.ts";
+import { buildStudioStatusLine, handleStudioSetup, inspectSetup } from "./studio-setup.ts";
+import { listAvailableAgents } from "./studio-agent-loader.ts";
 import { handleStudioModels } from "./studio-models.ts";
 import { handleStudioStatus } from "./studio-status.ts";
 import { handleStudioAgents } from "./studio-agents.ts";
@@ -946,10 +947,8 @@ export default function (pi: ExtensionAPI) {
 							roadmapDirective = " Active Project Line: Concept & Inception phase (no concept doc or prototype yet). In this phase, do NOT suggest downstream tasks like mapping systems or defining an art bible, as those strictly require a concept first. The only valid starting actions are: 1. Brainstorm concept (/concept), 2. Write concept from user premise, or 3. Code-first prototype starter (/studio:new).";
 						}
 
-						const agentsReadyCount = setup.agentsInstalled > 0 ? setup.agentsInstalled : setup.expectedAgents;
 						event.systemPromptOptions.promptGuidelines.push(
-							`Studio Environment Status: OK. ${agentsReadyCount} agents installed and ready for engine "${setup.currentEngine}".${roadmapDirective} ` +
-							"IMPORTANT: The environment is ALREADY fully configured. Do NOT ask the user to configure or run setup again. " +
+							`${buildStudioStatusLine({ ...setup, availableAgents: listAvailableAgents(ctx.cwd) })}${roadmapDirective} ` +
 							"When communicating as or with the Producer, DO NOT ask speculative questions about where the project is at; state the current project line directly."
 						);
 					} else {

@@ -292,6 +292,62 @@ export function inspectSetup(cwd: string): SetupStatus {
 	};
 }
 
+export interface StudioStatusInput {
+	agentsInstalled: number;
+	expectedAgents: number;
+	currentEngine: string;
+	missingAgents?: string[];
+	/** Every specialist the loader can actually resolve (project overrides + package). */
+	availableAgents?: string[];
+}
+
+/**
+ * Builds the environment-status line the studio injects into the agent guidance.
+ *
+ * Two mistakes live here in sequence, and the second one is why this function
+ * reports availability instead of installation counts. First, `agentsInstalled`
+ * of 0 was reported as `expectedAgents`, so an untouched project read as fully
+ * configured. Then it was reported as "no specialists, work inline", which is
+ * the opposite error: the loader falls back to the package's `agents/` directory,
+ * so zero project overrides still leaves a complete roster available and
+ * delegation works. Local templates are overrides, not a prerequisite.
+ */
+export function buildStudioStatusLine(setup: StudioStatusInput): string {
+	const installed = Math.max(0, setup.agentsInstalled || 0);
+	const expected = setup.expectedAgents || 0;
+	const engine = setup.currentEngine || "sin motor";
+	const available = setup.availableAgents ?? [];
+
+	if (available.length === 0) {
+		return (
+			`Studio Environment Status: NO ROSTER. No specialist template is resolvable for engine "${engine}", so subagent_run cannot dispatch anything. ` +
+			"Run /setup (or /studio:setup) to install the roster; offer it through `ask_user_question`, never as a numbered text menu."
+		);
+	}
+
+	if (installed <= 0) {
+		return (
+			`Studio Environment Status: OK. ${available.length} specialist templates available for engine "${engine}", resolved from the package; this project has no local overrides in .pi/agents. ` +
+			"Delegation through subagent_run works right now - the Producer MUST delegate instead of doing specialist work inline. " +
+			"/setup only copies the templates into the project so they can be customized; it is not required for delegation."
+		);
+	}
+
+	if (installed < expected) {
+		const missing = (setup.missingAgents ?? []).slice(0, 10);
+		const missingText = missing.length > 0 ? ` Project-level overrides missing: ${missing.join(", ")}.` : "";
+		return (
+			`Studio Environment Status: PARTIAL OVERRIDES. ${installed} of ${expected} project-level templates in .pi/agents${missingText} ` +
+			`The remaining specialists still resolve from the package, so delegation works for all of them. Running /setup completes the local overrides.`
+		);
+	}
+
+	return (
+		`Studio Environment Status: OK. ${installed} project-level agents installed for engine "${engine}" and ready. ` +
+		"IMPORTANT: The environment is ALREADY fully configured. Do NOT ask the user to configure or run setup again."
+	);
+}
+
 export async function handleStudioSetup(
 	args: string,
 	ctx: ExtensionContext,

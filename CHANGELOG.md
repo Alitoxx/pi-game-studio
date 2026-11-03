@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (Roster Status)
+- **The status line lied about the roster twice, in opposite directions.** `agentsInstalled` counts templates in the project's `.pi/agents`, but the loader resolves specialists from the package's `agents/` directory and treats local files as overrides. Reporting that count as readiness produced both errors:
+  - First, `0` was substituted with `expectedAgents`, so an untouched project read as `OK. 10 agents installed and ready` — and the same paragraph ordered the agent not to ask about setup.
+  - Then the correction over-reported the gap: it announced package mode, "no specialists", "work inline". A project with zero overrides still resolves the full package roster, so that line told the Producer to absorb the work it should have delegated. Caught by the first real session that read it.
+  - `buildStudioStatusLine` now reports availability: `OK` with the resolved count (`N specialist templates available, no local overrides`), `PARTIAL OVERRIDES` (project templates incomplete while the package still covers them) and `NO ROSTER`, the only state that blocks delegation and points at `/setup`.
+  - `agents/producer.md` states the rule directly: absence of local overrides is not absence of specialists.
+
 ### Fixed (Engine Authority)
 - **The configured engine decides the compile command.** `getEngineCompileCommand` read a marker file as an engine signal before it read `project.yaml`: a single `Cargo.toml` in the project root returned `cargo check` no matter what the project was configured as, and the function's last resort was `cargo check` too, so any project whose engine could not be identified was compiled as Rust by default. A Godot project carrying a copied starter or a vendored crate paid for a Rust build it never needed.
   - `project.yaml` is now the authority: `detectProjectEngine` only accepts a marker file that confirms the configured engine, and `getEngineCompileCommand` answers from one per-engine table.

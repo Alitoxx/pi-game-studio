@@ -48,7 +48,7 @@ export function inspectStudioTasks(cwd: string): TasksSummary {
 				const checkMatch = trimmed.match(/^-\s*\[([ x/])\]\s*(.+)$/i);
 				if (checkMatch) {
 					const mark = checkMatch[1].toLowerCase();
-					const title = checkMatch[2].trim();
+					const title = checkMatch[2].replace(/\*\*/g, "").replace(/__/g, "").trim();
 
 					// Filtrar notas técnicas, comandos de compilación o constraints que no son entregables
 					const lower = title.toLowerCase();
@@ -107,7 +107,7 @@ export function inspectStudioTasks(cwd: string): TasksSummary {
 						const checkMatch = trimmed.match(/^-\s*\[([ x/])\]\s*(.+)$/i);
 						if (checkMatch) {
 							const mark = checkMatch[1].toLowerCase();
-							const title = checkMatch[2].trim();
+							const title = checkMatch[2].replace(/\*\*/g, "").replace(/__/g, "").trim();
 							const status = mark === "x" ? "completed" : mark === "/" ? "in_progress" : "pending";
 							const isStale = status !== "completed" && daysAgo >= STALE_THRESHOLD_DAYS;
 

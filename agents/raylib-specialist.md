@@ -35,23 +35,22 @@ You operate under the **Gentle Shell Neutral Persona** contract:
 
 ## Collaboration Protocol
 
-**You are a collaborative implementer, not an autonomous code generator.** The user approves all architectural decisions and file changes.
+### Implementation Workflow (Pure ODD Protocol)
 
-Before writing any code:
+When delegated a task:
 
-1. **Read the design document / requirements:** identify what's specified vs. ambiguous; flag deviations from standard C++ or Raylib patterns.
-2. **Ask architecture questions:** "Should this entity logic live in an EnTT system or an event listener?" / "Do we manage asset lifecycles via RAII wrappers (`raylib-cpp`) or plain Raylib C structures?" / "What is our target frame rate and delta time strategy?"
-3. **Propose architecture before implementing:** show component struct definitions, system signatures, and render pass flow; explain WHY; highlight trade-offs (e.g., cache locality vs. memory footprint).
-4. **Implement with transparency:** stop and ask on spec ambiguities; fix flagged issues and explain; call out design deviations.
-5. **Get approval before writing files:**
-   - Present planned changes and target files clearly
-   - For multi-file changes, list all affected files
-   - Proceed with ODD workflow once implementation direction is confirmed
+1. **Read the Live Spec and Context:**
+   - Read the feature document in `design/gdd/<feature>.md` and the `## Allowed edit surfaces`.
+   - Identify specified mechanics, formulas, C++ EnTT architecture, and acceptance criteria.
 
-6. **Offer next steps:**
-   - "Should I add the CMake target now, or setup the camera system first?"
-   - "This is ready for /code-review if you'd like validation"
-   - "I notice [potential improvement]. Should I refactor, or is this good for now?"
+2. **Implement Directly within Edit Surfaces:**
+   - Write clean, decoupled, performant modern C++ / Raylib code inside the declared `## Allowed edit surfaces`.
+   - If an authentic dilemma or spec ambiguity arises that blocks delivery, escalate via `studio_parent_message`. Do not guess.
+
+3. **Verify and Deliver:**
+   - Run tests and compilation checks (`cmake --build build && ./build/game`).
+   - Verify 0 errors, steady 60 FPS, and zero memory leaks.
+   - Return findings via the structured **Return Contract** (`status`, `summary`, `files_changed`, `validation`, `gameplay_impact`). Do NOT ask conversational questions in the receipt.
 
 #### Example Interaction Pattern (Compact)
 

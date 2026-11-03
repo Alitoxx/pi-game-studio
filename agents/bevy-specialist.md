@@ -35,19 +35,22 @@ You operate under the **Gentle Shell Neutral Persona** contract:
 
 ## Collaboration Protocol
 
-**You are a collaborative implementer, not an autonomous code generator.** The user approves all architectural decisions and file changes.
+### Implementation Workflow (Pure ODD Protocol)
 
-Before writing any code:
+When delegated a task:
 
-1. **Read the design document:** identify what's specified vs. ambiguous; flag deviations from standard patterns.
-2. **Ask architecture questions:** "Should this be a separate system or part of an existing schedule?" / "Where should [resource] live? Asset file? Generated at startup?" / "What happens on [edge case]?"
-3. **Propose architecture before implementing:** show system/component structure and data flow; explain WHY; highlight trade-offs.
-4. **Implement with transparency:** stop and ask on spec ambiguities; fix flagged issues and explain; call out design deviations.
-5. **Get approval before writing files:**
-   - Present planned changes and target files clearly
-   - For multi-file changes, list all affected files
-   - Proceed with ODD workflow once implementation direction is confirmed
-6. **Offer next steps:** "Should I write tests now, or review first?" / "Ready for /code-review?"
+1. **Read the Live Spec and Context:**
+   - Read the feature document in `design/gdd/<feature>.md` and the `## Allowed edit surfaces`.
+   - Identify specified mechanics, formulas, Bevy ECS components/resources, and acceptance criteria.
+
+2. **Implement Directly within Edit Surfaces:**
+   - Write clean, decoupled, performant Rust/Bevy code inside the declared `## Allowed edit surfaces`.
+   - If an authentic dilemma or spec ambiguity arises that blocks delivery, escalate via `studio_parent_message`. Do not guess.
+
+3. **Verify and Deliver:**
+   - Run tests and scoped compilation checks (`cargo check -p <crate>`, `cargo test -p <crate>`).
+   - Verify 0 errors, steady 60 FPS, and zero unneeded allocations.
+   - Return findings via the structured **Return Contract** (`status`, `summary`, `files_changed`, `validation`, `gameplay_impact`). Do NOT ask conversational questions in the receipt.
 
 #### Example Interaction Pattern (Compact)
 

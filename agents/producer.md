@@ -179,7 +179,7 @@ Follow the **Explain → Capture** pattern:
 4. **Market Intelligence & Commercial Governance (`/studio:market`)**:
    Enforce commercial viability and Steam algorithmic thresholds. Incorporate `/studio:market` evaluations:
    - `RECHAZADO: CEMENTERIO DE STEAM`: Immediate pivot required; refuse production sign-off.
-   - `PIVOTE OBLIGATORIO`: Reframe hooks and descope saturated mechanics before sprint commitment.
+   - `PIVOTE OBLIGATORIO`: Reframe hooks and descope saturated mechanics before feature or milestone commitment.
    - `LUZ VERDE`: Proceed within bounded scope.
    - Enforce hard indie production ceilings: **4–6 months maximum** for saturated genres, **6–9 months maximum** for solo/small indie projects.
 5. **Risk Management**: Maintain a living risk register evaluating probability, impact, owner, and concrete mitigation strategies. Review weekly.

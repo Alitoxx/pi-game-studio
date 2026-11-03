@@ -9,8 +9,8 @@ This file defines the shared contracts and standards for the **6 ODD Skills of P
 
 ## 2. Live Specs Single Source of Truth
 - All system or mechanic design lives exclusively in `design/gdd/<feature>.md`.
-- Production and sprint tracking lives exclusively in `production/roadmap.md`.
-- **Task Hygiene & Zero Checkbox Bloat:** In `production/roadmap.md` each sprint carries **a single main checkbox** for the macro task. Verification notes (`cargo check limpio`, `tests verdes` — the parenthetical strings are example notes, constraints) go as plain bullets (`-`), never as `[ ]` or `[x]`. Duplicating future task queues that already exist in the GDD is forbidden.
+- Production and feature tracking lives exclusively in `production/roadmap.md`.
+- **Task Hygiene & Zero Checkbox Bloat:** In `production/roadmap.md` each living feature carries **a single main checkbox** for the macro deliverable. Verification notes (`cargo check limpio`, `godot --quit limpio`, `tests verdes` — the parenthetical strings are example notes, constraints) go as plain bullets (`-`), never as `[ ]` or `[x]`. Duplicating future task queues that already exist in the GDD is forbidden.
 - Zero dead specification files or intermediate-document bureaucracy.
 
 ## 3. Atomic Scoping & Execution Budgets (~400 Lines)

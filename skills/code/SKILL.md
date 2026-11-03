@@ -39,7 +39,7 @@ When `/code <feature>` is invoked (or `/code review`):
 
 ### 3. Per-Engine Build & Test Verification
 Validation and specialist routing per active engine (prioritize fast, scoped validation):
-- **Godot** (`godot-specialist`): `godot --headless --check-only`
+- **Godot** (`godot-specialist`): `godot --headless --quit`
 - **Unity** (`unity-specialist`): `Unity -batchmode -runTests` or C# Roslyn analysis
 - **Unreal** (`unreal-specialist`): `Build.bat` / `UnrealEditor-Cmd`
 - **Bevy** (`bevy-specialist`): `cargo check` for the project, or `cargo test -p <crate>` for logic-decoupled crates (e.g. `radio-core`). Avoid the full root `cargo test` if it recompiles Bevy with heavy debug profiles.

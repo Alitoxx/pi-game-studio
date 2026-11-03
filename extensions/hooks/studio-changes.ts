@@ -140,16 +140,23 @@ export function getFileDiff(cwd: string, filePath: string): string {
 }
 
 export function getGitStatus(cwd: string): FileChange[] {
-	const stdout = runGit(["status", "--porcelain"], { cwd });
+	// Porcelain output is whitespace-significant: a worktree-only change begins with
+	// a space, so it must not be trimmed by the shared exec door.
+	const stdout = runGit(["status", "--porcelain"], { cwd, trim: false });
 	if (stdout === null) return [];
 
 	try {
 		const diffStats = getGitDiffStats(cwd);
-		const lines = stdout.trim().split("\n").filter(Boolean);
+		// Never trim the whole output: porcelain v1 prefixes each line with two status
+		// columns plus a space, and a worktree-only change starts with a space. Trim
+		// only the trailing newline, or the first entry loses its first character.
+		const lines = stdout.replace(/\n+$/, "").split("\n").filter(Boolean);
 
 		return lines.map((line) => {
 			const status = line.slice(0, 2).trim();
-			const filePath = line.slice(3).trim();
+			const rawPath = line.slice(3);
+			// Renames and copies carry `old -> new`; the tracked path is the destination.
+			const filePath = (rawPath.includes(" -> ") ? rawPath.split(" -> ").pop()! : rawPath).trim();
 			const diff = diffStats.get(filePath);
 
 			let additions = diff?.additions;

@@ -375,4 +375,33 @@ describe("Studio HUD and Live Tasks Widget", () => {
 			});
 		}).not.toThrow();
 	});
+
+	test("extractCleanMission extracts substantive goals from boilerplate agent prompts", () => {
+		const script = `
+			const { extractCleanMission } = await import("./extensions/hooks/studio-subagents-viewer.ts");
+
+			const sample1 = "Eres el game-designer del estudio Pi Game Studio. Proyecto: \\"Volga 1942: Puesto de Mando\\" (Godot 4.7.2, GDScript).\\nTarea: Diseñar sistema de teletipo T4";
+			if (extractCleanMission(sample1) !== "Diseñar sistema de teletipo T4") {
+				throw new Error("failed to extract task: " + extractCleanMission(sample1));
+			}
+
+			const sample2 = "Eres el lead-programmer del estudio.\\nDirectorio: /path/to/repo\\nObjetivo: Implementar autoload de radio";
+			if (extractCleanMission(sample2) !== "Implementar autoload de radio") {
+				throw new Error("failed to extract objetivo: " + extractCleanMission(sample2));
+			}
+
+			const sample3 = "Diseñar combate naval sin preámbulos";
+			if (extractCleanMission(sample3) !== "Diseñar combate naval sin preámbulos") {
+				throw new Error("failed on plain text: " + extractCleanMission(sample3));
+			}
+		`;
+		const { execFileSync } = require("child_process");
+		expect(() => {
+			execFileSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+				cwd: path.join(__dirname, ".."),
+				encoding: "utf8",
+				timeout: 60000,
+			});
+		}).not.toThrow();
+	});
 });

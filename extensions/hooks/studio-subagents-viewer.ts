@@ -354,6 +354,22 @@ export function computeTaskOddPhase(task: TaskRecord): TaskProgressPhase {
 	};
 }
 
+export function extractCleanMission(raw: string): string {
+	if (!raw) return "";
+	const lines = raw.split("\n").map((l) => l.trim()).filter(Boolean);
+	for (const line of lines) {
+		const match = line.match(/^(?:Tarea|Task|Objetivo|Misión|Mission):\s*(.*)/i);
+		if (match && match[1]) {
+			return match[1].trim();
+		}
+	}
+	const substantive = lines.find((l) => !/^Eres el [a-z0-9_-]+ del estudio/i.test(l) && !/^Directorio:/i.test(l));
+	if (substantive) {
+		return substantive.replace(/^Proyecto:\s*["'][^"']+["']\s*\(.*?\)\.?\s*/i, "").trim();
+	}
+	return lines[0] || "";
+}
+
 /**
  * Renders an expansive, full-screen Live Stream Console of agent execution.
  * Dedicated 100% to displaying real-time tool calls, bash outputs, thinking stream,
@@ -389,17 +405,29 @@ export function renderSubagentLiveConsoleView(
 	lines.push(panelTop(cardWidth - 2, `${BLUE}${headerTitle}${RESET}`, "rounded", BORDER));
 
 	const phase = computeTaskOddPhase(targetTask);
-	const statusLine = `  ${statusBadge} ${role.muted("·")} ${WHITE}${phase.name}${RESET} ${role.accent(`[${phase.bar}] ${phase.percent}%`)} ${role.muted("·")} ${WHITE}${elapsedStr}${RESET}`;
-	lines.push(`${panelRow(statusLine, innerWidth + 2, BORDER)}`);
+	const shortModel = targetTask.model && targetTask.model !== "inherit"
+		? targetTask.model.split("/").pop() || targetTask.model
+		: "inherit";
 
-	const activityLine = `  ${role.muted("Actividad:")} ${WHITE}${phase.metricsText}${RESET} ${role.muted("·")} ${role.muted("Modelo:")} ${BLUE}${targetTask.model || "inherit"}${RESET}`;
-	lines.push(`${panelRow(activityLine, innerWidth + 2, BORDER)}`);
+	// Fila 1: Estado, barra de avance, fase, tiempo y modelo
+	const statusLine = `  ${statusBadge} ${role.accent(`[${phase.bar}] ${phase.percent}%`)} ${role.muted("·")} ${WHITE}${phase.name}${RESET} ${role.muted("·")} ${WHITE}${elapsedStr}${RESET} ${role.muted("·")} ${BLUE}${shortModel}${RESET}`;
+	lines.push(`${panelRow(truncateAnsi(statusLine, innerWidth), innerWidth + 2, BORDER)}`);
+
+	// Fila 2: Misión sustantiva (limpia de boilerplate)
+	const cleanMission = extractCleanMission(targetTask.task);
+	const missionLine = `  ${role.muted("Misión:")}    ${WHITE}${truncateAnsi(cleanMission, innerWidth - 14)}${RESET}`;
+	lines.push(`${panelRow(missionLine, innerWidth + 2, BORDER)}`);
+
+	// Fila 3: Telemetría de herramientas y última actividad viva
+	const activeAction = targetTask.latestActivity ? ` ${role.muted("· Última:")} ${targetTask.latestActivity}` : "";
+	const activityLine = `  ${role.muted("Actividad:")} ${WHITE}${phase.metricsText}${RESET}${activeAction}`;
+	lines.push(`${panelRow(truncateAnsi(activityLine, innerWidth), innerWidth + 2, BORDER)}`);
 
 	lines.push(panelRule(cardWidth - 2, "rounded", BORDER));
 
-	// Chrome count: 4 top lines + 2 bottom lines = 6
+	// Chrome count: 5 top lines + 2 bottom lines = 7
 	const requestedHeight = height ? Math.max(16, height) : 24;
-	const availableRows = Math.max(4, requestedHeight - 6);
+	const availableRows = Math.max(4, requestedHeight - 7);
 
 	const allLogs = withDroppedMarker(
 		targetTask,
@@ -506,10 +534,8 @@ export function renderSubagentModalView(
 
 	// Panel 1: Instruction / Prompt
 	lines.push(`${panelRow(`${LAVENDER}Instrucción Asignada${RESET}`, innerWidth + 2, BORDER)}`);
-	const taskLines = targetTask.task.split("\n").slice(0, 3);
-	for (const tl of taskLines) {
-		lines.push(`${panelRow(`  ${WHITE}${truncateAnsi(tl.trim(), innerWidth - 4)}${RESET}`, innerWidth + 2, BORDER)}`);
-	}
+	const cleanMission = extractCleanMission(targetTask.task);
+	lines.push(`${panelRow(`  ${WHITE}${truncateAnsi(cleanMission, innerWidth - 4)}${RESET}`, innerWidth + 2, BORDER)}`);
 	lines.push(`${panelRow("", innerWidth + 2, BORDER)}`);
 
 	// Prepare results or error lines

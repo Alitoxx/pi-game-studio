@@ -679,7 +679,7 @@ export class StudioAgentsRunner {
 				`files_changed:`,
 				`  - "<path_to_file>"`,
 				`validation:`,
-				`  - "<exact command>: <observed result>" # e.g. "godot --headless --check-only: 0 errors" (or structural: <property>: <result> if no bash)`,
+				`  - "<exact command>: <observed result>" # e.g. "godot --headless --quit: 0 errors" (or structural: <property>: <result> if no bash)`,
 				`gameplay_impact:`,
 				`  - "<game feel, latency, memory allocations, or trade-offs>"`,
 				`\`\`\``,

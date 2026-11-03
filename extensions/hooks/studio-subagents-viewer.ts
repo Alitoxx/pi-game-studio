@@ -337,9 +337,9 @@ export function computeTaskOddPhase(task: TaskRecord): TaskProgressPhase {
 	const bar = "▰".repeat(filled) + "▱".repeat(barWidth - filled);
 
 	const parts: string[] = [];
-	if (totalTools > 0) parts.push(`${totalTools} herramientas`);
-	if (readCount > 0) parts.push(`${readCount} lecturas`);
-	if (writeCount > 0) parts.push(`${writeCount} cambios`);
+	if (totalTools > 0) parts.push(`${totalTools} ${totalTools === 1 ? "herramienta" : "herramientas"}`);
+	if (readCount > 0) parts.push(`${readCount} ${readCount === 1 ? "lectura" : "lecturas"}`);
+	if (writeCount > 0) parts.push(`${writeCount} ${writeCount === 1 ? "cambio" : "cambios"}`);
 	if (bashCount > 0) parts.push(`${bashCount} bash`);
 	const metricsText = parts.length > 0 ? parts.join(" · ") : "Iniciando...";
 

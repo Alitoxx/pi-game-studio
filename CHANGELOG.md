@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (Command Output)
+- **`/studio:profile` printed nothing outside the TUI.** The report was handed to `ctx.ui.notify` as its only channel, and the process sample ran in an unawaited callback, so a session without UI (`--print`, RPC child, script) got no report, no error and no usage — and a UI session got the report out of band after the command had already resolved. It now awaits the sample and prints to stdout when there is no UI, keeping `notify` behind the house `ctx.hasUI` guard. Found by sweeping all thirty command handlers against a throwaway project: it was the only one that produced no output.
+
 ### Fixed (Roster Status)
 - **The status line lied about the roster twice, in opposite directions.** `agentsInstalled` counts templates in the project's `.pi/agents`, but the loader resolves specialists from the package's `agents/` directory and treats local files as overrides. Reporting that count as readiness produced both errors:
   - First, `0` was substituted with `expectedAgents`, so an untouched project read as `OK. 10 agents installed and ready` — and the same paragraph ordered the agent not to ask about setup.

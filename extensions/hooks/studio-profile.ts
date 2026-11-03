@@ -83,34 +83,44 @@ export async function handleStudioProfile(args: string, ctx: ExtensionContext): 
 	const studioRoot = findStudioRoot(ctx.cwd) || ctx.cwd;
 	const budget = auditPerformanceBudgets(studioRoot);
 
-	// Quick sample of current processes
-	exec("ps aux | grep -iE 'godot|bevy|raylib|main' | grep -v grep | head -n 3", (err, stdout) => {
-		const metrics = measurePerfMetrics(stdout || "", budget);
-		setActivePerfMetrics(metrics);
-
-		const memoryDisplay = metrics.memoryMb === null ? "n/d (sin proceso del juego)" : `${metrics.memoryMb} MB`;
-		const fpsDisplay = metrics.fps === null ? "n/d (el juego no reporta telemetría)" : `${metrics.fps} FPS`;
-		const statusDisplay =
-			metrics.status === "OK"
-				? "DENTRO DE PRESUPUESTO"
-				: metrics.status === "UNKNOWN"
-					? "SIN MEDICIÓN"
-					: "ALERTA DE RENDIMIENTO";
-
-		const report = [
-			"LIVE PERFORMANCE & BUDGET TRACKER",
-			"──────────────────────────────────────────────",
-			`Presupuesto FPS:   ${budget.targetFps} FPS (${budget.maxFrameTimeMs}ms por frame)`,
-			`Presupuesto Mem:   ${budget.maxMemoryMb} MB (Actual: ${memoryDisplay})`,
-			`FPS medido:        ${fpsDisplay}`,
-			`Estado General:    ${statusDisplay}`,
-		];
-
-		if (metrics.alerts.length > 0) {
-			report.push("──────────────────────────────────────────────");
-			metrics.alerts.forEach((a) => report.push(`[!] ${a}`));
-		}
-
-		ctx.ui?.notify?.(report.join("\n"), metrics.status === "OK" ? "info" : "warning");
+	// The sample is awaited: the command must not resolve before it has measured
+	// anything, and its report must exist by the time it returns.
+	const processSample = await new Promise<string>((resolve) => {
+		exec("ps aux | grep -iE 'godot|bevy|raylib|main' | grep -v grep | head -n 3", (err, stdout) => {
+			resolve(err ? "" : stdout || "");
+		});
 	});
+
+	const metrics = measurePerfMetrics(processSample, budget);
+	setActivePerfMetrics(metrics);
+
+	const memoryDisplay = metrics.memoryMb === null ? "n/d (sin proceso del juego)" : `${metrics.memoryMb} MB`;
+	const fpsDisplay = metrics.fps === null ? "n/d (el juego no reporta telemetría)" : `${metrics.fps} FPS`;
+	const statusDisplay =
+		metrics.status === "OK"
+			? "DENTRO DE PRESUPUESTO"
+			: metrics.status === "UNKNOWN"
+				? "SIN MEDICIÓN"
+				: "ALERTA DE RENDIMIENTO";
+
+	const report = [
+		"LIVE PERFORMANCE & BUDGET TRACKER",
+		"──────────────────────────────────────────────",
+		`Presupuesto FPS:   ${budget.targetFps} FPS (${budget.maxFrameTimeMs}ms por frame)`,
+		`Presupuesto Mem:   ${budget.maxMemoryMb} MB (Actual: ${memoryDisplay})`,
+		`FPS medido:        ${fpsDisplay}`,
+		`Estado General:    ${statusDisplay}`,
+	];
+
+	if (metrics.alerts.length > 0) {
+		report.push("──────────────────────────────────────────────");
+		metrics.alerts.forEach((a) => report.push(`[!] ${a}`));
+	}
+
+	const text = report.join("\n");
+	if (ctx.hasUI && typeof (ctx.ui as any)?.notify === "function") {
+		ctx.ui.notify(text, metrics.status === "OK" ? "info" : "warning");
+	} else {
+		console.log(`\n${text}\n`);
+	}
 }

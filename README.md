@@ -51,7 +51,9 @@ En lugar de mantener un arnés paralelo o exigir documentos de diseño intermedi
 Instala el paquete directamente en Pi desde GitHub:
 
 ```bash
-pi install git+https://github.com/Alitoxx/pi-game-studio.git
+pi install https://github.com/Alitoxx/pi-game-studio
+# o fijado a una versión:
+pi install git:github.com/Alitoxx/pi-game-studio@v2.0.0
 ```
 
 O desde una copia local si clonaste el repositorio:

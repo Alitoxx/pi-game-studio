@@ -4,42 +4,49 @@ description: "Trigger: Godot, Godot 4, GDScript, .tscn, .tres, project.godot, Ch
 license: MIT
 metadata:
   author: Alitoxx
-  version: "2.0"
+  version: "2.1"
 ---
 
 ## Activation Contract
 
-Activate when working in a Godot 4.x project (`project.godot`, `.gd`, `.tscn`, `.tres`, `.gdshader`). Do not activate for Godot 3 legacy codebases without adapting annotations.
+Activate when working in a Godot 4.x project (`project.godot`, `.gd`, `.tscn`, `.tres`, `.gdshader`). Do not use Godot 3 syntax under any circumstance.
 
 ## Hard Rules
 
-- **Strict Static Typing**: Write explicitly typed GDScript (`var speed: float = 240.0`, `func apply_damage(amount: int) -> void:`, and typed signal callbacks `func _on_body_entered(body: Node2D) -> void:`).
-- **Composition Over Inheritance**: Build entities from focused component nodes (`HealthComponent`, `HitboxComponent`, `StateMachine`) rather than deep script inheritance chains.
-- **Signal Up, Call Down**: Parents call child methods directly; children emit typed `signal` events upward or via an Autoload `SignalBus`. Cache node references with `@onready` or `@export`—never call `get_node()` or `$` inside `_process`/`_physics_process`.
+- **Banned Godot 3 Hallucinations (NEVER write the left column)**:
+  - `KinematicBody2D` / `KinematicBody` -> Always use `CharacterBody2D` / `CharacterBody3D`.
+  - `velocity = move_and_slide(velocity, Vector2.UP)` -> Set `velocity` property, then call `move_and_slide()` with **zero arguments**.
+  - `Sprite` / `Position2D` / `Spatial` -> Always use `Sprite2D`, `Marker2D`, `Node3D`.
+  - `yield(t, "timeout")` -> Always use `await get_tree().create_timer(1.0).timeout`.
+  - `export var` / `onready var` -> Always use `@export var` / `@onready var`.
+  - `connect("sig", self, "_fn")` -> Always use callable syntax `sig.connect(_fn)`.
+  - `scene.instance()` -> Always use `scene.instantiate()`.
+  - `Tween.new()` node -> Always use `create_tween()`.
+  - `PhysicsRayQueryParameters2D.create(from, to, mask, [self])` -> `exclude` requires `Array[RID]`, so always pass `[get_rid()]`, never `[self]`.
+- **Strict Static Typing & Composition**: Write explicitly typed GDScript (`var speed: float = 240.0`, `func _on_body_entered(body: Node2D) -> void:`). Compose scenes from child component nodes; follow **Call Down, Signal Up** (never hardcode brittle upward paths like `get_parent().get_node("../UI")`).
 - **Custom Resource (`.tres`) Serialization Contract**:
-  - Define data assets as top-level scripts (`class_name WeaponStats extends Resource`). Never define a serialized `Resource` as an inner `class` inside a `Node` script, or `.tres` deserialization will fail.
-  - Every parameter in `Resource._init()` MUST declare a default value (`func _init(p_damage: int = 0) -> void:`) so the Godot Inspector and loader can instantiate it cleanly.
-- **Physics & Rendering Discipline**: Run `move_and_slide()` and raycasts in `_physics_process(delta: float)`. `preload()` scenes at init, pool projectiles, use `MultiMeshInstance2D/3D` for crowds, and attach `VisibleOnScreenNotifier2D/3D` for off-screen culling.
-- **Headless SceneTree Probe Contract**: Any headless test script run with `godot --headless -s` MUST extend `SceneTree`, enforce a frame watchdog (`MAX_FRAMES`) in `_process()`, and call `quit(0)` or `quit(1)` explicitly with a bounded CLI timeout.
+  - Define custom resources as top-level scripts (`class_name WeaponStats extends Resource`), never as an inner `class` inside a `Node` script.
+  - Every parameter in `Resource._init()` MUST declare a default value (`func _init(p_damage: int = 0) -> void:`) so the Inspector and `.tres` loader can instantiate it.
+- **Physics vs Render Loop**: Run `move_and_slide()`, `move_and_collide()`, and raycasts strictly inside `_physics_process(delta: float)`, never inside `_process()`.
 
 ## Decision Gates
 
 | Situation | Action |
 | --- | --- |
-| Shared tuning data across scenes/entities | Create a top-level `class_name ... extends Resource` (`.tres`) with default `_init` args |
-| Visual hit-flash, outline, or distortion effect | Write a `.gdshader` (`canvas_item` or `spatial`) with `uniform` parameters instead of CPU loops |
-| High-frequency spawning (bullets, particles, debris) | Pre-allocate a node pool in `_ready()` and toggle processing/visibility instead of `queue_free()` |
-| Verifying changes from CLI | Run `godot --headless --editor --quit` (or `godot --headless --quit`) and headless `SceneTree` probes |
+| Validating a single edited GDScript file | Run `godot --headless --path . --check-only --script res://path/to/file.gd` |
+| Smoke-testing the main scene from CLI | Run `godot --headless --path . --quit-after 120` and grep output for `SCRIPT ERROR` or `Parse Error` |
+| Custom headless test script (`-s`) | Extend `SceneTree`, enforce a frame watchdog in `_process()`, and call `quit(0)` / `quit(1)` |
+| Exporting to Web / itch.io | Use the `Compatibility` renderer, GDScript (not C#), and disable `Thread Support` to avoid `SharedArrayBuffer` header blocks |
 
 ## Execution Steps
 
-1. Inspect `project.godot` for input actions, autoloads, and collision layer names.
-2. Implement typed GDScript/C# modules and compose scenes (`.tscn`) and resources (`.tres`).
-3. Verify zero parse/import errors via `godot --headless --quit` and execute applicable headless `SceneTree` test scripts.
+1. Inspect `project.godot` for Godot version, input actions, autoloads, and collision layers.
+2. Implement typed GDScript modules, scenes (`.tscn`), and resources (`.tres`) with zero Godot 3 syntax.
+3. Run `godot --headless --path . --check-only --script <script>` or `godot --headless --path . --quit-after 60` and verify zero `SCRIPT ERROR` / `Parse Error` lines in stdout/stderr (do not trust exit code `0` alone).
 
 ## Output Contract
 
 Return:
 - Modified `.gd`, `.tscn`, `.tres`, or `.gdshader` paths.
-- Output and exit code of `godot --headless` verification.
+- Exact `godot --headless` command run and confirmation that zero `SCRIPT ERROR` or `Parse Error` lines appeared.
 - Any new input actions or collision layers registered in `project.godot`.

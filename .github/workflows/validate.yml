@@ -3,133 +3,50 @@ name: Validate
 on:
   push:
     branches: [main, master]
-  # No base-branch filter: a stacked pull request targets another feature
-  # branch, and filtering by base left those with no CI at all.
   pull_request:
 
 jobs:
   validate:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v7
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@v4
         with:
-          node-version: 24
-          cache: 'pnpm'
+          node-version: 22
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run tests
-        run: pnpm test
-
-      # The hooks ship to users and jest runs with --experimental-strip-types,
-      # which erases types without checking them. This step is the only thing that
-      # verifies them, so it must fail the job when it fails.
-      - name: Type-check the hooks extension
-        run: pnpm exec tsc -p extensions/hooks/tsconfig.json --noEmit
-
-      - name: Validate package.json
+      - name: Validate package.json and skills
         run: |
-          node -e "
-            const pkg = require('./package.json');
-            assert(pkg.keywords.includes('pi-package'), 'missing pi-package keyword');
-            assert(pkg.pi?.skills, 'missing pi.skills');
-            assert(!pkg.pi?.prompts, 'pi.prompts must stay retired (odd/tasks/retire-prompts-layer.md)');
-            assert(pkg.pi?.extensions, 'missing pi.extensions');
-            console.log('✅ package.json valid');
-            function assert(condition, msg) { if (!condition) { console.error('❌', msg); process.exit(1); } }
-          "
+          node -e '
+            const fs = require("fs");
+            const path = require("path");
+            const assert = require("assert");
 
-      - name: Validate agent frontmatter
-        run: |
-          for f in agents/*.md; do
-            name=$(basename "$f" .md)
-            if ! head -20 "$f" | grep -q 'model: inherit'; then
-              echo "❌ $name missing model: inherit"
-              exit 1
-            fi
-            if head -20 "$f" | grep -qE 'model: (opus|sonnet|haiku)'; then
-              echo "❌ $name has Claude model residual"
-              exit 1
-            fi
-            echo "✅ $name"
-          done
-          echo "All $(( $(ls agents/*.md | wc -l) )) agents valid"
+            const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+            assert(pkg.keywords.includes("pi-package"), "missing pi-package keyword");
+            assert(Array.isArray(pkg.pi?.skills) && pkg.pi.skills.includes("./skills"), "missing pi.skills");
+            assert(!pkg.pi?.extensions, "extensions must stay retired");
+            assert(!pkg.pi?.prompts, "prompts must stay retired");
 
-      - name: Validate skill SKILL.md files
-        run: |
-          for d in skills/*/; do
-            [[ "$d" == *"test-results"* || "$d" == *"test-rubrics"* ]] && continue
-            skill=$(basename "$d")
-            [[ "$skill" == _* ]] && continue
-            if [ ! -f "${d}SKILL.md" ]; then
-              echo "❌ $skill missing SKILL.md"
-              exit 1
-            fi
-            if head -20 "${d}SKILL.md" | grep -qE 'model: (opus|sonnet|haiku)'; then
-              echo "❌ $skill has Claude model residual"
-              exit 1
-            fi
-            echo "✅ $skill"
-          done
-          echo "All $( ls -d skills/*/ | grep -v '/_' | wc -l | tr -d ' ' ) skills valid"
+            const expected = [
+              "gamedev-bevy",
+              "gamedev-core",
+              "gamedev-godot",
+              "gamedev-phaser",
+              "gamedev-raylib",
+              "gamedev-unity",
+              "gamedev-unreal"
+            ];
+            const dirs = fs.readdirSync("skills").sort();
+            assert.deepStrictEqual(dirs, expected, "skill directory mismatch");
 
-      - name: Validate assign-models.js
-        run: |
-          output=$(node scripts/assign-models.js --dry-run --tier '{
-            "director": "anthropic/claude-sonnet-4",
-            "workhorse": "openai/gpt-4o",
-            "lightweight": "ollama/llama3.2"
-          }' 2>&1)
-          echo "$output"
-          echo "$output" | grep -q "Summary:" || { echo "❌ assign-models.js produced no summary"; exit 1; }
-          echo "✅ assign-models.js runs clean"
-
-      - name: Validate models.default.json
-        run: |
-          node -e "
-            const m = require('./models.default.json');
-            const tiers = ['director', 'workhorse', 'lightweight'];
-            // The manifest names the three tiers and assigns no model of its own: a
-            // concrete id belongs to a provider the package does not control, and an id
-            // that does not resolve makes the child return empty, which the runner then
-            // reports as a return-contract violation — a broken agent that never was.
-            const keys = Object.keys(m);
-            const expected = [...tiers].sort();
-            const actual = [...keys].sort();
-            // AGENTS.md documents the key set: tiers only, no per-agent keys.
-            if (JSON.stringify(actual) !== JSON.stringify(expected)) {
-              console.error('❌ models.default.json keys drifted');
-              console.error('  expected:', expected.join(', '));
-              console.error('  actual:  ', actual.join(', '));
-              process.exit(1);
+            for (const dir of dirs) {
+              const skillPath = path.join("skills", dir, "SKILL.md");
+              assert(fs.existsSync(skillPath), "missing " + skillPath);
+              const content = fs.readFileSync(skillPath, "utf8");
+              const match = content.match(/^---\nname:\s*(\S+)\ndescription:\s*"([^"]+)"\n---/);
+              assert(match && match[1] === dir && match[2].length > 10, "invalid frontmatter in " + skillPath);
             }
-            for (const key of keys) {
-              const value = typeof m[key] === 'string' ? m[key].trim() : m[key];
-              if (typeof value !== 'string' || value.length === 0) {
-                console.error('❌ empty model for key', key);
-                process.exit(1);
-              }
-              if (value !== 'inherit' && !/^[^/\s]+\/\S+$/.test(value)) {
-                console.error('❌ model for key', key, 'is neither inherit nor provider/model:', value);
-                process.exit(1);
-              }
-            }
-            console.log('✅ models.default.json names the documented key set:', keys.join(', '));
-          "
-
-
-      - name: Check file count consistency
-        run: |
-          AGENTS=$(ls -1 agents/*.md | wc -l | tr -d ' ')
-          SKILLS=$(ls -d skills/*/ | wc -l | tr -d ' ')
-          PROMPTS=$(find prompts -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
-          echo "📊 Agents: $AGENTS | Skills: $SKILLS | Templates: $PROMPTS"
-          [ "$AGENTS" = "15" ] || { echo "❌ Expected 15 agents (8 core + 6 engine specialists + 1 read-only verifier), got $AGENTS"; exit 1; }
-          [ "$PROMPTS" = "0" ] || { echo "❌ Expected 0 templates (layer retired), got $PROMPTS"; exit 1; }
+            console.log("All 7 Gentle Shell gamedev skills validated.");
+          '

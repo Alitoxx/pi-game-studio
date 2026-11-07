@@ -1,8 +1,0 @@
-title: "Godot 2D Character Starter"
-engine: "godot"
-genre: "2d-adventure"
-platforms:
-  - "pc"
-  - "mobile"
-  - "web"
-language: "es"

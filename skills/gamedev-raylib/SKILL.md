@@ -1,33 +1,43 @@
 ---
 name: gamedev-raylib
-description: "Raylib C/C++ (C++17/20 & EnTT ECS) game development for Gentle Shell. Trigger: Raylib, CMakeLists.txt with raylib, EnTT, rlgl, GLSL 330 shaders in C/C++."
+description: "Trigger: Raylib, C++ game, CMakeLists.txt with raylib, EnTT ECS, rlgl, GLSL 330 shaders, rlImGui. Modern C++17/20 Raylib and EnTT game engineering."
+license: MIT
+metadata:
+  author: Alitoxx
+  version: "2.0"
 ---
 
-# Raylib & Modern C++ (EnTT) Game Engineering
+## Activation Contract
 
-Apply these standards whenever working in a Raylib C or C++ project.
+Activate when working in a C or C++ project using Raylib (`raylib.h`, `CMakeLists.txt` with `raylib`, `entt`).
 
-## 1. Architecture & Memory Management
+## Hard Rules
 
-- **RAII for GPU/Audio Resources**: Wrap `Texture2D`, `Shader`, `Sound`, `Music`, and `RenderTexture2D` in move-only C++ RAII structs (or a centralized `ResourceManager`) that automatically call `UnloadTexture`, `UnloadShader`, etc. in their destructor, strictly after `InitWindow` and before `CloseWindow`.
-- **Fixed-Timestep Accumulator Loop**: Decouple simulation from rendering:
-  - Accumulate `GetFrameTime()` clamped to a safe maximum (e.g., `0.25f`).
-  - Step physics and gameplay in fixed `dt = 1.0f / 60.0f` increments.
-  - Render between `BeginDrawing()` and `EndDrawing()` using interpolated transforms.
-- **Cache-Friendly EnTT ECS**: When using `entt::registry`, keep components as plain POD structs and iterate with `registry.view<const Velocity, Position>().each(...)`. Never allocate heap memory (`new`, `malloc`, unreserved `std::vector`) inside per-frame system loops.
+- **RAII GPU & Audio Resource Safety**: Wrap `Texture2D`, `Shader`, `Sound`, `Music`, and `RenderTexture2D` in move-only C++ RAII handles (or a central `ResourceManager`) that call `UnloadTexture`, `UnloadShader`, `UnloadRenderTexture`, etc. before `CloseWindow()`. Never load GPU resources before `InitWindow()`.
+- **Fixed-Timestep Accumulator Loop**: Clamp `GetFrameTime()` (max `0.25f`), step physics/simulation in fixed `dt = 1.0f / 60.0f` increments, and render between `BeginDrawing()` and `EndDrawing()`.
+- **RenderTexture & Camera Discipline**:
+  - Perform off-screen rendering inside `BeginTextureMode(target)` / `EndTextureMode()` **before** `BeginDrawing()`, never nested inside `BeginDrawing()`. Flip `sourceRec.height = -(float)target.texture.height` when drawing `RenderTexture2D` due to OpenGL bottom-left UV origin.
+  - Separate world-space draws inside `BeginMode2D(camera)` / `BeginMode3D(camera)` from screen-space UI/HUD draws after `EndMode2D()`.
+- **Shader Uniform Caching**: Query `GetShaderLocation(shader, "uniformName")` once at initialization and store the `int` location index; never look up uniform strings inside the per-frame draw loop. Bind texture uniforms with `SetShaderValueTexture`.
+- **Cache-Friendly EnTT ECS**: Keep components as plain POD structs, iterate via `registry.view<const Velocity, Position>().each(...)`, and perform zero heap allocations (`new`, `malloc`, unreserved `std::vector::push_back`) per frame.
 
-## 2. Rendering, Shaders & Input
+## Decision Gates
 
-- **Camera & World Space**: Separate world rendering inside `BeginMode2D(camera)` / `BeginMode3D(camera)` from screen-space HUD/debug rendering drawn after `EndMode2D()` / `EndMode3D()`.
-- **2D Draw Ordering**: Sort top-down or isometric sprites by Y-coordinate (or depth key) into a reusable pre-reserved render buffer before issuing draw calls, grouping by texture atlas to minimize `rlgl` batch flushes.
-- **GLSL 330 Shaders**: Cache uniform locations once at load time with `GetShaderLocation(shader, "uTime")`—never query uniform names by string inside the draw loop.
-- **Debug Overlay**: Provide an `F3` toggle showing `DrawFPS`, frame time (`GetFrameTime() * 1000.0f`), entity counts, and wireframe collision bounds (`DrawRectangleLinesEx`, `DrawCircleLines`).
+| Situation | Action |
+| --- | --- |
+| Top-down or isometric 2D depth sorting | Sort draw keys into a pre-reserved buffer by Y-coordinate and atlas ID before drawing |
+| Post-processing or CRT/bloom shader pass | Render scene to `RenderTexture2D` in `BeginTextureMode`, then draw flipped texture with `BeginShaderMode` |
+| Core gameplay/ECS math verification | Decouple simulation from `InitWindow` and verify via headless CTest unit binaries |
 
-## 3. Build & Verification
+## Execution Steps
 
-- **CMake Build & Test**:
-  ```bash
-  cmake -B build -DCMAKE_BUILD_TYPE=Debug && cmake --build build
-  ctest --test-dir build --output-on-failure
-  ```
-- Keep core gameplay math and ECS systems decoupled from window initialization so unit tests can execute in headless CLI environments.
+1. Inspect `CMakeLists.txt` and source structure to identify C++ standard, EnTT usage, and target binaries.
+2. Implement simulation/ECS modules and rendering passes with RAII resource management and cached shader locations.
+3. Build and test with `cmake -B build && cmake --build build && ctest --test-dir build --output-on-failure`.
+
+## Output Contract
+
+Return:
+- C/C++ source, header, shader, and `CMakeLists.txt` files modified.
+- Exact CMake build and CTest verification output.
+- Confirmation of RAII resource cleanup and zero per-frame allocations.

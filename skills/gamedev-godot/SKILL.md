@@ -1,32 +1,45 @@
 ---
 name: gamedev-godot
-description: "Godot 4.x game development for Gentle Shell. Trigger: Godot, GDScript, .tscn, .tres, project.godot, CharacterBody2D, CharacterBody3D, gdshader, GDExtension."
+description: "Trigger: Godot, Godot 4, GDScript, .tscn, .tres, project.godot, CharacterBody2D, CharacterBody3D, gdshader, GDExtension. Idiomatic Godot 4.x engineering and headless verification."
+license: MIT
+metadata:
+  author: Alitoxx
+  version: "2.0"
 ---
 
-# Godot 4.x Engineering
+## Activation Contract
 
-Apply these standards whenever working in a Godot 4 project (`project.godot`).
+Activate when working in a Godot 4.x project (`project.godot`, `.gd`, `.tscn`, `.tres`, `.gdshader`). Do not activate for Godot 3 legacy codebases without adapting annotations.
 
-## 1. Architecture & Scene Organization
+## Hard Rules
 
-- **Composition Over Inheritance**: Build entities as scenes composed of focused child nodes (`HealthComponent`, `HitboxComponent`, `VelocityComponent`, `StateMachine`) rather than deep script inheritance chains.
-- **Static Typing Everywhere**: Write strictly typed GDScript (`var speed: float = 240.0`, `func apply_damage(amount: int) -> void:`). Enable static type warnings to catch errors at parse time and maximize GDScript VM performance.
-- **Node References**: Cache child references with `@onready var sprite: Sprite2D = $Sprite2D` or `@export var target: Node2D`. Never call `get_node()` or `$` repeatedly inside `_process` or `_physics_process`.
-- **Signal Up, Call Down**: Parents call methods on children directly; children emit typed `signal` events upward or through a global Autoload `SignalBus` for decoupled UI/audio reactions.
-- **Data-Driven Custom Resources (`.tres`)**: Define stats, weapon configs, and movement tuning as `class_name MovementStats extends Resource` with `@export` properties so values can be swapped and tuned without code edits.
+- **Strict Static Typing**: Write explicitly typed GDScript (`var speed: float = 240.0`, `func apply_damage(amount: int) -> void:`, and typed signal callbacks `func _on_body_entered(body: Node2D) -> void:`).
+- **Composition Over Inheritance**: Build entities from focused component nodes (`HealthComponent`, `HitboxComponent`, `StateMachine`) rather than deep script inheritance chains.
+- **Signal Up, Call Down**: Parents call child methods directly; children emit typed `signal` events upward or via an Autoload `SignalBus`. Cache node references with `@onready` or `@export`—never call `get_node()` or `$` inside `_process`/`_physics_process`.
+- **Custom Resource (`.tres`) Serialization Contract**:
+  - Define data assets as top-level scripts (`class_name WeaponStats extends Resource`). Never define a serialized `Resource` as an inner `class` inside a `Node` script, or `.tres` deserialization will fail.
+  - Every parameter in `Resource._init()` MUST declare a default value (`func _init(p_damage: int = 0) -> void:`) so the Godot Inspector and loader can instantiate it cleanly.
+- **Physics & Rendering Discipline**: Run `move_and_slide()` and raycasts in `_physics_process(delta: float)`. `preload()` scenes at init, pool projectiles, use `MultiMeshInstance2D/3D` for crowds, and attach `VisibleOnScreenNotifier2D/3D` for off-screen culling.
+- **Headless SceneTree Probe Contract**: Any headless test script run with `godot --headless -s` MUST extend `SceneTree`, enforce a frame watchdog (`MAX_FRAMES`) in `_process()`, and call `quit(0)` or `quit(1)` explicitly with a bounded CLI timeout.
 
-## 2. Physics, Rendering & Performance
+## Decision Gates
 
-- **Physics Loops**: Run `move_and_slide()` and raycasts inside `_physics_process(delta: float)`. Use `_process(delta: float)` only for visual interpolation, camera smoothing, and UI updates.
-- **Collision Layers & Masks**: Name collision layers explicitly in `project.godot` (e.g., Layer 1: World, Layer 2: Player, Layer 3: Enemies, Layer 4: Projectiles) and set bitmasks intentionally.
-- **Object Pooling & Instancing**: `preload()` frequently spawned scenes. For bullets, particles, or crowds, use an object pool or `MultiMeshInstance2D`/`MultiMeshInstance3D` instead of calling `instantiate()` and `queue_free()` dozens of times per second.
-- **Off-Screen Culling**: Attach `VisibleOnScreenNotifier2D`/`3D` to disable expensive AI or animation processing when entities leave the camera view.
-- **Shaders (`.gdshader`)**: Implement hit flashes, dissolve effects, water, and post-processing in `shader_type canvas_item` or `spatial` using exposed `uniform` parameters rather than CPU per-pixel loops.
+| Situation | Action |
+| --- | --- |
+| Shared tuning data across scenes/entities | Create a top-level `class_name ... extends Resource` (`.tres`) with default `_init` args |
+| Visual hit-flash, outline, or distortion effect | Write a `.gdshader` (`canvas_item` or `spatial`) with `uniform` parameters instead of CPU loops |
+| High-frequency spawning (bullets, particles, debris) | Pre-allocate a node pool in `_ready()` and toggle processing/visibility instead of `queue_free()` |
+| Verifying changes from CLI | Run `godot --headless --editor --quit` (or `godot --headless --quit`) and headless `SceneTree` probes |
 
-## 3. Headless Verification & Testing
+## Execution Steps
 
-- **Syntax & Import Check**:
-  ```bash
-  godot --headless --quit
-  ```
-- **Headless SceneTree Probe Contract**: When running a verification script via `godot --headless -s res://tests/probe.gd`, always extend `SceneTree`, run assertions inside `_process()` with a strict frame watchdog (`MAX_FRAMES`), and exit explicitly via `quit(0)` on pass or `quit(1)` on failure so the CLI never hangs.
+1. Inspect `project.godot` for input actions, autoloads, and collision layer names.
+2. Implement typed GDScript/C# modules and compose scenes (`.tscn`) and resources (`.tres`).
+3. Verify zero parse/import errors via `godot --headless --quit` and execute applicable headless `SceneTree` test scripts.
+
+## Output Contract
+
+Return:
+- Modified `.gd`, `.tscn`, `.tres`, or `.gdshader` paths.
+- Output and exit code of `godot --headless` verification.
+- Any new input actions or collision layers registered in `project.godot`.

@@ -1,25 +1,44 @@
 ---
 name: gamedev-unreal
-description: "Unreal Engine 5 (C++ & Blueprints) game development for Gentle Shell. Trigger: Unreal Engine, UE5, .uproject, UCLASS, UPROPERTY, Actor, Pawn, Gameplay Ability System (GAS), Enhanced Input."
+description: "Trigger: Unreal Engine, UE5, .uproject, .Build.cs, UCLASS, UPROPERTY, TObjectPtr, Actor, Pawn, Gameplay Ability System, GAS, Enhanced Input. Idiomatic Unreal Engine 5 C++ engineering."
+license: MIT
+metadata:
+  author: Alitoxx
+  version: "2.0"
 ---
 
-# Unreal Engine 5 (C++) Game Engineering
+## Activation Contract
 
-Apply these standards whenever working in an Unreal Engine 5 project (`*.uproject`, `Source/`).
+Activate when working in an Unreal Engine 5 project (`*.uproject`, `Source/*/*.Build.cs`, UE5 C++ headers and source files).
 
-## 1. C++ / Blueprint Boundary & Memory Safety
+## Hard Rules
 
-- **C++ Foundation, Blueprint Configuration**: Implement core gameplay logic, movement math, state machines, and performance-critical loops in C++. Expose tuning properties and asset references to Blueprints via `UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Config")`.
-- **Strict UObject Garbage Collection Safety**: Never store raw `UObject*` or `AActor*` member pointers without `UPROPERTY()`. Use `TObjectPtr<T>` for member references and `TWeakObjectPtr<T>` for non-owning cached pointers (such as target locks or UI references), checking `.IsValid()` before dereferencing.
-- **Soft References for Assets**: Use `TSoftObjectPtr<T>` and `TSoftClassPtr<T>` with async loading (`FStreamableManager`) in data tables and configs so referencing an asset does not load the entire dependency chain into memory at startup.
+- **Strict UObject Garbage Collection Safety**:
+  - Never store raw `UObject*` or `AActor*` member pointers without `UPROPERTY()`.
+  - Use `TObjectPtr<T>` for owning/hard member references (`UPROPERTY(EditAnywhere, BlueprintReadOnly) TObjectPtr<UInputAction> MoveAction;`) and `TWeakObjectPtr<T>` for non-owning cached pointers, checking `.IsValid()` before dereferencing.
+  - Use `TSoftObjectPtr<T>` and `TSoftClassPtr<T>` with async streaming (`FStreamableManager`) in data tables/configs to avoid synchronous hitching.
+- **Tick Suppression by Default**: Set `PrimaryActorTick.bCanEverTick = false` in `AActor` and `UActorComponent` constructors unless continuous per-frame integration is strictly required; prefer `FTimerManager`, delegates, and timelines.
+- **Enhanced Input Contract**: Register `TObjectPtr<UInputMappingContext>` via `UEnhancedInputLocalPlayerSubsystem` and bind `TObjectPtr<UInputAction>` inside `SetupPlayerInputComponent` by casting `PlayerInputComponent` to `UEnhancedInputComponent` (`BindAction(Action, ETriggerEvent::Triggered, this, &ThisClass::Handler)`).
+- **C++ Foundation & GAS**: Implement core math, movement, and hot loops in C++, exposing tuning fields via `UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Config")`. For complex combat/RPG rules, use **Gameplay Ability System (GAS)** (`UGameplayAbility`, `UAttributeSet`, `UGameplayEffect`, `FGameplayTag`).
 
-## 2. Tick Discipline, Input & GAS
+## Decision Gates
 
-- **Tick Suppression by Default**: Set `PrimaryActorTick.bCanEverTick = false` in every `AActor` and `UActorComponent` constructor unless continuous per-frame math is strictly required. Prefer timers (`GetWorldTimerManager()`), delegates, and timeline curves over ticking actors.
-- **Enhanced Input**: Bind controls exclusively through **Enhanced Input** (`UInputAction`, `UInputMappingContext`) in `SetupPlayerInputComponent`, never legacy hardcoded axis/action strings.
-- **Gameplay Ability System (GAS)**: For action/RPG combat, model abilities with `UGameplayAbility`, stats with `UAttributeSet`, and buffs/cooldowns/damage with `UGameplayEffect` and `FGameplayTag` hierarchies rather than ad-hoc boolean flags.
-- **Network Replication**: Perform authoritative gameplay mutations on the server (`HasAuthority()`), use `UPROPERTY(ReplicatedUsing = OnRep_...)` for state sync, and use unreliable RPCs only for cosmetic events.
+| Situation | Action |
+| --- | --- |
+| Storing a reference to a dynamically spawned Actor or UI widget | Use `TWeakObjectPtr<T>` and validate with `.IsValid()` |
+| Referencing heavy meshes, sounds, or particle systems in DataAssets | Use `TSoftObjectPtr<T>` and load asynchronously |
+| Periodic logic (cooldowns, AI perception checks, regeneration) | Use `GetWorldTimerManager().SetTimer(...)` with `bCanEverTick = false` |
+| Networked multiplayer state change | Mutate state on server (`HasAuthority()`) and replicate via `UPROPERTY(ReplicatedUsing = OnRep_...)` |
 
-## 3. Build & Verification
+## Execution Steps
 
-- **Compile & Automation Tests**: Verify C++ builds via UnrealBuildTool (`Build.bat` / `Build.sh <Project>Editor <Platform> Development`) and run headless automation specs via `UnrealEditor-Cmd <Project>.uproject -ExecCmds="Automation RunTests <Project>;Quit" -NullRHI -Unattended`.
+1. Inspect `*.uproject` and `*.Build.cs` modules (ensuring `EnhancedInput`, `GameplayAbilities`, `GameplayTags`, or `Niagara` are listed when used).
+2. Implement headers (`.h`) and source (`.cpp`) with forward declarations in headers, `TObjectPtr` properties, and suppressed actor ticks.
+3. Verify compilation via UnrealBuildTool and headless automation tests when the engine CLI is available.
+
+## Output Contract
+
+Return:
+- Modified `.h`, `.cpp`, and `.Build.cs` files.
+- Build/automation verification command and output.
+- Confirmation of `UPROPERTY`/`TObjectPtr` GC safety and tick discipline.

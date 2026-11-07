@@ -1,30 +1,45 @@
 ---
 name: gamedev-bevy
-description: "Bevy Engine (Rust ECS) game development for Gentle Shell. Trigger: Bevy, Rust game, Cargo.toml with bevy, ECS systems, WGSL shaders, bevy_ecs."
+description: "Trigger: Bevy, Rust game, Cargo.toml with bevy, bevy_ecs, ECS systems, WGSL shaders, Observers, States. Idiomatic Bevy Engine (Rust ECS) architecture and fast verification."
+license: MIT
+metadata:
+  author: Alitoxx
+  version: "2.0"
 ---
 
-# Bevy Engine (Rust ECS) Engineering
+## Activation Contract
 
-Apply these standards whenever working in a Bevy project (`Cargo.toml` with `bevy`).
+Activate when working in a Rust project using Bevy (`Cargo.toml` depending on `bevy` or `bevy_ecs`).
 
-## 1. Idiomatic Bevy ECS Architecture
+## Hard Rules
 
-- **Plugin Modularity**: Encapsulate every domain (player, combat, enemies, camera, audio, UI) into its own `Plugin` implementing `fn build(&self, app: &mut App)`. Keep `main.rs` as a thin plugin composer.
-- **Small Components, Focused Systems**: Design components as small data structs (`#[derive(Component, Reflect, Default)]`). Prefer multiple focused systems over monolithic systems with 10+ query parameters.
-- **Query Disjointness**: Use `Without<T>` or `ParamSet` when two queries in the same system access overlapping components mutably, preventing runtime panics.
-- **Query vs. Commands**: Mutate existing component data directly through `Query<&mut Transform>`. Use `Commands` only for structural ECS changes (spawning/despawning entities, inserting/removing components).
-- **Explicit System Ordering**: Chain dependent systems deterministically with `.chain()` or `.before()` / `.after()` inside `Update` and `FixedUpdate` schedules.
-- **State-Driven Schedules**: Drive game flow (`AppState::Menu`, `AppState::InGame`, `AppState::Paused`) using `States`, `OnEnter`, `OnExit`, and `.run_if(in_state(AppState::InGame))`.
+- **Plugin Modularity**: Encapsulate each domain (player, combat, AI, camera, audio, UI) in its own `Plugin` (`fn build(&self, app: &mut App)`). Keep `main.rs` as a thin plugin composition root.
+- **Modern Bevy ECS Standards (0.15–0.20+)**:
+  - Prefer **Required Components** (`#[require(Transform, Visibility)]`) and `Mesh2d`/`Mesh3d` + `MeshMaterial2d`/`MeshMaterial3d` over deprecated `PbrBundle`/`SpriteBundle`.
+  - Use reactive **Observers** (`app.add_observer(|trigger: On<Explode>, mut commands: Commands| ...)` and `commands.trigger(...)` / `#[derive(EntityEvent)]`) for immediate event reactions, and buffered `MessageWriter<T>`/`MessageReader<T>` (or `EventWriter`/`EventReader` matching `Cargo.lock`) for scheduled frame events.
+  - Spawn one-shot SFX with `AudioPlayer` + `PlaybackSettings::DESPAWN` so finished audio entities never leak.
+- **Query Safety & Disjointness**: Mutate existing components via `Query<&mut T>`; reserve `Commands` for structural changes (spawn/despawn/insert). Enforce query disjointness with `Without<T>` or `ParamSet` to prevent runtime panics.
+- **Deterministic Schedules**: Gate systems with `States` (`OnEnter`, `OnExit`, `.run_if(in_state(...))`) and order dependent systems explicitly with `.chain()`, `.before()`, or `.after()`.
+- **Zero Hot-Path Allocations**: Never call `.clone()`, `Vec::new()`, or `format!()` inside per-entity query loops in `Update`/`FixedUpdate`; reuse `Local<Vec<Entity>>` or resource buffers.
 
-## 2. Modern Bevy API Standards (0.15+ / 0.19+)
+## Decision Gates
 
-- **Required Components over Legacy Bundles**: Use `#[require(Transform, Visibility)]` on custom components and spawn `Mesh2d`/`Mesh3d` + `MeshMaterial2d`/`MeshMaterial3d` directly instead of deprecated `PbrBundle` or `SpriteBundle`.
-- **Events & Messages**: Use buffered events (`EventWriter<T>` / `EventReader<T>` or `MessageWriter`/`MessageReader` depending on the pinned Bevy version in `Cargo.lock`) and observers (`Trigger<T>`) to decouple combat hits, audio triggers, and UI updates.
-- **Audio Playback**: Spawn audio entities with `AudioPlayer` and `PlaybackSettings::DESPAWN` for one-shot SFX so finished audio entities do not leak in the ECS world.
-- **Hot-Path Allocation Discipline**: Never call `.clone()`, `Vec::new()`, or `format!()` inside per-entity query loops in `Update` or `FixedUpdate`. Reuse `Local<Vec<Entity>>` or resources for scratch buffers.
+| Situation | Action |
+| --- | --- |
+| Immediate reaction to a targeted entity event (death, damage, pickup) | Use an ECS Observer (`add_observer` + `trigger` / `EntityEvent`) |
+| High-throughput frame-buffered telemetry or collision stream | Use buffered `MessageWriter`/`MessageReader` (or `EventWriter`/`EventReader` per pinned Bevy version) |
+| Two mutable queries in the same system touch the same component | Add `Without<Marker>` filters or use `ParamSet` |
+| Testing ECS gameplay logic | Write headless unit tests with `App::new()`, `MinimalPlugins`, and `app.update()` |
 
-## 3. Verification & Fast Builds
+## Execution Steps
 
-- **Fast Compile Check**: Run `cargo check --workspace` for rapid feedback before running full binaries.
-- **Headless Unit Tests**: Test gameplay systems in isolation using `App::new()` with `MinimalPlugins`, inserting test resources/entities, calling `app.update()`, and asserting component states via `cargo test`.
-- **Dev Compile Speed**: Recommend `opt-level = 1` for workspace crates and `opt-level = 3` for dependencies (`[profile.dev.package."*"]`) in `Cargo.toml` so physics and rendering stay at 60 FPS during development.
+1. Check `Cargo.toml` / `Cargo.lock` to confirm the exact pinned Bevy version and feature flags.
+2. Implement small data `Component` structs, `Resource` configs, and focused `Plugin` systems.
+3. Run `cargo check --workspace` and `cargo test` (using `MinimalPlugins`) to verify compilation and system behavior.
+
+## Output Contract
+
+Return:
+- Affected crates, plugins, components, and schedule registrations.
+- Exact `cargo check` / `cargo test` commands executed and their exit codes.
+- Confirmation of query disjointness and zero per-frame heap allocations.

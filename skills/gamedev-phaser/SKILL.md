@@ -1,26 +1,43 @@
 ---
 name: gamedev-phaser
-description: "Phaser 3/4 HTML5 & TypeScript game development for Gentle Shell. Trigger: Phaser, TypeScript web game, Canvas/WebGL 2D game, Arcade Physics, Matter.js."
+description: "Trigger: Phaser, Phaser 3, Phaser 4, TypeScript web game, HTML5 Canvas, WebGL 2D game, Arcade Physics, Matter.js. Idiomatic Phaser TypeScript scene architecture and pooling."
+license: MIT
+metadata:
+  author: Alitoxx
+  version: "2.0"
 ---
 
-# Phaser (TypeScript) Game Engineering
+## Activation Contract
 
-Apply these standards whenever working in a Phaser 3 or Phaser 4 project.
+Activate when working in a Phaser 3 or Phaser 4 project (`package.json` with `phaser`, TypeScript/JavaScript 2D web games).
 
-## 1. Scene Lifecycle & Memory Safety
+## Hard Rules
 
-- **Strict Scene Lifecycle**: Separate responsibilities cleanly across `init(data)` (reset state/params), `preload()` (asset queueing), `create()` (world setup, pools, input bindings), and `update(time, delta)` (frame logic).
-- **Mandatory Shutdown Cleanup**: Register `this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => { ... })` in `create()` to remove custom event listeners, timers, tweens, and keyboard bindings so restarting a scene never duplicates handlers or leaks memory.
-- **Delta Normalization**: Convert Phaser's `delta` (milliseconds) to seconds (`const dt = delta / 1000`) for frame-rate independent movement math when updating custom velocities outside physics bodies.
+- **Strict Scene Lifecycle Separation**: Divide scene logic cleanly across `init(data)` (reset state), `preload()` (queue assets), `create()` (world setup, object pools, input bindings), and `update(time, delta)` (frame tick).
+- **Mandatory `SHUTDOWN` Cleanup**: In `create()`, always register `this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => { ... })` to remove custom event listeners, keyboard bindings, timers, and external references when a scene stops or restarts (note: `ArcadePhysics.World` auto-clears its colliders on `SHUTDOWN`, while custom `EventEmitter` listeners will leak and fire twice if not removed). Pair with `DESTROY` for permanent teardown.
+- **Delta Time Normalization**: Convert Phaser's `update(time, delta)` millisecond `delta` to seconds (`const dt = delta / 1000`) for custom frame-rate independent movement math.
+- **Object Pooling & Zero GC in `update()`**:
+  - Pre-allocate bullets, enemies, and VFX using `this.physics.add.group({ classType: Entity, maxSize: N, runChildUpdate: true })` and recycle via `get()` + `setActive(false).setVisible(false)` instead of `destroy()`.
+  - Never allocate temporary `{ x, y }` objects, arrays, or closures inside `update()`; reuse pre-allocated `Phaser.Math.Vector2` fields.
 
-## 2. Physics, Rendering & Pooling
+## Decision Gates
 
-- **Arcade vs. Matter Physics**: Use **Arcade Physics** for fast AABB platformers, top-down action, and bullet-hell games. Use **Matter.js** only when rotational rigid-body physics, constraints, or complex polygons are genuinely required.
-- **Object Pooling with Groups**: Pre-allocate projectiles, enemies, and particles with `this.physics.add.group({ classType: Bullet, maxSize: 100, runChildUpdate: true })`. Recycle via `get()` and `setActive(false).setVisible(false)` instead of `destroy()` inside combat loops.
-- **Zero Per-Frame GC Pressure**: Avoid allocating temporary `{ x, y }` objects, arrays, or closures inside `update()`. Reuse pre-allocated `Phaser.Math.Vector2` instances on the scene or entity class.
-- **Pixel-Art & Atlas Best Practices**: For pixel-art games, enable `pixelArt: true` and `roundPixels: true` in the game config to prevent sub-pixel blurring. Pack sprites into texture atlases rather than loading dozens of individual PNGs.
+| Situation | Action |
+| --- | --- |
+| Fast AABB platformer, top-down action, or bullet hell | Use **Arcade Physics** for minimal CPU overhead |
+| Complex polygon collisions, joints, or rotational rigid bodies | Use **Matter.js** physics |
+| Pixel-art rendering | Set `pixelArt: true` and `roundPixels: true` in game config and pack sprites into texture atlases |
+| Testable combat, inventory, or grid math | Extract pure TypeScript modules with zero Phaser DOM imports and test via `vitest` |
 
-## 3. Verification & Build
+## Execution Steps
 
-- **Typecheck & Bundling**: Verify zero TypeScript and bundler errors with `pnpm run build` (or `npx tsc --noEmit && npx vite build`).
-- **Pure Logic Unit Tests**: Decouple state machines, damage math, grid/pathfinding, and progression into pure TypeScript modules and test them directly with `vitest`.
+1. Inspect `package.json`, bundler config (`vite.config.ts`), and scene registration in `main.ts`.
+2. Implement pure TypeScript game logic modules and wire Phaser scenes with pooled groups and `SHUTDOWN` cleanup.
+3. Verify types and bundle integrity with `npx tsc --noEmit`, `vite build`, and `vitest run`.
+
+## Output Contract
+
+Return:
+- Scene and logic files created or updated.
+- Results of TypeScript type-checking, bundler build, and unit tests.
+- Confirmation of `SHUTDOWN` listener cleanup and object pooling.

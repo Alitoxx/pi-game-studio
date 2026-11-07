@@ -16,7 +16,7 @@ jobs:
         with:
           node-version: 22
 
-      - name: Validate package.json and skills
+      - name: Validate package.json and Gentle Shell normative skills
         run: |
           node -e '
             const fs = require("fs");
@@ -41,12 +41,27 @@ jobs:
             const dirs = fs.readdirSync("skills").sort();
             assert.deepStrictEqual(dirs, expected, "skill directory mismatch");
 
+            const requiredSections = [
+              "## Activation Contract",
+              "## Hard Rules",
+              "## Decision Gates",
+              "## Execution Steps",
+              "## Output Contract"
+            ];
+
             for (const dir of dirs) {
               const skillPath = path.join("skills", dir, "SKILL.md");
               assert(fs.existsSync(skillPath), "missing " + skillPath);
               const content = fs.readFileSync(skillPath, "utf8");
-              const match = content.match(/^---\nname:\s*(\S+)\ndescription:\s*"([^"]+)"\n---/);
-              assert(match && match[1] === dir && match[2].length > 10, "invalid frontmatter in " + skillPath);
+              const match = content.match(/^---\nname:\s*(\S+)\ndescription:\s*"(Trigger:[^"]+)"\nlicense:\s*MIT\nmetadata:\n\s+author:\s*\S+\n\s+version:\s*"[^"]+"\n---/);
+              assert(match && match[1] === dir, "invalid frontmatter in " + skillPath);
+
+              let lastIdx = -1;
+              for (const sec of requiredSections) {
+                const idx = content.indexOf(sec);
+                assert(idx > lastIdx, "missing or out-of-order section " + sec + " in " + skillPath);
+                lastIdx = idx;
+              }
             }
-            console.log("All 7 Gentle Shell gamedev skills validated.");
+            console.log("All 7 Gentle Shell normative gamedev skills validated.");
           '
